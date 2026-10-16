@@ -22,7 +22,7 @@ Four continuous experiences:
 3. **Remember:** **Finish & Save Cook** preserves planned steps and actual events, plus optional outcome notes. Browse and repeat previous sessions.
 4. **Improve:** Combine documented cooking methods with *comparable* historical sessions to offer better future timing windows with clear assumptions.
 
-**Model:** One *active cook* can contain several dishes, steps and pieces of equipment. A user can save multiple *completed cooks*. Dishes are not independent cooking sessions.
+**Model:** One *active cook* can contain several dishes, steps and pieces of equipment. A user can save multiple *completed cooks*. Dishes are not independent cooking sessions. Archived history is **device-local**, so export a backup before clearing browser data or switching devices.
 
 ## Product principles
 
@@ -49,11 +49,11 @@ As of the latest reviewed source code:
 | Add, rename, remove, reorder checklist steps | **Working** | Task IDs and history preserved |
 | Step completion, notes and timestamped readings | **Working** | Food and equipment readings, with auto-start event logging |
 | Beerometer | **Working** | Playful countdown using a fixed time conversion |
-| Brisket / wings / brats / turkey starter templates | **Partial** | Stage-based instructions and references exist; assumptions, variants and safety/source review still need work |
+| Four curated starter templates | **Working, initial methods** | Meat Church pellet brisket and smoked-fried wings; Traeger grilled beer-bath brats; USDA unstuffed oven turkey; editable assumptions and cited sources. Extra variants tracked in #18 |
 | Ribs, chicken and oven-side starter templates | **Basic** | Editable placeholders |
 | Plain-text recipe paste / .txt / .md | **Basic** | Line-by-line extraction, not yet reliable recipe understanding |
 | Temperature-informed live ETA/replanning | **Not yet** | Steps can be adjusted manually |
-| Finish, archive, and revisit cook history | **Not yet** | Only one browser-local active meal currently persists |
+| Finish, archive, review and repeat cook sessions | **Working in current implementation** | Browser-local completed sessions with frozen checklists, actual events, optional outcome notes, repeat, delete and JSON backup/restore |
 | Weight-aware researched estimates | **Not yet** | Current durations are user-editable placeholders |
 | URL import, photo/PDF import, accounts, sync | **Not yet** | Backend required for URL fetch and secure AI ingestion |
 
@@ -61,14 +61,14 @@ As of the latest reviewed source code:
 
 ## MVP: what “useful enough to share” means
 
-The first proper release should allow a cook to complete this entire loop without switching to Apple Notes.
+The first proper release should allow a cook to complete this entire loop without switching to Apple Notes. The four starter methods and cook history are implemented; real phone testing, reliable offline operation, weight-aware estimates and coordinated resources still need work.
 
 ### Must-haves
 
 - [x] One cook with multiple dishes, target serving date/time and an editable checklist preview.
 - [x] Focused Cooking Mode with completion tracking, notes, readings and activity timestamps. **[#1](https://github.com/Warconn/how-many-beers/issues/1), closed.**
-- [ ] Finish, explicitly save, browse and **repeat a previous cook** without destroying its history. **[#8](https://github.com/Warconn/how-many-beers/issues/8).**
-- [ ] Finish and validate four genuinely useful starter templates: **brisket, smo-fried wings, beer brats, oven turkey**, with source references and safe checkpoints. **[#7](https://github.com/Warconn/how-many-beers/issues/7).**
+- [x] Finish, explicitly save, browse and **repeat a previous cook** without destroying its history. **[#8](https://github.com/Warconn/how-many-beers/issues/8).**
+- [x] Deliver four sourced starter methods: **pellet brisket, smoked-fried wings, grilled beer-bath brats, and unstuffed oven turkey**. Editable timing assumptions and safe condition checks are included. **[#7](https://github.com/Warconn/how-many-beers/issues/7).** Alternate methods are tracked under **[#18](https://github.com/Warconn/how-many-beers/issues/18)**.
 - [ ] Make brisket timing input intuitive: weight/cut, smoker temperature, reasonable duration **range**, buffer, safe rest/hold and manual overrides. **[#5](https://github.com/Warconn/how-many-beers/issues/5).**
 - [ ] Display sensible dependencies and at least basic late/early plan adjustment; do not imply competing oven/grill resources can perform incompatible work simultaneously. **[#3](https://github.com/Warconn/how-many-beers/issues/3).**
 - [ ] Preserve data safely across refresh and browser use, with a recovery/export path and realistic mobile/offline behavior. **[#10](https://github.com/Warconn/how-many-beers/issues/10).**
@@ -99,14 +99,14 @@ See [all tracked issues](https://github.com/Warconn/how-many-beers/issues) for a
 
 | Order | Workstream | Issues | Practical result |
 | --- | --- | --- | --- |
-| **0. Completed** | Editable checklist, event logging, automatic starts | #1 | We can log what actually happens while cooking |
-| **1. In progress** | Curated four-template library and method review | #7 | Useful recipes and stages without importing anything |
-| **2. MVP core** | Finished-cook archive, history and repeat | #8 | The data survives and past cooks become reusable |
-| **3. MVP core** | Weight-based brisket timing and schedule foundations | #5, first slice of #3 | Better first-cook plans and credible time ranges |
-| **4. MVP hardening** | Local data protection, mobile QA, real cooks | #10, #4 | Reliable on-phone experience friends can test |
-| **5. Next iteration** | Recipe URL import, then richer replanning | #2, rest of #3 | Bring your own recipe and adapt while cooking |
-| **6. Next iteration** | History-based personalization, timers, equipment profiles | #6, #11, #12 | Better predictions and proactive guidance |
-| **7. Later** | Media imports, voice, connected probes, accounts, groceries, coach | #9, #13–#17 | Broader platform once the core use case works |
+| **0. Completed** | Editable checklist, four initial template methods, archive and repeat | #1, #7, #8 | We can plan, log, save and reuse a cook |
+| **1. Next** | Weight-aware timing for brisket | #5 | Better researched planning windows from cut and weight |
+| **2. Next** | Dependency- and resource-aware scheduling | #3 | No conflicting equipment claims or false precision |
+| **3. Hardening** | Local reliability and actual mobile testing | #10, #4 | Trustworthy on-phone usage |
+| **4. Next** | Recipe URLs and improved intake | #2 | Bring an existing recipe into the plan |
+| **5. Next** | History-informed recommendations, timers and equipment profiles | #6, #11, #12 | Guidance becomes more personalized |
+| **6. Later** | Other cooking methods, image import, voice, probes and accounts | #18, #9, #13–#17 | Broader platform |
+
 
 A focused prototype can be tested before all MVP criteria are done. We should **not close a feature issue simply because its first UI or data structure exists**.
 
@@ -149,7 +149,7 @@ A focused prototype can be tested before all MVP criteria are done. We should **
 
 - **Frontend:** Next.js App Router, React, TypeScript, mobile-first CSS.
 - **Host:** Public GitHub Pages via `output: "export"`, with `/how-many-beers` as `basePath`.
-- **Data:** Browser-local storage for a single current cook. Extended cook events/step edits live in TypeScript domain code.
+- **Data:** Browser-local storage for one active cook plus a saved cook archive (separate versioned history key), frozen planned timelines, recorded events and JSON backup/restore. No cross-device sync yet.
 - **Schedule:** Basic TypeScript backward-offset timeline and stage-based templates. It is not yet a true dependency/resource scheduler.
 - **Tests:** Vitest domain tests; GitHub Actions typecheck, tests and static build.
 - **Security:** No publicly exposed model/API secrets are required for manual planning and local logging.
@@ -181,6 +181,15 @@ The frontend does **not** need to move away from GitHub Pages just to support a 
 - **Event:** append-only timestamped action such as start, completion, reading, equipment change, note, wrap or reopening.
 - **Archive:** frozen completed session snapshot plus original event stream, source versions and optional outcome feedback.
 - **Recommendation (later):** source baseline, similar past cook IDs, assumptions, uncertainties and editable suggested start window.
+
+### Cook history and backup behavior
+
+- In Cooking Mode, **Finish & Save Cook** requests confirmation and optional outcome notes. It does not auto-complete unchecked steps.
+- Saving snapshots the original planned checklist, recorded completion and start times, notes, measurements and custom tasks.
+- Saving writes the archive before rotating the active cook; an interrupted rotation can be retried without duplicating the archived session.
+- History supports read-only detail views, search, reuse as a clean future plan, removal with confirmation, and JSON export/restore.
+- **Important:** History currently lives in this browser only. Download backups regularly. Clearing browser data, using private browsing, or switching devices can remove or hide the data. This is not cloud sync.
+- The Beerometer represents the **duration from cook start to finish**, never the current-time countdown. It uses actual recorded start/finish when available, otherwise scheduled start/finish.
 
 Never use the AI output as the authoritative state mutation mechanism. Validate structured inputs and execute scheduling logic deterministically.
 
@@ -214,7 +223,7 @@ Open http://localhost:3000. `npm run build` generates static output in `out/`. P
 Before inviting users beyond early personal testing:
 
 - [ ] Validate the four built-in method references and temperature / holding advice.
-- [ ] Finish and save a complete cook with no loss of actual history.
+- [x] Finish and save a cook with original checklist and actual events. Verify during a real on-phone cook before broader launch.
 - [ ] Check use on real iPhone Safari, Android Chrome and desktop.
 - [ ] Verify refresh, local persistence failures, nighttime timelines and time zones.
 - [ ] Test with multiple dishes and incompatible oven/grill conditions.
