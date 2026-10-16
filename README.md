@@ -85,6 +85,7 @@ The first proper release should allow a cook to complete this entire loop withou
 - Timers, overdue steps, optional notifications, and clear Now / Next / Later grouping. **[#11](https://github.com/Warconn/how-many-beers/issues/11).**
 - Remembering equipment profiles, heat settings, warmup and capacity. **[#12](https://github.com/Warconn/how-many-beers/issues/12).**
 - **History-informed schedule suggestions** with transparent evidence and uncertainty, e.g. a 15 lb brisket compared with previous cooks and published method standards. **[#6](https://github.com/Warconn/how-many-beers/issues/6).**
+- **Visual polish and branding:** replace decorative emoji and generic card styling with a cohesive minimal design system, consistent icons and subtle custom low-poly/geometric artwork. This is a **wants/polish** item, not a blocker for #5 or #19/#20. **[#21](https://github.com/Warconn/how-many-beers/issues/21).**
 
 ### Future state: worthwhile, but not necessary to validate the idea
 
