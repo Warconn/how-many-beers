@@ -129,11 +129,21 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const completed = {...m.completed};
   if (kind==="completed") completed[taskId]=timestamp;
   if (kind==="reopened") delete completed[taskId];
+  const priorEvents = m.events ?? [];
+  // First meaningful action starts the step. Do not create duplicate starts
+  // for repeated readings, completion, or reopened attempts.
+  const afterReopen = priorEvents.filter(e => e.taskId===taskId);
+  const reopenIndex = afterReopen.map(e=>e.kind).lastIndexOf("reopened");
+  const attemptEvents = afterReopen.slice(reopenIndex+1);
+  const alreadyStarted = attemptEvents.some(e=>e.kind==="started" || e.kind==="completed");
+  const start = !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
+    ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,occurredAt:timestamp}]
+    : [];
   const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp};
   if (value !== undefined) event.value=value;
   if (unit) event.unit=unit;
   if (note?.trim()) event.note=note.trim().slice(0,500);
-  return {...m, completed, events: [...(m.events ?? []),event]};
+  return {...m, completed, events: [...priorEvents,...start,event]};
 }
 
 export function latestStartedEvent(events: CookEvent[], taskId: string): CookEvent | undefined {
@@ -141,4 +151,18 @@ export function latestStartedEvent(events: CookEvent[], taskId: string): CookEve
   // If a task was reopened, allow starting the new attempt.
   const lastRestartIndex = relevant.map(e=>e.kind).lastIndexOf("reopened");
   return relevant.slice(lastRestartIndex+1).find(e=>e.kind==="started");
+}
+
+/** A text update counts as work begun only while actively cooking.
+ * Planning edits never start anything. Empty keystrokes do not start a task. */
+export function updateTaskNote(meal: Meal, taskId:string, value:string, occurredAt:string):ExtendedMeal {
+  const m=migrateMeal(meal);
+  if(!cookTimeline(m).some(t=>t.id===taskId)) throw Error("Task not found.");
+  const notes={...m.notes,[taskId]:value.slice(0,500)};
+  if(m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
+  const taskEvents=(m.events??[]).filter(e=>e.taskId===taskId);
+  const lastReopen=taskEvents.map(e=>e.kind).lastIndexOf("reopened");
+  const attempt=taskEvents.slice(lastReopen+1);
+  if(attempt.some(e=>e.kind==="started" || e.kind==="completed")) return {...m,notes};
+  return recordEvent({...m,notes},taskId,"started",occurredAt);
 }
