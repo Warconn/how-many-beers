@@ -65,7 +65,7 @@ describe("cooking checklist and history",()=>{
     const done=recordEvent(meal,task.id,"completed","2026-11-25T05:00:00.000Z");
     const reopened=recordEvent(done,task.id,"reopened","2026-11-25T05:05:00.000Z");
     expect(reopened.completed[task.id]).toBeUndefined();
-    expect(reopened.events?.filter(e=>e.taskId===task.id).map(e=>e.kind)).toEqual(["completed","reopened"]);
+    expect(reopened.events?.filter(e=>e.taskId===task.id).map(e=>e.kind)).toEqual(["started","completed","reopened"]);
   });
 
   it("hides deleted steps but keeps their historical completion and temperature readings",()=>{
@@ -74,7 +74,7 @@ describe("cooking checklist and history",()=>{
     const removed=removeStep(completed,task.id,"2026-11-25T05:30:00.000Z");
     expect(cookTimeline(removed).some(t=>t.id===task.id)).toBe(false);
     expect(removed.completed[task.id]).toBe("2026-11-25T05:00:00.000Z");
-    expect(removed.events?.filter(e=>e.taskId===task.id).map(e=>e.kind)).toEqual(["completed","removed"]);
+    expect(removed.events?.filter(e=>e.taskId===task.id).map(e=>e.kind)).toEqual(["started","completed","removed"]);
   });
 
   it("rejects empty task names, invalid temperature values, and cycles of bad editing",()=>{
