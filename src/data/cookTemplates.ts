@@ -20,7 +20,7 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"check",title:"Check bark and brisket temperature",anchor:"progress",progress:0.55,conditional:true,instructions:"Check the bark, temperature and stall. Meat Church's pellet method raises the pit to about 225°F once internal temperature is near 165°F. This is a checkpoint, not a timer."},
     {id:"wrap",title:"Decide whether to wrap",anchor:"progress",progress:0.75,conditional:true,instructions:"When bark is set, commonly around 175°F internal in Meat Church's pellet method, wrap in butcher paper if desired. Consider raising pit to 250–275°F. Log the actual reading and decision."},
     {id:"finish",title:"Probe the flat for tenderness",anchor:"finish",conditional:true,instructions:"Verify food safety and look for a very tender flat; Meat Church often observes roughly 203°F, but tenderness rather than a fixed number determines barbecue texture."},
-    {id:"hold",title:"Begin safe, monitored rest or hold",anchor:"finish",conditional:true,instructions:"Rest briefly or use temperature-controlled hot holding at 140°F or above. Never assume a cooler maintains a safe temperature; use a thermometer and food-safe time limits."},
+    {id:"rest",title:"Begin safe, monitored rest or hold",anchor:"finish",conditional:true,instructions:"Rest briefly or use temperature-controlled hot holding at 140°F or above. Never assume a cooler maintains a safe temperature; use a thermometer and food-safe time limits."},
     {id:"serve",title:"Slice and serve",anchor:"serve",instructions:"Slice across the grain and serve. Record whether bark, tenderness and timing met your goals."}
   ],
   wings: [
@@ -49,7 +49,7 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"start",title:"Begin roasting turkey",anchor:"start",instructions:"Roast in a stable pan/rack. Actual duration depends strongly on turkey weight, stuffing, oven and pan; treat this schedule as an editable starting estimate."},
     {id:"check",title:"Check breast, thigh and wing temperatures",anchor:"progress",progress:0.75,conditional:true,instructions:"Use a food thermometer in the thickest part of the breast, innermost thigh and wing, avoiding bone. Continue cooking until all checked locations reach 165°F."},
     {id:"finish",title:"Verify 165°F in all required locations",anchor:"finish",conditional:true,instructions:"The USDA safe minimum is 165°F in the thickest breast and innermost thigh and wing; stuffing, if any, must independently reach 165°F."},
-    {id:"hold",title:"Rest before carving",anchor:"finish",instructions:"A roughly 20-minute stand improves carving. For longer waits, follow safe hot-holding or refrigeration guidance."},
+    {id:"rest",title:"Rest before carving",anchor:"finish",instructions:"A roughly 20-minute stand improves carving. For longer waits, follow safe hot-holding or refrigeration guidance."},
     {id:"serve",title:"Carve and serve turkey",anchor:"serve",instructions:"Carve and serve after verifying safe internal temperature."}
   ]
 };
