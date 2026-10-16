@@ -55,6 +55,9 @@ describe("cooking checklist and history",()=>{
     expect(changed.completed[task.id]).toBe("2026-11-25T05:00:00.000Z");
     expect(changed.events?.map(e=>e.occurredAt)).toEqual(meal.events?.map(e=>e.occurredAt));
     expect(changed.events?.filter(e=>e.kind==="equipment")[0]).toMatchObject({value:250,unit:"°F"});
+    const switched=recordEvent(changed,task.id,"equipment","2026-11-25T05:10:00.000Z",undefined,undefined,"Switched to smoke mode");
+    expect(switched.events?.at(-1)).toMatchObject({kind:"equipment",note:"Switched to smoke mode"});
+
   });
 
   it("can reopen tasks and preserves both the completion and reopening events",()=>{
