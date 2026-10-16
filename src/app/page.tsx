@@ -225,7 +225,7 @@ export default function Home() {
               <button className="back-link" type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>← Edit your plan</button>
               <p className="eyebrow">YOU'RE COOKING</p>
               <h2>{meal.name || "Your cook"}</h2>
-              <p className="cook-target">🍽️ Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
+              <p className="cook-target">🍽️ Serving {when(meal.serveAt || null)} · One cook with {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
             </div>
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
@@ -375,10 +375,10 @@ export default function Home() {
             <div className="stack">
               <section className="panel ready-panel">
                 <p className="eyebrow">READY WHEN YOU ARE</p>
-                <h2>Your cooking plan</h2>
+                <h2>One cook, everything on the menu.</h2>
                 <p className="muted">{meal.dishes.length === 0
-                  ? "Add a dish to start building your timeline."
-                  : meal.dishes.length + (meal.dishes.length === 1 ? " dish" : " dishes") + " · " + timeline.length + " planned steps"}</p>
+                  ? "Add your first dish to build a single coordinated cook."
+                  : meal.dishes.length + (meal.dishes.length === 1 ? " dish" : " dishes") + " in this cook · " + timeline.length + " steps in one checklist."}</p>
                 {warnings.map((warning,i) => <p className="warning" key={i}>⚠️ {warning}</p>)}
                 {timeline.some(t => t.scheduledAt === null) && <p className="warning">⚠️ Some imported recipe steps don't have timing yet. Add durations for a useful schedule.</p>}
                 {meal.dishes.length > 0 && (
@@ -387,11 +387,42 @@ export default function Home() {
                     <div><span>First planned step</span><strong>{when(timeline.find(t => !!t.scheduledAt)?.scheduledAt ?? null)}</strong></div>
                   </div>
                 )}
-                <button type="button" className="button primary start-cook-btn" disabled={meal.dishes.length === 0}
-                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);}}>
-                  {meal.startedAt ? "▶ Resume cooking" : "🔥 Start the cook"}
+                {meal.dishes.length > 0 && (
+                  <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
+                    <div className="preview-intro">
+                      <div>
+                        <p className="eyebrow">BEFORE YOU START</p>
+                        <h3>Preview your checklist</h3>
+                      </div>
+                      <span className="preview-count">{timeline.length} steps</span>
+                    </div>
+                    <p className="muted small">All dishes appear in one timeline, ordered by planned time. You can review the tasks now, then check them off once you start cooking.</p>
+                    <ol className="preview-steps">
+                      {timeline.map((task, index) => (
+                        <li className={"preview-step " + (meal.completed[task.id] ? "preview-done" : "")} key={task.id}>
+                          <span className="preview-index" aria-hidden="true">{meal.completed[task.id] ? "✓" : index + 1}</span>
+                          <div className="preview-task">
+                            <div className="preview-step-top">
+                              <strong>{task.title}</strong>
+                              <time>{when(task.scheduledAt)}</time>
+                            </div>
+                            <span className="preview-dish">{task.dishName}</span>
+                            {task.isCondition && <span className="preview-conditional">Check when ready</span>}
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                    {timeline.some(task => task.scheduledAt === null) && (
+                      <p className="warning">Some imported steps need durations before they can be scheduled.</p>
+                    )}
+                  </section>
+                )}
+                <button type="button" className="button primary start-cook-btn"
+                  disabled={meal.dishes.length === 0 || !Number.isFinite(new Date(meal.serveAt).getTime())}
+                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});}}>
+                  {meal.startedAt ? "▶ Return to cooking" : "🔥 Start the cook"}
                 </button>
-                <p className="small muted">When you start, your checklist takes center stage. You can return to edit the plan anytime without losing progress.</p>
+                <p className="small muted">{meal.startedAt ? "Your current cook is saved. Returning to it won't create another one." : "Nothing starts until you choose Start the cook."} You can always return to the plan without losing progress.</p>
               </section>
               <aside className="panel tip">
                 <strong>A heads-up about timing</strong>
@@ -406,14 +437,6 @@ export default function Home() {
               </aside>
             </div>
           </div>
-          {meal.dishes.length > 0 && (
-            <div className="plan-mobile-bar">
-              <span>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} ready</span>
-              <button type="button" onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);}}>
-                {meal.startedAt ? "Resume cook →" : "Start cooking →"}
-              </button>
-            </div>
-          )}
         </>
       )}
       <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span></footer>
