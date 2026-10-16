@@ -68,43 +68,38 @@ function DurationInput({
 }
 
 function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[] }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
   const dish = meal.dishes.find(item => item.preset === "brisket") ?? meal.dishes[0];
-  const plannedFinish = dish ? timeline.find(task => task.id === dish.id + ":finish") : undefined;
-  const serveTask = dish ? timeline.find(task => task.id === dish.id + ":serve") : undefined;
-  const targetIso = plannedFinish?.scheduledAt ?? serveTask?.scheduledAt;
-  const endTime = targetIso ? new Date(targetIso).getTime() : NaN;
-  const valid = Number.isFinite(endTime);
-  const minutesLeft = valid ? Math.max(0, Math.ceil((endTime - now) / 60_000)) : 0;
-  const beers = Number((minutesLeft / 90).toFixed(1));
-  const hours = Math.floor(minutesLeft / 60);
-  const minutes = minutesLeft % 60;
-  const isFinished = !!(plannedFinish && meal.completed[plannedFinish.id]);
-
-  return <section className="beerometer" aria-label="Playful cooking countdown">
+  const startTask = dish ? timeline.find(task => task.id === dish.id + ":start") : undefined;
+  const finishTask = dish ? timeline.find(task => task.id === dish.id + ":finish")
+    ?? timeline.find(task => task.id === dish.id + ":check")
+    ?? timeline.find(task => task.id === dish.id + ":serve") : undefined;
+  const events = (meal as ExtendedMeal).events ?? [];
+  const startedAt = startTask && events.find(e => e.taskId === startTask.id && e.kind === "started")?.occurredAt;
+  const completedAt = finishTask ? meal.completed[finishTask.id] : undefined;
+  const from = startedAt ?? startTask?.scheduledAt;
+  const to = completedAt ?? finishTask?.scheduledAt;
+  const durationMinutes = from && to ? Math.max(0, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 60000)) : NaN;
+  const valid = Number.isFinite(durationMinutes);
+  const totalBeers = valid ? durationMinutes / 90 : 0;
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+  return <section className="beerometer" aria-label="Cook duration in beers">
     <div className="beerometer-main">
       <div className="beerometer-emblem" aria-hidden="true">🍺</div>
       <div className="beerometer-copy">
         <p className="eyebrow">THE BEEROMETER</p>
         <h2>How many beers till it&apos;s done?</h2>
-        <p>{dish
-          ? "Counting down to " + dish.name.toLowerCase() + (plannedFinish ? "\u0027s planned finish." : "\u0027s planned serving time.")
-          : "Add a dish to fire up the countdown."}</p>
+        <p>{dish ? (completedAt ? "Actual " : "Planned ") + dish.name.toLowerCase() + " start-to-finish duration." : "Add a dish to fire up the Beerometer."}</p>
       </div>
     </div>
     <div className="beerometer-reading">
       <div className="beerometer-figure">
-        <strong>{dish && valid ? (isFinished ? "Done!" : beers.toFixed(1)) : "—"}</strong>
-        <span>{isFinished ? "You checked it off" : "beers"}</span>
+        <strong>{dish && valid ? totalBeers.toFixed(1) : "—"}</strong>
+        <span>beers</span>
       </div>
-      <p className="beerometer-clock">{dish && valid && !isFinished
-        ? (minutesLeft === 0 ? "The planned finish time has passed" : `${hours}h ${String(minutes).padStart(2, "0")}m on the clock`)
-        : isFinished ? "Nice work. Dinner awaits." : "The clock starts once you add a dish."}</p>
+      <p className="beerometer-clock">{dish && valid
+        ? `${hours}h ${String(minutes).padStart(2, "0")}m ${completedAt ? "actual" : "planned"} cook`
+        : "Set a cook start and finish time."}</p>
     </div>
   </section>;
 }
