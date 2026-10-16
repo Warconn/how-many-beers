@@ -18,3 +18,75 @@
 .beerometer-clock{font-size:12px;color:#dac8af;margin:3px 0}
 .beerometer-disclaimer{margin:0;width:100%;padding-top:13px;border-top:1px solid #544739;color:#c0b3a4;font-size:11px;line-height:1.45}
 @media(max-width:650px){.beerometer{padding:17px;gap:17px}.beerometer-main{flex-basis:100%}.beerometer-emblem{height:53px;width:53px;font-size:27px;border-radius:14px}.beerometer h2{font-size:18px}.beerometer-reading{align-items:flex-start;margin-left:0}.beerometer-figure strong{font-size:38px}}
+
+
+/* Separate planning and cooking experiences */
+.planning-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:start}
+.ready-panel h2{margin:7px 0 9px;font-size:26px;letter-spacing:-.6px}
+.ready-summary{margin:19px 0;display:grid;gap:12px}
+.ready-summary>div{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#faf7f2;display:flex;flex-direction:column;gap:3px}
+.ready-summary span{font-size:11px;color:var(--muted);font-weight:700}
+.ready-summary strong{font-size:15px}
+.start-cook-btn{width:100%;min-height:53px;font-size:17px}
+.ready-panel>.small{line-height:1.5;margin-bottom:0}
+.cook-header{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:6px 0 20px}
+.cook-header h2{font-size:37px;letter-spacing:-1.2px;line-height:1.1;margin:5px 0 8px}
+.cook-header .eyebrow{margin-top:14px}
+.back-link{border:0;background:transparent;color:var(--accent-dark);font-weight:800;padding:4px 0 7px;font-size:13px}
+.back-link:hover,.link:hover{text-decoration:underline}
+.cook-target{color:var(--muted);font-size:14px;margin:0}
+.cook-progress-chip{display:flex;flex-direction:column;align-items:center;background:#f0e5d7;border:1px solid #e2d4c2;border-radius:15px;padding:14px 18px;min-width:104px}
+.cook-progress-chip strong{font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.cook-progress-chip span{font-size:11px;color:#7c674f;font-weight:700}
+.cook-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(250px,.7fr);gap:20px;align-items:start}
+.cook-sidebar{display:grid;gap:16px}
+.active-cook-panel{padding:23px}
+.cook-section-label{color:var(--accent-dark);font-size:11px;letter-spacing:1.3px;font-weight:800;margin:22px 0 12px}
+.cook-task{padding:17px}
+.cook-task.first-task{background:#fff9f0;border:2px solid #ca8550;box-shadow:0 4px 14px rgba(162,92,40,.07)}
+.next-label{font-size:10px;margin:0 0 9px;color:var(--accent)}
+.cook-task .task-top{gap:14px}
+.cook-task .task-top input{width:26px;height:26px;accent-color:var(--accent)}
+.cook-task .task-main strong{font-size:16px}
+.cook-task .task-main time{font-size:12px}
+.cook-task .task-dish{margin-top:7px}
+.cook-task .task-note{padding:11px}
+.cook-task .note-label{font-size:11px}
+.done-section{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+.done-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);background:#f8f6f2;color:#514b42;border-radius:12px;padding:13px 15px;font-size:13px;font-weight:800}
+.completed-list{margin-top:14px}
+.cook-finished{text-align:center;padding:50px 22px}
+.cook-finished span{font-size:40px}.cook-finished h3{font-size:23px;margin:10px 0}.cook-finished p{color:var(--muted);font-size:13px}
+.cook-summary h3{margin:8px 0 13px;font-size:20px}
+.menu-item{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-direction:column;gap:5px}
+.menu-item strong{font-size:13px}.menu-item span{font-size:12px;color:var(--muted)}
+.sidebar-next{border-top:1px solid var(--line);padding:14px 0 0;margin-top:7px;display:flex;flex-direction:column;gap:4px}
+.sidebar-next span{font-size:11px;color:var(--muted)}.sidebar-next strong{font-size:13px}
+.cook-warnings{background:#fff8ed}.cook-warnings p{font-size:12px;line-height:1.5}
+.plan-mobile-bar,.cook-mobile-bar{display:none}
+@media(max-width:900px){
+.planning-layout{grid-template-columns:1fr}
+.cook-layout{grid-template-columns:minmax(0,1fr)}
+.cook-sidebar{grid-template-columns:1fr 1fr}
+.cook-sidebar>.panel:last-child{grid-column:1/-1}
+}
+@media(max-width:650px){
+.planning-screen,.cooking-screen{padding-bottom:105px}
+.cooking-screen .site-header{margin-bottom:19px}
+.cook-header{align-items:start;margin-bottom:15px}
+.cook-header h2{font-size:28px}
+.cook-target{font-size:12px;line-height:1.4}
+.cook-progress-chip{min-width:79px;padding:12px}
+.cook-progress-chip strong{font-size:20px}
+.cook-progress-chip span{font-size:10px}
+.active-cook-panel{padding:15px}
+.cook-sidebar{grid-template-columns:1fr}
+.cook-task{padding:14px}
+.cook-task .task-main strong{font-size:15px}
+.cook-task .task-main .between{align-items:start;flex-direction:column;gap:6px}
+.cook-task .task-top input{width:28px;height:28px}
+.cook-mobile-bar,.plan-mobile-bar{display:flex;position:fixed;z-index:30;bottom:0;left:0;right:0;align-items:center;justify-content:space-between;gap:14px;padding:12px max(17px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(17px,env(safe-area-inset-left));background:#fffdf9;border-top:1px solid var(--line);box-shadow:0 -7px 30px rgba(30,20,10,.08)}
+.cook-mobile-bar span,.plan-mobile-bar span{font-size:12px;font-weight:800;color:#5d574e}
+.cook-mobile-bar button,.plan-mobile-bar button{background:var(--accent);color:#fff;font-weight:800;border:0;border-radius:11px;padding:13px 17px;font-size:13px}
+.cook-summary,.cook-warnings{display:none}
+}
