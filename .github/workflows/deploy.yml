@@ -32,6 +32,8 @@ jobs:
       - name: Validate types
         run: npm run typecheck
 
+      - name: Run regression tests
+        run: npm run test
       - name: Build static website
         run: npm run build
 
