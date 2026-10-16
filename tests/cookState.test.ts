@@ -1,5 +1,6 @@
 import {describe, it, expect} from "vitest";
 import {addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep} from "../src/domain/cookState";
+import type {ExtendedMeal} from "../src/domain/cookState";
 import {createDish, newMeal} from "../src/domain/meal";
 
 function seed(){
@@ -41,7 +42,7 @@ describe("cooking checklist and history",()=>{
   });
 
   it("retains completion timestamps and activity logs after serving-time edits",()=>{
-    let meal=seed();
+    let meal:ExtendedMeal=seed();
     const task=cookTimeline(meal)[0];
     meal=recordEvent(meal,task.id,"started","2026-11-25T04:00:00.000Z");
     meal=recordEvent(meal,task.id,"temperature","2026-11-25T04:25:00.000Z",165,"°F","flat");
