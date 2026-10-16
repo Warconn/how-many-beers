@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Dish, Meal, PresetId } from "@/domain/meal";
+import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
 import { buildTimeline, equipmentWarnings } from "@/domain/schedule";
 import { parseRecipeText } from "@/domain/recipe";
@@ -13,6 +13,96 @@ function when(iso: string | null): string {
   if (!iso) return "Timing TBD";
   const d = new Date(iso);
   return new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }).format(d);
+}
+
+
+type DurationUnit = "hours" | "minutes";
+
+function DurationInput({
+  id, minutes, unit, minMinutes, maxMinutes, onChange
+}: {
+  id: string;
+  minutes: number;
+  unit: DurationUnit;
+  minMinutes: number;
+  maxMinutes: number;
+  onChange: (minutes: number) => void;
+}) {
+  const displayed = unit === "hours" ? String(Number((minutes / 60).toFixed(2))) : String(minutes);
+  const [draft, setDraft] = useState(displayed);
+
+  useEffect(() => setDraft(displayed), [displayed]);
+
+  const commit = () => {
+    if (!draft.trim()) {
+      setDraft(displayed);
+      return;
+    }
+    const entered = Number(draft);
+    const nextMinutes = Math.round(entered * (unit === "hours" ? 60 : 1));
+    if (!Number.isFinite(entered) || nextMinutes < minMinutes || nextMinutes > maxMinutes) {
+      setDraft(displayed);
+      return;
+    }
+    onChange(nextMinutes);
+    setDraft(unit === "hours" ? String(Number((nextMinutes / 60).toFixed(2))) : String(nextMinutes));
+  };
+
+  return <input
+    id={id}
+    type="number"
+    inputMode="decimal"
+    min={unit === "hours" ? minMinutes / 60 : minMinutes}
+    max={unit === "hours" ? maxMinutes / 60 : maxMinutes}
+    step={unit === "hours" ? "0.25" : "5"}
+    value={draft}
+    onChange={e => setDraft(e.target.value)}
+    onBlur={commit}
+    onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+  />;
+}
+
+function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[] }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const dish = meal.dishes.find(item => item.preset === "brisket") ?? meal.dishes[0];
+  const plannedFinish = dish ? timeline.find(task => task.id === dish.id + ":finish") : undefined;
+  const serveTask = dish ? timeline.find(task => task.id === dish.id + ":serve") : undefined;
+  const targetIso = plannedFinish?.scheduledAt ?? serveTask?.scheduledAt;
+  const endTime = targetIso ? new Date(targetIso).getTime() : NaN;
+  const valid = Number.isFinite(endTime);
+  const minutesLeft = valid ? Math.max(0, Math.ceil((endTime - now) / 60_000)) : 0;
+  const imaginaryBeers = Number((minutesLeft / 90).toFixed(1));
+  const hours = Math.floor(minutesLeft / 60);
+  const minutes = minutesLeft % 60;
+  const isFinished = !!(plannedFinish && meal.completed[plannedFinish.id]);
+
+  return <section className="beerometer" aria-label="Playful cooking countdown">
+    <div className="beerometer-main">
+      <div className="beerometer-emblem" aria-hidden="true">🍺</div>
+      <div className="beerometer-copy">
+        <p className="eyebrow">THE BEEROMETER</p>
+        <h2>How many beers till it&apos;s done?</h2>
+        <p>{dish
+          ? "Counting down to " + dish.name.toLowerCase() + (plannedFinish ? "\u0027s planned finish." : "\u0027s planned serving time.")
+          : "Add a dish to fire up the countdown."}</p>
+      </div>
+    </div>
+    <div className="beerometer-reading">
+      <div className="beerometer-figure">
+        <strong>{dish && valid ? (isFinished ? "Done!" : imaginaryBeers.toFixed(1)) : "—"}</strong>
+        <span>{isFinished ? "You checked it off" : "imaginary beers"}</span>
+      </div>
+      <p className="beerometer-clock">{dish && valid && !isFinished
+        ? (minutesLeft === 0 ? "The planned finish time has passed" : `${hours}h ${String(minutes).padStart(2, "0")}m on the clock`)
+        : isFinished ? "Nice work. Dinner awaits." : "The clock starts once you add a dish."}</p>
+    </div>
+    <p className="beerometer-disclaimer">1 imaginary beer = 90 minutes. Just a fun countdown, not a drinking target or a reliable doneness estimate. Trust the probe, not the clock.</p>
+  </section>;
 }
 
 export default function Home() {
@@ -99,6 +189,8 @@ export default function Home() {
         </div>
       </section>
 
+      <BeerEstimator meal={meal} timeline={timeline}/>
+
       <div className="two-column">
         <div className="stack">
           <section className="panel">
@@ -124,8 +216,22 @@ export default function Home() {
                   <label htmlFor={"equipment-"+d.id}>Equipment</label>
                   <input id={"equipment-"+d.id} value={d.equipment} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment:e.target.value}:item)}))}/>
                   {d.preset!=="custom" ? <div className="small-grid">
-                    <div><label htmlFor={"cook-"+d.id}>Estimated cook (min)</label><input id={"cook-"+d.id} type="number" min="15" max="3000" value={d.cookMinutes} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,cookMinutes:Math.max(15,Number(e.target.value)||15)}:item)}))}/></div>
-                    <div><label htmlFor={"rest-"+d.id}>Rest/hold (min)</label><input id={"rest-"+d.id} type="number" min="0" max="600" value={d.restMinutes} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,restMinutes:Math.max(0,Number(e.target.value)||0)}:item)}))}/></div>
+                    <div>
+                      <label htmlFor={"cook-"+d.id}>Estimated cook ({d.preset==="brisket" || d.preset==="ribs" ? "hours" : "min"})</label>
+                      <DurationInput id={"cook-"+d.id} minutes={d.cookMinutes}
+                        unit={d.preset==="brisket" || d.preset==="ribs" ? "hours" : "minutes"}
+                        minMinutes={15} maxMinutes={2880}
+                        onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,cookMinutes:value}:item)}))}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={"rest-"+d.id}>Rest/hold ({d.preset==="brisket" ? "hours" : "min"})</label>
+                      <DurationInput id={"rest-"+d.id} minutes={d.restMinutes}
+                        unit={d.preset==="brisket" ? "hours" : "minutes"}
+                        minMinutes={0} maxMinutes={720}
+                        onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,restMinutes:value}:item)}))}
+                      />
+                    </div>
                   </div> : <div className="recipe-steps">
                     {(d.steps||[]).map(s=><div className="recipe-row" key={s.id}>
                       <span>{s.title}</span>
