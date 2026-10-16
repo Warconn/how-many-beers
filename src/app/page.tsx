@@ -347,6 +347,22 @@ export default function Home() {
                     </div>)}
                     <p className="muted small">Blank time means the step stays unscheduled. Confirm all timings before relying on this plan.</p>
                   </div>}
+                  {d.preset!=="custom" && presets[d.preset].pitTempF!==undefined && (
+                    <div className="template-settings">
+                      <label htmlFor={"pit-"+d.id}>Starting smoker / oven setting (°F)</label>
+                      <input id={"pit-"+d.id} type="number" min={150} max={450} step={5}
+                        value={d.pitTempF ?? presets[d.preset].pitTempF ?? 250}
+                        onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id ? {...item,pitTempF:Math.min(450,Math.max(150,Number(e.target.value)||250))}:item)}))}
+                      />
+                      <p className="muted small">These are starter plans, not weight-calibrated predictions. You can adjust durations, pit settings, and every checklist step.</p>
+                    </div>
+                  )}
+                  {d.preset!=="custom" && !!presets[d.preset].sources?.length && (
+                    <div className="template-sources">
+                      <span>Method references</span>
+                      {presets[d.preset].sources?.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.title} ↗</a>)}
+                    </div>
+                  )}
                 </article>
               ))}
             </div>}
