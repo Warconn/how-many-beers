@@ -33,6 +33,18 @@ describe("researched starter templates",()=>{
     expect(steps.findIndex(t=>t.id.endsWith(":check"))).toBeLessThan(steps.findIndex(t=>t.id.endsWith(":fry")));
     expect(steps.find(t=>t.id.endsWith(":check"))?.instructions).toContain("165°F");
   });
+  it("smoked wings reach checked safe temperature before heating fryer and frying",()=>{
+    const meal=newMeal();meal.dishes=[createDish("wings")];
+    const ids=buildTimeline(meal).map(t=>t.id.split(":").at(-1));
+    expect(ids.indexOf("check")).toBeLessThan(ids.indexOf("oil"));
+    expect(ids.indexOf("oil")).toBeLessThan(ids.indexOf("fry"));
+  });
+  it("grilled brats reach their checked safe temperature before the beer bath",()=>{
+    const meal=newMeal();meal.dishes=[createDish("brats")];
+    const ids=buildTimeline(meal).map(t=>t.id.split(":").at(-1));
+    expect(ids.indexOf("check")).toBeLessThan(ids.indexOf("bath"));
+    expect(buildTimeline(meal).find(t=>t.id.endsWith(":check"))?.instructions).toContain("160°F");
+  });
   it("turkey shows verified 165°F rather than a timer-only endpoint",()=>{
     const meal=newMeal();meal.dishes=[createDish("turkey")];
     const steps=buildTimeline(meal);
