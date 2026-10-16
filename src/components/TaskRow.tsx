@@ -9,6 +9,7 @@ type Props = {
   task: PlannedTask;
   index: number;
   count: number;
+  isNext?: boolean;
   mode: "planning" | "cooking";
   completedAt?: string;
   events: CookEvent[];
@@ -26,7 +27,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent
+  task,index,count,isNext=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent
 }:Props) {
   const [editing,setEditing]=useState(false);
   const [title,setTitle]=useState(task.title);
@@ -59,13 +60,13 @@ export default function TaskRow({
     setReading("");setReadingNote("");setLogging(false);setError("");
   };
 
-  return <article className={"task cook-task "+(done?"done ":"")+(index===0 && isCooking ? "first-task":"")} aria-label={task.title}>
+  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")} aria-label={task.title}>
     <div className="task-top">
       {isCooking && <input aria-label={"Complete "+task.title} type="checkbox" checked={done}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/>}
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
-        {index===0 && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
+        {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
         <div className="between"><strong>{task.title}</strong><time>{task.scheduledAt ? formatted(task.scheduledAt) : "Timing TBD"}</time></div>
         <p className="task-dish">{task.dishName}</p>
         {task.instructions && <p className="muted small">{task.instructions}</p>}
