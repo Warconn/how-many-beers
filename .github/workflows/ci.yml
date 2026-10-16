@@ -20,5 +20,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check types
         run: npm run typecheck
+      - name: Run regression tests
+        run: npm run test
       - name: Build app
         run: npm run build
