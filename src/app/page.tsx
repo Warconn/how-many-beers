@@ -441,7 +441,7 @@ export default function Home() {
                     </div>
                   )}
                   {d.preset!=="custom" && presets[d.preset].cookRangeMinutes && (
-                    <p className="muted small">Reference timing window: {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Source-method context only; adjust the estimate for your equipment and size.</p>
+                    <p className="muted small">Editable planning window (not a guaranteed or weight-derived estimate): {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Source-method context only; adjust the estimate for your equipment and size.</p>
                   )}
                   {d.preset!=="custom" && presets[d.preset].pitTempF!==undefined && (
                     <div className="template-settings">
