@@ -117,3 +117,45 @@
   .preview-step-top time{font-size:12px}
   .preview-steps{max-height:52vh}
 }
+
+
+/* Checklist editing and actual cook activity, usable on a phone */
+.task-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:12px 0 2px;padding-left:35px}
+.task-actions button{border:1px solid #e1d5ca;background:#fffaf5;border-radius:8px;padding:7px 10px;min-height:33px;font-size:12px;font-weight:700;color:#75533b}
+.task-actions button:disabled{opacity:.35;cursor:not-allowed}
+.task-actions button.danger{color:#af382c;background:#fff6f3;border-color:#efd9d5}
+.task-actions button:focus-visible,.done-toggle:focus-visible,.add-step-trigger:focus-visible{outline:3px solid #b3663e;outline-offset:2px}
+.task-logging-actions{margin-top:8px}
+.task-editor,.reading-form{border-radius:12px;background:#faf6f0;border:1px solid #e9ded1;padding:14px;margin:13px 0 3px}
+.task-editor label,.reading-form label{font-size:12px;margin-top:10px}
+.task-editor .button,.reading-form .button{margin-top:12px}
+.reading-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(86px,1fr);gap:10px}
+.reading-fields>div{min-width:0}
+.reading-form .muted{margin:6px 0}
+.step-event{color:#746754;font-size:11px;margin:6px 0 0}
+.task-activity{margin:13px 0 0 34px;border-top:1px solid #e8e0d5;padding-top:9px}
+.task-activity summary{font-size:12px;font-weight:800;cursor:pointer;color:#7b5137}
+.task-activity ul{margin:8px 0 0;padding-left:17px;font-size:11px;line-height:1.6;color:#635b52}
+.form-error{color:#a63627;background:#fff0ed;border:1px solid #f3d3cc;border-radius:8px;font-size:12px;line-height:1.4;padding:9px 11px;margin:10px 0}
+.add-step-block{margin:17px 0}
+.add-step-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#faf4ec;border:1px dashed #cfac91;color:#8c4829;border-radius:11px;padding:12px 14px;font-size:13px;font-weight:800;cursor:pointer}
+.add-step-form{padding:14px;border:1px solid var(--line);background:#fff;border-radius:12px;margin-top:9px}
+.add-step-form .button{width:100%}
+.add-step-form p.small{font-size:11px;margin:8px 0}
+.preview-task-list{margin-top:13px;max-height:65vh;overflow:auto;overscroll-behavior:contain;padding:3px}
+.preview-task-list .cook-task{padding:12px;border:1px solid var(--line);background:#fff}
+.preview-task-list .task-top{display:flex;gap:12px;align-items:start}
+.preview-task-list .task-main strong{font-size:13px}
+.preview-task-list .task-main .muted{font-size:11px;margin-top:4px}
+.preview-task-list .task-actions{padding-left:38px;gap:6px}
+.preview-task-list .task-actions button{padding:6px 8px;min-height:32px}
+.preview-task-list .preview-index{flex-shrink:0;margin-top:0}
+@media(max-width:650px){
+ .task-actions{padding-left:0;gap:7px}
+ .task-actions button{min-height:38px;padding:9px 12px}
+ .preview-task-list{max-height:none;overflow:visible}
+ .preview-task-list .task-actions{padding-left:0}
+ .preview-task-list .task-actions button{min-height:38px;padding:9px 10px}
+ .task-activity{margin-left:0}
+ .task-editor,.reading-form{padding:11px}
+}
