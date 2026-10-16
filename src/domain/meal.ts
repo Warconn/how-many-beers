@@ -14,6 +14,7 @@ export type Dish = {
   cookMinutes: number;
   restMinutes: number;
   pitTempF?: number;
+  weightLb?: number;
   steps?: RecipeStep[];
 };
 
@@ -39,13 +40,15 @@ export type PlannedTask = {
   isCondition: boolean;
 };
 
-export const presets: Record<Exclude<PresetId, "custom">, { label: string; equipment: string; cookMinutes: number; restMinutes: number; notice: string; pitTempF?: number; sources?: {title:string;url:string}[] }> = {
+export const presets: Record<Exclude<PresetId, "custom">, { label: string; equipment: string; cookMinutes: number; restMinutes: number; notice: string; pitTempF?: number; cookRangeMinutes?: [number,number]; referenceWeightLb?: number; sources?: {title:string;url:string}[] }> = {
   brisket: {
     label: "Smoked brisket",
     equipment: "Pellet smoker",
     cookMinutes: 780,
     restMinutes: 120,
     pitTempF: 200,
+    cookRangeMinutes: [600,1080],
+    referenceWeightLb: 16,
     sources: [{title:"Meat Church · Pellet Grill Brisket",url:"https://www.meatchurch.com/blogs/recipes/pellet-grill-brisket"},{title:"USDA · Food safety",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/steps-keep-food-safe"}],
     notice: "Stage guidance inspired by Meat Church. 13 h is an editable placeholder, not weight-derived. Wrap and doneness depend on bark and probe."
   },
@@ -55,7 +58,9 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
     cookMinutes: 210,
     restMinutes: 20,
     pitTempF: 325,
-    sources: [{title:"USDA · Turkey roasting",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/poultry/turkey-basics-safe-cooking"}],
+    cookRangeMinutes: [180,225],
+    referenceWeightLb: 13,
+    sources: [{title:"USDA · Turkey roasting",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/poultry/lets-talk-turkey-roasting"}],
     notice: "Unstuffed oven roast. Around 3.5 h is only a planning placeholder for a mid-sized turkey; time depends on weight. Verify 165°F with a probe."
   },
   ribs: {
@@ -76,15 +81,17 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
     label: "Smo-fried wings",
     equipment: "Smoker + fryer",
     pitTempF: 225,
+    cookRangeMinutes: [180,260],
     cookMinutes: 195,
     restMinutes: 5,
-    sources:[{title:"Meat Church · Smoked Fried Wings",url:"https://www.meatchurch.com/blogs/recipes/smoked-fried-wings"},{title:"USDA · Deep frying safety",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/deep-fat-frying"}],
+    sources:[{title:"Meat Church · Smoked Fried Wings",url:"https://www.meatchurch.com/blogs/recipes/smoked-fried-wings"},{title:"USDA · Deep frying safety",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/grilling-and-food-safety"}],
     notice:"Smoke to at least 165°F (Meat Church reports about 3 h), then crisp carefully in ~350°F oil. Timing varies."
   },
   brats: {
-    label: "Beer brats",
+    label: "Grilled beer-bath brats",
     equipment: "Pellet grill",
     pitTempF: 350,
+    cookRangeMinutes: [70,85],
     cookMinutes: 80,
     restMinutes: 0,
     sources:[{title:"Traeger · Brats in Beer",url:"https://www.traeger.com/recipes/brats-beer-bath"},{title:"USDA · Safe temperatures",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/safe-temperature-chart"}],
@@ -101,7 +108,7 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
 
 export function createDish(preset: Exclude<PresetId, "custom">): Dish {
   const p = presets[preset];
-  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, cookMinutes: p.cookMinutes, restMinutes: p.restMinutes };
+  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: p.restMinutes };
 }
 
 export function localDateTime(date: Date): string {
