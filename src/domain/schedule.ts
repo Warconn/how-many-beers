@@ -1,4 +1,5 @@
 import type { Dish, Meal, PlannedTask } from "./meal";
+import { templateSteps } from "../data/cookTemplates";
 
 const minute = 60_000;
 
@@ -7,7 +8,35 @@ function at(serveAt: string, beforeMinutes: number): string | null {
   return Number.isNaN(time) ? null : new Date(time - beforeMinutes * minute).toISOString();
 }
 
+function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
+  const steps=templateSteps[d.preset];
+  if(!steps)return null;
+  const cook=Math.max(15,d.cookMinutes);
+  const rest=Math.max(0,d.restMinutes);
+  const startOffset=cook+rest;
+  return steps.map(step=>{
+    const before=step.anchor==="prep" || step.anchor==="preheat"
+      ? startOffset+(step.beforeStartMin??0)
+      : step.anchor==="start" ? startOffset
+      : step.anchor==="progress" ? rest+Math.round(cook*(1-(step.progress??0.5)))
+      : step.anchor==="finish" ? rest : 0;
+    const temp=d.pitTempF ?? null;
+    const subst=(s:string)=>s.replaceAll("{pitTempF}",temp===null?"your chosen pit temperature":String(temp));
+    return {
+      id:d.id+":"+step.id,
+      dishId:d.id,
+      dishName:d.name,
+      title:subst(step.title),
+      instructions:subst(step.instructions),
+      scheduledAt:at(serveAt,before),
+      isCondition:!!step.conditional
+    };
+  });
+}
+
 function builtinTasks(d: Dish, serveAt: string): PlannedTask[] {
+  const curated=curatedTasks(d,serveAt);
+  if(curated)return curated;
   const cook = Math.max(15, d.cookMinutes);
   const rest = Math.max(0, d.restMinutes);
   const isSlow = d.preset === "brisket" || d.preset === "ribs";
