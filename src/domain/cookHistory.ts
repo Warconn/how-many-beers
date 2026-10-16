@@ -61,6 +61,21 @@ export function archiveCook(meal: Meal, history:HistoryLibrary, feedback:string,
   return {version:1,cooks:[entry,...history.cooks.filter(c=>c.id!==entry.id)]};
 }
 
+export type StorageWriter = Pick<Storage, "setItem">;
+
+/** Archive before rotating the active cook. A failure writing the next active
+ * meal leaves the original active key untouched and the archive available.
+ * Retrying is idempotent because archive IDs are the original meal IDs. */
+export function commitCompletedCook(
+  active:Meal,history:HistoryLibrary,feedback:string,at:string,storage:StorageWriter
+):{history:HistoryLibrary;next:ExtendedMeal}{
+  const saved=archiveCook(active,history,feedback,at);
+  const next=migrateMeal(newMeal());
+  storage.setItem(HISTORY_KEY,JSON.stringify(saved));
+  storage.setItem(ACTIVE_KEY,JSON.stringify(next));
+  return {history:saved,next};
+}
+
 export function removeArchivedCook(history:HistoryLibrary,id:string):HistoryLibrary {
   return {version:1,cooks:history.cooks.filter(c=>c.id!==id)};
 }
