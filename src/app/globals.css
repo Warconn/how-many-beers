@@ -4,7 +4,7 @@
 @media(max-width:390px){.site-header h1{font-size:20px}.subtitle{font-size:11px}.task-main .between{align-items:start;flex-direction:column;gap:3px}}
 
 
-/* Beerometer: an intentionally playful time conversion, not a consumption goal. */
+/* Beerometer */
 .beerometer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:22px;background:#26231e;color:#faf4e8;border:1px solid #4b3a2e;border-radius:20px;padding:22px 25px;margin-bottom:20px;box-shadow:0 7px 25px rgba(42,31,22,.10)}
 .beerometer-main{display:flex;align-items:center;gap:15px;flex:1 1 310px;min-width:0}
 .beerometer-emblem{width:64px;height:64px;flex-shrink:0;display:grid;place-items:center;border:1px solid #735139;background:#493426;border-radius:18px;font-size:32px}
@@ -16,7 +16,6 @@
 .beerometer-figure strong{font-size:41px;line-height:1.1;letter-spacing:-1px;color:#ffc878;font-variant-numeric:tabular-nums}
 .beerometer-figure span{color:#fae7cf;font-size:13px;font-weight:700}
 .beerometer-clock{font-size:12px;color:#dac8af;margin:3px 0}
-.beerometer-disclaimer{margin:0;width:100%;padding-top:13px;border-top:1px solid #544739;color:#c0b3a4;font-size:11px;line-height:1.45}
 @media(max-width:650px){.beerometer{padding:17px;gap:17px}.beerometer-main{flex-basis:100%}.beerometer-emblem{height:53px;width:53px;font-size:27px;border-radius:14px}.beerometer h2{font-size:18px}.beerometer-reading{align-items:flex-start;margin-left:0}.beerometer-figure strong{font-size:38px}}
 
 
