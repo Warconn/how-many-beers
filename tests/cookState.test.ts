@@ -1,5 +1,5 @@
 import {describe, it, expect} from "vitest";
-import {addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep} from "../src/domain/cookState";
+import {addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote} from "../src/domain/cookState";
 import type {ExtendedMeal} from "../src/domain/cookState";
 import {createDish, newMeal} from "../src/domain/meal";
 
@@ -83,5 +83,38 @@ describe("cooking checklist and history",()=>{
     expect(()=>editStep(meal,task.id,"","")).toThrow("title");
     expect(()=>recordEvent(meal,task.id,"temperature","2026-11-25T05:00:00.000Z",900,"°F")).toThrow("valid food temperature");
     expect(()=>recordEvent(meal,task.id,"started","not-a-date")).toThrow("timestamp");
+  });
+});
+
+describe("automatic step start",()=>{
+  it("marks the first completed action as started with the same timestamp",()=>{
+    const meal=seed();
+    const task=cookTimeline(meal)[0];
+    const done=recordEvent(meal,task.id,"completed","2026-11-25T04:00:00.000Z");
+    expect(done.events?.filter(e=>e.taskId===task.id).map(e=>e.kind)).toEqual(["started","completed"]);
+    expect(done.events?.[0].occurredAt).toBe(done.completed[task.id]);
+  });
+  it("automatically starts on first saved reading but not on subsequent readings",()=>{
+    const meal=seed(), task=cookTimeline(meal)[0];
+    const first=recordEvent(meal,task.id,"temperature","2026-11-25T04:00:00.000Z",169,"°F");
+    const second=recordEvent(first,task.id,"equipment","2026-11-25T04:01:00.000Z",250,"°F");
+    expect(second.events?.filter(e=>e.kind==="started")).toHaveLength(1);
+    expect(second.events?.filter(e=>e.kind==="temperature")).toHaveLength(1);
+  });
+  it("starts on first note while cooking but not during planning or repeated characters",()=>{
+    const meal=seed(), task=cookTimeline(meal)[0];
+    const planning=updateTaskNote(meal,task.id,"bark", "2026-11-25T04:00:00.000Z");
+    expect(planning.events).toHaveLength(0);
+    const active={...planning,mode:"cooking" as const};
+    const started=updateTaskNote(active,task.id,"bark looks good","2026-11-25T04:01:00.000Z");
+    const again=updateTaskNote(started,task.id,"bark looks great","2026-11-25T04:02:00.000Z");
+    expect(again.events?.filter(e=>e.kind==="started")).toHaveLength(1);
+    expect(again.notes[task.id]).toBe("bark looks great");
+  });
+  it("keeps legacy completed steps completed without inventing a new start",()=>{
+    const old=seed(), task=cookTimeline(old)[0];
+    old.completed[task.id]="2026-11-25T04:00:00.000Z";
+    const logged=recordEvent(migrateMeal(old),task.id,"temperature","2026-11-25T04:20:00.000Z",180,"°F");
+    expect(logged.events?.filter(e=>e.kind==="started")).toHaveLength(0);
   });
 });
