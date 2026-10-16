@@ -77,7 +77,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
   const endTime = targetIso ? new Date(targetIso).getTime() : NaN;
   const valid = Number.isFinite(endTime);
   const minutesLeft = valid ? Math.max(0, Math.ceil((endTime - now) / 60_000)) : 0;
-  const imaginaryBeers = Number((minutesLeft / 90).toFixed(1));
+  const beers = Number((minutesLeft / 90).toFixed(1));
   const hours = Math.floor(minutesLeft / 60);
   const minutes = minutesLeft % 60;
   const isFinished = !!(plannedFinish && meal.completed[plannedFinish.id]);
@@ -95,14 +95,13 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
     </div>
     <div className="beerometer-reading">
       <div className="beerometer-figure">
-        <strong>{dish && valid ? (isFinished ? "Done!" : imaginaryBeers.toFixed(1)) : "—"}</strong>
-        <span>{isFinished ? "You checked it off" : "imaginary beers"}</span>
+        <strong>{dish && valid ? (isFinished ? "Done!" : beers.toFixed(1)) : "—"}</strong>
+        <span>{isFinished ? "You checked it off" : "beers"}</span>
       </div>
       <p className="beerometer-clock">{dish && valid && !isFinished
         ? (minutesLeft === 0 ? "The planned finish time has passed" : `${hours}h ${String(minutes).padStart(2, "0")}m on the clock`)
         : isFinished ? "Nice work. Dinner awaits." : "The clock starts once you add a dish."}</p>
     </div>
-    <p className="beerometer-disclaimer">1 imaginary beer = 90 minutes. Just a fun countdown, not a drinking target or a reliable doneness estimate. Trust the probe, not the clock.</p>
   </section>;
 }
 
