@@ -102,7 +102,7 @@ See [all tracked issues](https://github.com/Warconn/how-many-beers/issues) for a
 | Order | Workstream | Issues | Result |
 | --- | --- | --- | --- |
 | **0. Done** | Editable checklist, starter templates, cook archives | #1, #7, #8 | Plan, cook and save history on this device |
-| **1. First** | Researched weight-based brisket timing | **#5** | Weight + cut + pit method + serving time generate an editable start window |
+| **1. First** | Researched weight-based brisket timing | **#5** | Weight + cut + pit method + serving time generate an editable start window; compare recalled 1.5 h/lb rule without assuming it is reliable |
 | **2. Account foundation** | Optional login, private database and ownership policies | **#19** | Safely identify users and privately store cooks in the cloud |
 | **3. Sync foundation** | Migrate guest cooks, autosave, offline queue and conflict-safe replay | **#20**, #10 | Resume on a different device without losing activity |
 | **4. Smarter schedules** | Dependencies, equipment conflicts and replanning | #3 | Better time coordination across dishes |
@@ -162,7 +162,7 @@ A focused personal prototype can be tested before all beta requirements are done
 
 Recommendation: keep the static GitHub Pages app, add **Supabase Auth + Postgres** as a browser-accessible backend for optional signed-in cooks. This is **planned, not yet connected or deployed**. A user can remain a guest with local device-only saves. GitHub Pages does not need to run a Next.js server for browser-based Supabase Auth and database requests.
 
-- **#19, account/schema:** Start with email code or magic-link login, carefully test GitHub Pages project-path redirects and account recovery, and create owner-scoped tables for cook sessions, append-only activity events and optional profile preferences. Every exposed table needs grants, Row Level Security for read/write, and cross-account tests. A public Supabase publishable key may be used with RLS; never put service-role/secret keys in this public repo or frontend.
+- **#19, account/schema:** Provide familiar social sign-in, prioritizing Google and Apple, with email code/magic-link recovery and Facebook as a requested option to evaluate. Test callbacks at the GitHub Pages project path. Support securely linking multiple verified sign-in identities to one account, avoiding fragmented cook history. Create owner-scoped cook sessions, append-only activity events and optional preferences. Enforce Row Level Security for read/write with cross-account tests; never expose service-role/secret keys in the public repo or frontend.
 - **#20, local-first sync:** Save each critical action to durable local storage first, then enqueue it for the signed-in user's cloud archive. Debounce frequent notes. Show **Saved on device**, **Syncing**, **Saved to account**, or **Needs attention**, rather than falsely claiming success. Replay an offline outbox with stable event IDs and retries; preserve actual event timestamps.
 - **First login migration:** Detect existing local active cook and archived history and let the user preview and deliberately import or keep local. Do not erase the guest cook or silently replace a newer cloud cook. Duplicate event IDs are idempotent.
 - **Conflict policy:** One active cook per owner, many completed ones; append-only activity merges by ID, editable plan state uses revision/optimistic concurrency. When two devices change the same plan, prompt instead of last-write-wins. Make account switching/logout clear private local caches.
