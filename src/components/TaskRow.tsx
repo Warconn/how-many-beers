@@ -79,7 +79,7 @@ export default function TaskRow({
       </div>
     </div>
     <div className="task-actions" aria-label={"Manage "+task.title}>
-      <button type="button" onClick={()=>{setEditing(v=>!v);setError("");}} aria-expanded={editing}>{editing?"Cancel edit":"Edit"}</button>
+      <button type="button" onClick={() => { if(editing){handleSave();}else{setEditing(true);setError("");}}} aria-expanded={editing}>{editing?"Save & Close":"Edit"}</button>
       <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
       <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
       <button type="button" className="danger" onClick={()=>{
@@ -91,13 +91,11 @@ export default function TaskRow({
       <input id={"edit-title-"+task.id} value={title} maxLength={160} onChange={e=>setTitle(e.target.value)}/>
       <label htmlFor={"edit-instructions-"+task.id}>Instructions</label>
       <textarea id={"edit-instructions-"+task.id} value={instructions} maxLength={500} rows={3} onChange={e=>setInstructions(e.target.value)}/>
-      <button type="button" className="button secondary" onClick={handleSave}>Save changes</button>
     </div>}
     {isCooking && <>
       <div className="task-actions task-logging-actions">
-        {!done && !started && <button type="button" onClick={()=>onEvent("started")}>▶ Start step</button>}
         <button type="button" onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>
-          {logging?"Cancel reading":"+ Log temperature"}
+          {logging?"Close logging":"+ Log temperature"}
         </button>
       </div>
       {logging && <div className="reading-form">
