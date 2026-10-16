@@ -24,6 +24,8 @@ export type Meal = {
   dishes: Dish[];
   completed: Record<string, string>; // ISO completion timestamp keyed by task ID
   notes: Record<string, string>;
+  mode?: "planning" | "cooking"; // optional to preserve existing localStorage meals
+  startedAt?: string;
 };
 
 export type PlannedTask = {
@@ -88,5 +90,5 @@ export function newMeal(): Meal {
   const serve = new Date();
   serve.setDate(serve.getDate() + 1);
   serve.setHours(18, 0, 0, 0);
-  return { version: 1, id: crypto.randomUUID(), name: "Next cook", serveAt: localDateTime(serve), dishes: [], completed: {}, notes: {} };
+  return { version: 1, id: crypto.randomUUID(), name: "Next cook", serveAt: localDateTime(serve), dishes: [], completed: {}, notes: {}, mode: "planning" };
 }
