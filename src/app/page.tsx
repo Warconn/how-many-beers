@@ -9,6 +9,9 @@ import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import TaskRow from "@/components/TaskRow";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
+import { archiveCook, emptyHistory, exportBackup, HISTORY_KEY, readHistory, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
+import type { ArchivedCook, HistoryLibrary } from "@/domain/cookHistory";
+import CookHistoryPanel from "@/components/CookHistoryPanel";
 
 const STORAGE_KEY = "how-many-beers:meal:v1";
 type BuiltIn = Exclude<PresetId, "custom">;
@@ -112,8 +115,18 @@ export default function Home() {
   const [draft, setDraft] = useState<Dish | null>(null);
   const [message, setMessage] = useState("");
   const [showCompleted, setShowCompleted] = useState(false);
+  const [history,setHistory] = useState<HistoryLibrary>(emptyHistory());
+  const [outcome,setOutcome] = useState("");
+  const [showFinish,setShowFinish] = useState(false);
+  const [storageError,setStorageError] = useState("");
 
   useEffect(() => {
+    try{
+      const savedHistory=localStorage.getItem(HISTORY_KEY);
+      if(savedHistory)setHistory(readHistory(JSON.parse(savedHistory)));
+    }catch{
+      setStorageError("Saved cook history could not be read. Export or inspect your browser data before replacing it.");
+    }
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -124,7 +137,7 @@ export default function Home() {
         }
       }
     } catch {
-      // Corrupt or unavailable local storage: start a new plan.
+      setStorageError("Could not recover the current cook from browser storage. Avoid replacing data until it is backed up.");
     }
     setMeal(newMeal());
   }, []);
@@ -134,7 +147,7 @@ export default function Home() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meal));
     } catch {
-      // Browsers may refuse persistence when storage is disabled.
+      setStorageError("Browser storage is unavailable or full. Your latest cook edits may not survive a refresh.");
     }
   }, [meal]);
 
@@ -171,6 +184,67 @@ export default function Home() {
     try { patch(fn); setMessage(""); }
     catch(error) { setMessage(error instanceof Error ? error.message : "Could not update checklist."); }
   };
+  const persistNewMeal = (next:Meal) => {
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+    setMeal(next);
+    setShowFinish(false);
+    setOutcome("");
+    window.scrollTo({top:0,behavior:"instant"});
+  };
+  const finishCook = () => {
+    if(!meal) return;
+    try{
+      const nextArchive=archiveCook(meal,history,outcome,new Date().toISOString());
+      const nextMeal=newMeal();
+      // Write archive first, then clear active cook. A failed write never
+      // destroys the original active session.
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(nextArchive));
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(nextMeal));
+      setHistory(nextArchive);
+      setStorageError("");
+      persistNewMeal(nextMeal);
+      setMessage("Cook saved to history. Ready for the next one!");
+    }catch(error){
+      setStorageError("Could not save this cook. It is still available in your active checklist. "+(error instanceof Error?error.message:""));
+    }
+  };
+  const repeatCook = (entry:ArchivedCook) => {
+    if(!window.confirm("Start a new cook using this saved plan? Any unsaved current plan will be replaced."))return;
+    try{persistNewMeal(repeatArchivedCook(entry));setMessage("Copied your previous cook. Set a new serving time before starting.");setStorageError("");}
+    catch{setStorageError("Could not create a repeat cook. Your current plan was not replaced.");}
+  };
+  const deleteCook = (entry:ArchivedCook) => {
+    if(!window.confirm("Delete this saved cook permanently from this device? Consider downloading a backup first."))return;
+    try{
+      const next=removeArchivedCook(history,entry.id);
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(next));
+      setHistory(next);setStorageError("");
+    }catch{setStorageError("Could not delete the saved cook. Browser storage may be unavailable.");}
+  };
+  const downloadBackup = () => {
+    if(!meal)return;
+    try{
+      const blob=new Blob([exportBackup(meal,history,new Date().toISOString())],{type:"application/json"});
+      const url=URL.createObjectURL(blob);
+      const anchor=document.createElement("a");
+      anchor.href=url;
+      anchor.download="how-many-beers-backup-"+new Date().toISOString().slice(0,10)+".json";
+      document.body.appendChild(anchor);anchor.click();anchor.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),500);
+    }catch{setStorageError("Could not export the cook backup.");}
+  };
+  const importBackup = async (file:File) => {
+    if(file.size>4_000_000){setStorageError("Backup is too large (4 MB maximum).");return;}
+    try{
+      const data=validateBackup(await file.text());
+      if(!window.confirm("Restore this backup? It replaces the active cook and saved history on this device."))return;
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(data.history));
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data.active));
+      setHistory(data.history);setMeal(data.active);setStorageError("");
+      setMessage("Your cook history has been restored.");
+    }catch(error){setStorageError("Could not restore backup: "+(error instanceof Error?error.message:"unrecognized file"));}
+  };
+
   const addCustom = (title:string,instructions:string,scheduledAt:string|null) => {
     safelyPatch(m=>addStep(m,title,instructions,scheduledAt));
   };
@@ -206,6 +280,7 @@ export default function Home() {
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
+      {storageError && <div className="warning" role="alert">⚠️ {storageError}</div>}
       <header className="site-header">
         <div className="brand-icon" aria-hidden>🍺</div>
         <div>
@@ -257,6 +332,18 @@ export default function Home() {
                   {showCompleted && <div className="checklist completed-list">{finished.map(task => taskCard(task, "cooking"))}</div>}
                 </section>
               )}
+              <section className="finish-cook">
+                <h3>All wrapped up?</h3>
+                <p className="muted small">Save this session's actual steps, notes and temperatures so you can reference them next time.</p>
+                {!showFinish ? <button className="button primary" type="button" onClick={()=>setShowFinish(true)}>✓ Finish & Save Cook</button>
+                  : <div className="finish-form">
+                    <p className="muted small">{remaining.length} unchecked steps. You can save even if some weren't needed.</p>
+                    <label htmlFor="cook-outcome">How did it turn out? (optional)</label>
+                    <textarea id="cook-outcome" rows={3} maxLength={2000} value={outcome} onChange={e=>setOutcome(e.target.value)} placeholder="Tenderness, timing, bark, what I'd change next time..."/>
+                    <button type="button" className="button primary" onClick={finishCook}>Save Cook & Start Fresh</button>
+                    <button type="button" className="button secondary" onClick={()=>setShowFinish(false)}>Not yet</button>
+                  </div>}
+              </section>
             </section>
             <aside className="cook-sidebar">
               <section className="panel cook-summary">
@@ -276,6 +363,7 @@ export default function Home() {
           </div>
           <nav className="cook-mobile-bar" aria-label="Cook tools">
             <span>✓ {complete} of {timeline.length} complete</span>
+            <button type="button" onClick={() => {setShowFinish(true);document.querySelector(".finish-cook")?.scrollIntoView({behavior:"smooth",block:"center"});}}>Save Cook</button>
             <button type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>Edit plan</button>
           </nav>
         </>
@@ -456,6 +544,9 @@ export default function Home() {
                 }}>Start a fresh plan →</button>
               </aside>
             </div>
+          </div>
+          <div className="history-layout">
+            <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup}/>
           </div>
         </>
       )}
