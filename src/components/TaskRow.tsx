@@ -52,11 +52,14 @@ export default function TaskRow({
     onEdit(title,instructions);setEditing(false);setError("");
   };
   const handleReading=()=>{
-    const num=Number(reading);
-    if(!reading.trim() || !Number.isFinite(num) || num<=0 || num>(unit==="°F"?600:300)){
-      setError("Enter a valid temperature before saving.");return;
+    const hasTemperature=reading.trim().length>0;
+    const num=hasTemperature?Number(reading):undefined;
+    if((readingType==="temperature" && !hasTemperature) ||
+       (hasTemperature && (!Number.isFinite(num) || num===undefined || num<=0 || num>(unit==="°F"?600:300))) ||
+       (readingType==="equipment" && !hasTemperature && !readingNote.trim())){
+      setError(readingType==="equipment"?"Enter a setpoint or describe the equipment change.":"Enter a valid food temperature.");return;
     }
-    onEvent(readingType,num,unit,readingNote);
+    onEvent(readingType,num,hasTemperature?unit:undefined,readingNote);
     setReading("");setReadingNote("");setLogging(false);setError("");
   };
 
@@ -102,24 +105,24 @@ export default function TaskRow({
           <label htmlFor={"reading-kind-"+task.id}>Reading type</label>
           <select id={"reading-kind-"+task.id} value={readingType} onChange={e=>setReadingType(e.target.value as "temperature"|"equipment")}>
             <option value="temperature">Meat / food temperature</option>
-            <option value="equipment">Smoker / oven setting</option>
+            <option value="equipment">Equipment setting / change</option>
           </select>
         </div>
         <div className="reading-fields">
-          <div><label htmlFor={"reading-temp-"+task.id}>Temperature</label>
+          <div><label htmlFor={"reading-temp-"+task.id}>{readingType==="equipment"?"Setpoint (optional)":"Food temperature"}</label>
           <input type="number" inputMode="decimal" min={1} max={unit==="°F"?600:300} id={"reading-temp-"+task.id} value={reading} onChange={e=>setReading(e.target.value)} placeholder="e.g. 169"/></div>
           <div><label htmlFor={"reading-unit-"+task.id}>Unit</label>
           <select id={"reading-unit-"+task.id} value={unit} onChange={e=>setUnit(e.target.value as "°F"|"°C")}><option value="°F">°F</option><option value="°C">°C</option></select></div>
         </div>
         <label htmlFor={"reading-note-"+task.id}>Location / details (optional)</label>
-        <input id={"reading-note-"+task.id} maxLength={500} value={readingNote} onChange={e=>setReadingNote(e.target.value)} placeholder={readingType==="temperature"?"Flat, thickest part...":"Pit set to 250..."}/>
+        <input id={"reading-note-"+task.id} maxLength={500} value={readingNote} onChange={e=>setReadingNote(e.target.value)} placeholder={readingType==="temperature"?"Flat, thickest part...":"Pit set to 250, switched to Smoke mode..."}/>
         <button type="button" className="button primary" onClick={handleReading}>Save timestamped reading</button>
       </div>}
       <label className="note-label" htmlFor={"note-"+task.id}>Quick notes</label>
       <input id={"note-"+task.id} className="task-note" maxLength={500} placeholder="Bark looks good, wrapped in paper..." value={note} onChange={e=>onNote(e.target.value)}/>
       {activity.length>0 && <details className="task-activity"><summary>Activity ({activity.length}{events.filter(e=>e.taskId===task.id&&e.kind!=="removed").length>8?"+":""})</summary>
         <ul>{activity.map(e=><li key={e.id}>
-          <time>{formatted(e.occurredAt)}</time> · {e.kind==="temperature"?"Food temp":e.kind==="equipment"?"Equipment temp":e.kind==="reopened"?"Reopened":e.kind==="completed"?"Completed":"Started"}
+          <time>{formatted(e.occurredAt)}</time> · {e.kind==="temperature"?"Food temp":e.kind==="equipment"?"Equipment setting":e.kind==="reopened"?"Reopened":e.kind==="completed"?"Completed":"Started"}
           {e.value!==undefined?" "+e.value+(e.unit||""):""}{e.note?" · "+e.note:""}
         </li>)}</ul>
       </details>}
