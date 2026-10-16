@@ -178,15 +178,26 @@ npm run build
 
 Node.js 20+ is recommended. Open http://localhost:3000.
 
-## Hosting
+## Hosting on GitHub Pages
 
-Public GitHub source does **not automatically host a dynamic web app**. To put How Many Beers? online:
+The initial UI is a static-exported Next.js application hosted at **https://warconn.github.io/how-many-beers/**.
 
-1. Open [Vercel → New Project](https://vercel.com/new).
-2. Import `Warconn/how-many-beers`.
-3. Keep the Next.js defaults and deploy.
-4. Use free/manual features first; store future AI secrets only as server-side host environment variables, never in `NEXT_PUBLIC_*`.
-5. Before enabling arbitrary public uploads, implement input validation, privacy notice, rate limiting, abuse controls and safe file handling.
+- The Next.js configuration exports the site to `out/` with `/how-many-beers` as its base path.
+- The [Deploy to GitHub Pages workflow](.github/workflows/deploy.yml) builds and publishes the `out/` folder on pushes to `main`.
+- In repository **Settings → Pages**, select **GitHub Actions** under **Build and deployment / Source** to enable artifact-based deployment. This is a one-time repo setting.
+- Visit **Actions → Deploy to GitHub Pages** to check deployments or trigger one manually.
+- The app stores one meal locally in the browser; there is no user account or cloud sync yet.
+
+GitHub Pages hosts **static files only**. Photo/PDF recipe AI processing, shared data, and API secrets will require a separately hosted backend/service later. Never expose AI API keys in browser code.
+
+For local development:
+
+```bash
+npm install
+npm run dev
+```
+
+Run `npm run build` to generate the GitHub Pages static output.
 
 ## Future Ideas
 
