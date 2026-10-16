@@ -342,6 +342,19 @@ export default function Home() {
                     </div>)}
                     <p className="muted small">Blank time means the step stays unscheduled. Confirm all timings before relying on this plan.</p>
                   </div>}
+                  {d.preset!=="custom" && presets[d.preset].referenceWeightLb!==undefined && (
+                    <div className="template-settings">
+                      <label htmlFor={"weight-"+d.id}>Weight (lb), for reference</label>
+                      <input id={"weight-"+d.id} type="number" inputMode="decimal" min={1} max={40} step={0.5}
+                        value={d.weightLb ?? ""}
+                        onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id ? {...item,weightLb:e.target.value===""?undefined:Math.max(1,Math.min(40,Number(e.target.value)||1))}:item)}))}
+                      />
+                      <p className="muted small">Weight is saved with your cook. Automatic weight-based time estimates are tracked in #5, so this doesn't silently change cook time yet.</p>
+                    </div>
+                  )}
+                  {d.preset!=="custom" && presets[d.preset].cookRangeMinutes && (
+                    <p className="muted small">Reference timing window: {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Source-method context only; adjust the estimate for your equipment and size.</p>
+                  )}
                   {d.preset!=="custom" && presets[d.preset].pitTempF!==undefined && (
                     <div className="template-settings">
                       <label htmlFor={"pit-"+d.id}>Starting smoker / oven setting (°F)</label>
