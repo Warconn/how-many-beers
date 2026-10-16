@@ -159,3 +159,12 @@
  .task-activity{margin-left:0}
  .task-editor,.reading-form{padding:11px}
 }
+
+/* Curated template context and references */
+.template-settings{border-top:1px solid var(--line);margin-top:15px;padding-top:11px}
+.template-settings input{max-width:170px}
+.template-settings>.small{font-size:11px;line-height:1.55;margin-bottom:5px}
+.template-sources{display:flex;flex-wrap:wrap;gap:7px 12px;align-items:center;margin-top:13px}
+.template-sources span{color:var(--muted);font-weight:800;font-size:11px;width:100%}
+.template-sources a{font-size:11px;font-weight:700;text-decoration:underline;text-underline-offset:3px;color:var(--accent-dark)}
+.template-sources a:focus-visible{outline:3px solid #b3663e;outline-offset:2px;border-radius:3px}
