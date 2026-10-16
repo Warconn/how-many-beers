@@ -9,7 +9,7 @@ import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import TaskRow from "@/components/TaskRow";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
-import { archiveCook, emptyHistory, exportBackup, HISTORY_KEY, readHistory, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
+import { commitCompletedCook, emptyHistory, exportBackup, HISTORY_KEY, readHistory, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
 import type { ArchivedCook, HistoryLibrary } from "@/domain/cookHistory";
 import CookHistoryPanel from "@/components/CookHistoryPanel";
 
@@ -194,12 +194,9 @@ export default function Home() {
   const finishCook = () => {
     if(!meal) return;
     try{
-      const nextArchive=archiveCook(meal,history,outcome,new Date().toISOString());
-      const nextMeal=newMeal();
-      // Write archive first, then clear active cook. A failed write never
-      // destroys the original active session.
-      localStorage.setItem(HISTORY_KEY,JSON.stringify(nextArchive));
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(nextMeal));
+      const committed=commitCompletedCook(meal,history,outcome,new Date().toISOString(),localStorage);
+      const nextArchive=committed.history;
+      const nextMeal=committed.next;
       setHistory(nextArchive);
       setStorageError("");
       persistNewMeal(nextMeal);
