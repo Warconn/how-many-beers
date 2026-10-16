@@ -116,8 +116,14 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const m = migrateMeal(meal);
   if (!cookTimeline(m).some(t=>t.id===taskId)) throw new Error("Task not found.");
   if (!Number.isFinite(new Date(occurredAt).getTime())) throw new Error("Invalid event timestamp.");
-  if ((kind==="temperature" || kind==="equipment") && (!Number.isFinite(value) || value === undefined || value <= 0 || value > (unit==="°C" ? 300 : 600))) {
-    throw new Error("Enter a valid temperature.");
+  if (kind==="temperature" && (!Number.isFinite(value) || value === undefined || value <= 0 || value > (unit==="°C" ? 300 : 600))) {
+    throw new Error("Enter a valid food temperature.");
+  }
+  if (kind==="equipment" && value !== undefined && (!Number.isFinite(value) || value <= 0 || value > (unit==="°C" ? 300 : 600))) {
+    throw new Error("Enter a valid equipment temperature.");
+  }
+  if (kind==="equipment" && value === undefined && !note?.trim()) {
+    throw new Error("Describe the equipment setting change.");
   }
   const timestamp=occurredAt;
   const completed = {...m.completed};
