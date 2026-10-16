@@ -112,6 +112,7 @@ export default function Home() {
   const [recipeText, setRecipeText] = useState("");
   const [draft, setDraft] = useState<Dish | null>(null);
   const [message, setMessage] = useState("");
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     try {
@@ -142,6 +143,8 @@ export default function Home() {
   const warnings = useMemo(() => meal ? equipmentWarnings(meal) : [], [meal]);
   const complete = meal ? timeline.filter(task => !!meal.completed[task.id]).length : 0;
   const next = meal ? timeline.find(task => !meal.completed[task.id]) : null;
+  const remaining = meal ? timeline.filter(task => !meal.completed[task.id]) : [];
+  const finished = meal ? timeline.filter(task => !!meal.completed[task.id]) : [];
 
   const patch = (fn:(m:Meal)=>Meal) => setMeal(current => current ? fn(current) : current);
 
@@ -163,8 +166,48 @@ export default function Home() {
 
   if (!meal) return <main className="shell"><div className="panel">Loading your cook...</div></main>;
 
+
+  const cooking = meal.mode === "cooking";
+  const toggleTask = (taskId: string, checked: boolean) => {
+    patch(m => {
+      const completed = {...m.completed};
+      if (checked) completed[taskId] = new Date().toISOString();
+      else delete completed[taskId];
+      return {...m, completed};
+    });
+  };
+  const taskCard = (task: PlannedTask, index = -1) => {
+    const done = meal.completed[task.id];
+    return (
+      <article key={task.id} className={"task cook-task " + (done ? "done " : "") + (index === 0 ? "first-task" : "")}>
+        <label className="task-top">
+          <input type="checkbox" checked={!!done} onChange={e => toggleTask(task.id, e.target.checked)} />
+          <div className="task-main">
+            {index === 0 && <p className="eyebrow next-label">DO THIS NEXT</p>}
+            <div className="between">
+              <strong>{task.title}</strong>
+              <time>{when(task.scheduledAt)}</time>
+            </div>
+            <p className="task-dish">{task.dishName}</p>
+            <p className="muted small">{task.instructions}</p>
+            {task.isCondition && <span className="condition">Check the food, not just the timer</span>}
+            {done && <p className="completed-time">✓ Done {new Date(done).toLocaleString()}</p>}
+          </div>
+        </label>
+        <label className="note-label" htmlFor={"note-" + task.id}>Notes / temperature</label>
+        <input
+          className="task-note"
+          id={"note-" + task.id}
+          placeholder="e.g. 169°F, wrapped, bark looks good"
+          value={meal.notes[task.id] || ""}
+          onChange={e => patch(m => ({ ...m, notes: { ...m.notes, [task.id]: e.target.value } }))}
+        />
+      </article>
+    );
+  };
+
   return (
-    <main className="shell">
+    <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
       <header className="site-header">
         <div className="brand-icon" aria-hidden>🍺</div>
         <div>
@@ -172,26 +215,86 @@ export default function Home() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">Dinner has a deadline. Brisket does not.</p>
         </div>
-        <span className="version-pill">Early MVP</span>
+        <span className="version-pill">{cooking ? "Cook in progress" : "Plan your cook"}</span>
       </header>
 
-      <section className="hero panel">
-        <div>
-          <p className="eyebrow">YOUR GAME PLAN</p>
-          <h2>What time are we eating?</h2>
-          <p>Pick a time, add your dishes, and keep the actual cook in one place.</p>
-        </div>
-        <div className="hero-fields">
-          <label htmlFor="meal-name">Meal name</label>
-          <input id="meal-name" value={meal.name} onChange={e => patch(m => ({...m,name:e.target.value}))} maxLength={80}/>
-          <label htmlFor="serve-at">Serve date and time</label>
-          <input id="serve-at" type="datetime-local" value={meal.serveAt} onChange={e=>patch(m=>({...m,serveAt:e.target.value}))}/>
-        </div>
-      </section>
+      {cooking ? (
+        <>
+          <section className="cook-header">
+            <div>
+              <button className="back-link" type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>← Edit your plan</button>
+              <p className="eyebrow">YOU'RE COOKING</p>
+              <h2>{meal.name || "Your cook"}</h2>
+              <p className="cook-target">🍽️ Serving {when(new Date(meal.serveAt).toISOString())} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
+            </div>
+            <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
+          </section>
 
-      <BeerEstimator meal={meal} timeline={timeline}/>
+          <BeerEstimator meal={meal} timeline={timeline}/>
 
-      <div className="two-column">
+          <div className="cook-layout">
+            <section className="panel active-cook-panel">
+              <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
+              <div className="progress-track"><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div>
+              {remaining.length > 0 ? (
+                <>
+                  <p className="cook-section-label">NOW &amp; COMING UP</p>
+                  <div className="checklist">{remaining.map((task, i) => taskCard(task, i))}</div>
+                </>
+              ) : (
+                <div className="cook-finished">
+                  <span aria-hidden>🎉</span>
+                  <h3>{timeline.length ? "That's a wrap!" : "Your checklist is empty"}</h3>
+                  <p>{timeline.length ? "All steps are checked off. Enjoy dinner, and save those notes for next time." : "Go back and add a dish to build your plan."}</p>
+                </div>
+              )}
+              {finished.length > 0 && (
+                <section className="done-section">
+                  <button type="button" className="done-toggle" aria-expanded={showCompleted}
+                    onClick={() => setShowCompleted(v => !v)}>
+                    <span>✓ Completed ({finished.length})</span><span>{showCompleted ? "Hide −" : "Show +"}</span>
+                  </button>
+                  {showCompleted && <div className="checklist completed-list">{finished.map(task => taskCard(task))}</div>}
+                </section>
+              )}
+            </section>
+            <aside className="cook-sidebar">
+              <section className="panel cook-summary">
+                <p className="eyebrow">YOUR COOK</p>
+                <h3>On the menu</h3>
+                {meal.dishes.map(d => <div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}
+                {next && <div className="sidebar-next"><span>Next planned milestone</span><strong>{when(next.scheduledAt)}</strong></div>}
+              </section>
+              {warnings.length > 0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i) => <p key={i}>⚠️ {w}</p>)}</section>}
+              {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some recipe steps do not have confirmed timing yet. Edit the plan to set their durations.</p>}
+              <section className="panel tip">
+                <strong>Cook smart</strong>
+                <p>All times are planning estimates. Use a food thermometer, verify doneness, and follow safe holding and equipment instructions.</p>
+                <button className="link" onClick={() => patch(m => ({...m, mode: "planning"}))}>Adjust the plan →</button>
+              </section>
+            </aside>
+          </div>
+          <nav className="cook-mobile-bar" aria-label="Cook tools">
+            <span>✓ {complete} of {timeline.length} complete</span>
+            <button type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>Edit plan</button>
+          </nav>
+        </>
+      ) : (
+        <>
+          <section className="hero panel">
+            <div>
+              <p className="eyebrow">PLAN YOUR COOK</p>
+              <h2>What time are we eating?</h2>
+              <p>Set your serving time, add dishes, and we'll build your checklist.</p>
+            </div>
+            <div className="hero-fields">
+              <label htmlFor="meal-name">Meal name</label>
+              <input id="meal-name" value={meal.name} onChange={e => patch(m => ({...m, name: e.target.value}))} maxLength={80}/>
+              <label htmlFor="serve-at">Serve date and time</label>
+              <input id="serve-at" type="datetime-local" value={meal.serveAt} onChange={e => patch(m => ({...m, serveAt: e.target.value}))}/>
+            </div>
+          </section>
+          <div className="planning-layout">
         <div className="stack">
           <section className="panel">
             <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">STEP 1</p><h2>What are we cooking?</h2></div></div>
@@ -268,49 +371,51 @@ export default function Home() {
           </section>
         </div>
 
-        <div className="stack">
-          <section className="panel checklist-panel">
-            <div className="section-title"><span className="section-icon">✅</span><div><p className="eyebrow">STEP 2</p><h2>Follow the plan</h2></div></div>
-            {timeline.length===0 ? <div className="empty"><span aria-hidden>🕒</span><h3>No steps yet</h3><p>Add your first dish to build a serving-time checklist.</p></div> : <>
-              <div className="progress-heading"><strong>{complete} / {timeline.length} complete</strong><span>{Math.round(100*complete/timeline.length)}%</span></div>
-              <div className="progress-track"><div style={{width:(100*complete/timeline.length)+"%"}}/></div>
-              {next && <div className="up-next"><p className="eyebrow">UP NEXT</p><strong>{next.title}</strong><p>{next.dishName} · {when(next.scheduledAt)}</p></div>}
-              {warnings.map((warning,i)=><div className="warning" key={i}>⚠️ {warning}</div>)}
-              {timeline.some(t=>t.scheduledAt===null) && <div className="warning">⚠️ Some imported steps need durations before they can be scheduled.</div>}
-              <div className="checklist">
-                {timeline.map(task=>{
-                  const done=meal.completed[task.id];
-                  return <article key={task.id} className={"task "+(done?"done":"")}>
-                    <label className="task-top">
-                      <input type="checkbox" checked={!!done} onChange={e=>patch(m=>{
-                        const completed={...m.completed};if(e.target.checked)completed[task.id]=new Date().toISOString();else delete completed[task.id];return {...m,completed};
-                      })}/>
-                      <div className="task-main"><div className="between"><strong>{task.title}</strong><time>{when(task.scheduledAt)}</time></div>
-                        <p className="task-dish">{task.dishName}</p>
-                        <p className="muted small">{task.instructions}</p>
-                        {task.isCondition && <span className="condition">Requires a real-world check</span>}
-                        {done && <p className="completed-time">✓ Completed {new Date(done).toLocaleString()}</p>}
-                      </div>
-                    </label>
-                    <label className="note-label" htmlFor={"note-"+task.id}>Cook notes / temperature</label>
-                    <input id={"note-"+task.id} className="task-note" placeholder="e.g. 169°F, wrapped, bark looks good" value={meal.notes[task.id]||""} onChange={e=>patch(m=>({...m,notes:{...m.notes,[task.id]:e.target.value}}))}/>
-                  </article>;
-                })}
-              </div>
-            </>}
-          </section>
-          <aside className="panel tip">
-            <strong>A heads-up about timing</strong>
-            <p>These are editable planning estimates, not guaranteed finish times or food-safety checks. Always use a food thermometer, follow your equipment instructions, and hold food at appropriate temperatures.</p>
-            <button className="link" onClick={()=>{
-              if(window.confirm("Start a new meal? This will replace the current locally saved cook.")){
-                setMeal(newMeal());
-                setMessage("Started a new meal.");
-              }
-            }}>Start a fresh cook →</button>
-          </aside>
-        </div>
-      </div>
+
+            <div className="stack">
+              <section className="panel ready-panel">
+                <p className="eyebrow">READY WHEN YOU ARE</p>
+                <h2>Your cooking plan</h2>
+                <p className="muted">{meal.dishes.length === 0
+                  ? "Add a dish to start building your timeline."
+                  : meal.dishes.length + (meal.dishes.length === 1 ? " dish" : " dishes") + " · " + timeline.length + " planned steps"}</p>
+                {warnings.map((warning,i) => <p className="warning" key={i}>⚠️ {warning}</p>)}
+                {timeline.some(t => t.scheduledAt === null) && <p className="warning">⚠️ Some imported recipe steps don't have timing yet. Add durations for a useful schedule.</p>}
+                {meal.dishes.length > 0 && (
+                  <div className="ready-summary">
+                    <div><span>Serve</span><strong>{when(new Date(meal.serveAt).toISOString())}</strong></div>
+                    <div><span>First planned step</span><strong>{when(timeline.find(t => !!t.scheduledAt)?.scheduledAt ?? null)}</strong></div>
+                  </div>
+                )}
+                <button type="button" className="button primary start-cook-btn" disabled={meal.dishes.length === 0}
+                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);}}>
+                  {meal.startedAt ? "▶ Resume cooking" : "🔥 Start the cook"}
+                </button>
+                <p className="small muted">When you start, your checklist takes center stage. You can return to edit the plan anytime without losing progress.</p>
+              </section>
+              <aside className="panel tip">
+                <strong>A heads-up about timing</strong>
+                <p>Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
+                <button className="link" onClick={() => {
+                  if (window.confirm("Start a new meal? This replaces the current cook stored in this browser.")) {
+                    setMeal(newMeal());
+                    setShowCompleted(false);
+                    setMessage("Started a new meal.");
+                  }
+                }}>Start a fresh plan →</button>
+              </aside>
+            </div>
+          </div>
+          {meal.dishes.length > 0 && (
+            <div className="plan-mobile-bar">
+              <span>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} ready</span>
+              <button type="button" onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);}}>
+                {meal.startedAt ? "Resume cook →" : "Start cooking →"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
       <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span></footer>
     </main>
   );
