@@ -14,7 +14,7 @@ describe("researched starter templates",()=>{
       expect(presets[preset].sources?.length).toBeGreaterThan(0);
       expect(plan.length).toBeGreaterThanOrEqual(6);
       expect(plan.find(t=>t.id.endsWith(":start"))).toBeDefined();
-      expect(plan.find(t=>t.id.endsWith(":finish"))?.isCondition).toBe(true);
+      expect(plan.find(t=>t.id.endsWith(preset==="wings" ? ":check" : ":finish"))?.isCondition).toBe(true);
       expect(plan.at(-1)?.title.toLowerCase()).toContain("serve");
       expect(plan.every(t=>t.scheduledAt && Number.isFinite(new Date(t.scheduledAt).getTime()))).toBe(true);
       expect(plan.map(t=>new Date(t.scheduledAt!).getTime())).toEqual([...plan].map(t=>new Date(t.scheduledAt!).getTime()).sort((a,b)=>a-b));
