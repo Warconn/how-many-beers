@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
 import { equipmentWarnings } from "@/domain/schedule";
-import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep } from "@/domain/cookState";
+import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import TaskRow from "@/components/TaskRow";
 import AddStepForm from "@/components/AddStepForm";
@@ -192,8 +192,17 @@ export default function Home() {
       completedAt={meal.completed[task.id]}
       events={taskEvents}
       note={meal.notes[task.id] || ""}
-      onNote={value=>patch(m=>({...m,notes:{...m.notes,[task.id]:value}}))}
-      onEdit={(title,instructions)=>safelyPatch(m=>editStep(m,task.id,title,instructions))}
+      onNote={value=>patch(m=>updateTaskNote(m,task.id,value,new Date().toISOString()))}
+      onEdit={(title,instructions)=>safelyPatch(m=>{
+        const changed=title!==task.title || instructions!==task.instructions;
+        const updated=editStep(m,task.id,title,instructions);
+        if(!changed || m.mode!=="cooking") return updated;
+        const history=(m as ExtendedMeal).events??[];
+        const taskEvents=history.filter(e=>e.taskId===task.id);
+        const reopen=taskEvents.map(e=>e.kind).lastIndexOf("reopened");
+        if(taskEvents.slice(reopen+1).some(e=>e.kind==="started"||e.kind==="completed")) return updated;
+        return recordEvent(updated,task.id,"started",new Date().toISOString());
+      })}
       onMove={direction=>safelyPatch(m=>moveStep(m,task.id,direction))}
       onRemove={()=>safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()))}
       onEvent={(kind:CookEventKind,value,unit,note)=>safelyPatch(m=>recordEvent(m,task.id,kind,new Date().toISOString(),value,unit,note))}
