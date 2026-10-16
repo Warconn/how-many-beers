@@ -12,6 +12,7 @@ type BuiltIn = Exclude<PresetId, "custom">;
 function when(iso: string | null): string {
   if (!iso) return "Timing TBD";
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Set a serving time";
   return new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }).format(d);
 }
 
@@ -225,7 +226,7 @@ export default function Home() {
               <button className="back-link" type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>← Edit your plan</button>
               <p className="eyebrow">YOU'RE COOKING</p>
               <h2>{meal.name || "Your cook"}</h2>
-              <p className="cook-target">🍽️ Serving {when(new Date(meal.serveAt).toISOString())} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
+              <p className="cook-target">🍽️ Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
             </div>
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
@@ -383,7 +384,7 @@ export default function Home() {
                 {timeline.some(t => t.scheduledAt === null) && <p className="warning">⚠️ Some imported recipe steps don't have timing yet. Add durations for a useful schedule.</p>}
                 {meal.dishes.length > 0 && (
                   <div className="ready-summary">
-                    <div><span>Serve</span><strong>{when(new Date(meal.serveAt).toISOString())}</strong></div>
+                    <div><span>Serve</span><strong>{when(meal.serveAt || null)}</strong></div>
                     <div><span>First planned step</span><strong>{when(timeline.find(t => !!t.scheduledAt)?.scheduledAt ?? null)}</strong></div>
                   </div>
                 )}
