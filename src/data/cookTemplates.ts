@@ -28,8 +28,8 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"prep",title:"Season and set out cooking equipment",anchor:"prep",beforeStartMin:55,instructions:"Prepare wing sections and season; use separate utensils for raw and cooked poultry. Check your fryer's instructions."},
     {id:"preheat",title:"Preheat smoker to {pitTempF}°F",anchor:"preheat",beforeStartMin:25,instructions:"Meat Church's smoked-fried wings method starts with a 225°F smoke; adjust for your setup."},
     {id:"start",title:"Start smoking wings",anchor:"start",instructions:"Smoke on grates until a thermometer confirms at least 165°F. Meat Church reports approximately 3 hours for its example, but cook to temperature, not time."},
-    {id:"oil",title:"Prepare fryer and heat oil",anchor:"progress",progress:0.8,instructions:"Toward the end of smoking, set up a stable fryer according to its manual and carefully heat oil to about 350°F. Keep water away from hot oil."},
-    {id:"check",title:"Confirm wings are cooked through",anchor:"progress",progress:0.9,conditional:true,instructions:"Check thick parts of the wings for at least 165°F before the final crisping fry. If not done, keep cooking and update the plan."},
+    {id:"oil",title:"Prepare fryer and heat oil",anchor:"progress",progress:0.94,instructions:"After verifying the wings have finished smoking, set up a stable fryer according to its manual and carefully heat oil to about 350°F. Keep water away from hot oil."},
+    {id:"check",title:"Confirm wings are cooked through",anchor:"progress",progress:0.91,conditional:true,instructions:"Check thick parts of the wings for at least 165°F before the final crisping fry. If not done, keep cooking and update the plan."},
     {id:"fry",title:"Flash-fry wings for crisp skin",anchor:"progress",progress:0.96,conditional:true,instructions:"Using safe, properly sized batches, carefully fry smoked wings around 350°F for roughly 3 minutes until crisp. Follow manufacturer instructions and avoid overcrowding."},
     {id:"finish",title:"Drain and season or sauce",anchor:"finish",instructions:"Drain fried wings and toss with sauce or a finishing dusting. Use clean cookware for ready-to-eat chicken."},
     {id:"serve",title:"Serve wings",anchor:"serve",instructions:"Serve promptly while crisp and hot."}
@@ -38,8 +38,9 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"prep",title:"Slice onions and make beer bath",anchor:"prep",beforeStartMin:45,instructions:"Prepare beer, onions, and butter in a heat-safe pan or saucepan. The Traeger method simmers onions in beer while grilling the brats."},
     {id:"preheat",title:"Preheat grill to {pitTempF}°F",anchor:"preheat",beforeStartMin:25,instructions:"Traeger's grill-and-beer-bath method calls for about 350°F. Use a suitable pan for the beer bath."},
     {id:"start",title:"Place brats on the grill",anchor:"start",instructions:"Grill raw bratwurst, turning with tongs. Traeger's example starts with roughly 20–25 minutes, then continues in the beer bath."},
-    {id:"bath",title:"Transfer brats to simmering beer and onions",anchor:"progress",progress:0.35,instructions:"Transfer brats to the beer pan with tongs and simmer until the onions are tender, often another 45–60 minutes in the source recipe."},
-    {id:"finish",title:"Check bratwurst internal temperature",anchor:"finish",conditional:true,instructions:"If made from raw ground pork or beef, verify 160°F in the center. Time and color alone are not enough; other sausage products may have different labeled instructions."},
+    {id:"check",title:"Verify brats are cooked through",anchor:"progress",progress:0.3,conditional:true,instructions:"Check center temperature: raw ground-pork or beef brats should reach at least 160°F. Verify before the beer bath; timing alone does not confirm doneness."},
+    {id:"bath",title:"Transfer cooked brats to simmering beer and onions",anchor:"progress",progress:0.34,instructions:"Transfer brats to the beer pan with tongs and simmer until the onions are tender, often another 45–60 minutes in the source recipe."},
+    {id:"finish",title:"Check serving temperature and beer bath",anchor:"finish",conditional:true,instructions:"Confirm the brats stay safely hot and onions are ready. Raw ground-pork/beef brats should already have reached 160°F before the beer bath."},
     {id:"serve",title:"Toast buns and serve",anchor:"serve",instructions:"Toast buns shortly before serving; top brats with onions and condiments."}
   ],
   turkey: [
