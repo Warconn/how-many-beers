@@ -48,14 +48,15 @@ As of the latest reviewed source code:
 | Set serving date/time and inspect one timeline | **Working** | Backward-offset schedule, not a full resource planner |
 | Add, rename, remove, reorder checklist steps | **Working** | Task IDs and history preserved |
 | Step completion, notes and timestamped readings | **Working** | Food and equipment readings, with auto-start event logging |
-| Beerometer | **Working** | Playful countdown using a fixed time conversion |
+| Beerometer | **Working** | Total planned/actual start-to-finish duration converted to beers, not time remaining |
 | Four curated starter templates | **Working, initial methods** | Meat Church pellet brisket and smoked-fried wings; Traeger grilled beer-bath brats; USDA unstuffed oven turkey; editable assumptions and cited sources. Extra variants tracked in #18 |
 | Ribs, chicken and oven-side starter templates | **Basic** | Editable placeholders |
 | Plain-text recipe paste / .txt / .md | **Basic** | Line-by-line extraction, not yet reliable recipe understanding |
 | Temperature-informed live ETA/replanning | **Not yet** | Steps can be adjusted manually |
 | Finish, archive, review and repeat cook sessions | **Working in current implementation** | Browser-local completed sessions with frozen checklists, actual events, optional outcome notes, repeat, delete and JSON backup/restore |
 | Weight-aware researched estimates | **Not yet** | Current durations are user-editable placeholders |
-| URL import, photo/PDF import, accounts, sync | **Not yet** | Backend required for URL fetch and secure AI ingestion |
+| Accounts and cloud sync | **Not yet** | Optional Supabase Auth/Postgres planned in #19; migration and offline sync in #20 |
+| URL import / photo/PDF | **Not yet** | Secure server-side ingestion would need a separate API |
 
 **Important:** Existing template cook durations and milestones are starter estimates. Stage references still need validation. A cook is not guaranteed done because a scheduled task time has passed.
 
@@ -72,6 +73,7 @@ The first proper release should allow a cook to complete this entire loop withou
 - [ ] Make brisket timing input intuitive: weight/cut, smoker temperature, reasonable duration **range**, buffer, safe rest/hold and manual overrides. **[#5](https://github.com/Warconn/how-many-beers/issues/5).**
 - [ ] Display sensible dependencies and at least basic late/early plan adjustment; do not imply competing oven/grill resources can perform incompatible work simultaneously. **[#3](https://github.com/Warconn/how-many-beers/issues/3).**
 - [ ] Preserve data safely across refresh and browser use, with a recovery/export path and realistic mobile/offline behavior. **[#10](https://github.com/Warconn/how-many-beers/issues/10).**
+- [ ] Add optional login, private cloud persistence and automatic safe cross-device resume before the broader public beta. **[#19](https://github.com/Warconn/how-many-beers/issues/19), [#20](https://github.com/Warconn/how-many-beers/issues/20).**
 - [ ] Real mobile usability tests, food-safety review, clear privacy/storage notices and user feedback. **[#4](https://github.com/Warconn/how-many-beers/issues/4).**
 
 **MVP acceptance test:** Plan a brisket and a side for 3 PM, preview the merged schedule, cook from a phone, check off tasks and log a wrap temperature, finish/save the cook, review its actual timeline tomorrow, then repeat it with a new serving time. No account or paid AI service required.
@@ -89,7 +91,7 @@ The first proper release should allow a cook to complete this entire loop withou
 - Photo/PDF/handwritten recipe extraction. **[#9](https://github.com/Warconn/how-many-beers/issues/9).**
 - Voice activity updates with review before saving. **[#13](https://github.com/Warconn/how-many-beers/issues/13).**
 - Smart probe/thermometer integrations. **[#14](https://github.com/Warconn/how-many-beers/issues/14).**
-- Optional user accounts, cross-device history and collaborative cooking. **[#15](https://github.com/Warconn/how-many-beers/issues/15).**
+- Shared household cooking and invited helpers, after personal accounts and sync. **[#15](https://github.com/Warconn/how-many-beers/issues/15).**
 - Ingredient/grocery planning, quantity scaling, meal-prep and optional estimated macros. **[#16](https://github.com/Warconn/how-many-beers/issues/16).**
 - A context-aware cooking coach that explains options using observed temperatures and trusted recipe baselines, without autonomously changing a cook. **[#17](https://github.com/Warconn/how-many-beers/issues/17).**
 
@@ -97,18 +99,20 @@ See [all tracked issues](https://github.com/Warconn/how-many-beers/issues) for a
 
 ## Prioritized delivery sequence
 
-| Order | Workstream | Issues | Practical result |
+| Order | Workstream | Issues | Result |
 | --- | --- | --- | --- |
-| **0. Completed** | Editable checklist, four initial template methods, archive and repeat | #1, #7, #8 | We can plan, log, save and reuse a cook |
-| **1. Next** | Weight-aware timing for brisket | #5 | Better researched planning windows from cut and weight |
-| **2. Next** | Dependency- and resource-aware scheduling | #3 | No conflicting equipment claims or false precision |
-| **3. Hardening** | Local reliability and actual mobile testing | #10, #4 | Trustworthy on-phone usage |
-| **4. Next** | Recipe URLs and improved intake | #2 | Bring an existing recipe into the plan |
-| **5. Next** | History-informed recommendations, timers and equipment profiles | #6, #11, #12 | Guidance becomes more personalized |
-| **6. Later** | Other cooking methods, image import, voice, probes and accounts | #18, #9, #13–#17 | Broader platform |
+| **0. Done** | Editable checklist, starter templates, cook archives | #1, #7, #8 | Plan, cook and save history on this device |
+| **1. First** | Researched weight-based brisket timing | **#5** | Weight + cut + pit method + serving time generate an editable start window |
+| **2. Account foundation** | Optional login, private database and ownership policies | **#19** | Safely identify users and privately store cooks in the cloud |
+| **3. Sync foundation** | Migrate guest cooks, autosave, offline queue and conflict-safe replay | **#20**, #10 | Resume on a different device without losing activity |
+| **4. Smarter schedules** | Dependencies, equipment conflicts and replanning | #3 | Better time coordination across dishes |
+| **5. Reliability/testing** | Installable offline-ready app and real mobile beta | #10, #4 | Trustworthy experience in the kitchen and garage |
+| **6. Next** | URL recipe import, personal-history-adjusted timing | #2, #6 | Bring recipes in and improve estimates over repeated cooks |
+| **7. Later** | Notifications, more equipment/methods, voice, probes, collaborative cooks, nutrition and AI | #9, #11–#18 | Expand once the core use case is dependable |
 
+We should build **#5 first without waiting for login**. Accounts and sync are the next architecture work, but they must remain optional so the app stays useful as a single-device guest tool.
 
-A focused prototype can be tested before all MVP criteria are done. We should **not close a feature issue simply because its first UI or data structure exists**.
+A focused personal prototype can be tested before all beta requirements are done. Do not close an issue simply because its first UI exists.
 
 ## Example journeys / acceptance scenarios
 
@@ -149,10 +153,24 @@ A focused prototype can be tested before all MVP criteria are done. We should **
 
 - **Frontend:** Next.js App Router, React, TypeScript, mobile-first CSS.
 - **Host:** Public GitHub Pages via `output: "export"`, with `/how-many-beers` as `basePath`.
-- **Data:** Browser-local storage for one active cook plus a saved cook archive (separate versioned history key), frozen planned timelines, recorded events and JSON backup/restore. No cross-device sync yet.
+- **Data:** Browser-local storage for one active cook and saved history, plus JSON backup/restore. Writes are attempted on changes but are not cloud-backed or guaranteed durable. Optional accounts and sync are planned under #19/#20.
 - **Schedule:** Basic TypeScript backward-offset timeline and stage-based templates. It is not yet a true dependency/resource scheduler.
 - **Tests:** Vitest domain tests; GitHub Actions typecheck, tests and static build.
 - **Security:** No publicly exposed model/API secrets are required for manual planning and local logging.
+
+### Planned private account storage, without changing frontend hosting
+
+Recommendation: keep the static GitHub Pages app, add **Supabase Auth + Postgres** as a browser-accessible backend for optional signed-in cooks. This is **planned, not yet connected or deployed**. A user can remain a guest with local device-only saves. GitHub Pages does not need to run a Next.js server for browser-based Supabase Auth and database requests.
+
+- **#19, account/schema:** Start with email code or magic-link login, carefully test GitHub Pages project-path redirects and account recovery, and create owner-scoped tables for cook sessions, append-only activity events and optional profile preferences. Every exposed table needs grants, Row Level Security for read/write, and cross-account tests. A public Supabase publishable key may be used with RLS; never put service-role/secret keys in this public repo or frontend.
+- **#20, local-first sync:** Save each critical action to durable local storage first, then enqueue it for the signed-in user's cloud archive. Debounce frequent notes. Show **Saved on device**, **Syncing**, **Saved to account**, or **Needs attention**, rather than falsely claiming success. Replay an offline outbox with stable event IDs and retries; preserve actual event timestamps.
+- **First login migration:** Detect existing local active cook and archived history and let the user preview and deliberately import or keep local. Do not erase the guest cook or silently replace a newer cloud cook. Duplicate event IDs are idempotent.
+- **Conflict policy:** One active cook per owner, many completed ones; append-only activity merges by ID, editable plan state uses revision/optimistic concurrency. When two devices change the same plan, prompt instead of last-write-wins. Make account switching/logout clear private local caches.
+- **Storage model:** Versioned sessions hold serving date/time and IANA timezone, dish weight/cut/smoker/method, planned timeline snapshot, estimator assumptions and revision; events retain separate actual occurredAt and cloud receivedAt. Saved sessions remain frozen for repeat/history. Account deletion and export must be supported.
+- **Offline/PWA (#10):** Move toward IndexedDB for queued events and cooking sessions, support offline checklist and recover from reloads, quota failures and interrupted writes. Until implemented, local browser data can be lost; keep using JSON backups.
+- **Later collaborative cooks (#15):** Invite helpers and manage multi-user permissions only after secure personal cloud sync is working.
+
+Supabase's free plan is useful for a prototype, but free projects can pause after inactivity and do not include managed database backups. Account/cloud persistence must not be represented as reliable production storage until backup, quota, retention, monitoring and RLS testing are addressed. References: https://supabase.com/docs/guides/database/postgres/row-level-security and https://supabase.com/pricing.
 
 ### Next boundaries we should keep clean
 
