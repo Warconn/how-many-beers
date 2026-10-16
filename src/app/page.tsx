@@ -446,9 +446,9 @@ export default function Home() {
                   {d.preset!=="custom" && presets[d.preset].pitTempF!==undefined && (
                     <div className="template-settings">
                       <label htmlFor={"pit-"+d.id}>Starting smoker / oven setting (°F)</label>
-                      <input id={"pit-"+d.id} type="number" min={150} max={450} step={5}
+                      <input id={"pit-"+d.id} type="number" min={d.preset==="turkey"?325:150} max={450} step={5}
                         value={d.pitTempF ?? presets[d.preset].pitTempF ?? 250}
-                        onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id ? {...item,pitTempF:Math.min(450,Math.max(150,Number(e.target.value)||250))}:item)}))}
+                        onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id ? {...item,pitTempF:Math.min(450,Math.max(d.preset==="turkey"?325:150,Number(e.target.value)||250))}:item)}))}
                       />
                       <p className="muted small">These are starter plans, not weight-calibrated predictions. You can adjust durations, pit settings, and every checklist step.</p>
                     </div>
