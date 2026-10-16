@@ -81,7 +81,7 @@ describe("cooking checklist and history",()=>{
     const meal=seed(), task=cookTimeline(meal)[0];
     expect(()=>addStep(meal,"  ")).toThrow("title");
     expect(()=>editStep(meal,task.id,"","")).toThrow("title");
-    expect(()=>recordEvent(meal,task.id,"temperature","2026-11-25T05:00:00.000Z",900,"°F")).toThrow("valid temperature");
+    expect(()=>recordEvent(meal,task.id,"temperature","2026-11-25T05:00:00.000Z",900,"°F")).toThrow("valid food temperature");
     expect(()=>recordEvent(meal,task.id,"started","not-a-date")).toThrow("timestamp");
   });
 });
