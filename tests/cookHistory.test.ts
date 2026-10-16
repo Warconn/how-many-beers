@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {archiveCook,emptyHistory,exportBackup,removeArchivedCook,repeatArchivedCook,validateBackup} from "../src/domain/cookHistory";
+import {ACTIVE_KEY,HISTORY_KEY,archiveCook,commitCompletedCook,emptyHistory,exportBackup,removeArchivedCook,repeatArchivedCook,validateBackup} from "../src/domain/cookHistory";
 import {cookTimeline,editStep,recordEvent,addStep,removeStep} from "../src/domain/cookState";
 import {createDish,newMeal} from "../src/domain/meal";
 
@@ -71,6 +71,23 @@ describe("saved session history",()=>{
     expect(()=>validateBackup('{"version":0}')).toThrow();
     expect(()=>validateBackup(JSON.stringify({format:"other",version:1}))).toThrow();
     expect(()=>validateBackup("not json")).toThrow();
+  });
+  it("archives first and preserves the original active cook when rotation fails",()=>{
+    const {active}=example();
+    const original=JSON.stringify(active);
+    const store=new Map<string,string>([[ACTIVE_KEY,original]]);
+    const broken={setItem:(key:string,value:string)=>{
+      if(key===ACTIVE_KEY)throw new Error("storage full");
+      store.set(key,value);
+    }};
+    expect(()=>commitCompletedCook(active,emptyHistory(),"Great",TIMESTAMP,broken)).toThrow("storage full");
+    expect(store.get(ACTIVE_KEY)).toBe(original);
+    const saved=JSON.parse(store.get(HISTORY_KEY)!) as ReturnType<typeof emptyHistory>;
+    expect(saved.cooks).toHaveLength(1);
+    const working={setItem:(key:string,value:string)=>{store.set(key,value);}};
+    const retried=commitCompletedCook(active,saved,"Great",TIMESTAMP,working);
+    expect(retried.history.cooks).toHaveLength(1);
+    expect(retried.next.id).not.toBe(active.id);
   });
   it("only removes the requested archived cook and de-duplicates repeated saves",()=>{
     const {active}=example();
