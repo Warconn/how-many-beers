@@ -181,7 +181,7 @@ export default function Home() {
 
 
   const cooking = view === "cooking";
-  const hasActiveWork = meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0;
+  const hasActiveWork = meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
   const beginNewCook = () => {
     if (hasActiveWork && !window.confirm("Start a new cook? This replaces the unfinished cook saved on this device. Export a backup first if you want to keep it.")) return;
     try {
@@ -577,13 +577,7 @@ export default function Home() {
               <aside className="panel tip">
                 <strong>A heads-up about timing</strong>
                 <p>Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
-                <button className="link" onClick={() => {
-                  if (window.confirm("Start a new meal? This replaces the current cook stored in this browser.")) {
-                    setMeal(newMeal());
-                    setShowCompleted(false);
-                    setMessage("Started a new meal.");
-                  }
-                }}>Start a fresh plan →</button>
+                <button className="link" onClick={beginNewCook}>Start a fresh plan →</button>
               </aside>
             </div>
           </div>
