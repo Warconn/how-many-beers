@@ -1,3 +1,26 @@
+## Production baseline and next UX backlog (October 26, 2026)
+
+**Released:** [PR #29](https://github.com/Warconn/how-many-beers/pull/29) merged `dev` to `main` at commit `3e7868d`. The production site is [How Many Beers on GitHub Pages](https://warconn.github.io/how-many-beers/); [Cloudflare Pages](https://how-many-beers.pages.dev/) follows `dev`. The user verified that the release appeared in production. The release includes Home/resume, Guided Cook Planner, unified template/pasted-recipe Add Dish source selection, expandable per-dish task controls and browser regression testing. The existing UI is functional but **not the final approved UX**.
+
+### Confirmed production UX bugs, next sprint
+
+- **[#28](https://github.com/Warconn/how-many-beers/issues/28): Add/Edit dishes and layered step management are unintuitive.** Too many UI layers to choose templates, edit a dish and adjust its steps. Separate Add from contextual dish editing, make menu navigation obvious, and avoid persistent long forms.
+- **[#30](https://github.com/Warconn/how-many-beers/issues/30): Live Schedule is not directly editable.** Make schedule steps selectable and adjustable, keeping dish and combined-schedule views in sync while retaining historical events. This is simpler than future intelligent dependency scheduling in #3.
+- **[#31](https://github.com/Warconn/how-many-beers/issues/31): Ready When You Are is redundant.** Remove oversized summary and duplicate schedule metrics; replace with a compact Start/Continue Cooking action without hiding essential warnings or food-safety reminders.
+
+These are **open follow-up bugs**, not fixed by the production release. Existing issue #24/#25 describes the original capabilities; #28/#30/#31 track the remaining actual friction.
+
+### Engineering and release process
+
+Move away from direct work-in-progress commits to `dev`. Use ChatGPT for UX direction and acceptance criteria; implement on `feature/*` branches (preferably via Codex with the repo installed locally), run TypeScript + Vitest + Playwright + static build before committing, and have GitHub Actions validate a PR targeting `dev`. Merge only a reviewed, passing feature into `dev`, which triggers the Cloudflare preview. Promote `dev` to `main` through a release PR after green CI and product review. Cloudflare's current Git-connected configuration may still deploy on every `dev` push until workflow settings are adjusted; do not claim gated deployments have been implemented.
+
+### Next sprint acceptance priorities
+
+1. Fix #28 as the main editing/adding journey, with Playwright verification and preserved cook/event data.
+2. Introduce direct schedule adjustments in #30 without introducing speculative duration inference.
+3. Remove redundant Ready panel in #31, verifying Start/Continue and warnings.
+4. Review full plan-to-cook-to-resume behavior on desktop/mobile and establish screenshot baselines before the next production promotion.
+
 ## Inline dish step planning (October 26, 2026)
 
 The Guided Cook Planner now treats planning as editable by default. Each menu dish has an expandable list of its own steps, rendered using the existing task editor. Users can edit/remove/reorder those steps and create a custom unscheduled step attached to that dish; the shared Live Schedule continues to be derived from the combined cook state. Templates and recipe imports remain accessible through Add a dish. The former Edit/Done Editing menu toggle is no longer used for step adjustments; advanced equipment and duration settings remain available on demand.
