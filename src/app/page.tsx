@@ -111,6 +111,7 @@ export default function Home() {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
   const [showDishSetup, setShowDishSetup] = useState(false);
+  const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
@@ -425,6 +426,7 @@ export default function Home() {
         <>
           <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps. <button type="button" className="link" onClick={()=>setView("cooking")}>Return to cooking →</button></p>}
+          <div className="guided-planner"><div className="guided-main">
           <section className="hero panel">
             <div>
               <p className="eyebrow">PLAN YOUR COOK</p>
@@ -449,10 +451,7 @@ export default function Home() {
                 <button className="link" type="button" onClick={()=>{setEditingDishId(d.id);setShowDishSetup(true)}} aria-label={"Edit "+d.name}>Edit dish details →</button>
               </article>)}
             </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
-            <div className="workspace-timeline-heading"><h3>Cooking timeline</h3><span>{timeline.length} steps</span></div>
-            {timeline.length ? <ol className="workspace-timeline">
-              {timeline.map(task=><li key={task.id}><time>{when(task.scheduledAt)}</time><div><strong>{task.title}</strong><span>{task.dishName}</span></div></li>)}
-            </ol> : <p className="muted">Your combined timeline appears here when you add a dish.</p>}
+}
           </section>
           <div className={"planning-layout" + (showDishSetup ? " workspace-editing" : "")}>
         <div className="stack workspace-editor">
@@ -615,6 +614,19 @@ export default function Home() {
                 <button className="link" onClick={beginNewCook}>Start a fresh plan →</button>
               </aside>
             </div>
+          </div>
+          </div>
+          <aside className="guided-schedule" aria-label="Live schedule">
+            <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
+            <p className="muted small">Serving {when(meal.serveAt || null)}</p>
+            {timeline.length ? <>
+              <ol className="schedule-list">
+                {(showFullSchedule?timeline:timeline.slice(0,4)).map(task=><li key={task.id}><time>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}</span></li>)}
+              </ol>
+              {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
+            </> : <p className="muted small">Add a dish to see your schedule.</p>}
+            {warnings.length>0 && <p className="muted small">{warnings.length} timing or equipment notes to review below.</p>}
+          </aside>
           </div>
         </>
       )}
