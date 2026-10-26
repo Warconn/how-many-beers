@@ -273,6 +273,16 @@ export default function Home() {
     }catch(error){setStorageError("Could not restore backup: "+(error instanceof Error?error.message:"unrecognized file"));}
   };
 
+  const removeDish = (dishId:string) => {
+    const dish=meal.dishes.find(d=>d.id===dishId);
+    if(!dish || !window.confirm("Remove "+dish.name+" and its planned steps? Recorded activity is retained."))return;
+    patch(m=>({...m,dishes:m.dishes.filter(d=>d.id!==dishId),customTasks:(m as ExtendedMeal).customTasks?.filter(t=>t.dishId!==dishId)}));
+    if(editingDishId===dishId)setEditingDishId(null);
+    if(newStepDishId===dishId){setNewStepDishId(null);setNewStepTitle("");}
+    const focusId=editingDishId && editingDishId!==dishId ? editingDishId : meal.dishes.find(d=>d.id!==dishId)?.id;
+    requestAnimationFrame(()=>document.getElementById(focusId?"dish-toggle-"+focusId:"add-dish-button")?.focus());
+  };
+
   const addDishStep = (dishId:string) => {
     const dish=meal?.dishes.find(d=>d.id===dishId);
     if(!dish || !newStepTitle.trim())return;
@@ -481,7 +491,7 @@ export default function Home() {
           <section className="workspace-overview" aria-label="Cook overview">
             <div className="workspace-heading">
               <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} in this cook</h2></div>
-              <button type="button" className="button secondary" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? "Cancel adding" : "+ Add a dish"}</button>
+              <button id="add-dish-button" type="button" className="button secondary" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? "Cancel adding" : "+ Add a dish"}</button>
             </div>
             <p className="muted small menu-guidance">{showDishSetup ? "Choose a starter or import your recipe. Everything stays in this cook." : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>
             {showDishSetup && <section className="menu-add-dish" role="region" aria-label="Add dish">
@@ -527,10 +537,13 @@ export default function Home() {
             </section>}
             {meal.dishes.length ? <div className="workspace-dish-grid">
               {meal.dishes.map(d=><article className={"workspace-dish"+(editingDishId===d.id?" is-open":"")} aria-label={d.name} key={d.id}>
+                <div className="dish-header">
                 <button id={"dish-toggle-"+d.id} className="dish-select" type="button" aria-label={"Edit "+d.name} aria-expanded={editingDishId===d.id} aria-controls={"dish-"+d.id} onClick={()=>{setEditingDishId(current=>current===d.id?null:d.id);setShowDishSetup(false);setNewStepDishId(null);setNewStepTitle("")}}>
                   <span className="dish-summary"><strong>{d.name}</strong><span>{d.equipment} · {timeline.filter(t=>t.dishId===d.id).length} steps</span></span>
                   <span className="dish-toggle">{editingDishId===d.id?"Hide steps ↑":"Adjust steps ↓"}</span>
                 </button>
+                  <button type="button" className="dish-remove" aria-label={"Remove "+d.name} onClick={()=>removeDish(d.id)}>Remove dish</button>
+                </div>
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
@@ -592,7 +605,7 @@ export default function Home() {
                       {presets[d.preset].sources?.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.title} ↗</a>)}
                     </div>
                   )}
-                    <button className="link danger" onClick={()=>{if(window.confirm("Remove "+d.name+" and its planned steps? Recorded activity is retained.")){patch(m=>({...m,dishes:m.dishes.filter(item=>item.id!==d.id),customTasks:(m as ExtendedMeal).customTasks?.filter(t=>t.dishId!==d.id)}));setEditingDishId(null);setShowDishSetup(false)}}} aria-label={"Remove "+d.name}>Remove dish</button>
+
                   </details>
                   <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>
                   {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}

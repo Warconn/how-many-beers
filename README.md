@@ -323,7 +323,10 @@ Edit, reorder, remove and add steps inside the dish. Dish settings is a small,
 collapsed disclosure for name, equipment, durations and reference settings. Changes
 save as you make them and update the derived Live Schedule. Step numbering and
 reordering are scoped to the selected dish. Removing a dish requires confirmation;
-recorded activity remains in the cook. IDs and the browser storage schema are unchanged.
+recorded activity remains in the cook. Remove dish is visible beside each dish
+heading, including collapsed dishes, as a separate action from selecting/editing.
+Cancelling leaves the cook untouched; removing one dish keeps other dishes and their
+open editor intact. IDs and the browser storage schema are unchanged.
 
 Direct Live Schedule editing (#30) and changes to Ready When You Are (#31) remain
 out of scope. Recipe URLs are still unsupported. Cooks and history remain device-local.
