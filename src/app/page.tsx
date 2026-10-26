@@ -110,6 +110,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
 export default function Home() {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
+  const [showDishSetup, setShowDishSetup] = useState(false);
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
   const [recipeText, setRecipeText] = useState("");
@@ -189,6 +190,7 @@ export default function Home() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
       setMeal(fresh);
       setView("planning");
+      setShowDishSetup(true);
       setShowCompleted(false);
       setMessage("");
     } catch { setStorageError("Unable to save a new cook. Your current cook is unchanged."); }
@@ -305,6 +307,7 @@ export default function Home() {
       {view === "home" ? (
         <section className="home-layout" aria-label="Home">
           <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
+          <div className="home-primary">
           {hasActiveWork && <section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{meal.mode === "cooking" ? "In progress" : "Planning"}</span></div>
             <h3>{meal.name || "Your cook"}</h3>
@@ -324,6 +327,15 @@ export default function Home() {
           </section>
           <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <span aria-hidden="true">→</span></button>
           <p className="home-storage-note">Saved on this device only. <button type="button" onClick={()=>setView("history")}>Back up your cooks</button> before switching browsers.</p>
+          </div>
+          <aside className="home-guide" aria-label="How it works">
+            <p className="eyebrow">THE GAME PLAN</p>
+            <h3>One cook. Every dish. Right on time.</h3>
+            <p>Start with a template, bring everything into one timeline, and follow along when it’s time to cook.</p>
+            <div className="home-guide-step"><span>01</span><div><strong>Plan your menu</strong><small>Brisket, brats, sides. All together.</small></div></div>
+            <div className="home-guide-step"><span>02</span><div><strong>See the full schedule</strong><small>One checklist across every dish.</small></div></div>
+            <div className="home-guide-step"><span>03</span><div><strong>Cook and check it off</strong><small>Pick up where you left off.</small></div></div>
+          </aside>
         </section>
       ) : view === "history" ? (
         <section className="home-history">
@@ -424,10 +436,26 @@ export default function Home() {
               <input id="serve-at" type="datetime-local" value={meal.serveAt} onChange={e => patch(m => ({...m, serveAt: e.target.value}))}/>
             </div>
           </section>
-          <div className="planning-layout">
-        <div className="stack">
+          <section className="workspace-overview" aria-label="Cook overview">
+            <div className="workspace-heading">
+              <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} in this cook</h2></div>
+              <button type="button" className="button secondary" onClick={()=>setShowDishSetup(v=>!v)}>{showDishSetup ? "Done editing" : "+ Add or edit dishes"}</button>
+            </div>
+            {meal.dishes.length ? <div className="workspace-dish-grid">
+              {meal.dishes.map(d=><article className="workspace-dish" key={d.id}>
+                <strong>{d.name}</strong><span>{d.equipment}</span>
+                <button className="link" type="button" onClick={()=>setShowDishSetup(true)}>Edit dish details →</button>
+              </article>)}
+            </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
+            <div className="workspace-timeline-heading"><h3>Cooking timeline</h3><span>{timeline.length} steps</span></div>
+            {timeline.length ? <ol className="workspace-timeline">
+              {timeline.map(task=><li key={task.id}><time>{when(task.scheduledAt)}</time><div><strong>{task.title}</strong><span>{task.dishName}</span></div></li>)}
+            </ol> : <p className="muted">Your combined timeline appears here when you add a dish.</p>}
+          </section>
+          <div className={"planning-layout" + (showDishSetup ? " workspace-editing" : "")}>
+        <div className="stack workspace-editor">
           <section className="panel">
-            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">STEP 1</p><h2>What are we cooking?</h2></div></div>
+            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">EDIT MENU</p><h2>Add or edit dishes</h2></div></div>
             <div className="add-form">
               <label htmlFor="preset">Choose a starting template</label>
               <select id="preset" value={preset} onChange={e=>setPreset(e.target.value as BuiltIn)}>
