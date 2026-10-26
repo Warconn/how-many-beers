@@ -197,3 +197,16 @@ legacy active cooks without a start time, warning visibility and checklist discl
 The tests first failed against the previous UI. Screenshot evidence is saved under
 docs/screenshots/issue-31-*.png. Direct schedule editing (#30) and removal discovery
 (#33) stay separate.
+
+## Issue #30: shared step timing editor
+
+Dish steps and Live Schedule now reach the same inline editor for planned date/time,
+estimated duration, name/instructions, step equipment and an optional target food
+temperature. General prep opens in checklist review. The flat menu remains intact;
+Save/Cancel does not add a separate details page.
+
+Manual times are fixed, plan timing remains derived, and reset restores original timing.
+Duration updates estimated finish without shifting unrelated starts. Live Schedule is
+chronological; manual checklist order remains distinct. Actual events and completed
+history are preserved. See [Step timing](step-timing.md) for the complete rules,
+calendar/DST behavior, tests, manual checks and remaining scheduling limitations.

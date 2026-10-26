@@ -1,9 +1,11 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import type {PlannedTask} from "@/domain/meal";
-import type {CookEvent, CookEventKind} from "@/domain/cookState";
+import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
+import StepEditor from "./StepEditor";
+import {estimatedFinish} from "@/domain/stepTiming";
 
 type Props = {
   task: PlannedTask;
@@ -16,7 +18,10 @@ type Props = {
   events: CookEvent[];
   note: string;
   onNote: (value:string)=>void;
-  onEdit: (title:string, instructions:string)=>void;
+  editing: boolean;
+  onEditingChange: (open:boolean)=>void;
+  editorId: string;
+  onEdit: (title:string, instructions:string, details?:StepPlanEdit)=>void;
   onMove: (direction:"up"|"down")=>void;
   onRemove: ()=>void;
   onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string)=>void;
@@ -28,11 +33,9 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent
+  task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId
 }:Props) {
-  const [editing,setEditing]=useState(false);
-  const [title,setTitle]=useState(task.title);
-  const [instructions,setInstructions]=useState(task.instructions);
+  const [savedMessage,setSavedMessage] = useState(false);
   const [logging,setLogging]=useState(false);
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
   const [reading,setReading]=useState("");
@@ -40,18 +43,11 @@ export default function TaskRow({
   const [readingNote,setReadingNote]=useState("");
   const [error,setError]=useState("");
 
-  useEffect(()=>{if(!editing){setTitle(task.title);setInstructions(task.instructions);}},[task.title,task.instructions,editing]);
-
   const done=!!completedAt;
   const started=latestStartedEvent(events,task.id);
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
 
-  const handleSave=()=>{
-    if(!title.trim()){setError("Please enter a task title.");return;}
-    if(title.trim().length>160){setError("Keep titles under 160 characters.");return;}
-    onEdit(title,instructions);setEditing(false);setError("");
-  };
   const handleReading=()=>{
     const hasTemperature=reading.trim().length>0;
     const num=hasTemperature?Number(reading):undefined;
@@ -64,14 +60,16 @@ export default function TaskRow({
     setReading("");setReadingNote("");setLogging(false);setError("");
   };
 
-  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title}>
+  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title} id={editorId}>
     <div className="task-top">
       {isCooking && <input aria-label={"Complete "+task.title} type="checkbox" checked={done}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/>}
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
         {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
-        <div className="between"><strong>{task.title}</strong><time>{task.scheduledAt ? formatted(task.scheduledAt) : "Timing TBD"}</time></div>
+        <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt ?? undefined}>{task.scheduledAt ? formatted(task.scheduledAt) : "Timing TBD"}</time></div>
+        {(task.durationMinutes != null || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? task.durationMinutes+" min" : "Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        {(task.equipment !== task.baseEquipment || task.targetTempF != null) && <p className="planned-step-details">{[task.equipment !== task.baseEquipment ? task.equipment || "Equipment unspecified" : "", task.targetTempF != null ? "Target "+task.targetTempF+"°F (planned)" : ""].filter(Boolean).join(" · ")}</p>}
         {!compact && <p className="task-dish">{task.dishName}</p>}
         {task.instructions && <p className="muted small">{task.instructions}</p>}
         {task.isCondition && <span className="condition">Verify actual conditions</span>}
@@ -80,19 +78,15 @@ export default function TaskRow({
       </div>
     </div>
     <div className="task-actions" aria-label={"Manage "+task.title}>
-      <button type="button" onClick={() => { if(editing){handleSave();}else{setEditing(true);setError("");}}} aria-expanded={editing}>{editing?"Save & Close":"Edit"}</button>
+      {!editing && <button type="button" id={editorId+"-trigger"} onClick={() => {setSavedMessage(false);onEditingChange(true);}} aria-expanded={false}>Edit</button>}
       <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
       <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
       <button type="button" className="danger" onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
       }}>Remove</button>
     </div>
-    {editing && <div className="task-editor">
-      <label htmlFor={"edit-title-"+task.id}>Task name</label>
-      <input id={"edit-title-"+task.id} value={title} maxLength={160} onChange={e=>setTitle(e.target.value)}/>
-      <label htmlFor={"edit-instructions-"+task.id}>Instructions</label>
-      <textarea id={"edit-instructions-"+task.id} value={instructions} maxLength={500} rows={3} onChange={e=>setInstructions(e.target.value)}/>
-    </div>}
+    {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);setSavedMessage(true);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
+    {savedMessage && !editing && <p className="step-saved" role="status">Changes saved.</p>}
     {isCooking && <>
       <div className="task-actions task-logging-actions">
         <button type="button" onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>

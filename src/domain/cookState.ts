@@ -13,7 +13,17 @@ export type CookEvent = {
   note?: string;
 };
 
-export type TaskOverride = { title?: string; instructions?: string };
+export type TaskOverride = {
+  title?: string; instructions?: string; scheduledAt?: string | null;
+  durationMinutes?: number | null; equipment?: string; targetTempF?: number | null;
+};
+export type StepPlanEdit = {
+  timingMode: "plan" | "fixed" | "unscheduled";
+  scheduledAt: string | null;
+  durationMinutes: number | null;
+  equipment: string;
+  targetTempF: number | null;
+};
 export type ExtendedMeal = Meal & {
   customTasks?: PlannedTask[];
   taskOverrides?: Record<string, TaskOverride>;
@@ -46,7 +56,13 @@ export function cookTimeline(meal: Meal): PlannedTask[] {
   const hidden = new Set(m.hiddenTaskIds);
   const combined = [...buildTimeline(m), ...(m.customTasks ?? [])]
     .filter(t => !hidden.has(t.id))
-    .map(t => ({ ...t, ...m.taskOverrides?.[t.id] }));
+    .map(t => {
+      const base = {...t, durationMinutes: t.durationMinutes ?? null,
+        equipment: t.equipment ?? m.dishes.find(d=>d.id===t.dishId)?.equipment ?? "", targetTempF: t.targetTempF ?? null};
+      const override = m.taskOverrides?.[t.id] ?? {};
+      const timingMode = override.scheduledAt === undefined ? "plan" : override.scheduledAt === null ? "unscheduled" : "fixed";
+      return {...base, ...override, baseScheduledAt:base.scheduledAt, baseDurationMinutes:base.durationMinutes, baseEquipment:base.equipment, timingMode} as PlannedTask;
+    });
   if (!(m.taskOrder?.length)) {
     // First load shows the plan in scheduled order. Unscheduled steps come last.
     return combined.sort((a,b) => {
@@ -83,12 +99,29 @@ export function addStep(meal: Meal, title: string, instructions = "", scheduledA
   };
 }
 
-export function editStep(meal: Meal, taskId: string, title: string, instructions: string): ExtendedMeal {
+export function editStep(meal: Meal, taskId: string, title: string, instructions: string, details?: StepPlanEdit): ExtendedMeal {
   const trimmed = title.trim();
   if (!trimmed || trimmed.length > 160) throw new Error("Give the task a title (up to 160 characters).");
-  if (!cookTimeline(meal).some(t=>t.id===taskId)) throw new Error("Task not found.");
+  const task=cookTimeline(meal).find(t=>t.id===taskId);
+  if (!task) throw new Error("Task not found.");
   const m = migrateMeal(meal);
-  return {...m, taskOverrides: {...m.taskOverrides, [taskId]: {title: trimmed, instructions: instructions.trim().slice(0,500)}}};
+  const override:TaskOverride={...m.taskOverrides?.[taskId], title:trimmed,instructions:instructions.trim().slice(0,500)};
+  if(details){
+    if(!["plan","fixed","unscheduled"].includes(details.timingMode))throw new Error("Choose a valid timing mode.");
+    if(details.timingMode==="fixed" && (!details.scheduledAt || !Number.isFinite(Date.parse(details.scheduledAt))))throw new Error("Choose a valid planned date and time.");
+    if(details.durationMinutes!==null && (!Number.isFinite(details.durationMinutes) || details.durationMinutes<0 || details.durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
+    if(details.targetTempF!==null && (!Number.isFinite(details.targetTempF) || details.targetTempF<=0 || details.targetTempF>600))throw new Error("Target food temperature must be between 1 and 600°F, or blank.");
+    if(details.equipment.trim().length>80)throw new Error("Keep equipment names under 80 characters.");
+    if(details.timingMode==="plan")delete override.scheduledAt;
+    else override.scheduledAt=details.timingMode==="unscheduled"?null:new Date(details.scheduledAt!).toISOString();
+    if(details.durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
+    else override.durationMinutes=details.durationMinutes;
+    if(details.equipment.trim()===task.baseEquipment)delete override.equipment;
+    else override.equipment=details.equipment.trim();
+    if(details.targetTempF===null)delete override.targetTempF;
+    else override.targetTempF=details.targetTempF;
+  }
+  return {...m, taskOverrides: {...m.taskOverrides, [taskId]:override}};
 }
 
 export function removeStep(meal: Meal, taskId: string, occurredAt: string): ExtendedMeal {

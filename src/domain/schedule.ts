@@ -61,6 +61,7 @@ function importedTasks(d: Dish, serveAt: string): PlannedTask[] {
   let offset = 0;
   const arr = (d.steps ?? []).map((step) => ({
     id: d.id + ":" + step.id, dishId:d.id, dishName:d.name, title:step.title,
+    durationMinutes: step.minutes,
     instructions: step.minutes === null ? "Timing needed: edit the recipe before relying on this timeline." : "Imported recipe step. Confirm instructions and timing.",
     scheduledAt:null as string|null, isCondition:step.minutes === null
   }));
@@ -71,7 +72,7 @@ function importedTasks(d: Dish, serveAt: string): PlannedTask[] {
       arr[i].scheduledAt=at(serveAt,offset);
     }
   }
-  arr.push({id:d.id+":serve",dishId:d.id,dishName:d.name,title:"Serve",instructions:"Confirm safe doneness and plate.",scheduledAt:at(serveAt,0),isCondition:false});
+  arr.push({id:d.id+":serve",dishId:d.id,dishName:d.name,title:"Serve",durationMinutes:null,instructions:"Confirm safe doneness and plate.",scheduledAt:at(serveAt,0),isCondition:false});
   return arr;
 }
 

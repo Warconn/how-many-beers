@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
+import { chronologicalTasks } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
@@ -113,6 +114,7 @@ export default function Home() {
   const [showDishSetup, setShowDishSetup] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [showChecklistPreview, setShowChecklistPreview] = useState(false);
+  const [editingStep, setEditingStep] = useState<{id:string;context:"dish"|"checklist"|"cooking"}|null>(null);
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [newStepDishId,setNewStepDishId] = useState<string | null>(null);
   const [newStepTitle,setNewStepTitle] = useState("");
@@ -160,6 +162,7 @@ export default function Home() {
   }, [meal]);
 
   const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
+  const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
   const warnings = useMemo(() => meal ? equipmentWarnings(meal) : [], [meal]);
   const complete = meal ? timeline.filter(task => !!meal.completed[task.id]).length : 0;
   const next = meal ? timeline.find(task => !meal.completed[task.id]) : null;
@@ -201,6 +204,7 @@ export default function Home() {
       setView("planning");
       setShowDishSetup(true);
       setEditingDishId(null);
+      setEditingStep(null);
       setAddMethod("template");
       setShowCompleted(false);
       setMessage("");
@@ -287,21 +291,25 @@ export default function Home() {
     const visibleTasks = compact ? timeline.filter(t=>t.dishId===task.dishId) : timeline;
     const index = visibleTasks.findIndex(t => t.id === task.id);
     const taskEvents = (meal as ExtendedMeal).events ?? [];
+    const context = compact ? "dish" : mode === "cooking" ? "cooking" : "checklist";
     return <TaskRow
       key={task.id}
       task={task}
       index={index}
       count={visibleTasks.length}
       compact={compact}
+      editorId={context+"-step-"+task.id}
+      editing={editingStep?.id===task.id && editingStep.context===context}
+      onEditingChange={open=>setEditingStep(open?{id:task.id,context}:null)}
       isNext={isNext}
       mode={mode}
       completedAt={meal.completed[task.id]}
       events={taskEvents}
       note={meal.notes[task.id] || ""}
       onNote={value=>patch(m=>updateTaskNote(m,task.id,value,new Date().toISOString()))}
-      onEdit={(title,instructions)=>safelyPatch(m=>{
+      onEdit={(title,instructions,details)=>safelyPatch(m=>{
         const changed=title!==task.title || instructions!==task.instructions;
-        const updated=editStep(m,task.id,title,instructions);
+        const updated=editStep(m,task.id,title,instructions,details);
         if(!changed || m.mode!=="cooking") return updated;
         const history=(m as ExtendedMeal).events??[];
         const taskEvents=history.filter(e=>e.taskId===task.id);
@@ -313,6 +321,15 @@ export default function Home() {
       onRemove={()=>safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()))}
       onEvent={(kind:CookEventKind,value,unit,note)=>safelyPatch(m=>recordEvent(m,task.id,kind,new Date().toISOString(),value,unit,note))}
     />;
+  };
+
+  const editScheduleStep = (task:PlannedTask) => {
+    setShowDishSetup(false);
+    if(meal.dishes.some(d=>d.id===task.dishId)){
+      setEditingDishId(task.dishId);setEditingStep({id:task.id,context:"dish"});
+    }else{
+      setShowChecklistPreview(true);setEditingStep({id:task.id,context:"checklist"});
+    }
   };
 
   return (
@@ -608,7 +625,7 @@ export default function Home() {
           </section>
           <section className="plan-notes" aria-label="Plan notes">
             {warnings.map((warning,i) => <p className="warning" key={i}>{warning}</p>)}
-            {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. Review them before relying on the schedule; imported recipe durations can be set in Dish settings.</p>}
+            {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. Set a planned date and time in the step editor, or leave them unscheduled and review them before relying on the schedule.</p>}
             <p className="muted small timing-guidance">Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
           </section>
           {showChecklistPreview && timeline.length > 0 && (
@@ -627,7 +644,7 @@ export default function Home() {
             <p className="muted small">Serving {when(meal.serveAt || null)}</p>
             {timeline.length ? <>
               <ol className="schedule-list">
-                {(showFullSchedule?timeline:timeline.slice(0,4)).map(task=><li key={task.id}><time>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}</span></li>)}
+                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+task.durationMinutes+" min":""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}
               </ol>
               {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
             </> : <p className="muted small">Add a dish to see your schedule.</p>}
