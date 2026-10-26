@@ -1,3 +1,16 @@
+## Inline dish step planning (October 26, 2026)
+
+The Guided Cook Planner now treats planning as editable by default. Each menu dish has an expandable list of its own steps, rendered using the existing task editor. Users can edit/remove/reorder those steps and create a custom unscheduled step attached to that dish; the shared Live Schedule continues to be derived from the combined cook state. Templates and recipe imports remain accessible through Add a dish. The former Edit/Done Editing menu toggle is no longer used for step adjustments; advanced equipment and duration settings remain available on demand.
+
+### Test-first acceptance criteria
+- Expand brisket steps without opening or mutating brat details.
+- Add a custom step to brisket; it remains attached to brisket and survives refresh.
+- Task edits preserve existing IDs and recorded completion events.
+- The Live Schedule reflects changes to the combined timeline, with unscheduled steps identified as such.
+- Verify desktop and mobile flows in Playwright before release.
+
+The compact Start Cooking and complete cooking-mode redesign are separate follow-up work. Only promote `dev` to `main` after green CI and visual review.
+
 ## Add Dish consolidation (October 26, 2026)
 
 The Add Dish editor now has two choices inside one surface: **Start from template** (existing starter methods) or **Import a recipe** (paste instructions or upload a .txt/.md file). Selecting an existing dish remains an Edit action on the menu card. The separate full-page Import a Recipe section has been removed to keep the Guided Planner focused. URL import is not yet implemented and must not be presented as a working feature.
