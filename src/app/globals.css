@@ -213,3 +213,53 @@
 
 /* Core Cook Experience: Home */
 .home-layout{display:grid;gap:18px;max-width:690px;margin:12px auto 55px}.home-intro h2{font-size:36px;letter-spacing:-1.1px;margin:8px 0}.home-intro p:last-child{margin:0}.home-current h3,.home-new h3{font-size:23px;letter-spacing:-.5px;margin:12px 0 8px}.home-status{font-size:11px;font-weight:800;background:#f4e6d7;color:#81431f;border-radius:999px;padding:7px 12px}.home-current .muted,.home-new .muted{font-size:14px}.home-dishes{font-size:13px;line-height:1.5}.home-actions{display:flex;gap:10px;flex-wrap:wrap}.home-actions .button{margin-top:12px}.home-history-link{background:transparent;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:left;color:var(--accent-dark);font-weight:800}.home-history{max-width:1050px;margin:auto}.home-new .button{margin-top:12px}@media(max-width:650px){.home-intro h2{font-size:31px}.home-actions .button{flex:1 1 100%}}
+
+/* Responsive application foundation, October 2026. Consistent content alignment. */
+:root{--bg:#f8f7f4;--surface:#fff;--ink:#252621;--muted:#6d6d65;--line:#e5e3dd;--accent:#a64e2d;--accent-dark:#873d23;--accent-light:#f6ede7}
+html{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-width:320px}
+.shell{width:min(100% - 64px,1120px);max-width:1120px;padding:32px 0 48px;margin-inline:auto}
+.site-header{width:100%;max-width:100%;padding:0 0 25px;border-bottom:1px solid var(--line);margin:0 0 36px;align-items:center}
+.site-header h1{font-size:clamp(23px,2.5vw,30px);letter-spacing:-.7px}
+.site-header .eyebrow{font-size:10px;letter-spacing:1.3px;color:var(--muted)}
+.brand-icon{height:49px;width:49px;border-radius:12px;background:#f4e8d4;font-size:24px}
+.home-layout{width:100%;max-width:100%;margin:0 auto 72px;grid-template-columns:minmax(0,1fr);gap:0}
+.home-intro,.home-current,.home-new,.home-history-link,.home-storage-note{max-width:720px}
+.home-intro{margin-bottom:30px}
+.home-intro h2{font-size:clamp(30px,3vw,40px);letter-spacing:-1.3px;margin:0 0 8px;font-weight:750}
+.home-intro .muted{font-size:15px;line-height:1.55}
+.home-current,.home-new{padding:28px 30px;border-radius:13px;box-shadow:none;background:var(--surface)}
+.home-current{margin-bottom:16px}
+.home-current h3,.home-new h3{font-size:22px;letter-spacing:-.5px;margin:0 0 8px;font-weight:700}
+.home-new .muted,.home-current .muted{margin:0;font-size:14px;line-height:1.6}
+.home-new .button{margin-top:23px}
+.home-actions .button{margin-top:20px}
+.home-current .between{margin-bottom:16px}
+.home-dishes{color:var(--muted);font-size:13px}
+.home-history-link{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:18px 2px 16px;color:var(--ink);font-weight:600;font-size:14px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.home-history-link span{color:var(--accent)}
+.home-storage-note{font-size:12px;color:var(--muted);margin:18px 2px 0;line-height:1.6}
+.home-storage-note button{border:0;background:transparent;padding:0;text-decoration:underline;color:inherit;cursor:pointer;font-size:inherit}
+.home-layout .button{border-radius:8px;padding:12px 17px;font-size:14px;font-weight:650}
+footer{text-align:left;border-top:1px solid var(--line);padding:23px 0;color:var(--muted)}
+@media(min-width:1100px){
+ .home-layout{padding-left:clamp(0px,4vw,58px)}
+}
+@media(max-width:700px){
+ .shell{width:calc(100% - 36px);padding:18px 0 34px}
+ .site-header{margin-bottom:29px;padding-bottom:18px;gap:11px}
+ .site-header h1{font-size:22px}
+ .site-header .subtitle{font-size:11px}
+ .brand-icon{width:44px;height:44px;font-size:23px}
+ .home-intro{margin-bottom:24px}
+ .home-intro h2{font-size:32px}
+ .home-current,.home-new{padding:22px 20px}
+ .home-actions{display:grid}
+ .home-layout{margin-bottom:55px}
+ footer{text-align:center;font-size:11px}
+}
+@media(max-width:390px){
+ .site-header h1{font-size:19px}
+ .site-header .eyebrow{font-size:9px}
+ .home-intro h2{font-size:29px}
+}
