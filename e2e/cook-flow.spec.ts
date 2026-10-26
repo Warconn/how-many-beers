@@ -19,7 +19,6 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
 
-  await page.getByRole("button", { name: "Add or edit dishes" }).click();
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.getByRole("heading", { name: /2 dishes in this cook/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cooking timeline" })).toBeVisible();
@@ -53,7 +52,6 @@ test("template picker adds dishes and keeps their settings separate", async ({ p
   await expect(page.getByRole("heading", { name: "Choose a template" })).toBeVisible();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
-  await page.getByRole("button", { name: "Add or edit dishes" }).click();
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
   await page.getByRole("button", { name: "Edit Smoked brisket" }).click();
