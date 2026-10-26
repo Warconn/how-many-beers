@@ -225,3 +225,13 @@ manual timing. Fixed step overrides and recorded activity survive applying/reloa
 See [Brisket timing comparisons](brisket-estimates.md) for policy, sources, provenance,
 unvalidated extrapolation and pending live-source review. Recipe-template content updates
 follow #5 and focused Cooking Mode #26 when the user supplies their actual recipes.
+
+## Issue #26: clock-based cooking focus
+
+Cooking Mode uses chronological Now, Next (30 minutes), Later and Untimed groups,
+independent of manual planner checklist order. Future details and completed activity
+are secondary disclosures; Now retains direct completion, notes and temperature logging.
+A compact navigation/header, optional Beerometer and secondary step options reduce setup
+clutter. Clock updates never complete steps or reinterpret condition-driven checks.
+Home/overview/reload preserve lifecycle and actual events. See [Cooking Mode](cooking-mode.md)
+for exact thresholds, editing safeguards, tests and real-device QA limits.
