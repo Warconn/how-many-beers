@@ -354,3 +354,12 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .inline-step-add input{flex:1 1 210px;min-width:0}
 .inline-step-add button{flex:0 0 auto}
 @media(max-width:600px){.inline-step-add{display:grid;grid-template-columns:1fr}.inline-step-add input,.inline-step-add button{width:100%}}
+
+/* One selected dish editor; menu actions remain distinct from adding. */
+.dish-select{display:grid;gap:6px;text-align:left;background:transparent;border:0;color:inherit;width:100%;padding:4px;cursor:pointer;min-height:72px}
+.dish-select[aria-pressed="true"]{border-left:3px solid var(--accent);padding-left:12px}
+.dish-select:focus-visible{outline:3px solid #b65d32;outline-offset:4px}
+#dish-editor{scroll-margin-top:20px}
+.dish-advanced{border-top:1px solid var(--line);margin-top:20px;padding-top:16px}
+.dish-advanced summary{cursor:pointer;font-weight:700;padding:8px 0;min-height:44px}
+.inline-dish-steps{min-width:0}

@@ -136,3 +136,25 @@ The workspace now prioritizes planning actions over a full-width timeline. At de
 
 This release reuses existing cook/session persistence, templates, step actions and cooking mode. The schedule is derived from the same timeline data, not separately persisted. Playwright now covers sidebar placement, responsive stacking and expand/collapse behavior. Follow-up refinements: collapse the detailed checklist preview by default, strengthen per-dish step editing and validate the flow on real devices. Promotion to `main` requires a green CI run, review of visual screenshots and acceptance of the full plan-to-cook journey.
 
+
+## Issue #28 implementation
+
+- A separate Add a dish action opens template or pasted/uploaded text import. Adding
+  closes the picker and returns to the menu; Cancel adding leaves the cook unchanged.
+- Each dish card is a keyboard-accessible selection button with its name, equipment,
+  step count and selected state. Only the selected dish's editor is shown.
+- Dish name and ordered step actions share one contextual editor. Advanced settings
+  are collapsed above the steps so they are available without scrolling through them.
+- Back to menu exits details without changing cook status. Dish removal asks for
+  confirmation and retains recorded events. Existing stable IDs and storage schema
+  are reused. The derived combined schedule remains visible on desktop and follows
+  planning on narrow phones.
+- No direct schedule editing (#30), Ready panel removal (#31), URL ingestion or
+  deployment configuration changes are included.
+
+Playwright covers template/import creation, selecting and renaming one of two dishes,
+custom steps, refresh/resume, and editing/reordering/removing steps in an existing
+cooking session while preserving IDs, completion records and temperature events.
+The new Add/Edit acceptance test was first run against the previous UI and failed
+because adding left the template picker open. Desktop/mobile screenshots are attached
+by the tests for review; optional video recording depends on the runner's browser setup.

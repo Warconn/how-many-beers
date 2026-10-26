@@ -311,3 +311,16 @@ We should track time-to-first-usable-plan, confusion about step timing, successf
 ## License
 
 The repository is **public, but no open-source license has been selected**. Public GitHub visibility does not by itself grant code reuse rights. Choose a license deliberately before accepting external contributions.
+
+## Contextual Add/Edit Dish (#28)
+
+Planning keeps serving time, the menu and the combined Live Schedule together.
+Add a dish opens the template/text-recipe picker; adding returns to the menu.
+Select a named dish card to rename it and review its steps in one editor. Equipment,
+durations and reference settings are in the collapsed Advanced dish settings section.
+Back to menu closes the editor; adding and editing are separate actions. Removing a
+dish requires confirmation. Step actions reuse the existing ID and event-preserving
+helpers. Custom steps remain owned by their dish, including after rename/removal.
+
+Direct Live Schedule editing (#30) and changes to Ready When You Are (#31) remain
+out of scope. Recipe URLs are still unsupported. Cooks and history remain device-local.
