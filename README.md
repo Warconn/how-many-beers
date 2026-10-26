@@ -372,14 +372,6 @@ were blocked during this implementation; the staged-method weight scaling and un
 allowances are app assumptions. See [timing rules and evidence limits](docs/brisket-estimates.md).
 Template instruction updates using the user’s own recipes are the next content follow-up.
 
-## Focused Cooking Mode (#26)
-
-The execution checklist separates **Now**, **Next** (next 30 minutes), **Later** and
-**Untimed** steps. Future details expand in place; completed activity stays in its own
-section. Navigation, readings, notes and history retain the same cook and timestamps.
-The smaller header, optional Beerometer and secondary step options keep attention on
-cooking. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).
-
 ## Save a plan for later (#39)
 
 Use **Save plan for later** beside Start cooking to confirm a device-local save and
@@ -387,3 +379,13 @@ return Home without starting. Home shows the first planned step and cooking star
 with full dates/timezone, plus **Start cooking** and **Resume planning**. Existing
 changes still autosave. This keeps one active/planning cook per browser; it does not
 add cloud sync or automatic reminders. See [saved-plan behavior](docs/saved-plans.md).
+
+## Guided Cooking Mode (#26)
+
+Cooking opens one step with its instructions, notes and readings. A fixed **Up next**
+footer previews the following step, while **Full checklist** shows the whole cook as
+one flat list. Checking off a step advances guidance; previewing never completes it.
+**Edit plan** adjusts setup, and **Finish cook** explicitly archives when ready.
+Progress autosaves in this browser. Open edit/reading drafts are protected, and IDs,
+actual timestamps and history survive navigation/reload. Cancel adding is a small,
+quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).

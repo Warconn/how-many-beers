@@ -79,3 +79,11 @@ same cook later. Keep one active/planning cook per browser, existing autosave,
 archive/history, IDs and actual timestamps. Failed writes must not claim success.
 Suggested times do not automatically start a session. Cloud sync, background reminders
 and a library of multiple future plans remain separate work.
+
+## Cooking Mode review iteration (#26)
+
+The user requested guided cooking after finding the grouped list and Save Cook / View
+plan footer clunky. Prioritize one detailed current step, next-step preview in a fixed
+footer, a flat whole-cook checklist and a distinct Edit plan action. Completion advances
+guidance; preview/navigation do not mutate events. Finish cook archives only after
+confirmation. Keep unsaved edit/reading drafts protected and Cancel adding compact.

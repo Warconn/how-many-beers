@@ -226,16 +226,6 @@ See [Brisket timing comparisons](brisket-estimates.md) for policy, sources, prov
 unvalidated extrapolation and pending live-source review. Recipe-template content updates
 follow #5 and focused Cooking Mode #26 when the user supplies their actual recipes.
 
-## Issue #26: clock-based cooking focus
-
-Cooking Mode uses chronological Now, Next (30 minutes), Later and Untimed groups,
-independent of manual planner checklist order. Future details and completed activity
-are secondary disclosures; Now retains direct completion, notes and temperature logging.
-A compact navigation/header, optional Beerometer and secondary step options reduce setup
-clutter. Clock updates never complete steps or reinterpret condition-driven checks.
-Home/overview/reload preserve lifecycle and actual events. See [Cooking Mode](cooking-mode.md)
-for exact thresholds, editing safeguards, tests and real-device QA limits.
-
 ## Issue #39: save now, start later
 
 Planning includes an explicit Save plan for later action. After successful storage
@@ -244,3 +234,14 @@ Start cooking is an explicit Home action; Resume planning adjusts the same plan.
 Failed writes keep the planner open. Saving does not set lifecycle/start timestamps,
 complete tasks or archive an unfinished cook. Existing device-local autosave, one active
 cook, archived history and replacement confirmation remain intact. See [saved plans](saved-plans.md).
+
+## Issue #26: guided cooking review iteration
+
+User review found the grouped checklist and Save Cook / View plan footer still clunky.
+Cooking now focuses one step, with a fixed Up next preview and a Full checklist action.
+The whole cook is a flat chronological list, including completed/untimed items, with
+in-place selection back into the shared step editor. Checking off advances guidance;
+previewing and navigating never complete a task or reset lifecycle/history. Open edits
+and reading drafts are protected. Finish cook is an explicit archive action, separate
+from editing the plan or autosaving progress. Cancel adding is a quiet compact control.
+See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
