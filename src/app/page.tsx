@@ -306,8 +306,8 @@ export default function Home() {
 
       {view === "home" ? (
         <section className="home-layout" aria-label="Home">
-          <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
           <div className="home-primary">
+          <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
           {hasActiveWork && <section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{meal.mode === "cooking" ? "In progress" : "Planning"}</span></div>
             <h3>{meal.name || "Your cook"}</h3>
