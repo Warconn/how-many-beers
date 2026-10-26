@@ -210,3 +210,6 @@
 .cook-mobile-bar button{padding:11px;font-size:12px}
 .cook-mobile-bar span{font-size:11px}
 }
+
+/* Core Cook Experience: Home */
+.home-layout{display:grid;gap:18px;max-width:690px;margin:12px auto 55px}.home-intro h2{font-size:36px;letter-spacing:-1.1px;margin:8px 0}.home-intro p:last-child{margin:0}.home-current h3,.home-new h3{font-size:23px;letter-spacing:-.5px;margin:12px 0 8px}.home-status{font-size:11px;font-weight:800;background:#f4e6d7;color:#81431f;border-radius:999px;padding:7px 12px}.home-current .muted,.home-new .muted{font-size:14px}.home-dishes{font-size:13px;line-height:1.5}.home-actions{display:flex;gap:10px;flex-wrap:wrap}.home-actions .button{margin-top:12px}.home-history-link{background:transparent;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:left;color:var(--accent-dark);font-weight:800}.home-history{max-width:1050px;margin:auto}.home-new .button{margin-top:12px}@media(max-width:650px){.home-intro h2{font-size:31px}.home-actions .button{flex:1 1 100%}}
