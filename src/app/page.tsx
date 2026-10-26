@@ -295,16 +295,16 @@ export default function Home() {
       <header className="site-header">
         <div className="brand-icon" aria-hidden>🍺</div>
         <div>
-          <p className="eyebrow">THE COOKING CHECKLIST</p>
+          <p className="eyebrow">PLAN · COOK · REPEAT</p>
           <h1>How Many Beers?</h1>
           <p className="subtitle">Dinner has a deadline. Brisket does not.</p>
         </div>
-        <span className="version-pill">{meal.mode === "cooking" ? "Cook in progress" : "Your cooking companion"}</span>
+        
       </header>
 
       {view === "home" ? (
         <section className="home-layout" aria-label="Home">
-          <div className="home-intro"><p className="eyebrow">WELCOME BACK</p><h2>What&apos;s cooking?</h2><p className="muted">One cook, everything on the menu.</p></div>
+          <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
           {hasActiveWork && <section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{meal.mode === "cooking" ? "In progress" : "Planning"}</span></div>
             <h3>{meal.name || "Your cook"}</h3>
@@ -318,12 +318,12 @@ export default function Home() {
             </div>
           </section>}
           <section className="panel home-new">
-            <h3>{hasActiveWork ? "Planning something else?" : "Plan your next cook"}</h3>
-            <p className="muted">{hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose a dish template and build your checklist."}</p>
+            <h3>{hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
+            <p className="muted">{hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
             <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
           </section>
-          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Cook history and backups →</button>
-          <p className="muted small">Your cooks are stored on this device. Export a backup before switching devices or clearing browser data.</p>
+          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <span aria-hidden="true">→</span></button>
+          <p className="home-storage-note">Saved on this device only. <button type="button" onClick={()=>setView("history")}>Back up your cooks</button> before switching browsers.</p>
         </section>
       ) : view === "history" ? (
         <section className="home-history">
