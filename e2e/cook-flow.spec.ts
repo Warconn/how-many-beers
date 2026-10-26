@@ -99,3 +99,29 @@ test("home fits common viewport widths without horizontal overflow", async ({ pa
     expect(overflow, `Unexpected horizontal overflow at ${width}px`).toBe(false);
   }
 });
+
+test("guided planner keeps menu beside schedule and allows full schedule expansion", async ({ page }) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.getByRole("button", {name:/Plan a new cook/}).click();
+  await page.getByRole("button", {name:"Add smoked brisket"}).click();
+  const planner=await page.locator(".guided-main").boundingBox();
+  const schedule=await page.getByRole("complementary",{name:"Live schedule"}).boundingBox();
+  expect(planner && schedule).toBeTruthy();
+  if(!planner||!schedule)return;
+  expect(schedule.x).toBeGreaterThan(planner.x+planner.width-10);
+  await expect(page.getByRole("button",{name:/Show full schedule/})).toBeVisible();
+  await page.getByRole("button",{name:/Show full schedule/}).click();
+  await expect(page.locator(".schedule-list li")).toHaveCount(8);
+  await page.getByRole("button",{name:/Show less/}).click();
+  await expect(page.locator(".schedule-list li")).toHaveCount(4);
+});
+test("mobile planner keeps planning controls first and schedule accessible",async ({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.getByRole("button",{name:/Plan a new cook/}).click();
+  const p=await page.locator(".guided-main").boundingBox();
+  const sched=await page.getByRole("complementary",{name:"Live schedule"}).boundingBox();
+  expect(p&&sched).toBeTruthy();
+  if(!p||!sched)return;
+  expect(sched.y).toBeGreaterThan(p.y);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
