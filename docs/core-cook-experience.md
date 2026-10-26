@@ -99,3 +99,10 @@ New UX behavior is defined by user-journey Playwright acceptance tests before im
 
 The workspace begins with the menu and combined timeline. The Add or Edit action reveals template choices (brisket and brats first, with existing starter variants available). Adding dishes stays within the same cook, and an Edit button on a menu card narrows the settings form to a single selected dish. Returning to the workspace must not change cooking status. This is a progressive UX refactor, not yet a dedicated route or fully isolated editable step experience.
 
+
+## Guided Cook Planner increment (October 26, 2026)
+
+The workspace now prioritizes planning actions over a full-width timeline. At desktop sizes it provides a **planning column** (meal name and serving time, dish menu, selected dish editing, readiness and checklist review) alongside a **sticky Live Schedule** companion. The schedule shows four upcoming chronological planned steps by default, with a Show full schedule control. At smaller widths, the columns stack to keep planning controls first.
+
+This release reuses existing cook/session persistence, templates, step actions and cooking mode. The schedule is derived from the same timeline data, not separately persisted. Playwright now covers sidebar placement, responsive stacking and expand/collapse behavior. Follow-up refinements: collapse the detailed checklist preview by default, strengthen per-dish step editing and validate the flow on real devices. Promotion to `main` requires a green CI run, review of visual screenshots and acceptance of the full plan-to-cook journey.
+
