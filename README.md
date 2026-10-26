@@ -1,3 +1,9 @@
+## Add Dish consolidation (October 26, 2026)
+
+The Add Dish editor now has two choices inside one surface: **Start from template** (existing starter methods) or **Import a recipe** (paste instructions or upload a .txt/.md file). Selecting an existing dish remains an Edit action on the menu card. The separate full-page Import a Recipe section has been removed to keep the Guided Planner focused. URL import is not yet implemented and must not be presented as a working feature.
+
+Acceptance checks: switch methods without affecting the meal, import a named set of steps, add a template alongside it, verify both dish cards and one schedule, and preserve the cook on reload. Remaining polish is tracked in issue #28.
+
 # How Many Beers? 🍺
 
 **Dinner has a deadline. Brisket does not.**
