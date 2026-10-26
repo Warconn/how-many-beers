@@ -109,6 +109,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
 
 export default function Home() {
   const [meal, setMeal] = useState<Meal | null>(null);
+  const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
   const [recipeText, setRecipeText] = useState("");
@@ -179,7 +180,19 @@ export default function Home() {
   if (!meal) return <main className="shell"><div className="panel">Loading your cook...</div></main>;
 
 
-  const cooking = meal.mode === "cooking";
+  const cooking = view === "cooking";
+  const hasActiveWork = meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0;
+  const beginNewCook = () => {
+    if (hasActiveWork && !window.confirm("Start a new cook? This replaces the unfinished cook saved on this device. Export a backup first if you want to keep it.")) return;
+    try {
+      const fresh = newMeal();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+      setMeal(fresh);
+      setView("planning");
+      setShowCompleted(false);
+      setMessage("");
+    } catch { setStorageError("Unable to save a new cook. Your current cook is unchanged."); }
+  };
   const safelyPatch = (fn:(m:Meal)=>Meal) => {
     try { patch(fn); setMessage(""); }
     catch(error) { setMessage(error instanceof Error ? error.message : "Could not update checklist."); }
@@ -189,6 +202,7 @@ export default function Home() {
     setMeal(next);
     setShowFinish(false);
     setOutcome("");
+    setView("home");
     window.scrollTo({top:0,behavior:"instant"});
   };
   const finishCook = () => {
@@ -285,14 +299,43 @@ export default function Home() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">Dinner has a deadline. Brisket does not.</p>
         </div>
-        <span className="version-pill">{cooking ? "Cook in progress" : "Plan your cook"}</span>
+        <span className="version-pill">{meal.mode === "cooking" ? "Cook in progress" : "Your cooking companion"}</span>
       </header>
 
-      {cooking ? (
+      {view === "home" ? (
+        <section className="home-layout" aria-label="Home">
+          <div className="home-intro"><p className="eyebrow">WELCOME BACK</p><h2>What&apos;s cooking?</h2><p className="muted">One cook, everything on the menu.</p></div>
+          {hasActiveWork && <section className="panel home-current">
+            <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{meal.mode === "cooking" ? "In progress" : "Planning"}</span></div>
+            <h3>{meal.name || "Your cook"}</h3>
+            <p className="muted">{when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
+            {meal.dishes.length > 0 && <p className="home-dishes">{meal.dishes.map(d=>d.name).join(" · ")}</p>}
+            <div className="home-actions">
+              {meal.mode === "cooking" ? <>
+                <button type="button" className="button primary" onClick={()=>setView("cooking")}>Continue cooking →</button>
+                <button type="button" className="button secondary" onClick={()=>setView("planning")}>View cook</button>
+              </> : <button type="button" className="button primary" onClick={()=>setView("planning")}>Resume planning →</button>}
+            </div>
+          </section>}
+          <section className="panel home-new">
+            <h3>{hasActiveWork ? "Planning something else?" : "Plan your next cook"}</h3>
+            <p className="muted">{hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose a dish template and build your checklist."}</p>
+            <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
+          </section>
+          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Cook history and backups →</button>
+          <p className="muted small">Your cooks are stored on this device. Export a backup before switching devices or clearing browser data.</p>
+        </section>
+      ) : view === "history" ? (
+        <section className="home-history">
+          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup}/>
+        </section>
+      ) : cooking ? (
         <>
+          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           <section className="cook-header">
             <div>
-              <button className="back-link" type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>← Edit your plan</button>
+              <button className="back-link" type="button" onClick={() => setView("planning")}>← View your cook</button>
               <p className="eyebrow">YOU'RE COOKING</p>
               <h2>{meal.name || "Your cook"}</h2>
               <p className="cook-target">🍽️ Serving {when(meal.serveAt || null)} · One cook with {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
@@ -354,18 +397,20 @@ export default function Home() {
               <section className="panel tip">
                 <strong>Cook smart</strong>
                 <p>All times are planning estimates. Use a food thermometer, verify doneness, and follow safe holding and equipment instructions.</p>
-                <button className="link" onClick={() => patch(m => ({...m, mode: "planning"}))}>Adjust the plan →</button>
+                <button className="link" onClick={() => setView("planning")}>View the plan →</button>
               </section>
             </aside>
           </div>
           <nav className="cook-mobile-bar" aria-label="Cook tools">
             <span>✓ {complete} of {timeline.length} complete</span>
             <button type="button" onClick={() => {setShowFinish(true);document.querySelector(".finish-cook")?.scrollIntoView({behavior:"smooth",block:"center"});}}>Save Cook</button>
-            <button type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>Edit plan</button>
+            <button type="button" onClick={() => setView("planning")}>View plan</button>
           </nav>
         </>
       ) : (
         <>
+          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps. <button type="button" className="link" onClick={()=>setView("cooking")}>Return to cooking →</button></p>}
           <section className="hero panel">
             <div>
               <p className="eyebrow">PLAN YOUR COOK</p>
@@ -524,7 +569,7 @@ export default function Home() {
                 {timeline.length===0 && <AddStepForm onAdd={addCustom}/>}
                 <button type="button" className="button primary start-cook-btn"
                   disabled={timeline.length === 0 || !Number.isFinite(new Date(meal.serveAt).getTime())}
-                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});}}>
+                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setView("cooking");setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});}}>
                   {meal.startedAt ? "▶ Return to cooking" : "🔥 Start the cook"}
                 </button>
                 <p className="small muted">{meal.startedAt ? "Your current cook is saved. Returning to it won't create another one." : "Nothing starts until you choose Start the cook."} You can always return to the plan without losing progress.</p>
@@ -541,9 +586,6 @@ export default function Home() {
                 }}>Start a fresh plan →</button>
               </aside>
             </div>
-          </div>
-          <div className="history-layout">
-            <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup}/>
           </div>
         </>
       )}
