@@ -151,6 +151,11 @@ accordion within the menu instead, with a single dish heading and no return navi
    header collapses it. Only one dish is expanded at a time.
 4. Use Dish settings for name, equipment, durations and optional reference settings.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
+   Remove dish is a compact trash icon beside the heading, not hidden in settings;
+   it retains a descriptive accessible label/tooltip and a 44px touch target;
+   confirmation is required. Cancel does not mutate the cook, and removing one dish
+   preserves other dishes, recorded events and the open editor for another dish.
+   Focus returns to a remaining dish or Add a dish after removal.
 5. Add more dishes or start cooking. The responsive Live Schedule stays derived from
    the same cook; no direct timeline editing (#30) or Ready panel removal (#31).
 

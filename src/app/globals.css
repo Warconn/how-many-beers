@@ -347,11 +347,17 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 /* Dish selection and editing share one menu surface. */
 .workspace-dish{background:transparent;padding:0!important;gap:0;overflow:hidden}
 .dish-select{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:transparent;border:0;color:inherit;width:100%;padding:16px;cursor:pointer;min-height:76px}
-.dish-summary{display:grid;gap:5px;min-width:0}.dish-summary strong{color:var(--ink);overflow-wrap:anywhere}
+.dish-summary{display:grid;gap:5px;min-width:0}.dish-summary strong{color:var(--ink);overflow-wrap:anywhere}.dish-summary>span{overflow-wrap:anywhere}
 .dish-select .dish-toggle{color:var(--accent-dark);font-weight:650;flex-shrink:0}
 .dish-select:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
 .workspace-dish.is-open{border-color:#c99579}
-.is-open>.dish-select{background:#faf2ec}
+.is-open>.dish-header{background:#faf2ec}
+/* Removal is a sibling of selection, never nested inside the dish button/settings. */
+.dish-header{display:flex;align-items:center;min-width:0;padding-right:10px}
+.dish-header .dish-select{flex:1;width:auto;min-width:0}
+.dish-remove{flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);cursor:pointer}
+.dish-remove:hover{color:#9b3e2b;background:#f9ede8}.dish-remove:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media(max-width:600px){.dish-header{padding-right:6px}.dish-header .dish-select .dish-toggle{font-size:0}.dish-header .dish-toggle::after{content:"⌄";font-size:18px}.dish-header .dish-select[aria-expanded=true] .dish-toggle::after{content:"⌃"}}
 .dish-inline-editor{padding:0 16px 16px;min-width:0}
 .dish-advanced{border-bottom:1px solid var(--line);padding:4px 0 10px}
 .dish-advanced summary{cursor:pointer;font-weight:650;padding:12px 0;min-height:44px;color:var(--accent-dark)}

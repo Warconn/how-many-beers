@@ -15,9 +15,10 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 Production release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) delivered Home/resume, the Guided Cook Planner, persistent Live Schedule, template/recipe selection in one Add Dish experience, expandable per-dish steps, cooking checklist/history, and Playwright regression tests. User confirmed GitHub Pages production deployment. These features are a functional baseline, **not UX approval of every interaction**.
 
 Current prioritized backlog:
-- [#28](https://github.com/Warconn/how-many-beers/issues/28): **first task**. Add/Edit Dish workflow and step-editing layers are unintuitive. Make adding new dishes and editing existing dishes obvious, keep step edits in context, and make advanced settings secondary.
-- [#30](https://github.com/Warconn/how-many-beers/issues/30): Live Schedule is read-only; allow direct contextual step selection/adjustment and retain event history. Do not silently invent timings.
-- [#31](https://github.com/Warconn/how-many-beers/issues/31): remove the oversized redundant Ready When You Are panel and provide a compact Start/Continue Cooking action without hiding important warnings.
+- [#28](https://github.com/Warconn/how-many-beers/issues/28): completed in `dev` through PR #32 after user review. Keep the flattened inline dish menu; do not restore a separate details panel.
+- [#30](https://github.com/Warconn/how-many-beers/issues/30): step dates, duration and details from dish and Live Schedule are in review in PR #35. Read its timing rules before extending scheduling; do not silently invent durations or automatic dependency shifting.
+- [#31](https://github.com/Warconn/how-many-beers/issues/31): completed in `dev` through user-approved PR #34. Keep one compact Start/Continue action and visible plan warnings.
+- [#33](https://github.com/Warconn/how-many-beers/issues/33): low-priority follow-up to make Remove dish visible beside its heading, with confirmation and recorded-history preservation.
 - [#3](https://github.com/Warconn/how-many-beers/issues/3): advanced dependency-aware replanning is later, **not** a prerequisite for #30.
 
 For #28, preserve the useful high-level flow and live schedule. Do not combine a broad redesign of Cooking Mode or advanced scheduling into that PR. Ask for product direction only when a genuine irreversible UX choice remains; otherwise implement the smallest coherent change based on acceptance criteria.
