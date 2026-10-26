@@ -58,6 +58,10 @@ test('planned cook has one compact action beneath the menu and optional checklis
   const started = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
   expect(started.mode).toBe('cooking');
   expect(started.startedAt).toBeTruthy();
+  if(await page.getByRole('checkbox',{name:/^Complete /}).count()===0){
+    await expect(page.getByText('Nothing due right now.',{exact:true})).toBeVisible();
+    await page.locator('.future-step > summary').first().click();
+  }
   const stepLabel = await page.getByRole('checkbox', { name: /^Complete / }).first().getAttribute('aria-label');
   await page.getByRole('checkbox', { name: stepLabel!, exact: true }).click();
   await expect.poll(async () => page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!).completed).length)).toBe(1);

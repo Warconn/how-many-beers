@@ -7,6 +7,8 @@ import { chronologicalTasks } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
+import FutureStep from "@/components/FutureStep";
+import { cookingFocus } from "@/domain/cookingFocus";
 import TaskRow from "@/components/TaskRow";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
@@ -124,6 +126,7 @@ export default function Home() {
   const [recipeText, setRecipeText] = useState("");
   const [draft, setDraft] = useState<Dish | null>(null);
   const [message, setMessage] = useState("");
+  const [clockNow,setClockNow] = useState(()=>Date.now());
   const [showCompleted, setShowCompleted] = useState(false);
   const [history,setHistory] = useState<HistoryLibrary>(emptyHistory());
   const [outcome,setOutcome] = useState("");
@@ -161,12 +164,29 @@ export default function Home() {
     }
   }, [meal]);
 
+  useEffect(()=>{
+    if(view!=="cooking"){setEditingStep(current=>current?.context==="cooking"?null:current);return;}
+    const update=()=>{
+      // Avoid moving an editor or a partially entered reading between groups.
+      if(editingStep?.context==="cooking" || document.querySelector('.cooking-screen .reading-form'))return;
+      if(document.activeElement?.matches('input,textarea,select'))return;
+      setClockNow(Date.now());
+    };
+    update();
+    const timer=window.setInterval(update,30_000);
+    document.addEventListener('visibilitychange',update);
+    window.addEventListener('focus',update);
+    return ()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',update);window.removeEventListener('focus',update);};
+  },[view,editingStep]);
+
   const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
   const warnings = useMemo(() => meal ? equipmentWarnings(meal) : [], [meal]);
   const complete = meal ? timeline.filter(task => !!meal.completed[task.id]).length : 0;
-  const next = meal ? timeline.find(task => !meal.completed[task.id]) : null;
+
   const remaining = meal ? timeline.filter(task => !meal.completed[task.id]) : [];
+  const focus = cookingFocus(timeline,meal?.completed??{},clockNow);
+  const next=focus.now[0]??focus.next[0]??focus.later[0]??focus.untimed[0];
   const finished = meal ? timeline.filter(task => !!meal.completed[task.id]) : [];
 
   const patch = (fn:(m:Meal)=>Meal) => setMeal(current => current ? fn(current) : current);
@@ -328,8 +348,8 @@ export default function Home() {
         return recordEvent(updated,task.id,"started",new Date().toISOString());
       })}
       onMove={direction=>safelyPatch(m=>moveStep(m,task.id,direction,compact?task.dishId:undefined))}
-      onRemove={()=>safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()))}
-      onEvent={(kind:CookEventKind,value,unit,note)=>safelyPatch(m=>recordEvent(m,task.id,kind,new Date().toISOString(),value,unit,note))}
+      onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
+      onEvent={(kind:CookEventKind,value,unit,note)=>{if(kind==="completed"||kind==="reopened")setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>recordEvent(m,task.id,kind,new Date().toISOString(),value,unit,note));}}
     />;
   };
 
@@ -395,10 +415,9 @@ export default function Home() {
         </section>
       ) : cooking ? (
         <>
-          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          <nav className="cooking-navigation" aria-label="Cook navigation"><button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button><button className="back-link" type="button" onClick={() => setView("planning")}>← View your cook</button></nav>
           <section className="cook-header">
             <div>
-              <button className="back-link" type="button" onClick={() => setView("planning")}>← View your cook</button>
               <p className="eyebrow">YOU'RE COOKING</p>
               <h2>{meal.name || "Your cook"}</h2>
               <p className="cook-target">🍽️ Serving {when(meal.serveAt || null)} · One cook with {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
@@ -406,19 +425,33 @@ export default function Home() {
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
 
-          <BeerEstimator meal={meal} timeline={timeline}/>
+          <details className="cook-duration-details"><summary>Cook duration &amp; Beerometer</summary><BeerEstimator meal={meal} timeline={timeline}/></details>
 
           <div className="cook-layout">
             <section className="panel active-cook-panel">
               <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
               <div className="progress-track"><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div>
-              <AddStepForm compact onAdd={addCustom}/>
               {message && <p className="form-error" role="alert">{message}</p>}
               {remaining.length > 0 ? (
-                <>
-                  <p className="cook-section-label">NOW &amp; COMING UP</p>
-                  <div className="checklist">{remaining.map((task, i) => taskCard(task, "cooking", i === 0))}</div>
-                </>
+                <div className="cooking-focus">
+                  <section aria-label="Now" className="focus-group focus-now">
+                    <h3>Now <span>{focus.now.length}</span></h3>
+                    <p className="muted small">Due or planned earlier. Check conditions; timing is an estimate.</p>
+                    {focus.now.length ? <div className="checklist">{focus.now.map((task,i)=>taskCard(task,"cooking",i===0))}</div> : <p className="focus-empty">Nothing due right now.</p>}
+                  </section>
+                  <section aria-label="Next" className="focus-group">
+                    <h3>Next <span>{focus.next.length}</span></h3><p className="muted small">Planned in the next 30 minutes.</p>
+                    {focus.next.length ? focus.next.map(task=><FutureStep key={task.id} task={task} onClose={()=>setEditingStep(current=>current?.id===task.id && current.context==="cooking"?null:current)}>{taskCard(task,"cooking")}</FutureStep>) : <p className="focus-empty">No steps planned in the next 30 minutes.</p>}
+                  </section>
+                  <section aria-label="Later" className="focus-group">
+                    <h3>Later <span>{focus.later.length}</span></h3>
+                    {focus.later.length ? focus.later.map(task=><FutureStep key={task.id} task={task} onClose={()=>setEditingStep(current=>current?.id===task.id && current.context==="cooking"?null:current)}>{taskCard(task,"cooking")}</FutureStep>) : <p className="focus-empty">No later steps planned.</p>}
+                  </section>
+                  {focus.untimed.length>0 && <section aria-label="Untimed steps" className="focus-group">
+                    <h3>Untimed <span>{focus.untimed.length}</span></h3><p className="muted small">Choose when to do these; they are not overdue.</p>
+                    {focus.untimed.map(task=><FutureStep key={task.id} task={task} onClose={()=>setEditingStep(current=>current?.id===task.id && current.context==="cooking"?null:current)}>{taskCard(task,"cooking")}</FutureStep>)}
+                  </section>}
+                </div>
               ) : (
                 <div className="cook-finished">
                   <span aria-hidden>🎉</span>
@@ -435,6 +468,7 @@ export default function Home() {
                   {showCompleted && <div className="checklist completed-list">{finished.map(task => taskCard(task, "cooking"))}</div>}
                 </section>
               )}
+              <div className="cook-extra-tools"><AddStepForm compact onAdd={addCustom}/></div>
               <section className="finish-cook">
                 <h3>All wrapped up?</h3>
                 <p className="muted small">Save this session's actual steps, notes and temperatures so you can reference them next time.</p>

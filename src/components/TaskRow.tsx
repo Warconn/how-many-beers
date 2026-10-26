@@ -62,8 +62,8 @@ export default function TaskRow({
 
   return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title} id={editorId}>
     <div className="task-top">
-      {isCooking && <input aria-label={"Complete "+task.title} type="checkbox" checked={done}
-        onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/>}
+      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done}
+        onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
         {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
@@ -79,11 +79,16 @@ export default function TaskRow({
     </div>
     <div className="task-actions" aria-label={"Manage "+task.title}>
       {!editing && <button type="button" id={editorId+"-trigger"} onClick={() => {setSavedMessage(false);onEditingChange(true);}} aria-expanded={false}>Edit</button>}
-      <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
+      {isCooking ? <details className="step-options"><summary>Step options</summary><div className="step-option-actions">      <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
       <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
       <button type="button" className="danger" onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
-      }}>Remove</button>
+      }}>Remove</button></div></details> : <>      <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
+      <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
+      <button type="button" className="danger" onClick={()=>{
+        if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
+      }}>Remove</button></>}
+
     </div>
     {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);setSavedMessage(true);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {savedMessage && !editing && <p className="step-saved" role="status">Changes saved.</p>}
