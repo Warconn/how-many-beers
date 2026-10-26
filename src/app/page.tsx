@@ -114,6 +114,7 @@ export default function Home() {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [showChecklistPreview, setShowChecklistPreview] = useState(false);
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
+  const [addMethod, setAddMethod] = useState<"template" | "recipe">("template");
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
   const [recipeText, setRecipeText] = useState("");
@@ -195,6 +196,7 @@ export default function Home() {
       setView("planning");
       setShowDishSetup(true);
       setEditingDishId(null);
+      setAddMethod("template");
       setShowCompleted(false);
       setMessage("");
     } catch { setStorageError("Unable to save a new cook. Your current cook is unchanged."); }
@@ -456,8 +458,13 @@ export default function Home() {
           <div className={"planning-layout" + (showDishSetup ? " workspace-editing" : "")}>
         <div className="stack workspace-editor">
           <section className="panel">
-            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">EDIT MENU</p><h2>Add or edit dishes</h2></div></div>
+            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">EDIT MENU</p><h2>Add a dish</h2></div></div>
             {!editingDishId && <>
+              <div className="add-method-tabs" role="group" aria-label="Add dish method">
+                <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>Start from template</button>
+                <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>Import a recipe</button>
+              </div>
+              {addMethod==="template" ? <>
               <h3>Choose a template</h3>
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
               <div className="template-picker">
@@ -467,6 +474,30 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+              </> : <div className="recipe-import-inline">
+                <p className="muted small">Paste instructions or upload a text file. Recipe URLs aren't supported yet.</p>
+                <label htmlFor="recipe-name">Recipe title</label>
+                <input id="recipe-name" value={recipeName} onChange={e=>setRecipeName(e.target.value)} placeholder="Grandma's mac & cheese"/>
+                <label htmlFor="recipe-text">Recipe instructions</label>
+                <textarea id="recipe-text" rows={5} value={recipeText} onChange={e=>setRecipeText(e.target.value)} placeholder={"1. Preheat oven\\n2. Prepare ingredients\\n3. Cook until done"}/>
+                <label htmlFor="recipe-file">Upload .txt or .md</label>
+                <input id="recipe-file" type="file" accept=".txt,.md,text/plain,text/markdown" onChange={e=>void onTextFile(e.target.files?.[0])}/>
+                <button className="button secondary" type="button" disabled={!recipeText.trim()} onClick={()=>{
+                  const parsed=parseRecipeText(recipeName,recipeText);
+                  if(!parsed.steps?.length){setMessage("No recipe steps found. Try one instruction per line.");return;}
+                  setDraft(parsed);setMessage("");
+                }}>Preview recipe steps</button>
+                {draft && <div className="draft">
+                  <strong>Review {draft.steps?.length} imported steps</strong>
+                  <p className="muted small">Each non-empty line becomes a step. Confirm timings after adding.</p>
+                  <ol>{draft.steps?.map(step=><li key={step.id}>{step.title}</li>)}</ol>
+                  <button className="button primary" type="button" onClick={()=>{
+                    patch(m=>({...m,dishes:[...m.dishes,draft]}));
+                    setDraft(null);setRecipeName("");setRecipeText("");setMessage("Recipe added. Review step timing in dish details.");
+                  }}>Add to this cook</button>
+                </div>}
+                {message && <p className="notice" role="status">{message}</p>}
+              </div>}
             </>}
             {editingDishId && <div className="dish-edit-heading"><h3>Edit dish</h3><button type="button" className="link" onClick={()=>setEditingDishId(null)}>← All dishes</button></div>}
             {!editingDishId && meal.dishes.length>0 && <p className="muted small">Select Edit on a dish above to change its details.</p>}
@@ -540,28 +571,7 @@ export default function Home() {
             </div>}
           </section>
 
-          <section className="panel">
-            <div className="section-title"><span className="section-icon">📋</span><div><p className="eyebrow">OPTIONAL</p><h2>Import a recipe</h2></div></div>
-            <p className="muted">Paste your recipe or load a plain text file. We&apos;ll turn each line into an editable checklist step. Photo/PDF intelligence comes next.</p>
-            <label htmlFor="recipe-name">Recipe title</label>
-            <input id="recipe-name" value={recipeName} onChange={e=>setRecipeName(e.target.value)} placeholder="Grandma's mac & cheese"/>
-            <label htmlFor="recipe-text">Recipe instructions</label>
-            <textarea id="recipe-text" rows={7} value={recipeText} onChange={e=>setRecipeText(e.target.value)} placeholder={"1. Preheat oven\n2. Prepare ingredients\n3. Bake until cooked\n4. Let rest and serve"}/>
-            <label className="file-label" htmlFor="recipe-file">Choose a .txt or .md recipe</label>
-            <input id="recipe-file" className="file-input" type="file" accept=".txt,.md,text/plain,text/markdown" onChange={e=>void onTextFile(e.target.files?.[0])}/>
-            <button className="button secondary" disabled={!recipeText.trim()} onClick={()=>{
-              const parsed=parseRecipeText(recipeName,recipeText);
-              if(!parsed.steps?.length){setMessage("No recipe steps found. Try one instruction per line.");return;}
-              setDraft(parsed);setMessage("");
-            }}>Preview recipe steps</button>
-            {draft && <div className="draft">
-              <strong>Review {draft.steps?.length} imported steps</strong>
-              <p className="muted small">The basic importer treats each non-empty line as a step, including ingredient lines. Remove any unwanted lines from the source before importing. Timing stays unassigned until you confirm it.</p>
-              <ol>{draft.steps?.map(s=><li key={s.id}>{s.title}</li>)}</ol>
-              <button className="button primary" onClick={()=>{patch(m=>({...m,dishes:[...m.dishes,draft]}));setDraft(null);setRecipeName("");setRecipeText("");setMessage("Added recipe. Set each step's timing in the dish editor.");}}>Add to this cook</button>
-            </div>}
-            {message && <p className="notice" role="status">{message}</p>}
-          </section>
+
         </div>
 
 
