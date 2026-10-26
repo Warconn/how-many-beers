@@ -143,3 +143,20 @@ test("a recipe can be imported from the same Add Dish interface as templates", a
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
   await expect(page.getByRole("complementary", { name: "Live schedule" })).toBeVisible();
 });
+
+test("planner expands one dish to manage its steps without edit mode",async({page})=>{
+ await page.getByRole("button",{name:/Plan a new cook/}).click();
+ await page.getByRole("button",{name:"Add smoked brisket"}).click();
+ await page.getByRole("button",{name:"Add grilled beer-bath brats"}).click();
+ await page.getByRole("button",{name:/Smoked brisket steps/}).click();
+ await expect(page.getByRole("region",{name:"Smoked brisket steps"})).toBeVisible();
+ await expect(page.getByRole("button",{name:"Add a step to Smoked brisket"})).toBeVisible();
+ await page.getByRole("button",{name:"Add a step to Smoked brisket"}).click();
+ await page.getByLabel("Step title").fill("Get wood pellets");
+ await page.getByRole("button",{name:"Save step"}).click();
+ await expect(page.getByText("Get wood pellets")).toBeVisible();
+ await page.reload();
+ await page.getByRole("button",{name:/Resume planning/}).click();
+ await page.getByRole("button",{name:/Smoked brisket steps/}).click();
+ await expect(page.getByText("Get wood pellets")).toBeVisible();
+});
