@@ -56,9 +56,9 @@ test("template picker adds dishes and keeps their settings separate", async ({ p
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
   await page.getByRole("button", { name: "Edit Smoked brisket", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Edit dish", exact: true })).toBeVisible();
+  await page.getByText("Dish settings", { exact: true }).click();
   await page.getByLabel("Dish name").fill("Saturday brisket");
-  await page.getByRole("button", { name: "← Back to menu" }).click();
+  await page.getByRole("button", { name: "Edit Saturday brisket", exact: true }).click();
   await expect(page.getByText("Saturday brisket").first()).toBeVisible();
   await expect(page.getByText("Grilled beer-bath brats").first()).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();

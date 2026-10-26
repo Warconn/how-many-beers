@@ -54,7 +54,7 @@ Allow one active/planning cook per user or device, with many completed archived 
 1. **Home**: Resume the existing cook prominently (name, planned serving time, dish count, status, meaningful next action). Start new cook, browse history/repeat and access templates indirectly. No full planner or giant form on entry.
 2. **Cook workspace**: The primary planning and overview surface for a particular cook. Name/serving time, menu of dishes, one combined timeline and unambiguous transition to Cooking Mode. A session in progress can also be viewed here without changing its state.
 3. **Add dish**: Pick a starter template (Brisket, Brats, Wings, Turkey) or start blank. Preview and optionally adjust defaults before adding. Return to the same cook.
-4. **Dish details**: Edit name, settings, and its ordered steps, with ownership visible. Provide a clear return to the shared cook view.
+4. **Adjust a dish**: Expand its menu card to work directly with its steps. Keep name and equipment/timing settings in a secondary disclosure within that card. No separate details surface or return navigation.
 5. **Cooking Mode**: Execution-only, emphasizing Now / Next / Later and completion/logging. No competing setup. Easily return to overview and Home. Retain existing event semantics.
 6. **History**: Accessed from Home; previous cooks are immutable until explicitly repeated into a new cook.
 
@@ -137,24 +137,32 @@ The workspace now prioritizes planning actions over a full-width timeline. At de
 This release reuses existing cook/session persistence, templates, step actions and cooking mode. The schedule is derived from the same timeline data, not separately persisted. Playwright now covers sidebar placement, responsive stacking and expand/collapse behavior. Follow-up refinements: collapse the detailed checklist preview by default, strengthen per-dish step editing and validate the flow on real devices. Promotion to `main` requires a green CI run, review of visual screenshots and acceptance of the full plan-to-cook journey.
 
 
-## Issue #28 implementation
+## Issue #28: one menu surface
 
-- A separate Add a dish action opens template or pasted/uploaded text import. Adding
-  closes the picker and returns to the menu; Cancel adding leaves the cook unchanged.
-- Each dish card is a keyboard-accessible selection button with its name, equipment,
-  step count and selected state. Only the selected dish's editor is shown.
-- Dish name and ordered step actions share one contextual editor. Advanced settings
-  are collapsed above the steps so they are available without scrolling through them.
-- Back to menu exits details without changing cook status. Dish removal asks for
-  confirmation and retains recorded events. Existing stable IDs and storage schema
-  are reused. The derived combined schedule remains visible on desktop and follows
-  planning on narrow phones.
-- No direct schedule editing (#30), Ready panel removal (#31), URL ingestion or
-  deployment configuration changes are included.
+Review feedback on the first PR iteration found that a menu card plus a separate
+Dish details / Edit dish panel still felt layered. The revision uses an inline
+accordion within the menu instead, with a single dish heading and no return navigation.
 
-Playwright covers template/import creation, selecting and renaming one of two dishes,
-custom steps, refresh/resume, and editing/reordering/removing steps in an existing
-cooking session while preserving IDs, completion records and temperature events.
-The new Add/Edit acceptance test was first run against the previous UI and failed
-because adding left the template picker open. Desktop/mobile screenshots are attached
-by the tests for review; optional video recording depends on the runner's browser setup.
+1. Set serving time.
+2. Add a template or imported text recipe in the menu. Cancel adding does not mutate
+   the cook. After adding, the picker closes and the new dish expands immediately;
+   keyboard focus moves to its header.
+3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
+   header collapses it. Only one dish is expanded at a time.
+4. Use Dish settings for name, equipment, durations and optional reference settings.
+   Settings stay collapsed by default. Step actions are visible directly in the dish.
+5. Add more dishes or start cooking. The responsive Live Schedule stays derived from
+   the same cook; no direct timeline editing (#30) or Ready panel removal (#31).
+
+The step list drops nested cards and repeated dish labels, while keeping instructions,
+condition warnings and existing event semantics. Numbers and reorder boundaries are
+local to the dish; moving a step swaps it with its own dish's neighbor and preserves
+other dishes' relative order and recorded events. Existing global checklist reordering
+continues to use the original behavior. No storage schema or ID changes.
+
+Playwright covers creation, import, cancellation, auto-expansion, one-card selection,
+settings, back/collapse/resume, and editing/reordering/removing steps in a saved cooking
+session without changing completion or temperature events. The inline-menu acceptance
+test first failed against the separate-panel UI. Desktop and phone screenshots are
+saved under docs/screenshots and attached to test runs. CI uses managed Chromium;
+this cloud runner uses system Chromium with optional video disabled.
