@@ -125,3 +125,21 @@ test("mobile planner keeps planning controls first and schedule accessible",asyn
   expect(sched.y).toBeGreaterThan(p.y);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+test("a recipe can be imported from the same Add Dish interface as templates", async ({ page }) => {
+  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await expect(page.getByRole("heading", { name: "Add a dish" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start from template" })).toBeVisible();
+  await page.getByRole("button", { name: "Import a recipe" }).click();
+  await expect(page.getByLabel("Recipe title")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Choose a template" })).toHaveCount(0);
+  await page.getByLabel("Recipe title").fill("Mac and cheese");
+  await page.getByLabel("Recipe instructions").fill("Preheat oven\nCook pasta\nBake");
+  await page.getByRole("button", { name: "Preview recipe steps" }).click();
+  await page.getByRole("button", { name: "Add to this cook" }).click();
+  await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
+  await page.getByRole("button", { name: "Start from template" }).click();
+  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
+  await expect(page.locator(".workspace-dish")).toHaveCount(2);
+  await expect(page.getByRole("complementary", { name: "Live schedule" })).toBeVisible();
+});
