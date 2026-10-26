@@ -235,3 +235,12 @@ A compact navigation/header, optional Beerometer and secondary step options redu
 clutter. Clock updates never complete steps or reinterpret condition-driven checks.
 Home/overview/reload preserve lifecycle and actual events. See [Cooking Mode](cooking-mode.md)
 for exact thresholds, editing safeguards, tests and real-device QA limits.
+
+## Issue #39: save now, start later
+
+Planning includes an explicit Save plan for later action. After successful storage
+acknowledgment, Home displays the same planning cook and its next planned start dates.
+Start cooking is an explicit Home action; Resume planning adjusts the same plan.
+Failed writes keep the planner open. Saving does not set lifecycle/start timestamps,
+complete tasks or archive an unfinished cook. Existing device-local autosave, one active
+cook, archived history and replacement confirmation remain intact. See [saved plans](saved-plans.md).

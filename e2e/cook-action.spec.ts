@@ -118,7 +118,7 @@ test('legacy started cook keeps its original start when continuing', async ({ pa
   const saved = migrateMeal({ ...newMeal(), dishes: [createDish('brisket')], mode: undefined, startedAt: '2026-10-25T12:00:00.000Z' });
   await page.evaluate(value => localStorage.setItem('how-many-beers:meal:v1', JSON.stringify(value)), saved);
   await page.reload();
-  await page.getByRole('button', { name: /Resume planning/ }).click();
+  await page.getByRole('button', { name: /View cook/ }).click();
   await page.getByRole('button', { name: 'Continue cooking', exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual({ ...saved, mode: 'cooking' });

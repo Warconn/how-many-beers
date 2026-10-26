@@ -379,3 +379,11 @@ The execution checklist separates **Now**, **Next** (next 30 minutes), **Later**
 section. Navigation, readings, notes and history retain the same cook and timestamps.
 The smaller header, optional Beerometer and secondary step options keep attention on
 cooking. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).
+
+## Save a plan for later (#39)
+
+Use **Save plan for later** beside Start cooking to confirm a device-local save and
+return Home without starting. Home shows the first planned step and cooking start,
+with full dates/timezone, plus **Start cooking** and **Resume planning**. Existing
+changes still autosave. This keeps one active/planning cook per browser; it does not
+add cloud sync or automatic reminders. See [saved-plan behavior](docs/saved-plans.md).
