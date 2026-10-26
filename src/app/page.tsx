@@ -112,6 +112,7 @@ export default function Home() {
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
   const [showDishSetup, setShowDishSetup] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
+  const [showChecklistPreview, setShowChecklistPreview] = useState(false);
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
@@ -580,7 +581,8 @@ export default function Home() {
                     <div><span>First planned step</span><strong>{when(timeline.find(t => !!t.scheduledAt)?.scheduledAt ?? null)}</strong></div>
                   </div>
                 )}
-                {(meal.dishes.length > 0 || timeline.length > 0) && (
+                {timeline.length > 0 && <button type="button" className="button secondary" onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview?"Hide full checklist":"Review full checklist"} ({timeline.length} steps)</button>}
+                {showChecklistPreview && (meal.dishes.length > 0 || timeline.length > 0) && (
                   <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
                     <div className="preview-intro">
                       <div>
