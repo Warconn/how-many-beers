@@ -583,7 +583,7 @@ export default function Home() {
           </div>
         </>
       )}
-      <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span></footer>
+      <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
     </main>
   );
 }
