@@ -188,6 +188,9 @@ export default function Home() {
 
 
   const cooking = view === "cooking";
+  const cookInProgress = meal.mode === "cooking" || !!meal.startedAt;
+  const startBlockReason = timeline.length === 0 ? "Add a dish or prep step to start."
+    : !Number.isFinite(new Date(meal.serveAt).getTime()) ? "Set a valid serving date and time to start." : "";
   const hasActiveWork = meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
   const beginNewCook = () => {
     if (hasActiveWork && !window.confirm("Start a new cook? This replaces the unfinished cook saved on this device. Export a backup first if you want to keep it.")) return;
@@ -443,7 +446,7 @@ export default function Home() {
       ) : (
         <>
           <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
-          {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps. <button type="button" className="link" onClick={()=>setView("cooking")}>Return to cooking →</button></p>}
+          {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
           <div className="guided-planner"><div className="guided-main">
           <section className="hero panel">
             <div>
@@ -587,58 +590,37 @@ export default function Home() {
               </article>)}
             </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
           </section>
-          <div className="planning-layout">
-            <div className="stack">
-              <section className="panel ready-panel">
-                <p className="eyebrow">READY WHEN YOU ARE</p>
-                <h2>One cook, everything on the menu.</h2>
-                <p className="muted">{meal.dishes.length === 0
-                  ? (timeline.length ? timeline.length+" prep steps ready." : "Add a dish or custom step to build a single coordinated cook.")
-                  : meal.dishes.length + (meal.dishes.length === 1 ? " dish" : " dishes") + " in this cook · " + timeline.length + " steps in one checklist."}</p>
-                {warnings.map((warning,i) => <p className="warning" key={i}>⚠️ {warning}</p>)}
-                {timeline.some(t => t.scheduledAt === null) && <p className="warning">⚠️ Some imported recipe steps don't have timing yet. Add durations for a useful schedule.</p>}
-                {meal.dishes.length > 0 && (
-                  <div className="ready-summary">
-                    <div><span>Serve</span><strong>{when(meal.serveAt || null)}</strong></div>
-                    <div><span>First planned step</span><strong>{when(timeline.find(t => !!t.scheduledAt)?.scheduledAt ?? null)}</strong></div>
-                  </div>
-                )}
-                {timeline.length > 0 && <button type="button" className="button secondary" onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview?"Hide full checklist":"Review full checklist"} ({timeline.length} steps)</button>}
-                {showChecklistPreview && (meal.dishes.length > 0 || timeline.length > 0) && (
-                  <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
-                    <div className="preview-intro">
-                      <div>
-                        <p className="eyebrow">BEFORE YOU START</p>
-                        <h3>Preview your checklist</h3>
-                      </div>
-                      <span className="preview-count">{timeline.length} steps</span>
-                    </div>
-                    <p className="muted small">All dishes appear in one timeline, ordered by planned time. You can review the tasks now, then check them off once you start cooking.</p>
-                    <div className="checklist preview-task-list">
-                      {timeline.map(task => taskCard(task, "planning"))}
-                    </div>
-                    <AddStepForm onAdd={addCustom}/>
-                    {message && <p className="form-error" role="alert">{message}</p>}
-                    {timeline.some(task => task.scheduledAt === null) && (
-                      <p className="warning">Some imported steps need durations before they can be scheduled.</p>
-                    )}
-                  </section>
-                )}
-                {timeline.length===0 && <AddStepForm onAdd={addCustom}/>}
-                <button type="button" className="button primary start-cook-btn"
-                  disabled={timeline.length === 0 || !Number.isFinite(new Date(meal.serveAt).getTime())}
-                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setView("cooking");setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});}}>
-                  {meal.startedAt ? "▶ Return to cooking" : "🔥 Start the cook"}
-                </button>
-                <p className="small muted">{meal.startedAt ? "Your current cook is saved. Returning to it won't create another one." : "Nothing starts until you choose Start the cook."} You can always return to the plan without losing progress.</p>
-              </section>
-              <aside className="panel tip">
-                <strong>A heads-up about timing</strong>
-                <p>Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
-                <button className="link" onClick={beginNewCook}>Start a fresh plan →</button>
-              </aside>
+          <section className="cook-actions" aria-label="Cooking actions">
+            <div className="cook-action-controls">
+              <button type="button" className="button primary cook-action-button"
+                disabled={!cookInProgress && !!startBlockReason}
+                aria-describedby={!cookInProgress && startBlockReason ? "cook-start-help" : undefined}
+                onClick={() => {
+                  if (!cookInProgress) patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));
+                  else if (meal.mode !== "cooking") patch(m => ({...m, mode: "cooking"}));
+                  setView("cooking");setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});
+                }}>{cookInProgress ? "Continue cooking" : "Start cooking"}</button>
+              {timeline.length > 0 && <button type="button" className="link review-checklist-button"
+                aria-expanded={showChecklistPreview} aria-controls="checklist-preview"
+                onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview ? "Hide checklist" : "Review checklist"}</button>}
             </div>
-          </div>
+            {!cookInProgress && startBlockReason && <p className="muted small" id="cook-start-help">{startBlockReason}</p>}
+          </section>
+          <section className="plan-notes" aria-label="Plan notes">
+            {warnings.map((warning,i) => <p className="warning" key={i}>{warning}</p>)}
+            {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. Review them before relying on the schedule; imported recipe durations can be set in Dish settings.</p>}
+            <p className="muted small timing-guidance">Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
+          </section>
+          {showChecklistPreview && timeline.length > 0 && (
+            <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
+              <div className="preview-intro"><h3>Cooking checklist</h3></div>
+              <p className="muted small">Review all dishes together. Check off steps and record actual readings in Cooking Mode.</p>
+              <div className="checklist preview-task-list">{timeline.map(task => taskCard(task, "planning"))}</div>
+              <AddStepForm onAdd={addCustom}/>
+              {message && <p className="form-error" role="alert">{message}</p>}
+            </section>
+          )}
+          {timeline.length === 0 && <AddStepForm onAdd={addCustom}/>}
           </div>
           <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
@@ -649,7 +631,7 @@ export default function Home() {
               </ol>
               {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
             </> : <p className="muted small">Add a dish to see your schedule.</p>}
-            {warnings.length>0 && <p className="muted small">{warnings.length} timing or equipment notes to review below.</p>}
+            {warnings.length>0 && <p className="muted small">Review shared equipment in the plan notes.</p>}
           </aside>
           </div>
         </>

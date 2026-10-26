@@ -35,14 +35,14 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
 test("resuming an in-progress cook preserves cooking status", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
-  await page.getByRole("button", { name: /Start the cook/ }).click();
+  await page.getByRole("button", { name: "Start cooking", exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
   await expect(page.getByRole("button", { name: /Continue cooking/ })).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: /View cook/ }).click();
   await expect(page.getByText(/Cook in progress/).first()).toBeVisible();
-  await page.locator(".notice").getByRole("button", { name: "Return to cooking →", exact: true }).click();
+  await page.getByRole("button", { name: "Continue cooking", exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
 });
 
