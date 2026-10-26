@@ -404,3 +404,5 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 @media(max-width:600px){.step-field-grid{grid-template-columns:minmax(0,1fr)}.step-editor{padding:12px}.step-editor-actions .button{flex:1}.step-editor input[type=datetime-local]{font-size:14px}}
 .step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
 .step-saved{font-size:12px;color:#456439;margin:8px 0}
+
+.planned-cook-start{border-top:1px solid var(--line);padding-top:15px;margin-top:15px}.planned-cook-start>.eyebrow{margin:0 0 7px}.planned-cook-start>strong{display:block;font-size:15px}.planned-cook-start p.small{margin:6px 0;line-height:1.5}.planned-cook-start time{display:block;font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.5}.planned-cook-on-heat{margin:14px 0;padding:12px 0;border-top:1px solid var(--line)}.planned-cook-on-heat>span,.planned-cook-on-heat>strong{display:block;font-size:12px;line-height:1.5}.planned-cook-on-heat>span{color:var(--muted)}.save-plan-button{min-height:48px}.home-actions #home-start-help{flex-basis:100%;margin:0}

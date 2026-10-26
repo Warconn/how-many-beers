@@ -68,3 +68,12 @@ npm run build
 Keep updates concise, plainspoken and product-oriented. Do not use em dashes. Explain tradeoffs and show the actual tested behavior. Distinguish between implementation complete, local tests passing, CI green, Cloudflare preview deployed and production deployed. Link the issue and PR. If an external account action is unavailable, say so instead of claiming Cloudflare or GitHub settings were changed.
 
 This file is the durable working summary of the October 2026 ChatGPT product discussion, not a transcript. For details beyond it, consult the docs and linked issues.
+
+## Save planned cook follow-up (#39)
+
+Save plan for later explicitly acknowledges the current browser-storage write and
+returns Home in planning. Home shows edited start times and supports starting the
+same cook later. Keep one active/planning cook per browser, existing autosave,
+archive/history, IDs and actual timestamps. Failed writes must not claim success.
+Suggested times do not automatically start a session. Cloud sync, background reminders
+and a library of multiple future plans remain separate work.

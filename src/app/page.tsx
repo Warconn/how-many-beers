@@ -7,6 +7,7 @@ import { chronologicalTasks } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
+import PlannedCookStart from "@/components/PlannedCookStart";
 import TaskRow from "@/components/TaskRow";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
@@ -129,6 +130,7 @@ export default function Home() {
   const [outcome,setOutcome] = useState("");
   const [showFinish,setShowFinish] = useState(false);
   const [storageError,setStorageError] = useState("");
+  const [planSaveResult,setPlanSaveResult] = useState<"saved"|"error"|null>(null);
 
   useEffect(() => {
     try{
@@ -194,13 +196,34 @@ export default function Home() {
   const cookInProgress = meal.mode === "cooking" || !!meal.startedAt;
   const startBlockReason = timeline.length === 0 ? "Add a dish or prep step to start."
     : !Number.isFinite(new Date(meal.serveAt).getTime()) ? "Set a valid serving date and time to start." : "";
-  const hasActiveWork = meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
+  const hasActiveWork = timeline.length > 0 || meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
+  const planStepDraftOpen=editingStep?.context==="dish" || editingStep?.context==="checklist" || newStepDishId!==null;
+  const savePlanForLater = () => {
+    if(cookInProgress || timeline.length===0 || planStepDraftOpen)return;
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(meal));
+      setStorageError(previous=>previous.startsWith("Browser storage is unavailable") || previous.startsWith("Could not save the cook start.") ? "" : previous);
+      setPlanSaveResult("saved");setView("home");setEditingStep(null);
+      window.scrollTo({top:0,behavior:"instant"});
+    }catch{setPlanSaveResult("error");requestAnimationFrame(()=>document.getElementById("save-plan-error")?.focus());}
+  };
+  const startCooking = () => {
+    if(!cookInProgress && startBlockReason)return;
+    const next:Meal=!cookInProgress ? {...meal,mode:"cooking",startedAt:meal.startedAt??new Date().toISOString()}
+      : meal.mode!=="cooking" ? {...meal,mode:"cooking"} : meal;
+    try{
+      if(next!==meal){localStorage.setItem(STORAGE_KEY,JSON.stringify(next));setMeal(next);}
+      setStorageError(previous=>previous.startsWith("Could not save the cook start.") ? "" : previous);
+      setPlanSaveResult(null);setView("cooking");setShowCompleted(false);
+      window.scrollTo({top:0,behavior:"instant"});
+    }catch{setStorageError("Could not save the cook start. Your plan is unchanged; free browser storage or export a backup before retrying.");requestAnimationFrame(()=>document.getElementById("storage-warning")?.focus());}
+  };
   const beginNewCook = () => {
     if (hasActiveWork && !window.confirm("Start a new cook? This replaces the unfinished cook saved on this device. Export a backup first if you want to keep it.")) return;
     try {
       const fresh = newMeal();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-      setMeal(fresh);
+      setMeal(fresh);setPlanSaveResult(null);
       setView("planning");
       setShowDishSetup(true);
       setEditingDishId(null);
@@ -344,7 +367,7 @@ export default function Home() {
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
-      {storageError && <div className="warning" role="alert">⚠️ {storageError}</div>}
+      {storageError && <div id="storage-warning" tabIndex={-1} className="warning" role="alert">⚠️ {storageError}</div>}
       <header className="site-header">
         <div className="brand-icon" aria-hidden>🍺</div>
         <div>
@@ -359,16 +382,22 @@ export default function Home() {
         <section className="home-layout" aria-label="Home">
           <div className="home-primary">
           <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
+          {planSaveResult==="saved" && <p className="notice" role="status">Plan saved on this device. Come back here to start when you’re ready.</p>}
           {hasActiveWork && <section className="panel home-current">
-            <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{meal.mode === "cooking" ? "In progress" : "Planning"}</span></div>
+            <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{cookInProgress ? "In progress" : "Planning"}</span></div>
             <h3>{meal.name || "Your cook"}</h3>
             <p className="muted">{when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
             {meal.dishes.length > 0 && <p className="home-dishes">{meal.dishes.map(d=>d.name).join(" · ")}</p>}
+            {!cookInProgress && <PlannedCookStart meal={meal} timeline={timeline}/>}
             <div className="home-actions">
-              {meal.mode === "cooking" ? <>
-                <button type="button" className="button primary" onClick={()=>setView("cooking")}>Continue cooking →</button>
+              {cookInProgress ? <>
+                <button type="button" className="button primary" onClick={startCooking}>Continue cooking →</button>
                 <button type="button" className="button secondary" onClick={()=>setView("planning")}>View cook</button>
-              </> : <button type="button" className="button primary" onClick={()=>setView("planning")}>Resume planning →</button>}
+              </> : <>
+                <button type="button" className="button primary" disabled={!!startBlockReason} aria-describedby={startBlockReason?"home-start-help":undefined} onClick={startCooking}>Start cooking</button>
+                <button type="button" className="button secondary" onClick={()=>{setPlanSaveResult(null);setView("planning");}}>Resume planning →</button>
+              </>}
+              {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
           </section>}
           <section className="panel home-new">
@@ -627,15 +656,14 @@ export default function Home() {
               <button type="button" className="button primary cook-action-button"
                 disabled={!cookInProgress && !!startBlockReason}
                 aria-describedby={!cookInProgress && startBlockReason ? "cook-start-help" : undefined}
-                onClick={() => {
-                  if (!cookInProgress) patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));
-                  else if (meal.mode !== "cooking") patch(m => ({...m, mode: "cooking"}));
-                  setView("cooking");setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});
-                }}>{cookInProgress ? "Continue cooking" : "Start cooking"}</button>
+                onClick={startCooking}>{cookInProgress ? "Continue cooking" : "Start cooking"}</button>
+              {!cookInProgress && <button type="button" className="button secondary save-plan-button" disabled={timeline.length===0 || planStepDraftOpen} aria-describedby={planStepDraftOpen?"save-plan-help":undefined} onClick={savePlanForLater}>Save plan for later</button>}
               {timeline.length > 0 && <button type="button" className="link review-checklist-button"
                 aria-expanded={showChecklistPreview} aria-controls="checklist-preview"
                 onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview ? "Hide checklist" : "Review checklist"}</button>}
             </div>
+            {!cookInProgress && planStepDraftOpen && <p id="save-plan-help" className="muted small">Save or cancel the open step first, then save your plan for later.</p>}
+            {planSaveResult==="error" && <p id="save-plan-error" tabIndex={-1} className="warning" role="alert">Could not save the plan. Keep this page open, free browser storage or export a backup, then retry.</p>}
             {!cookInProgress && startBlockReason && <p className="muted small" id="cook-start-help">{startBlockReason}</p>}
           </section>
           <section className="plan-notes" aria-label="Plan notes">
