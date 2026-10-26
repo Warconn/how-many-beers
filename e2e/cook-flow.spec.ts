@@ -16,11 +16,11 @@ test("home is a clean starting point with history access", async ({ page }) => {
 test("plan brisket and brats, see their combined timeline, then resume", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
   await expect(page.getByRole("heading", { name: /0 dishes in this cook/ })).toBeVisible();
-  await page.getByRole("button", { name: "+ Add dish", exact: true }).click();
+  await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
 
-  await page.getByLabel("Choose a starting template").selectOption("brats");
-  await page.getByRole("button", { name: "+ Add dish", exact: true }).click();
+  await page.getByRole("button", { name: "Add or edit dishes" }).click();
+  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.getByRole("heading", { name: /2 dishes in this cook/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cooking timeline" })).toBeVisible();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
