@@ -29,11 +29,11 @@ jobs:
         run: npm run test
       - name: Browser tests
         run: npm run test:e2e
-      - name: Upload screenshots, video and traces on failure
-        if: failure()
+      - name: Upload browser report, screenshots and traces
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-failures
+          name: playwright-browser-report
           path: |
             test-results/
             playwright-report/
