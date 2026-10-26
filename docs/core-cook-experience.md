@@ -151,7 +151,8 @@ accordion within the menu instead, with a single dish heading and no return navi
    header collapses it. Only one dish is expanded at a time.
 4. Use Dish settings for name, equipment, durations and optional reference settings.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
-   Remove dish is a separate visible action beside the heading, not hidden in settings;
+   Remove dish is a compact trash icon beside the heading, not hidden in settings;
+   it retains a descriptive accessible label/tooltip and a 44px touch target;
    confirmation is required. Cancel does not mutate the cook, and removing one dish
    preserves other dishes, recorded events and the open editor for another dish.
    Focus returns to a remaining dish or Add a dish after removal.

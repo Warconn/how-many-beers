@@ -355,8 +355,8 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 /* Removal is a sibling of selection, never nested inside the dish button/settings. */
 .dish-header{display:flex;align-items:center;min-width:0;padding-right:10px}
 .dish-header .dish-select{flex:1;width:auto;min-width:0}
-.dish-remove{flex-shrink:0;background:transparent;border:0;color:#9b3e2b;font-size:12px;font-weight:650;padding:10px 8px;min-width:76px;min-height:44px;cursor:pointer}
-.dish-remove:hover{text-decoration:underline}.dish-remove:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.dish-remove{flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);cursor:pointer}
+.dish-remove:hover{color:#9b3e2b;background:#f9ede8}.dish-remove:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 @media(max-width:600px){.dish-header{padding-right:6px}.dish-header .dish-select .dish-toggle{font-size:0}.dish-header .dish-toggle::after{content:"⌄";font-size:18px}.dish-header .dish-select[aria-expanded=true] .dish-toggle::after{content:"⌃"}}
 .dish-inline-editor{padding:0 16px 16px;min-width:0}
 .dish-advanced{border-bottom:1px solid var(--line);padding:4px 0 10px}
