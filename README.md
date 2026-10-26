@@ -13,6 +13,9 @@ The experience should feel closer to an intelligent cooking checklist than a rec
 
 ## Product vision
 
+**Current direction (October 25, 2026): Experience first.** How Many Beers is a cook management companion. Templates and timing intelligence support the cook experience, rather than defining the primary navigation. Our next milestone is [Core Cook Experience v1](docs/core-cook-experience.md): Home/resume, a cook workspace with multiple dishes, one shared timeline, and focused Cooking Mode. This new direction supersedes conflicting older roadmap priorities below.
+
+
 **“Tell us what you're making and when you're eating. We'll figure out the game plan.”**
 
 Four continuous experiences:
@@ -62,7 +65,7 @@ As of the latest reviewed source code:
 
 ## MVP: what “useful enough to share” means
 
-The first proper release should allow a cook to complete this entire loop without switching to Apple Notes. The four starter methods and cook history are implemented; real phone testing, reliable offline operation, weight-aware estimates and coordinated resources still need work.
+The first proper release should let a cook move clearly from Home to their meal workspace, add several dishes, use a unified timeline, follow Cooking Mode, and resume the same session later. The four starter methods and cook history are already implemented. Advanced estimates and resource scheduling remain later enhancements.
 
 ### Must-haves
 
@@ -70,8 +73,8 @@ The first proper release should allow a cook to complete this entire loop withou
 - [x] Focused Cooking Mode with completion tracking, notes, readings and activity timestamps. **[#1](https://github.com/Warconn/how-many-beers/issues/1), closed.**
 - [x] Finish, explicitly save, browse and **repeat a previous cook** without destroying its history. **[#8](https://github.com/Warconn/how-many-beers/issues/8).**
 - [x] Deliver four sourced starter methods: **pellet brisket, smoked-fried wings, grilled beer-bath brats, and unstuffed oven turkey**. Editable timing assumptions and safe condition checks are included. **[#7](https://github.com/Warconn/how-many-beers/issues/7).** Alternate methods are tracked under **[#18](https://github.com/Warconn/how-many-beers/issues/18)**.
-- [ ] Make brisket timing input intuitive: weight/cut, smoker temperature, reasonable duration **range**, buffer, safe rest/hold and manual overrides. **[#5](https://github.com/Warconn/how-many-beers/issues/5).**
-- [ ] Display sensible dependencies and at least basic late/early plan adjustment; do not imply competing oven/grill resources can perform incompatible work simultaneously. **[#3](https://github.com/Warconn/how-many-beers/issues/3).**
+- [ ] **Later, after the core experience:** Make brisket timing input intuitive: weight/cut, smoker temperature, reasonable duration **range**, buffer, safe rest/hold and manual overrides. **[#5](https://github.com/Warconn/how-many-beers/issues/5).**
+- [ ] **Later, after the core experience:** Display sensible dependencies and at least basic late/early plan adjustment; do not imply competing oven/grill resources can perform incompatible work simultaneously. **[#3](https://github.com/Warconn/how-many-beers/issues/3).**
 - [ ] Preserve data safely across refresh and browser use, with a recovery/export path and realistic mobile/offline behavior. **[#10](https://github.com/Warconn/how-many-beers/issues/10).**
 - [ ] Add optional login, private cloud persistence and automatic safe cross-device resume before the broader public beta. **[#19](https://github.com/Warconn/how-many-beers/issues/19), [#20](https://github.com/Warconn/how-many-beers/issues/20).**
 - [ ] Real mobile usability tests, food-safety review, clear privacy/storage notices and user feedback. **[#4](https://github.com/Warconn/how-many-beers/issues/4).**
@@ -100,20 +103,16 @@ See [all tracked issues](https://github.com/Warconn/how-many-beers/issues) for a
 
 ## Prioritized delivery sequence
 
-| Order | Workstream | Issues | Result |
-| --- | --- | --- | --- |
-| **0. Done** | Editable checklist, starter templates, cook archives | #1, #7, #8 | Plan, cook and save history on this device |
-| **1. First** | Researched weight-based brisket timing | **#5** | Weight + cut + pit method + serving time generate an editable start window; compare recalled 1.5 h/lb rule without assuming it is reliable |
-| **2. Account foundation** | Optional login, private database and ownership policies | **#19** | Safely identify users and privately store cooks in the cloud |
-| **3. Sync foundation** | Migrate guest cooks, autosave, offline queue and conflict-safe replay | **#20**, #10 | Resume on a different device without losing activity |
-| **4. Smarter schedules** | Dependencies, equipment conflicts and replanning | #3 | Better time coordination across dishes |
-| **5. Reliability/testing** | Installable offline-ready app and real mobile beta | #10, #4 | Trustworthy experience in the kitchen and garage |
-| **6. Next** | URL recipe import, personal-history-adjusted timing | #2, #6 | Bring recipes in and improve estimates over repeated cooks |
-| **7. Later** | Notifications, more equipment/methods, voice, probes, collaborative cooks, nutrition and AI | #9, #11–#18 | Expand once the core use case is dependable |
+**Updated October 25, 2026:** [Core Cook Experience v1](docs/core-cook-experience.md) is the immediate milestone. The previous #5-first roadmap is superseded.
 
-We should build **#5 first without waiting for login**. Accounts and sync are the next architecture work, but they must remain optional so the app stays useful as a single-device guest tool.
+1. **P0.1 Home and resume:** Show existing or in-progress cook prominently; safe start-new flow.
+2. **P0.2 Cook workspace:** Organize multiple dishes inside one cook, with a clear merged timeline.
+3. **P0.3 Add dish and edit:** Templates seed individual dishes; their steps are editable in context.
+4. **P0.4 Focused Cooking Mode:** Clear Now/Next/Later execution and simple navigation back to overview and Home.
+5. **P1 Reliability and UX validation:** Retain cook history and event records, improve data safety (#10), and test on real phones (#4).
+6. **P2 Product expansion:** Optional account/cloud sync (#19/#20), weight-based brisket estimates (#5), sophisticated dependencies (#3), URL imports (#2), history-informed timing (#6), and full branding (#21).
 
-A focused personal prototype can be tested before all beta requirements are done. Do not close an issue simply because its first UI exists.
+Existing checklist, starter templates and saved cook features (#1, #7, #8) are reusable foundations, not features to rebuild. Avoid specialized brisket intelligence, new template variants or cloud infrastructure as prerequisites for this UX milestone.
 
 ## Example journeys / acceptance scenarios
 
