@@ -263,3 +263,7 @@ footer{text-align:left;border-top:1px solid var(--line);padding:23px 0;color:var
  .site-header .eyebrow{font-size:9px}
  .home-intro h2{font-size:29px}
 }
+
+/* Discreet deployment identifier for testing screenshots and bug reports. */
+footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;color:#88877f;white-space:nowrap}
+@media(max-width:700px){footer .build-version{float:none;display:block;margin:10px 0 0;text-align:center}}
