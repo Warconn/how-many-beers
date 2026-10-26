@@ -302,3 +302,10 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .home-layout{grid-template-columns:minmax(0,1.45fr) minmax(260px,.75fr);align-items:start;gap:clamp(24px,4.5vw,64px)}
 .home-primary{grid-column:1;min-width:0}.home-guide{grid-column:2;margin-top:3px;max-width:350px}
 @media(max-width:850px){.home-layout{grid-template-columns:minmax(0,1fr);gap:0}.home-primary,.home-guide{grid-column:1}.home-guide{margin-top:32px;max-width:none}}
+
+/* Focused template picking and one-dish editing */
+.template-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:10px;margin:16px 0 4px}
+.template-choice{background:#fff;border:1px solid var(--line);border-radius:10px;text-align:left;padding:16px;display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;color:var(--ink);min-height:83px}
+.template-choice:hover,.template-choice:focus-visible{border-color:var(--accent);outline-offset:2px}
+.template-choice strong{font-size:14px;font-weight:650;grid-column:1}.template-choice span{font-size:12px;color:var(--muted);grid-column:1}.template-choice b{font-size:24px;font-weight:400;color:var(--accent);grid-column:2;grid-row:1 / 3}
+.dish-edit-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0}.dish-edit-heading h3{margin:0}
