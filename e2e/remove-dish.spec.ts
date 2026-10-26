@@ -59,6 +59,8 @@ test('remove is a separate keyboard action with a phone-sized target', async ({ 
   const box = await remove.boundingBox();
   expect(box!.width).toBeGreaterThanOrEqual(44);
   expect(box!.height).toBeGreaterThanOrEqual(44);
+  expect(box!.width).toBeLessThanOrEqual(48);
+  await expect(remove).toHaveAttribute('title', 'Remove Smoked brisket');
   await select.focus();
   await page.keyboard.press('Tab');
   await expect(remove).toBeFocused();

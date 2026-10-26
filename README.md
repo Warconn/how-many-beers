@@ -324,7 +324,8 @@ collapsed disclosure for name, equipment, durations and reference settings. Chan
 save as you make them and update the derived Live Schedule. Step numbering and
 reordering are scoped to the selected dish. Removing a dish requires confirmation;
 recorded activity remains in the cook. Remove dish is visible beside each dish
-heading, including collapsed dishes, as a separate action from selecting/editing.
+heading, including collapsed dishes, as a small trash icon with a descriptive
+label/tooltip and a 44px touch target, separate from selecting/editing.
 Cancelling leaves the cook untouched; removing one dish keeps other dishes and their
 open editor intact. IDs and the browser storage schema are unchanged.
 

@@ -542,7 +542,9 @@ export default function Home() {
                   <span className="dish-summary"><strong>{d.name}</strong><span>{d.equipment} · {timeline.filter(t=>t.dishId===d.id).length} steps</span></span>
                   <span className="dish-toggle">{editingDishId===d.id?"Hide steps ↑":"Adjust steps ↓"}</span>
                 </button>
-                  <button type="button" className="dish-remove" aria-label={"Remove "+d.name} onClick={()=>removeDish(d.id)}>Remove dish</button>
+                  <button type="button" className="dish-remove" aria-label={"Remove "+d.name} title={"Remove "+d.name} onClick={()=>removeDish(d.id)}>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>
+                  </button>
                 </div>
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
