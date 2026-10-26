@@ -47,6 +47,27 @@ test("resuming an in-progress cook preserves cooking status", async ({ page }) =
   await expect(page.getByText("Today's checklist")).toBeVisible();
 });
 
+
+test("template picker adds dishes and keeps their settings separate", async ({ page }) => {
+  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await expect(page.getByRole("heading", { name: "Choose a template" })).toBeVisible();
+  await page.getByRole("button", { name: "Add smoked brisket" }).click();
+  await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
+  await page.getByRole("button", { name: "Add or edit dishes" }).click();
+  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
+  await expect(page.locator(".workspace-dish")).toHaveCount(2);
+  await page.getByRole("button", { name: "Edit Smoked brisket" }).click();
+  await expect(page.getByRole("heading", { name: "Edit dish" })).toBeVisible();
+  await page.getByLabel("Dish name").fill("Saturday brisket");
+  await page.getByRole("button", { name: "Done editing" }).click();
+  await expect(page.getByText("Saturday brisket").first()).toBeVisible();
+  await expect(page.getByText("Grilled beer-bath brats").first()).toBeVisible();
+  await page.getByRole("button", { name: /Home/ }).first().click();
+  await page.reload();
+  await page.getByRole("button", { name: /Resume planning/ }).click();
+  await expect(page.locator(".workspace-dish")).toHaveCount(2);
+});
+
 test("desktop Home keeps heading and primary action in the left column", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const intro = await page.locator(".home-intro").boundingBox();
