@@ -452,7 +452,6 @@ export default function Home() {
                 <button className="link" type="button" onClick={()=>{setEditingDishId(d.id);setShowDishSetup(true)}} aria-label={"Edit "+d.name}>Edit dish details →</button>
               </article>)}
             </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
-}
           </section>
           <div className={"planning-layout" + (showDishSetup ? " workspace-editing" : "")}>
         <div className="stack workspace-editor">
