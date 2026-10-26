@@ -23,7 +23,7 @@ test('dish editor separates adding from selecting and preserves cooks', async ({
   await editor.getByText('Advanced dish settings', { exact: true }).click();
   await editor.scrollIntoViewIfNeeded();
   await info.attach('dish-editor.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
-  await page.screenshot({ path: `/workspace/.onboarding/editor-${info.project.name}.png`, fullPage: false });
+  await page.screenshot({ path: info.outputPath('dish-editor.png'), fullPage: false });
   await editor.getByRole('button', { name: '← Back to menu' }).click();
   await expect(editor).toHaveCount(0);
   await page.getByRole('button', { name: 'Edit Grilled beer-bath brats', exact: true }).click();
