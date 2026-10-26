@@ -101,6 +101,28 @@ The first proper release should let a cook move clearly from Home to their meal 
 
 See [all tracked issues](https://github.com/Warconn/how-many-beers/issues) for acceptance criteria. Long-term features are organized into manageable issues rather than treated as requirements for the first useful release.
 
+## UX test-driven development
+
+For each core UX increment, follow a red/green/review loop:
+1. Write a user-journey Playwright test expressing the intended result, including return navigation and persisted data.
+2. Confirm the new test fails for the missing behavior before implementation (red).
+3. Implement the minimum coherent experience, retaining existing cook data, history, and event semantics (green).
+4. Run Vitest, Playwright for desktop and mobile, plus layout assertions and screenshot capture.
+5. Review the generated visual report, accept intentional changes, and only then promote the stable release from `dev` to `main`.
+
+On every push to `dev`, GitHub Actions runs the browser regression suite. Failed traces and screenshots plus per-run screenshots are attached as artifacts. Browser geometry assertions guard the Home layout; pixel-based golden screenshot baselines are a later step and should be approved deliberately.
+
+### Current UX increment: template picker and isolated dish edits
+
+- A cook contains any number of dishes; each is created from a starter template.
+- `Add or edit dishes` reveals a separate template-picker surface, not a single enormous settings form.
+- Adding a second dish does not replace the first, and one combined timeline remains visible.
+- An explicit Edit action on a dish opens **only that dish's** settings.
+- Returning Home and refreshing preserves the full menu and cook state.
+- Still deferred: dish-level editable step restructuring, recipe intelligence, cross-device sync, and advanced timing predictions.
+
+Acceptance tests live in `e2e/cook-flow.spec.ts`. GitHub workflow: `.github/workflows/browser-tests.yml`.
+
 ## Prioritized delivery sequence
 
 **Updated October 25, 2026:** [Core Cook Experience v1](docs/core-cook-experience.md) is the immediate milestone. The previous #5-first roadmap is superseded.
