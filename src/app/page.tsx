@@ -111,6 +111,7 @@ export default function Home() {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
   const [showDishSetup, setShowDishSetup] = useState(false);
+  const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
   const [recipeText, setRecipeText] = useState("");
@@ -191,6 +192,7 @@ export default function Home() {
       setMeal(fresh);
       setView("planning");
       setShowDishSetup(true);
+      setEditingDishId(null);
       setShowCompleted(false);
       setMessage("");
     } catch { setStorageError("Unable to save a new cook. Your current cook is unchanged."); }
@@ -439,12 +441,12 @@ export default function Home() {
           <section className="workspace-overview" aria-label="Cook overview">
             <div className="workspace-heading">
               <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} in this cook</h2></div>
-              <button type="button" className="button secondary" onClick={()=>setShowDishSetup(v=>!v)}>{showDishSetup ? "Done editing" : "+ Add or edit dishes"}</button>
+              <button type="button" className="button secondary" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? "Done editing" : "Add or edit dishes"}</button>
             </div>
             {meal.dishes.length ? <div className="workspace-dish-grid">
               {meal.dishes.map(d=><article className="workspace-dish" key={d.id}>
                 <strong>{d.name}</strong><span>{d.equipment}</span>
-                <button className="link" type="button" onClick={()=>setShowDishSetup(true)}>Edit dish details →</button>
+                <button className="link" type="button" onClick={()=>{setEditingDishId(d.id);setShowDishSetup(true)}} aria-label={"Edit "+d.name}>Edit dish details →</button>
               </article>)}
             </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
             <div className="workspace-timeline-heading"><h3>Cooking timeline</h3><span>{timeline.length} steps</span></div>
@@ -456,16 +458,21 @@ export default function Home() {
         <div className="stack workspace-editor">
           <section className="panel">
             <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">EDIT MENU</p><h2>Add or edit dishes</h2></div></div>
-            <div className="add-form">
-              <label htmlFor="preset">Choose a starting template</label>
-              <select id="preset" value={preset} onChange={e=>setPreset(e.target.value as BuiltIn)}>
-                {Object.entries(presets).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}
-              </select>
-              <p className="muted small">{presets[preset].notice}</p>
-              <button className="button primary" onClick={()=>patch(m=>({...m,dishes:[...m.dishes,createDish(preset)]}))}>+ Add dish</button>
-            </div>
+            {!editingDishId && <>
+              <h3>Choose a template</h3>
+              <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
+              <div className="template-picker">
+                {(Object.entries(presets) as [BuiltIn, (typeof presets)[BuiltIn]][]).map(([id, template])=>(
+                  <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>patch(m=>({...m,dishes:[...m.dishes,createDish(id)]}))}>
+                    <strong>{template.label}</strong><span>{template.equipment}</span><b aria-hidden="true">+</b>
+                  </button>
+                ))}
+              </div>
+            </>}
+            {editingDishId && <div className="dish-edit-heading"><h3>Edit dish</h3><button type="button" className="link" onClick={()=>setEditingDishId(null)}>← All dishes</button></div>}
+            {!editingDishId && meal.dishes.length>0 && <p className="muted small">Select Edit on a dish above to change its details.</p>}
             {meal.dishes.length>0 && <div className="dish-list">
-              {meal.dishes.map(d=>(
+              {meal.dishes.filter(d=>editingDishId===d.id).map(d=>(
                 <article key={d.id} className="dish-card">
                   <div className="between">
                     <strong>{d.name}</strong>
