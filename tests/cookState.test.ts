@@ -118,3 +118,19 @@ describe("automatic step start",()=>{
     expect(logged.events?.filter(e=>e.kind==="started")).toHaveLength(0);
   });
 });
+
+it('moves a dish step past its own neighbor without reordering other dishes', () => {
+  const meal=seed();
+  meal.dishes.push(createDish('brats'));
+  const tasks=cookTimeline(meal);
+  const dishId=meal.dishes[0].id;
+  const own=tasks.filter(t=>t.dishId===dishId);
+  const saved=recordEvent(meal,own[0].id,'completed','2026-11-25T08:00:00.000Z');
+  const moved=moveStep(saved,own[own.length-1].id,'up',dishId);
+  expect(cookTimeline(moved).filter(t=>t.dishId===dishId).map(t=>t.id)).toEqual([
+    ...own.slice(0,-2).map(t=>t.id),own[own.length-1].id,own[own.length-2].id
+  ]);
+  expect(cookTimeline(moved).filter(t=>t.dishId!==dishId)).toEqual(tasks.filter(t=>t.dishId!==dishId));
+  expect(moved.events).toEqual(saved.events);
+  expect(moved.completed).toEqual(saved.completed);
+});

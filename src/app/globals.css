@@ -354,3 +354,29 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .inline-step-add input{flex:1 1 210px;min-width:0}
 .inline-step-add button{flex:0 0 auto}
 @media(max-width:600px){.inline-step-add{display:grid;grid-template-columns:1fr}.inline-step-add input,.inline-step-add button{width:100%}}
+
+/* Dish selection and editing share one menu surface. */
+.workspace-dish{background:transparent;padding:0!important;gap:0;overflow:hidden}
+.dish-select{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:transparent;border:0;color:inherit;width:100%;padding:16px;cursor:pointer;min-height:76px}
+.dish-summary{display:grid;gap:5px;min-width:0}.dish-summary strong{color:var(--ink);overflow-wrap:anywhere}
+.dish-select .dish-toggle{color:var(--accent-dark);font-weight:650;flex-shrink:0}
+.dish-select:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.workspace-dish.is-open{border-color:#c99579}
+.is-open>.dish-select{background:#faf2ec}
+.dish-inline-editor{padding:0 16px 16px;min-width:0}
+.dish-advanced{border-bottom:1px solid var(--line);padding:4px 0 10px}
+.dish-advanced summary{cursor:pointer;font-weight:650;padding:12px 0;min-height:44px;color:var(--accent-dark)}
+.dish-advanced input{width:100%;min-width:0}.dish-advanced label{display:block;margin:10px 0 6px;font-size:13px;font-weight:650}
+.menu-guidance{margin:-8px 0 16px}
+.menu-add-dish{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;margin-bottom:16px}
+.menu-add-dish h3{margin:0 0 12px}
+.inline-dish-steps{border:0;margin:0;padding-top:8px;gap:0}
+.compact-task{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:14px 0;box-shadow:none}
+.compact-task .task-top{gap:10px}.compact-task .task-main .between{align-items:start;gap:8px}
+.compact-task .task-main strong{font-size:14px}.compact-task .task-main time{font-size:11px}
+.compact-task .task-main p{margin:6px 0;font-size:12px;line-height:1.5}
+.compact-task .task-actions{margin:8px 0 0 36px;gap:6px}
+.compact-task .task-actions button{min-width:44px;min-height:44px}
+.compact-task .preview-index{width:26px;height:26px;flex:0 0 26px}
+.inline-dish-steps>.button{margin-top:14px;min-height:44px}
+@media(max-width:600px){.dish-select{padding:14px;gap:8px}.dish-select .dish-toggle{font-size:11px}.dish-inline-editor{padding:0 12px 14px}.compact-task .task-main .between{display:grid;gap:3px}.compact-task .task-actions{margin-left:0}}

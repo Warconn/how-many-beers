@@ -101,14 +101,18 @@ export function removeStep(meal: Meal, taskId: string, occurredAt: string): Exte
   };
 }
 
-export function moveStep(meal: Meal, taskId: string, direction: "up"|"down"): ExtendedMeal {
+export function moveStep(meal: Meal, taskId: string, direction: "up"|"down", dishId?: string): ExtendedMeal {
   const m = migrateMeal(meal);
-  const order = cookTimeline(m).map(t=>t.id);
-  const i = order.indexOf(taskId);
+  const timeline = cookTimeline(m);
+  const order = timeline.map(t=>t.id);
+  const scoped = dishId ? timeline.filter(t=>t.dishId===dishId).map(t=>t.id) : order;
+  const i = scoped.indexOf(taskId);
   if (i<0) throw new Error("Task not found.");
   const j = i + (direction==="up" ? -1 : 1);
-  if (j<0 || j>=order.length) return m;
-  [order[i],order[j]]=[order[j],order[i]];
+  if (j<0 || j>=scoped.length) return m;
+  // Swap only these slots so other dishes retain their positions and relative order.
+  const from=order.indexOf(scoped[i]), to=order.indexOf(scoped[j]);
+  [order[from],order[to]]=[order[to],order[from]];
   return {...m, taskOrder: order};
 }
 
