@@ -344,3 +344,13 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .recipe-import-inline input,.recipe-import-inline textarea{width:100%;min-width:0}
 .recipe-import-inline .button{justify-self:start}
 @media(max-width:450px){.add-method-tabs{display:grid;grid-template-columns:1fr 1fr}.add-method-tabs button{font-size:12px;padding:10px 5px}}
+
+/* Expandable per-dish planning controls */
+.inline-dish-steps{border-top:1px solid var(--line);padding-top:16px;margin-top:10px;display:grid;gap:12px;min-width:0}
+.inline-dish-steps .task-row{max-width:100%}
+.inline-dish-steps>.button{justify-self:start}
+.inline-step-add{display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:14px}
+.inline-step-add label{width:100%;font-size:13px;font-weight:650}
+.inline-step-add input{flex:1 1 210px;min-width:0}
+.inline-step-add button{flex:0 0 auto}
+@media(max-width:600px){.inline-step-add{display:grid;grid-template-columns:1fr}.inline-step-add input,.inline-step-add button{width:100%}}
