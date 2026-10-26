@@ -47,6 +47,32 @@ test("resuming an in-progress cook preserves cooking status", async ({ page }) =
   await expect(page.getByText("Today's checklist")).toBeVisible();
 });
 
+test("desktop Home keeps heading and primary action in the left column", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const intro = await page.locator(".home-intro").boundingBox();
+  const actions = await page.locator(".home-new").boundingBox();
+  const guide = await page.locator(".home-guide").boundingBox();
+  expect(intro && actions && guide).toBeTruthy();
+  if (!intro || !actions || !guide) return;
+  expect(Math.abs(intro.x - actions.x), "Heading and start card must share a left edge").toBeLessThan(8);
+  expect(actions.y, "Start card should follow heading").toBeGreaterThan(intro.y);
+  expect(guide.x, "Game Plan must be in the right column").toBeGreaterThan(actions.x + actions.width - 8);
+  expect(guide.y, "Game Plan should start near the top, not halfway down").toBeLessThan(intro.y + 100);
+  await testInfo.attach("home-desktop.png", { body: await page.screenshot({ fullPage: true, animations: "disabled" }), contentType: "image/png" });
+});
+
+test("mobile Home stacks content in a sensible order", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const intro = await page.locator(".home-intro").boundingBox();
+  const actions = await page.locator(".home-new").boundingBox();
+  const guide = await page.locator(".home-guide").boundingBox();
+  expect(intro && actions && guide).toBeTruthy();
+  if (!intro || !actions || !guide) return;
+  expect(intro.y).toBeLessThan(actions.y);
+  expect(actions.y + actions.height).toBeLessThan(guide.y);
+  await testInfo.attach("home-mobile.png", { body: await page.screenshot({ fullPage: true, animations: "disabled" }), contentType: "image/png" });
+});
+
 test("home fits common viewport widths without horizontal overflow", async ({ page }) => {
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });
