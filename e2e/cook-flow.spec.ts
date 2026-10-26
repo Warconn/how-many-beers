@@ -10,17 +10,17 @@ test("home is a clean starting point with history access", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "What's cooking?" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Plan a new cook/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Past cooks and backups/ })).toBeVisible();
-  await expect(page.locator("body")).not.toHaveJSProperty("scrollWidth", -1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
 test("plan brisket and brats, see their combined timeline, then resume", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
   await expect(page.getByRole("heading", { name: /0 dishes in this cook/ })).toBeVisible();
-  await page.getByRole("button", { name: /Add dish$/, exact: false }).first().click();
+  await page.getByRole("button", { name: "+ Add dish", exact: true }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
 
   await page.getByLabel("Choose a starting template").selectOption("brats");
-  await page.getByRole("button", { name: /Add dish$/, exact: false }).first().click();
+  await page.getByRole("button", { name: "+ Add dish", exact: true }).click();
   await expect(page.getByRole("heading", { name: /2 dishes in this cook/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cooking timeline" })).toBeVisible();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
@@ -34,7 +34,7 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
 
 test("resuming an in-progress cook preserves cooking status", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole("button", { name: /Add dish$/, exact: false }).first().click();
+  await page.getByRole("button", { name: "+ Add dish", exact: true }).click();
   await page.getByRole("button", { name: /Done editing/ }).click();
   await page.getByRole("button", { name: /Start the cook/ }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
