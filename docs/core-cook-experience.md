@@ -90,3 +90,12 @@ Reuse the existing Next.js/React/TypeScript domain modules and static GitHub Pag
 
 ## Validation scenario
 An existing user opens the app, sees Saturday Cookout, resumes a cook containing brisket and brats, reviews one timeline, adds wings from a template, edits only the wings steps, enters Cooking Mode, checks off a step and logs a reading, leaves to Home, and returns to exactly the same activity without resetting the cook. A new user can plan a first cook without seeing unrelated history or detailed controls.
+
+## Delivery methodology: test-first
+
+New UX behavior is defined by user-journey Playwright acceptance tests before implementation. Run tests to establish a failing expectation, build the feature, then require unit/browser checks and review screenshots before accepting the change. Avoid encoding brittle CSS implementation details except where protecting a known layout regression. GitHub CI is the verification source; a committed change does not imply a green build.
+
+### Increment: template picker and focused dish editing
+
+The workspace begins with the menu and combined timeline. The Add or Edit action reveals template choices (brisket and brats first, with existing starter variants available). Adding dishes stays within the same cook, and an Edit button on a menu card narrows the settings form to a single selected dish. Returning to the workspace must not change cooking status. This is a progressive UX refactor, not yet a dedicated route or fully isolated editable step experience.
+
