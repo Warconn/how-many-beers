@@ -21,13 +21,6 @@
 
 /* Separate planning and cooking experiences */
 .planning-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:start}
-.ready-panel h2{margin:7px 0 9px;font-size:26px;letter-spacing:-.6px}
-.ready-summary{margin:19px 0;display:grid;gap:12px}
-.ready-summary>div{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#faf7f2;display:flex;flex-direction:column;gap:3px}
-.ready-summary span{font-size:11px;color:var(--muted);font-weight:700}
-.ready-summary strong{font-size:15px}
-.start-cook-btn{width:100%;min-height:53px;font-size:17px}
-.ready-panel>.small{line-height:1.5;margin-bottom:0}
 .cook-header{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:6px 0 20px}
 .cook-header h2{font-size:37px;letter-spacing:-1.2px;line-height:1.1;margin:5px 0 8px}
 .cook-header .eyebrow{margin-top:14px}
@@ -107,8 +100,6 @@
 .preview-dish{display:block;margin-top:4px;font-size:11px;color:var(--muted);font-weight:600}
 .preview-conditional{display:inline-block;background:#fff4e8;color:#845633;padding:4px 7px;border-radius:5px;margin-top:6px;font-size:10px;font-weight:700}
 .preview-done{opacity:.7}.preview-done .preview-index{background:#e5eddf;color:#4b7040;border-color:#d7e3cb}
-.ready-panel .start-cook-btn{width:100%;display:flex;justify-content:center;align-items:center;gap:8px;border-radius:12px;font-size:16px;min-height:54px;margin-top:18px}
-.ready-panel .start-cook-btn:disabled{cursor:not-allowed}
 @media(max-width:650px){
   .planning-screen{padding-bottom:35px}
   .checklist-preview{padding:12px;border-radius:13px}
@@ -322,8 +313,6 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .guided-main .planning-layout .stack{min-width:0}
 .guided-main .workspace-dish-grid{grid-template-columns:1fr}
 .guided-main .workspace-dish{padding:13px}
-.guided-main .ready-panel .checklist-preview{margin-top:14px}
-.guided-main .ready-panel .preview-task-list{max-height:250px;overflow:auto}
 .guided-schedule{position:sticky;top:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:22px;min-width:0}
 .schedule-head{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:12px}
 .schedule-head .eyebrow{margin:0}.schedule-head strong{font-size:12px;color:var(--muted)}
@@ -380,3 +369,16 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .compact-task .preview-index{width:26px;height:26px;flex:0 0 26px}
 .inline-dish-steps>.button{margin-top:14px;min-height:44px}
 @media(max-width:600px){.dish-select{padding:14px;gap:8px}.dish-select .dish-toggle{font-size:11px}.dish-inline-editor{padding:0 12px 14px}.compact-task .task-main .between{display:grid;gap:3px}.compact-task .task-actions{margin-left:0}}
+
+/* One compact transition from planning to cooking. */
+.cook-actions{padding:0 2px}
+.cook-action-controls{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cook-action-controls .cook-action-button{margin:0;min-width:180px;min-height:48px}
+.cook-action-controls .review-checklist-button{padding:12px 0;min-height:44px;font-weight:650}
+.cook-action-button:disabled{cursor:not-allowed}
+.cook-actions>#cook-start-help{margin:8px 0 0;line-height:1.5}
+.plan-notes{padding:0 2px}
+.plan-notes .warning{margin:0 0 8px}
+.plan-notes .timing-guidance{margin:0;line-height:1.5}
+.guided-main>.checklist-preview{margin:0}
+@media(max-width:600px){.cook-action-controls{gap:2px;flex-direction:column;align-items:stretch}.cook-action-controls .cook-action-button{width:100%}.cook-action-controls .review-checklist-button{align-self:center}}

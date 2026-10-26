@@ -327,3 +327,19 @@ recorded activity remains in the cook. IDs and the browser storage schema are un
 
 Direct Live Schedule editing (#30) and changes to Ready When You Are (#31) remain
 out of scope. Recipe URLs are still unsupported. Cooks and history remain device-local.
+
+## Start or continue cooking (#31)
+
+The planner has one compact Start cooking action directly beneath the menu, with
+Review checklist alongside it. The full checklist stays closed until requested.
+The old Ready When You Are card, repeated serving/step summaries, and extra
+Start a fresh plan footer are removed. New cook replacement remains available from Home.
+
+An empty plan or invalid serving date explains why starting is disabled. An active
+cook instead shows Continue cooking, which returns to the saved checklist without
+changing its start time, notes, completion records or events, even if its plan now
+has no valid serving time. Equipment conflicts, untimed-step notices, and the
+food-safety reminder remain visible in Plan notes beneath the actions. Warnings
+are guidance, not automatic proof that a cook is safe or ready.
+
+No schedule editing (#30) or Remove dish discoverability changes (#33) are included.

@@ -166,3 +166,34 @@ session without changing completion or temperature events. The inline-menu accep
 test first failed against the separate-panel UI. Desktop and phone screenshots are
 saved under docs/screenshots and attached to test runs. CI uses managed Chromium;
 this cloud runner uses system Chromium with optional video disabled.
+
+## Issue #31: compact Start/Continue action
+
+The planner transitions from menu to cooking without a second summary card.
+Start cooking is the primary action directly below the menu; Review checklist
+opens the existing full checklist only when requested. Serving time and combined
+step information remain in their existing header/menu and Live Schedule locations.
+The Ready When You Are panel, duplicate metrics, and separate timing-tip card with
+Start a fresh plan are removed. Starting a replacement cook remains a Home action,
+with the existing confirmation and preservation rules.
+
+Starting requires at least one step and a valid serving time, with a visible disabled
+reason otherwise. Existing general-prep steps still count and can be added without
+a dish. A cook with mode cooking or an existing start time shows Continue cooking;
+continuing does not write a fresh start timestamp or require the plan to pass
+starting validation again. For normal active cooks it only changes the UI view;
+legacy cooks with a start time and missing lifecycle status normalize to cooking. All completion/event/note data
+and legacy saved cooks retain the current storage format.
+
+Plan notes remain visible below the actions: shared-equipment conflicts, untimed
+steps, and the reminder that schedules are estimates and thermometers/food-safety
+checks are still required. Notices are not hidden inside the checklist disclosure.
+An incomplete schedule does not assert readiness or invent timings. The optional
+checklist retains step actions and custom-prep entry; it is not a new timeline owner.
+
+Desktop/mobile Playwright checks cover removal of the old summary, compact placement,
+empty/invalid start reasons, initial start, real step completion and refresh/resume,
+legacy active cooks without a start time, warning visibility and checklist disclosure.
+The tests first failed against the previous UI. Screenshot evidence is saved under
+docs/screenshots/issue-31-*.png. Direct schedule editing (#30) and removal discovery
+(#33) stay separate.
