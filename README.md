@@ -343,3 +343,17 @@ food-safety reminder remain visible in Plan notes beneath the actions. Warnings
 are guidance, not automatic proof that a cook is safe or ready.
 
 No schedule editing (#30) or Remove dish discoverability changes (#33) are included.
+
+## Edit step timing and details (#30)
+
+Edit a step directly in its dish or select it in Live Schedule. The shared inline
+editor now includes planned date/time, estimated duration, equipment and an optional
+food-temperature target as well as name and instructions. Save/Cancel is explicit.
+
+A manually edited time stays fixed when serving time changes; Use plan timing restores
+the original/derived timing. Duration determines the step's estimated finish, without
+automatically moving other steps. Unknown durations and untimed steps remain supported.
+Live Schedule is chronological even when checklist steps are manually reordered.
+
+See [Step timing rules and manual checks](docs/step-timing.md) for timezone/DST handling,
+archive/backup compatibility and the limits of manual planning versus #3 replanning.

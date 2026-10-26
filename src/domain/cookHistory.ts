@@ -90,13 +90,16 @@ export function repeatArchivedCook(entry:ArchivedCook): ExtendedMeal {
     return old;
   };
   const base=newMeal();
+  const delta=Date.parse(base.serveAt)-Date.parse(previous.serveAt);
+  const shiftTime=(value:string|null|undefined)=>value && Number.isFinite(Date.parse(value)) && Number.isFinite(delta)
+    ? new Date(Date.parse(value)+delta).toISOString() : value;
   const oldOverrides=previous.taskOverrides??{};
-  const overrides=Object.fromEntries(Object.entries(oldOverrides).map(([id,value])=>[translate(id),{...value}]));
+  const overrides=Object.fromEntries(Object.entries(oldOverrides).map(([id,value])=>[translate(id),{...value,...(value.scheduledAt?{scheduledAt:shiftTime(value.scheduledAt)}:{})}]));
   return {
     ...base,
     name:entry.meal.name,
     dishes:previous.dishes.map(d=>({...d,id:dishIds.get(d.id)!})),
-    customTasks:(previous.customTasks??[]).map(t=>({...t,id:translate(t.id),dishId:dishIds.get(t.dishId)??t.dishId})),
+    customTasks:(previous.customTasks??[]).map(t=>({...t,scheduledAt:shiftTime(t.scheduledAt)??null,id:translate(t.id),dishId:dishIds.get(t.dishId)??t.dishId})),
     taskOverrides:overrides,
     hiddenTaskIds:(previous.hiddenTaskIds??[]).map(translate),
     taskOrder:(previous.taskOrder??[]).map(translate),

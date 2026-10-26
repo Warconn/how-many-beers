@@ -382,3 +382,19 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .plan-notes .timing-guidance{margin:0;line-height:1.5}
 .guided-main>.checklist-preview{margin:0}
 @media(max-width:600px){.cook-action-controls{gap:2px;flex-direction:column;align-items:stretch}.cook-action-controls .cook-action-button{width:100%}.cook-action-controls .review-checklist-button{align-self:center}}
+
+/* Shared step editor, reached from the dish or the chronological Live Schedule. */
+.step-editor{display:grid;gap:12px;margin-top:12px;padding:16px;background:#fffaf6;border:1px solid var(--line);border-radius:10px;min-width:0}
+.step-editor:focus{outline:none}.step-editor label{display:grid;gap:6px;font-size:12px;font-weight:650;min-width:0}
+.step-editor input,.step-editor textarea,.step-editor select{width:100%;min-width:0;max-width:100%}
+.step-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.step-time-source{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--accent-dark)}
+.step-time-source .link{margin:0;padding:8px 0;min-height:44px}.step-editor p{margin:0;line-height:1.5}
+.step-editor-actions{display:flex;flex-wrap:wrap;gap:10px}.step-editor-actions .button{margin:0;min-height:44px}
+.step-finish{font-size:12px;font-weight:650}.planned-step-details{font-size:11px;color:var(--accent-dark);line-height:1.5}
+.schedule-list .schedule-step{display:grid;width:100%;gap:6px;text-align:left;background:transparent;border:0;padding:0;min-height:60px;color:inherit;cursor:pointer}
+.schedule-step:hover strong,.schedule-step:focus-visible strong{text-decoration:underline}.schedule-step:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.schedule-step .schedule-edit-hint{font-size:11px;color:var(--accent-dark)}
+@media(max-width:600px){.step-field-grid{grid-template-columns:minmax(0,1fr)}.step-editor{padding:12px}.step-editor-actions .button{flex:1}.step-editor input[type=datetime-local]{font-size:14px}}
+.step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
+.step-saved{font-size:12px;color:#456439;margin:8px 0}
