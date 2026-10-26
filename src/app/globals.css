@@ -404,3 +404,11 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 @media(max-width:600px){.step-field-grid{grid-template-columns:minmax(0,1fr)}.step-editor{padding:12px}.step-editor-actions .button{flex:1}.step-editor input[type=datetime-local]{font-size:14px}}
 .step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
 .step-saved{font-size:12px;color:#456439;margin:8px 0}
+
+.brisket-planner{padding:2px 0 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brisket-planner h3{font-size:17px;margin:5px 0}.brisket-planner p{line-height:1.5}
+.brisket-window{border-left:3px solid var(--accent);padding:10px 13px;margin:16px 0;background:#faf6ee}
+.brisket-window p{margin:8px 0;font-size:13px}.brisket-window time{display:block;font-weight:650;font-variant-numeric:tabular-nums}
+.brisket-planner details{margin-top:14px}.brisket-planner summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
+.brisket-planner ul{padding-left:19px;line-height:1.6}.personal-rule{display:flex;align-items:center;gap:10px;min-height:44px}.personal-rule input{width:22px;height:22px}
+@media(max-width:600px){.brisket-planner .small-grid{grid-template-columns:1fr 1fr}.brisket-planner select{font-size:14px}}
