@@ -297,3 +297,8 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .planning-layout:not(.workspace-editing) .workspace-editor{display:none}
 .planning-layout:not(.workspace-editing){grid-template-columns:minmax(0,1fr)}
 @media(max-width:700px){.workspace-overview{padding:18px}.workspace-heading{align-items:start;flex-direction:column;gap:12px}.workspace-heading h2{font-size:21px}.workspace-timeline li{grid-template-columns:85px 1fr;gap:12px}}
+
+/* Home layout invariant: the heading and actions share the same column. */
+.home-layout{grid-template-columns:minmax(0,1.45fr) minmax(260px,.75fr);align-items:start;gap:clamp(24px,4.5vw,64px)}
+.home-primary{grid-column:1;min-width:0}.home-guide{grid-column:2;margin-top:3px;max-width:350px}
+@media(max-width:850px){.home-layout{grid-template-columns:minmax(0,1fr);gap:0}.home-primary,.home-guide{grid-column:1}.home-guide{margin-top:32px;max-width:none}}
