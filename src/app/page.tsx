@@ -482,7 +482,7 @@ export default function Home() {
           <nav className="cooking-navigation" aria-label="Cook navigation">
             <button type="button" className="back-link" disabled={cookingDraftOpen} onClick={()=>setView("home")}>← Home</button>
             <button className="back-link" type="button" disabled={cookingDraftOpen} onClick={()=>setView("planning")}>Edit plan</button>
-            <button className="back-link finish-cook-trigger" type="button" disabled={cookingDraftOpen || !timeline.length} onClick={openFinishCook}>Finish cook</button>
+            <button className="back-link finish-cook-trigger" type="button" disabled={cookingDraftOpen || (!timeline.length && !meal.dishes.length)} onClick={openFinishCook}>Finish cook</button>
           </nav>
           <section className="cook-header">
             <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
@@ -523,7 +523,7 @@ export default function Home() {
               openGuidedStep(guidance.next!.id);if(guidance.current && !meal.completed[guidance.current.id])setNavigationNote("Previous step remains unchecked. It is still in Full checklist.");
             }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{guidance.next.title}</strong><span className="guide-next-time">{guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span></button>
             : remaining.length ? <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>
-            : <button type="button" className="guide-next-button" aria-label="Finish cook" disabled={!timeline.length || cookingDraftOpen} onClick={openFinishCook}><span className="guide-next-label">{timeline.length?"All steps checked":"No steps yet"}</span><strong>Finish cook</strong></button>}
+            : <button type="button" className="guide-next-button" aria-label="Finish cook" disabled={(!timeline.length && !meal.dishes.length) || cookingDraftOpen} onClick={openFinishCook}><span className="guide-next-label">{timeline.length?"All steps checked":"No steps yet"}</span><strong>Finish cook</strong></button>}
           </nav>
         </>
       ) : (
