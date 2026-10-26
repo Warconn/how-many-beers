@@ -34,7 +34,7 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
 test("resuming an in-progress cook preserves cooking status", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
-  await page.getByRole("button", { name: /Done editing/ }).click();
+  await page.getByRole("button", { name: /Hide dish picker/ }).click();
   await page.getByRole("button", { name: /Start the cook/ }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
@@ -54,10 +54,11 @@ test("template picker adds dishes and keeps their settings separate", async ({ p
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
-  await page.getByRole("button", { name: "Edit Smoked brisket" }).click();
+  await page.getByRole("button", { name: /Smoked brisket steps/ }).click();
+  await page.getByRole("button", { name: "Advanced dish settings" }).click();
   await expect(page.getByRole("heading", { name: "Edit dish", exact: true })).toBeVisible();
   await page.getByLabel("Dish name").fill("Saturday brisket");
-  await page.getByRole("button", { name: "Done editing" }).click();
+  await page.getByRole("button", { name: "← Back to menu" }).click();
   await expect(page.getByText("Saturday brisket").first()).toBeVisible();
   await expect(page.getByText("Grilled beer-bath brats").first()).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
