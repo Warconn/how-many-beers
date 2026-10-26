@@ -334,3 +334,13 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .schedule-list span{font-size:11px;color:var(--accent-dark)}
 .schedule-toggle{margin-top:10px}
 @media(max-width:900px){.guided-planner{grid-template-columns:minmax(0,1fr)}.guided-schedule{position:static;order:2}.guided-main{order:1}.guided-main .hero{padding:20px}}
+
+/* One Add Dish flow with source tabs */
+.add-method-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);padding-bottom:12px;margin:4px 0 18px}
+.add-method-tabs button{background:transparent;border:1px solid transparent;border-radius:8px;padding:11px 14px;color:var(--muted);font-weight:650;cursor:pointer}
+.add-method-tabs button.selected{background:var(--accent-light);color:var(--accent-dark);border-color:var(--line)}
+.recipe-import-inline{display:grid;gap:12px;min-width:0}
+.recipe-import-inline label{font-size:13px;font-weight:650}
+.recipe-import-inline input,.recipe-import-inline textarea{width:100%;min-width:0}
+.recipe-import-inline .button{justify-self:start}
+@media(max-width:450px){.add-method-tabs{display:grid;grid-template-columns:1fr 1fr}.add-method-tabs button{font-size:12px;padding:10px 5px}}
