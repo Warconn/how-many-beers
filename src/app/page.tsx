@@ -109,6 +109,15 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
 
 export default function Home() {
   const [meal, setMeal] = useState<Meal | null>(null);
+  const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
+  const [showDishSetup, setShowDishSetup] = useState(false);
+  const [showFullSchedule, setShowFullSchedule] = useState(false);
+  const [showChecklistPreview, setShowChecklistPreview] = useState(false);
+  const [editingDishId, setEditingDishId] = useState<string | null>(null);
+  const [expandedDishId,setExpandedDishId] = useState<string | null>(null);
+  const [newStepDishId,setNewStepDishId] = useState<string | null>(null);
+  const [newStepTitle,setNewStepTitle] = useState("");
+  const [addMethod, setAddMethod] = useState<"template" | "recipe">("template");
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
   const [recipeText, setRecipeText] = useState("");
@@ -179,7 +188,22 @@ export default function Home() {
   if (!meal) return <main className="shell"><div className="panel">Loading your cook...</div></main>;
 
 
-  const cooking = meal.mode === "cooking";
+  const cooking = view === "cooking";
+  const hasActiveWork = meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
+  const beginNewCook = () => {
+    if (hasActiveWork && !window.confirm("Start a new cook? This replaces the unfinished cook saved on this device. Export a backup first if you want to keep it.")) return;
+    try {
+      const fresh = newMeal();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+      setMeal(fresh);
+      setView("planning");
+      setShowDishSetup(true);
+      setEditingDishId(null);
+      setAddMethod("template");
+      setShowCompleted(false);
+      setMessage("");
+    } catch { setStorageError("Unable to save a new cook. Your current cook is unchanged."); }
+  };
   const safelyPatch = (fn:(m:Meal)=>Meal) => {
     try { patch(fn); setMessage(""); }
     catch(error) { setMessage(error instanceof Error ? error.message : "Could not update checklist."); }
@@ -189,6 +213,7 @@ export default function Home() {
     setMeal(next);
     setShowFinish(false);
     setOutcome("");
+    setView("home");
     window.scrollTo({top:0,behavior:"instant"});
   };
   const finishCook = () => {
@@ -242,6 +267,17 @@ export default function Home() {
     }catch(error){setStorageError("Could not restore backup: "+(error instanceof Error?error.message:"unrecognized file"));}
   };
 
+  const addDishStep = (dishId:string) => {
+    const dish=meal?.dishes.find(d=>d.id===dishId);
+    if(!dish || !newStepTitle.trim())return;
+    safelyPatch(m=>{
+      const next=addStep(m,newStepTitle,"",null);
+      const created=next.customTasks?.[next.customTasks.length-1]?.id;
+      return {...next,customTasks:next.customTasks?.map(t=>t.id===created?{...t,dishId:dish.id,dishName:dish.name}:t)};
+    });
+    setNewStepTitle("");
+    setNewStepDishId(null);
+  };
   const addCustom = (title:string,instructions:string,scheduledAt:string|null) => {
     safelyPatch(m=>addStep(m,title,instructions,scheduledAt));
   };
@@ -281,18 +317,57 @@ export default function Home() {
       <header className="site-header">
         <div className="brand-icon" aria-hidden>🍺</div>
         <div>
-          <p className="eyebrow">THE COOKING CHECKLIST</p>
+          <p className="eyebrow">PLAN · COOK · REPEAT</p>
           <h1>How Many Beers?</h1>
           <p className="subtitle">Dinner has a deadline. Brisket does not.</p>
         </div>
-        <span className="version-pill">{cooking ? "Cook in progress" : "Plan your cook"}</span>
+        
       </header>
 
-      {cooking ? (
+      {view === "home" ? (
+        <section className="home-layout" aria-label="Home">
+          <div className="home-primary">
+          <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
+          {hasActiveWork && <section className="panel home-current">
+            <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{meal.mode === "cooking" ? "In progress" : "Planning"}</span></div>
+            <h3>{meal.name || "Your cook"}</h3>
+            <p className="muted">{when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
+            {meal.dishes.length > 0 && <p className="home-dishes">{meal.dishes.map(d=>d.name).join(" · ")}</p>}
+            <div className="home-actions">
+              {meal.mode === "cooking" ? <>
+                <button type="button" className="button primary" onClick={()=>setView("cooking")}>Continue cooking →</button>
+                <button type="button" className="button secondary" onClick={()=>setView("planning")}>View cook</button>
+              </> : <button type="button" className="button primary" onClick={()=>setView("planning")}>Resume planning →</button>}
+            </div>
+          </section>}
+          <section className="panel home-new">
+            <h3>{hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
+            <p className="muted">{hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
+            <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
+          </section>
+          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <span aria-hidden="true">→</span></button>
+          <p className="home-storage-note">Saved on this device only. <button type="button" onClick={()=>setView("history")}>Back up your cooks</button> before switching browsers.</p>
+          </div>
+          <aside className="home-guide" aria-label="How it works">
+            <p className="eyebrow">THE GAME PLAN</p>
+            <h3>One cook. Every dish. Right on time.</h3>
+            <p>Start with a template, bring everything into one timeline, and follow along when it’s time to cook.</p>
+            <div className="home-guide-step"><span>01</span><div><strong>Plan your menu</strong><small>Brisket, brats, sides. All together.</small></div></div>
+            <div className="home-guide-step"><span>02</span><div><strong>See the full schedule</strong><small>One checklist across every dish.</small></div></div>
+            <div className="home-guide-step"><span>03</span><div><strong>Cook and check it off</strong><small>Pick up where you left off.</small></div></div>
+          </aside>
+        </section>
+      ) : view === "history" ? (
+        <section className="home-history">
+          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup}/>
+        </section>
+      ) : cooking ? (
         <>
+          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           <section className="cook-header">
             <div>
-              <button className="back-link" type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>← Edit your plan</button>
+              <button className="back-link" type="button" onClick={() => setView("planning")}>← View your cook</button>
               <p className="eyebrow">YOU'RE COOKING</p>
               <h2>{meal.name || "Your cook"}</h2>
               <p className="cook-target">🍽️ Serving {when(meal.serveAt || null)} · One cook with {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
@@ -354,18 +429,21 @@ export default function Home() {
               <section className="panel tip">
                 <strong>Cook smart</strong>
                 <p>All times are planning estimates. Use a food thermometer, verify doneness, and follow safe holding and equipment instructions.</p>
-                <button className="link" onClick={() => patch(m => ({...m, mode: "planning"}))}>Adjust the plan →</button>
+                <button className="link" onClick={() => setView("planning")}>View the plan →</button>
               </section>
             </aside>
           </div>
           <nav className="cook-mobile-bar" aria-label="Cook tools">
             <span>✓ {complete} of {timeline.length} complete</span>
             <button type="button" onClick={() => {setShowFinish(true);document.querySelector(".finish-cook")?.scrollIntoView({behavior:"smooth",block:"center"});}}>Save Cook</button>
-            <button type="button" onClick={() => patch(m => ({...m, mode: "planning"}))}>Edit plan</button>
+            <button type="button" onClick={() => setView("planning")}>View plan</button>
           </nav>
         </>
       ) : (
         <>
+          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps. <button type="button" className="link" onClick={()=>setView("cooking")}>Return to cooking →</button></p>}
+          <div className="guided-planner"><div className="guided-main">
           <section className="hero panel">
             <div>
               <p className="eyebrow">PLAN YOUR COOK</p>
@@ -379,20 +457,77 @@ export default function Home() {
               <input id="serve-at" type="datetime-local" value={meal.serveAt} onChange={e => patch(m => ({...m, serveAt: e.target.value}))}/>
             </div>
           </section>
-          <div className="planning-layout">
-        <div className="stack">
-          <section className="panel">
-            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">STEP 1</p><h2>What are we cooking?</h2></div></div>
-            <div className="add-form">
-              <label htmlFor="preset">Choose a starting template</label>
-              <select id="preset" value={preset} onChange={e=>setPreset(e.target.value as BuiltIn)}>
-                {Object.entries(presets).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}
-              </select>
-              <p className="muted small">{presets[preset].notice}</p>
-              <button className="button primary" onClick={()=>patch(m=>({...m,dishes:[...m.dishes,createDish(preset)]}))}>+ Add dish</button>
+          <section className="workspace-overview" aria-label="Cook overview">
+            <div className="workspace-heading">
+              <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} in this cook</h2></div>
+              <button type="button" className="button secondary" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup && !editingDishId ? "Hide dish picker" : "+ Add a dish"}</button>
             </div>
+            {meal.dishes.length ? <div className="workspace-dish-grid">
+              {meal.dishes.map(d=><article className="workspace-dish" key={d.id}>
+                <strong>{d.name}</strong><span>{d.equipment}</span>
+                <button className="link" type="button" aria-expanded={expandedDishId===d.id} onClick={()=>setExpandedDishId(v=>v===d.id?null:d.id)} aria-label={d.name+" steps"}>{expandedDishId===d.id?"Hide steps ↑":"View and adjust steps ↓"}</button>
+                {expandedDishId===d.id && <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>
+                  <p className="muted small">Adjust steps or add something specific to this dish.</p>
+                  {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning"))}
+                  {newStepDishId===d.id ? <div className="inline-step-add">
+                    <label htmlFor={"new-step-"+d.id}>Step title</label>
+                    <input id={"new-step-"+d.id} value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
+                    <button type="button" className="button primary" disabled={!newStepTitle.trim()} onClick={()=>addDishStep(d.id)}>Save step</button>
+                    <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("")}}>Cancel</button>
+                  </div> : <button type="button" className="button secondary" onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
+                  <button className="link" type="button" onClick={()=>{setEditingDishId(d.id);setShowDishSetup(true)}}>Advanced dish settings</button>
+                </section>}
+              </article>)}
+            </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
+          </section>
+          <div className={"planning-layout" + (showDishSetup ? " workspace-editing" : "")}>
+        <div className="stack workspace-editor">
+          <section className="panel">
+            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">YOUR MENU</p><h2>{editingDishId?"Dish settings":"Add a dish"}</h2></div></div>
+            {!editingDishId && <>
+              <div className="add-method-tabs" role="group" aria-label="Add dish method">
+                <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>Start from template</button>
+                <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>Import a recipe</button>
+              </div>
+              {addMethod==="template" ? <>
+              <h3>Choose a template</h3>
+              <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
+              <div className="template-picker">
+                {(Object.entries(presets) as [BuiltIn, (typeof presets)[BuiltIn]][]).map(([id, template])=>(
+                  <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>patch(m=>({...m,dishes:[...m.dishes,createDish(id)]}))}>
+                    <strong>{template.label}</strong><span>{template.equipment}</span><b aria-hidden="true">+</b>
+                  </button>
+                ))}
+              </div>
+              </> : <div className="recipe-import-inline">
+                <p className="muted small">Paste instructions or upload a text file. Recipe URLs aren't supported yet.</p>
+                <label htmlFor="recipe-name">Recipe title</label>
+                <input id="recipe-name" value={recipeName} onChange={e=>setRecipeName(e.target.value)} placeholder="Grandma's mac & cheese"/>
+                <label htmlFor="recipe-text">Recipe instructions</label>
+                <textarea id="recipe-text" rows={5} value={recipeText} onChange={e=>setRecipeText(e.target.value)} placeholder={"1. Preheat oven\\n2. Prepare ingredients\\n3. Cook until done"}/>
+                <label htmlFor="recipe-file">Upload .txt or .md</label>
+                <input id="recipe-file" type="file" accept=".txt,.md,text/plain,text/markdown" onChange={e=>void onTextFile(e.target.files?.[0])}/>
+                <button className="button secondary" type="button" disabled={!recipeText.trim()} onClick={()=>{
+                  const parsed=parseRecipeText(recipeName,recipeText);
+                  if(!parsed.steps?.length){setMessage("No recipe steps found. Try one instruction per line.");return;}
+                  setDraft(parsed);setMessage("");
+                }}>Preview recipe steps</button>
+                {draft && <div className="draft">
+                  <strong>Review {draft.steps?.length} imported steps</strong>
+                  <p className="muted small">Each non-empty line becomes a step. Confirm timings after adding.</p>
+                  <ol>{draft.steps?.map(step=><li key={step.id}>{step.title}</li>)}</ol>
+                  <button className="button primary" type="button" onClick={()=>{
+                    patch(m=>({...m,dishes:[...m.dishes,draft]}));
+                    setDraft(null);setRecipeName("");setRecipeText("");setMessage("Recipe added. Review step timing in dish details.");
+                  }}>Add to this cook</button>
+                </div>}
+                {message && <p className="notice" role="status">{message}</p>}
+              </div>}
+            </>}
+            {editingDishId && <div className="dish-edit-heading"><h3>Edit dish</h3><button type="button" className="link" onClick={()=>{setEditingDishId(null);setShowDishSetup(false)}}>← Back to menu</button></div>}
+            {!editingDishId && meal.dishes.length>0 && <p className="muted small">Select Edit on a dish above to change its details.</p>}
             {meal.dishes.length>0 && <div className="dish-list">
-              {meal.dishes.map(d=>(
+              {meal.dishes.filter(d=>editingDishId===d.id).map(d=>(
                 <article key={d.id} className="dish-card">
                   <div className="between">
                     <strong>{d.name}</strong>
@@ -461,28 +596,7 @@ export default function Home() {
             </div>}
           </section>
 
-          <section className="panel">
-            <div className="section-title"><span className="section-icon">📋</span><div><p className="eyebrow">OPTIONAL</p><h2>Import a recipe</h2></div></div>
-            <p className="muted">Paste your recipe or load a plain text file. We&apos;ll turn each line into an editable checklist step. Photo/PDF intelligence comes next.</p>
-            <label htmlFor="recipe-name">Recipe title</label>
-            <input id="recipe-name" value={recipeName} onChange={e=>setRecipeName(e.target.value)} placeholder="Grandma's mac & cheese"/>
-            <label htmlFor="recipe-text">Recipe instructions</label>
-            <textarea id="recipe-text" rows={7} value={recipeText} onChange={e=>setRecipeText(e.target.value)} placeholder={"1. Preheat oven\n2. Prepare ingredients\n3. Bake until cooked\n4. Let rest and serve"}/>
-            <label className="file-label" htmlFor="recipe-file">Choose a .txt or .md recipe</label>
-            <input id="recipe-file" className="file-input" type="file" accept=".txt,.md,text/plain,text/markdown" onChange={e=>void onTextFile(e.target.files?.[0])}/>
-            <button className="button secondary" disabled={!recipeText.trim()} onClick={()=>{
-              const parsed=parseRecipeText(recipeName,recipeText);
-              if(!parsed.steps?.length){setMessage("No recipe steps found. Try one instruction per line.");return;}
-              setDraft(parsed);setMessage("");
-            }}>Preview recipe steps</button>
-            {draft && <div className="draft">
-              <strong>Review {draft.steps?.length} imported steps</strong>
-              <p className="muted small">The basic importer treats each non-empty line as a step, including ingredient lines. Remove any unwanted lines from the source before importing. Timing stays unassigned until you confirm it.</p>
-              <ol>{draft.steps?.map(s=><li key={s.id}>{s.title}</li>)}</ol>
-              <button className="button primary" onClick={()=>{patch(m=>({...m,dishes:[...m.dishes,draft]}));setDraft(null);setRecipeName("");setRecipeText("");setMessage("Added recipe. Set each step's timing in the dish editor.");}}>Add to this cook</button>
-            </div>}
-            {message && <p className="notice" role="status">{message}</p>}
-          </section>
+
         </div>
 
 
@@ -501,7 +615,8 @@ export default function Home() {
                     <div><span>First planned step</span><strong>{when(timeline.find(t => !!t.scheduledAt)?.scheduledAt ?? null)}</strong></div>
                   </div>
                 )}
-                {(meal.dishes.length > 0 || timeline.length > 0) && (
+                {timeline.length > 0 && <button type="button" className="button secondary" onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview?"Hide full checklist":"Review full checklist"} ({timeline.length} steps)</button>}
+                {showChecklistPreview && (meal.dishes.length > 0 || timeline.length > 0) && (
                   <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
                     <div className="preview-intro">
                       <div>
@@ -524,7 +639,7 @@ export default function Home() {
                 {timeline.length===0 && <AddStepForm onAdd={addCustom}/>}
                 <button type="button" className="button primary start-cook-btn"
                   disabled={timeline.length === 0 || !Number.isFinite(new Date(meal.serveAt).getTime())}
-                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});}}>
+                  onClick={() => {patch(m => ({...m, mode: "cooking", startedAt: m.startedAt ?? new Date().toISOString()}));setView("cooking");setShowCompleted(false);window.scrollTo({top:0,behavior:"instant"});}}>
                   {meal.startedAt ? "▶ Return to cooking" : "🔥 Start the cook"}
                 </button>
                 <p className="small muted">{meal.startedAt ? "Your current cook is saved. Returning to it won't create another one." : "Nothing starts until you choose Start the cook."} You can always return to the plan without losing progress.</p>
@@ -532,22 +647,26 @@ export default function Home() {
               <aside className="panel tip">
                 <strong>A heads-up about timing</strong>
                 <p>Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
-                <button className="link" onClick={() => {
-                  if (window.confirm("Start a new meal? This replaces the current cook stored in this browser.")) {
-                    setMeal(newMeal());
-                    setShowCompleted(false);
-                    setMessage("Started a new meal.");
-                  }
-                }}>Start a fresh plan →</button>
+                <button className="link" onClick={beginNewCook}>Start a fresh plan →</button>
               </aside>
             </div>
           </div>
-          <div className="history-layout">
-            <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup}/>
+          </div>
+          <aside className="guided-schedule" aria-label="Live schedule">
+            <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
+            <p className="muted small">Serving {when(meal.serveAt || null)}</p>
+            {timeline.length ? <>
+              <ol className="schedule-list">
+                {(showFullSchedule?timeline:timeline.slice(0,4)).map(task=><li key={task.id}><time>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}</span></li>)}
+              </ol>
+              {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
+            </> : <p className="muted small">Add a dish to see your schedule.</p>}
+            {warnings.length>0 && <p className="muted small">{warnings.length} timing or equipment notes to review below.</p>}
+          </aside>
           </div>
         </>
       )}
-      <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span></footer>
+      <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
     </main>
   );
 }
