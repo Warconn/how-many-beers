@@ -114,6 +114,9 @@ export default function Home() {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [showChecklistPreview, setShowChecklistPreview] = useState(false);
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
+  const [expandedDishId,setExpandedDishId] = useState<string | null>(null);
+  const [newStepDishId,setNewStepDishId] = useState<string | null>(null);
+  const [newStepTitle,setNewStepTitle] = useState("");
   const [addMethod, setAddMethod] = useState<"template" | "recipe">("template");
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
@@ -264,6 +267,17 @@ export default function Home() {
     }catch(error){setStorageError("Could not restore backup: "+(error instanceof Error?error.message:"unrecognized file"));}
   };
 
+  const addDishStep = (dishId:string) => {
+    const dish=meal?.dishes.find(d=>d.id===dishId);
+    if(!dish || !newStepTitle.trim())return;
+    safelyPatch(m=>{
+      const next=addStep(m,newStepTitle,"",null);
+      const created=next.customTasks?.[next.customTasks.length-1]?.id;
+      return {...next,customTasks:next.customTasks?.map(t=>t.id===created?{...t,dishId:dish.id,dishName:dish.name}:t)};
+    });
+    setNewStepTitle("");
+    setNewStepDishId(null);
+  };
   const addCustom = (title:string,instructions:string,scheduledAt:string|null) => {
     safelyPatch(m=>addStep(m,title,instructions,scheduledAt));
   };
@@ -446,19 +460,30 @@ export default function Home() {
           <section className="workspace-overview" aria-label="Cook overview">
             <div className="workspace-heading">
               <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} in this cook</h2></div>
-              <button type="button" className="button secondary" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? "Done editing" : "Add or edit dishes"}</button>
+              <button type="button" className="button secondary" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup && !editingDishId ? "Hide dish picker" : "+ Add a dish"}</button>
             </div>
             {meal.dishes.length ? <div className="workspace-dish-grid">
               {meal.dishes.map(d=><article className="workspace-dish" key={d.id}>
                 <strong>{d.name}</strong><span>{d.equipment}</span>
-                <button className="link" type="button" onClick={()=>{setEditingDishId(d.id);setShowDishSetup(true)}} aria-label={"Edit "+d.name}>Edit dish details →</button>
+                <button className="link" type="button" aria-expanded={expandedDishId===d.id} onClick={()=>setExpandedDishId(v=>v===d.id?null:d.id)} aria-label={d.name+" steps"}>{expandedDishId===d.id?"Hide steps ↑":"View and adjust steps ↓"}</button>
+                {expandedDishId===d.id && <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>
+                  <p className="muted small">Adjust steps or add something specific to this dish.</p>
+                  {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning"))}
+                  {newStepDishId===d.id ? <div className="inline-step-add">
+                    <label htmlFor={"new-step-"+d.id}>Step title</label>
+                    <input id={"new-step-"+d.id} value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
+                    <button type="button" className="button primary" disabled={!newStepTitle.trim()} onClick={()=>addDishStep(d.id)}>Save step</button>
+                    <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("")}}>Cancel</button>
+                  </div> : <button type="button" className="button secondary" onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
+                  <button className="link" type="button" onClick={()=>{setEditingDishId(d.id);setShowDishSetup(true)}}>Advanced dish settings</button>
+                </section>}
               </article>)}
             </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
           </section>
           <div className={"planning-layout" + (showDishSetup ? " workspace-editing" : "")}>
         <div className="stack workspace-editor">
           <section className="panel">
-            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">EDIT MENU</p><h2>Add a dish</h2></div></div>
+            <div className="section-title"><span className="section-icon">🔥</span><div><p className="eyebrow">YOUR MENU</p><h2>{editingDishId?"Dish settings":"Add a dish"}</h2></div></div>
             {!editingDishId && <>
               <div className="add-method-tabs" role="group" aria-label="Add dish method">
                 <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>Start from template</button>
@@ -499,7 +524,7 @@ export default function Home() {
                 {message && <p className="notice" role="status">{message}</p>}
               </div>}
             </>}
-            {editingDishId && <div className="dish-edit-heading"><h3>Edit dish</h3><button type="button" className="link" onClick={()=>setEditingDishId(null)}>← All dishes</button></div>}
+            {editingDishId && <div className="dish-edit-heading"><h3>Edit dish</h3><button type="button" className="link" onClick={()=>{setEditingDishId(null);setShowDishSetup(false)}}>← Back to menu</button></div>}
             {!editingDishId && meal.dishes.length>0 && <p className="muted small">Select Edit on a dish above to change its details.</p>}
             {meal.dishes.length>0 && <div className="dish-list">
               {meal.dishes.filter(d=>editingDishId===d.id).map(d=>(
