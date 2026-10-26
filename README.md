@@ -1,3 +1,14 @@
+## Production release and outstanding UX bugs (October 26, 2026)
+
+Core Cook Experience release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) reached `main` at `3e7868d`; user confirmed the GitHub Pages production site reflects the release. Current capabilities include Home/resume, Guided Planner, unified template/text-import Add Dish, expandable step controls, and CI Playwright. This is a functional baseline, **not a polished finished planner**.
+
+Production bug backlog:
+- [#28](https://github.com/Warconn/how-many-beers/issues/28): Overhaul adding/editing dishes and layered step management. Clarify Add vs contextual Edit and reduce scroll/state confusion.
+- [#30](https://github.com/Warconn/how-many-beers/issues/30): Make live combined schedule directly selectable/editable, sync dish changes, preserve recorded actual timestamps. Do not confuse with full dependency optimization (#3).
+- [#31](https://github.com/Warconn/how-many-beers/issues/31): Remove redundant Ready When You Are card; replace with compact Start/Continue and preserve warnings.
+
+Next delivery cycle: product decisions and acceptance tests here, implementation via Codex and feature branches, run TypeScript, unit, Playwright and build before PR to `dev`, approve green CI then merge to `dev` for Cloudflare preview, and promote reviewed candidates to `main`. Current Cloudflare Git integration still triggers on `dev` pushes; deployment gating is planned, not configured. Tests should cover both browsers and responsive layouts, refresh/resume and history retention.
+
 ## Inline dish step planning (October 26, 2026)
 
 The Guided Cook Planner now treats planning as editable by default. Each menu dish has an expandable list of its own steps, rendered using the existing task editor. Users can edit/remove/reorder those steps and create a custom unscheduled step attached to that dish; the shared Live Schedule continues to be derived from the combined cook state. Templates and recipe imports remain accessible through Add a dish. The former Edit/Done Editing menu toggle is no longer used for step adjustments; advanced equipment and duration settings remain available on demand.
