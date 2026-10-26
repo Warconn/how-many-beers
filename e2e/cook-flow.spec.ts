@@ -43,7 +43,7 @@ test("resuming an in-progress cook preserves cooking status", async ({ page }) =
   await page.reload();
   await page.getByRole("button", { name: /View cook/ }).click();
   await expect(page.getByText(/Cook in progress/).first()).toBeVisible();
-  await page.getByRole("button", { name: /Return to cooking/ }).click();
+  await page.locator(".notice").getByRole("button", { name: "Return to cooking →", exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
 });
 
