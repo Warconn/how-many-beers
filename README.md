@@ -362,10 +362,12 @@ Live Schedule is chronological even when checklist steps are manually reordered.
 See [Step timing rules and manual checks](docs/step-timing.md) for timezone/DST handling,
 archive/backup compatibility and the limits of manual planning versus #3 replanning.
 
-## Focused Cooking Mode (#26)
+## Guided Cooking Mode (#26)
 
-The execution checklist separates **Now**, **Next** (next 30 minutes), **Later** and
-**Untimed** steps. Future details expand in place; completed activity stays in its own
-section. Navigation, readings, notes and history retain the same cook and timestamps.
-The smaller header, optional Beerometer and secondary step options keep attention on
-cooking. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).
+Cooking opens one step with its instructions, notes and readings. A fixed **Up next**
+footer previews the following step, while **Full checklist** shows the whole cook as
+one flat list. Checking off a step advances guidance; previewing never completes it.
+**Edit plan** adjusts setup, and **Finish cook** explicitly archives when ready.
+Progress autosaves in this browser. Open edit/reading drafts are protected, and IDs,
+actual timestamps and history survive navigation/reload. Cancel adding is a small,
+quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).

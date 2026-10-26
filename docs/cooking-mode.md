@@ -1,53 +1,74 @@
-# Focused Cooking Mode (#26)
+# Guided Cooking Mode (#26)
 
-Cooking Mode prioritizes a clock-based execution checklist:
+Cooking Mode opens one step with its instructions, planned timing, notes and actual
+readings. The guide chooses the earliest unfinished step in chronological order,
+independent of manual planner checklist order. If an imported recipe has only a serving
+milestone and untimed work, the guide starts with its untimed work rather than suggesting
+that dinner is the first cooking action. Condition-driven steps require actual checks.
 
-- **Now:** unfinished steps due at or before the current instant, in chronological order.
-  The earliest one gets the existing next-action emphasis. Being due does not establish
-  readiness, especially for bark, tenderness and temperature-dependent steps.
-- **Next:** steps scheduled in the next 30 minutes, including the exact boundary.
-- **Later:** scheduled steps more than 30 minutes away.
-- **Untimed:** steps without a valid scheduled instant. They are never called overdue.
-- **Completed:** separate collapsed section with original completion timestamps, readings,
-  notes and activity. Reopening continues to use the existing append-only event model.
+## Moving through a cook
 
-Future and untimed steps show a compact title, dish and planned time. Expand one for the
-same shared editor, completion, readings and notes as a Now step. This is progressive
-disclosure, not a new editing route. Edit and temperature logging remain readily available;
-move/remove live under **Step options**. Manual ordering affects the planner checklist;
-Cooking Mode and Live Schedule remain chronological. Steps are never completed by the clock.
+- Check off the current step to record completion and advance to the next unchecked step.
+  Reopening retains prior activity and records the existing reopen event.
+- The fixed **Up next** footer shows the following step, dish and planned time on desktop
+  and phone. Tap to preview it; previewing does not check off the current step. Other
+  unchecked work stays discoverable in the full checklist.
+- **Full checklist** shows every dish’s steps as one flat chronological list, including
+  completed and untimed items. Checkboxes operate directly; open a row for the same
+  detailed step, including its actual readings and notes. **Back to step** returns to
+  the selected step. This navigation does not change cook mode or start timestamps.
+- **Edit plan** opens the existing dish/menu planner for setup adjustments. It is separate
+  from the whole-cook execution checklist. Home and reload resume the next unfinished step.
+- The active step remains selected when its planned date/time is edited, even if that
+  changes chronological position. Completion resumes guidance from unfinished work.
 
-The clock refreshes every 30 seconds and on window focus/tab visibility changes. Regrouping
-pauses while a cooking editor or reading form is open or an input/select/textarea has focus,
-so partially entered data is not moved out from under the user. Explicitly collapsing a
-future step cancels its unsaved editor draft and clears the pause; leaving Cooking Mode
-also clears its transient editor state. It catches up on the next
-eligible tick. Browser suspension does not require background execution: focus/re-entry
-uses current time. This is not a timer/notification service (#11) or dependency replanner (#3).
-Date comparisons use elapsed instants, including across midnight and DST transitions.
+The shared step editor still supports dates, duration, equipment and planning targets;
+actual events remain separate. Edit and temperature logging share one compact action row.
+An open editor or reading form blocks switching steps, Home, Edit plan and finishing,
+with a visible explanation, until saved/cancelled. The completion checkbox also waits
+for those drafts. Clock refreshes do not discard or complete a step. Step removal stays under secondary Step options; manual reordering remains in planning
+and does not override chronological execution.
 
-Home and cook overview links share a compact navigation row and only change UI view.
-The brand header is smaller during cooking; Beerometer is available in an optional
-Cook duration disclosure. Progress remains visible. Add-step controls move below the
-checklist rather than preceding the next action. Shared-equipment warnings remain visible
-on phones; safe-temperature/holding reminders stay accessible. Finish/save and the phone
-bottom tools continue using the existing archive/backup lifecycle.
+## Saving and finishing
 
-No storage schema, task/event ID or actual timestamp changes. Loading or navigating
-between Home, overview and Cooking Mode never resets progress. Planning remains the
-responsive two-column menu and Live Schedule experience.
+Progress continues autosaving in the current browser. There is no ambiguous Save Cook
+shortcut in the footer. **Finish cook** is a separate header action, and is offered after
+all steps are checked. It opens optional outcome notes and the unchecked-step count.
+Only **Save finished cook** archives the session using the existing frozen history
+snapshot and rotates to an empty plan. **Keep cooking** dismisses it without mutation.
+A failed archive retains the active cook through the existing recovery path.
+Planning’s Save plan for later (#39) remains a separate action; it does not finish a cook.
 
-## Validation
+Menu/equipment warnings, thermometer/holding reminders, optional Beerometer and adding a
+custom step remain secondary. The responsive planner and Live Schedule are preserved.
+Cancel adding is now a quiet **× Cancel** text control beside the menu heading, with a
+44px hit area and a descriptive accessible name. It closes the picker without mutation.
 
-Acceptance tests first fail against the previous ungrouped checklist. Playwright covers
-Now/Next/Later/untimed presentation despite reversed manual order, clock advancement,
-no automatic completion, temperature logging, notes, completed disclosure, editor/options,
-Home/overview/reload recovery and phone overflow. Screenshots are reviewed on desktop and
-phone. Pure grouping tests cover exact thresholds, invalid/unknown dates, completed and
-empty lists, immutability and offset transitions.
+## Timing and data guarantees
 
-Manual check: plan brisket and brats, start cooking, log a reading and note on a Now step,
-complete it, expand Completed and verify the timestamps. Return Home, view the plan,
-continue, reload and confirm identical activity. Expand a future step and adjust it with
-the shared timing editor. Try a narrow phone and keyboard controls. Actual iPhone Safari,
-Android outdoor and nighttime cooking sessions remain part of #4 real-device alpha QA.
+The clock refreshes every 30 seconds and on tab/window re-entry; refresh pauses while
+editing/reading or focusing an input. Labels describe planned timing. No clock action
+starts/completes food, shifts dependencies or interprets doneness. Untimed means untimed.
+The footer is navigation, not a countdown or notification service (#11).
+
+No storage schema, task/event ID or actual timestamp changes. Existing notes, readings,
+completion, custom tasks, overrides, manual order and archived snapshots survive navigation,
+reloading, editing and explicitly finishing. Advanced replanning remains #3. Current
+browser storage/backup and one active cook per browser remain unchanged.
+
+## Verification and manual review
+
+Acceptance tests first failed on the old grouped interface and wide Cancel button.
+Desktop/phone Playwright covers the single current card, fixed next-step footer, flat
+whole-cook list, preview without mutation, dates and selected-step continuity, protected
+editor/reading drafts, temperature/notes/completion, actual history, Home/plan/reload,
+all-checked finishing, archive confirmation/cancel, compact Cancel and narrow layouts.
+Unit checks cover selection, chronological/offset order, untimed recipes, removed steps,
+completed activity, wraparound preview and immutable plans/events.
+
+Try brisket and brats: start, inspect the next step at the bottom, preview it, open Full
+checklist and return to an earlier unchecked step. Log a reading, add a note, complete the
+step and verify advancement. Change a planned date and confirm the editor stays on that
+step. Review completed actuals, leave Home, reload and resume. Finish only when ready.
+Actual iPhone Safari/outdoor/nighttime sessions remain #4 alpha QA; automated phone
+coverage uses an emulated Chromium viewport.

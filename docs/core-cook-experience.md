@@ -216,12 +216,13 @@ chronological; manual checklist order remains distinct. Actual events and comple
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
 
-## Issue #26: clock-based cooking focus
+## Issue #26: guided cooking review iteration
 
-Cooking Mode uses chronological Now, Next (30 minutes), Later and Untimed groups,
-independent of manual planner checklist order. Future details and completed activity
-are secondary disclosures; Now retains direct completion, notes and temperature logging.
-A compact navigation/header, optional Beerometer and secondary step options reduce setup
-clutter. Clock updates never complete steps or reinterpret condition-driven checks.
-Home/overview/reload preserve lifecycle and actual events. See [Cooking Mode](cooking-mode.md)
-for exact thresholds, editing safeguards, tests and real-device QA limits.
+User review found the grouped checklist and Save Cook / View plan footer still clunky.
+Cooking now focuses one step, with a fixed Up next preview and a Full checklist action.
+The whole cook is a flat chronological list, including completed/untimed items, with
+in-place selection back into the shared step editor. Checking off advances guidance;
+previewing and navigating never complete a task or reset lifecycle/history. Open edits
+and reading drafts are protected. Finish cook is an explicit archive action, separate
+from editing the plan or autosaving progress. Cancel adding is a quiet compact control.
+See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
