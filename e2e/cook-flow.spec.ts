@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("home is a clean starting point with history access", async ({ page }) => {
-  await expect(page.getByRole("heading", { name: "What's cooking?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "From First Beer to First Bite." })).toBeVisible();
   await expect(page.getByRole("button", { name: /Plan a new cook/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Past cooks and backups/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);

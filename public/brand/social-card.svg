@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How Many Beers? From First Beer to First Bite.">
+<title>How Many Beers? From First Beer to First Bite.</title>
+<path fill="#F7F5F0" d="M0 0h1200v630H0z"/>
+<path fill="#AF4F27" d="M0 0h14v630H0z"/>
+<text x="72" y="104" font-family="Arial,sans-serif" font-size="18" font-weight="bold" letter-spacing="3" fill="#873A1E">PLAN · COOK · REPEAT</text>
+<text x="68" y="207" font-family="Georgia,serif" font-size="66" font-weight="bold" fill="#282722">How Many Beers?</text>
+<text x="72" y="298" font-family="Georgia,serif" font-size="48" fill="#282722">From First Beer</text>
+<text x="72" y="358" font-family="Georgia,serif" font-size="48" fill="#282722">to First Bite.</text>
+<text x="72" y="432" font-family="Arial,sans-serif" font-size="24" fill="#57524B">Plan every dish. Time your dinner.</text>
+<text x="72" y="468" font-family="Arial,sans-serif" font-size="24" fill="#57524B">Enjoy the cook.</text>
+<path d="M72 520H690" stroke="#D8CFC1"/>
+<text x="72" y="566" font-family="Arial,sans-serif" font-size="22" fill="#873A1E">howmanybeers.app</text>
+<circle cx="946" cy="302" r="180" fill="#EEE4D5"/>
+<g transform="translate(728,74) scale(1.7)"><g stroke-linejoin="round" stroke-linecap="round">
+  <path d="M68 75 H188 L177 206 Q128 221 79 206 Z" fill="#DEA15E" stroke="#282722" stroke-width="9"/>
+  <path d="M67 78 C61 67 72 57 85 61 C95 49 113 53 119 63 C131 53 144 56 151 66 C167 59 183 63 188 74 C192 87 181 96 169 91 C160 100 147 101 138 92 C126 101 114 100 105 91 C90 101 76 97 67 88 Z" fill="#FFFDF9" stroke="#282722" stroke-width="7"/>
+  <circle cx="128" cy="151" r="43" fill="#FFFDF9" stroke="#282722" stroke-width="8"/>
+  <path d="M128 128 V151 L149 163" fill="none" stroke="#AF4F27" stroke-width="9"/>
+  <circle cx="128" cy="151" r="5.8" fill="#AF4F27"/>
+</g></g>
+</svg>

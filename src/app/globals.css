@@ -468,3 +468,32 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 @media(max-width:600px){.cook-actions .cook-action-controls{align-items:stretch;gap:8px}.cook-actions .review-checklist-button{align-self:center}}
 
 .duration-controls{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:end;min-width:0}.duration-controls label{min-width:0}.duration-controls input,.duration-controls select{min-height:44px}
+
+/* #45: approved Classic Dial identity. Keep active-cook actions ahead of branding. */
+.site-header,.home-layout,footer{--muted:#6d675f}
+.site-header .brand-icon{width:64px;height:64px;background:transparent;border-radius:0}
+.brand-icon img{display:block;width:100%;height:100%;object-fit:contain}
+.site-header h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(24px,2.7vw,32px);letter-spacing:-1px;color:var(--dark)}
+.site-header .subtitle{color:var(--accent-dark);line-height:1.45}
+.home-first-visit .home-intro h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(36px,4.2vw,53px);font-weight:600;line-height:1.08;letter-spacing:-1.8px;margin:15px 0 18px;color:var(--dark)}
+.home-first-visit .home-intro .eyebrow{font-size:10px;letter-spacing:1.1px}
+.home-product-line{font-size:16px;font-weight:600;line-height:1.55;color:var(--ink);margin:0 0 12px}
+.home-first-visit .home-intro .muted{max-width:490px;font-size:15px}
+.home-first-visit .home-new{background:transparent;padding:0;border:0;border-radius:0}
+.home-first-visit .home-new h3,.home-first-visit .home-new>.muted{display:none}
+.home-first-visit .home-new .button{margin-top:0;min-height:48px;padding:13px 23px}
+.home-first-visit .home-intro{margin-bottom:22px}
+.home-guide h3{font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:600;line-height:1.15}
+.home-guide-step strong{color:var(--dark)}
+.home-layout button:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+@media(max-width:700px){
+ .site-header .brand-icon{width:54px;height:54px}
+ .site-header h1{font-size:26px}
+ .site-header .subtitle{font-size:12px}
+ .home-first-visit .home-intro h2{font-size:clamp(34px,8.8vw,44px);letter-spacing:-1.2px}
+ .home-first-visit .home-intro{margin-bottom:20px}
+ .home-first-visit .home-intro .muted{font-size:14px}
+ .home-product-line{font-size:15px}
+ .home-first-visit .home-new .button{width:100%}
+ .home-returning .home-intro{margin-bottom:18px}
+}

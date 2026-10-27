@@ -423,21 +423,26 @@ export default function Home() {
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
-      {storageError && <div id="storage-warning" tabIndex={-1} className="warning" role="alert">⚠️ {storageError}</div>}
+      {storageError && <div id="storage-warning" tabIndex={-1} className="warning" role="alert">{storageError}</div>}
       <header className="site-header">
-        <div className="brand-icon" aria-hidden>🍺</div>
+        <div className="brand-icon" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/primary-mark.svg`} width="256" height="256" alt="" /></div>
         <div>
           <p className="eyebrow">PLAN · COOK · REPEAT</p>
           <h1>How Many Beers?</h1>
-          <p className="subtitle">Dinner has a deadline. Brisket does not.</p>
+          <p className="subtitle">From First Beer to First Bite.</p>
         </div>
         
       </header>
 
       {view === "home" ? (
-        <section className="home-layout" aria-label="Home">
+        <section className={`home-layout ${hasActiveWork ? "home-returning" : "home-first-visit"}`} aria-label="Home">
           <div className="home-primary">
-          <div className="home-intro"><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></div>
+          <div className="home-intro">{hasActiveWork ? <><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></> : <>
+            <p className="eyebrow">A LITTLE LESS JUGGLING. A BETTER COOK.</p>
+            <h2>From First Beer<br className="brand-line-break" /> to First Bite.</h2>
+            <p className="home-product-line">Plan every dish. Time your dinner. Enjoy the cook.</p>
+            <p className="muted">Set your serving time, bring your dishes into one plan, and follow a guided checklist when it’s time to cook.</p>
+          </>}</div>
           {planSaveResult==="saved" && <p className="notice" role="status">Plan saved on this device. Come back here to start when you’re ready.</p>}
           {hasActiveWork && <section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{cookInProgress ? "In progress" : "Planning"}</span></div>
@@ -466,11 +471,12 @@ export default function Home() {
           </div>
           <aside className="home-guide" aria-label="How it works">
             <p className="eyebrow">THE GAME PLAN</p>
-            <h3>One cook. Every dish. Right on time.</h3>
-            <p>Start with a template, bring everything into one timeline, and follow along when it’s time to cook.</p>
-            <div className="home-guide-step"><span>01</span><div><strong>Plan your menu</strong><small>Brisket, brats, sides. All together.</small></div></div>
-            <div className="home-guide-step"><span>02</span><div><strong>See the full schedule</strong><small>One checklist across every dish.</small></div></div>
-            <div className="home-guide-step"><span>03</span><div><strong>Cook and check it off</strong><small>Pick up where you left off.</small></div></div>
+            <h3>One dinner.<br />One game plan.</h3>
+            <p>A shared schedule for every dish, with room to adjust as the cook unfolds.</p>
+            <div className="home-guide-step"><span>01</span><div><strong>Set serving time</strong><small>Start with when you want to eat.</small></div></div>
+            <div className="home-guide-step"><span>02</span><div><strong>Add dishes</strong><small>Templates or your own instructions. All together.</small></div></div>
+            <div className="home-guide-step"><span>03</span><div><strong>Adjust the plan</strong><small>Review timing in one Live Schedule.</small></div></div>
+            <div className="home-guide-step"><span>04</span><div><strong>Cook and check it off</strong><small>Record progress. Pick up where you left off.</small></div></div>
           </aside>
         </section>
       ) : view === "history" ? (
@@ -723,7 +729,7 @@ export default function Home() {
           </div>
         </>
       )}
-      <footer>How Many Beers? · Plan it. Cook it. Check it off. <span>Made for the cook, not the clock.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      <footer>How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
     </main>
   );
 }
