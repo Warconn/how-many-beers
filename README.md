@@ -393,3 +393,7 @@ quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.
 Current-step detail polish (#26): neutral card, quieter planned time/dish metadata,
 full-width instructions and notes, matching Edit / Log temperature controls, and a shared quiet trash icon, all with
 44px targets. See [Cooking Mode](docs/cooking-mode.md).
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.

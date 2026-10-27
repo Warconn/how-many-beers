@@ -249,3 +249,7 @@ See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limita
 Current-step detail (#26) uses one content edge for instructions, controls and notes.
 The title leads; planned time and dish stay secondary. Edit, Log temperature and Step
 options share a consistent compact treatment and 44px tap targets on desktop/phone.
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.
