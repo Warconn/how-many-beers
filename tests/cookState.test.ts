@@ -41,7 +41,7 @@ describe("cooking checklist and history",()=>{
     expect(cookTimeline(moved).map(t=>t.id).sort()).toEqual(cookTimeline(meal).map(t=>t.id).sort());
   });
 
-  it("retains completion timestamps and activity logs after serving-time edits",()=>{
+  it("retains recorded planned positions, completion timestamps and activity logs after serving-time edits",()=>{
     let meal:ExtendedMeal=seed();
     const task=cookTimeline(meal)[0];
     meal=recordEvent(meal,task.id,"started","2026-11-25T04:00:00.000Z");
@@ -51,7 +51,7 @@ describe("cooking checklist and history",()=>{
     const before=cookTimeline(meal).find(t=>t.id===task.id)!.scheduledAt;
     const changed={...meal,serveAt:"2026-11-25T17:00"};
     const after=cookTimeline(changed).find(t=>t.id===task.id)!.scheduledAt;
-    expect(after).not.toBe(before);
+    expect(after).toBe(before);
     expect(changed.completed[task.id]).toBe("2026-11-25T05:00:00.000Z");
     expect(changed.events?.map(e=>e.occurredAt)).toEqual(meal.events?.map(e=>e.occurredAt));
     expect(changed.events?.filter(e=>e.kind==="equipment")[0]).toMatchObject({value:250,unit:"°F"});
@@ -117,4 +117,20 @@ describe("automatic step start",()=>{
     const logged=recordEvent(migrateMeal(old),task.id,"temperature","2026-11-25T04:20:00.000Z",180,"°F");
     expect(logged.events?.filter(e=>e.kind==="started")).toHaveLength(0);
   });
+});
+
+it('moves a dish step past its own neighbor without reordering other dishes', () => {
+  const meal=seed();
+  meal.dishes.push(createDish('brats'));
+  const tasks=cookTimeline(meal);
+  const dishId=meal.dishes[0].id;
+  const own=tasks.filter(t=>t.dishId===dishId);
+  const saved=recordEvent(meal,own[0].id,'completed','2026-11-25T08:00:00.000Z');
+  const moved=moveStep(saved,own[own.length-1].id,'up',dishId);
+  expect(cookTimeline(moved).filter(t=>t.dishId===dishId).map(t=>t.id)).toEqual([
+    ...own.slice(0,-2).map(t=>t.id),own[own.length-1].id,own[own.length-2].id
+  ]);
+  expect(cookTimeline(moved).filter(t=>t.dishId!==dishId)).toEqual(tasks.filter(t=>t.dishId!==dishId));
+  expect(moved.events).toEqual(saved.events);
+  expect(moved.completed).toEqual(saved.completed);
 });

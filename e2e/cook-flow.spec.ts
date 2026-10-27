@@ -19,6 +19,7 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
 
+  await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.getByRole("heading", { name: /2 dishes in this cook/ })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Live schedule" })).toBeVisible();
@@ -34,15 +35,14 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
 test("resuming an in-progress cook preserves cooking status", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
-  await page.getByRole("button", { name: /Hide dish picker/ }).click();
-  await page.getByRole("button", { name: /Start the cook/ }).click();
+  await page.getByRole("button", { name: "Start cooking", exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
   await expect(page.getByRole("button", { name: /Continue cooking/ })).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: /View cook/ }).click();
   await expect(page.getByText(/Cook in progress/).first()).toBeVisible();
-  await page.locator(".notice").getByRole("button", { name: "Return to cooking →", exact: true }).click();
+  await page.getByRole("button", { name: "Continue cooking", exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
 });
 
@@ -52,13 +52,13 @@ test("template picker adds dishes and keeps their settings separate", async ({ p
   await expect(page.getByRole("heading", { name: "Choose a template" })).toBeVisible();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
+  await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
-  await page.getByRole("button", { name: /Smoked brisket steps/ }).click();
-  await page.getByRole("button", { name: "Advanced dish settings" }).click();
-  await expect(page.getByRole("heading", { name: "Edit dish", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Edit Smoked brisket", exact: true }).click();
+  await page.getByText("Dish settings", { exact: true }).click();
   await page.getByLabel("Dish name").fill("Saturday brisket");
-  await page.getByRole("button", { name: "← Back to menu" }).click();
+  await page.getByRole("button", { name: "Edit Saturday brisket", exact: true }).click();
   await expect(page.getByText("Saturday brisket").first()).toBeVisible();
   await expect(page.getByText("Grilled beer-bath brats").first()).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
@@ -139,6 +139,7 @@ test("a recipe can be imported from the same Add Dish interface as templates", a
   await page.getByRole("button", { name: "Preview recipe steps" }).click();
   await page.getByRole("button", { name: "Add to this cook" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
+  await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
   await page.getByRole("button", { name: "Start from template" }).click();
   await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
@@ -148,8 +149,9 @@ test("a recipe can be imported from the same Add Dish interface as templates", a
 test("planner expands one dish to manage its steps without edit mode",async({page})=>{
  await page.getByRole("button",{name:/Plan a new cook/}).click();
  await page.getByRole("button",{name:"Add smoked brisket"}).click();
+ await page.getByRole("button",{name:"+ Add a dish",exact:true}).click();
  await page.getByRole("button",{name:"Add grilled beer-bath brats"}).click();
- await page.getByRole("button",{name:/Smoked brisket steps/}).click();
+ await page.getByRole("button",{name:"Edit Smoked brisket",exact:true}).click();
  await expect(page.getByRole("region",{name:"Smoked brisket steps"})).toBeVisible();
  await expect(page.getByRole("button",{name:"Add a step to Smoked brisket"})).toBeVisible();
  await page.getByRole("button",{name:"Add a step to Smoked brisket"}).click();
@@ -158,6 +160,6 @@ test("planner expands one dish to manage its steps without edit mode",async({pag
  await expect(page.getByText("Get wood pellets")).toBeVisible();
  await page.reload();
  await page.getByRole("button",{name:/Resume planning/}).click();
- await page.getByRole("button",{name:/Smoked brisket steps/}).click();
+ await page.getByRole("button",{name:"Edit Smoked brisket",exact:true}).click();
  await expect(page.getByText("Get wood pellets")).toBeVisible();
 });

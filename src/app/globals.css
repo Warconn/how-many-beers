@@ -21,13 +21,6 @@
 
 /* Separate planning and cooking experiences */
 .planning-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:start}
-.ready-panel h2{margin:7px 0 9px;font-size:26px;letter-spacing:-.6px}
-.ready-summary{margin:19px 0;display:grid;gap:12px}
-.ready-summary>div{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#faf7f2;display:flex;flex-direction:column;gap:3px}
-.ready-summary span{font-size:11px;color:var(--muted);font-weight:700}
-.ready-summary strong{font-size:15px}
-.start-cook-btn{width:100%;min-height:53px;font-size:17px}
-.ready-panel>.small{line-height:1.5;margin-bottom:0}
 .cook-header{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:6px 0 20px}
 .cook-header h2{font-size:37px;letter-spacing:-1.2px;line-height:1.1;margin:5px 0 8px}
 .cook-header .eyebrow{margin-top:14px}
@@ -107,8 +100,6 @@
 .preview-dish{display:block;margin-top:4px;font-size:11px;color:var(--muted);font-weight:600}
 .preview-conditional{display:inline-block;background:#fff4e8;color:#845633;padding:4px 7px;border-radius:5px;margin-top:6px;font-size:10px;font-weight:700}
 .preview-done{opacity:.7}.preview-done .preview-index{background:#e5eddf;color:#4b7040;border-color:#d7e3cb}
-.ready-panel .start-cook-btn{width:100%;display:flex;justify-content:center;align-items:center;gap:8px;border-radius:12px;font-size:16px;min-height:54px;margin-top:18px}
-.ready-panel .start-cook-btn:disabled{cursor:not-allowed}
 @media(max-width:650px){
   .planning-screen{padding-bottom:35px}
   .checklist-preview{padding:12px;border-radius:13px}
@@ -322,8 +313,6 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .guided-main .planning-layout .stack{min-width:0}
 .guided-main .workspace-dish-grid{grid-template-columns:1fr}
 .guided-main .workspace-dish{padding:13px}
-.guided-main .ready-panel .checklist-preview{margin-top:14px}
-.guided-main .ready-panel .preview-task-list{max-height:250px;overflow:auto}
 .guided-schedule{position:sticky;top:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:22px;min-width:0}
 .schedule-head{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:12px}
 .schedule-head .eyebrow{margin:0}.schedule-head strong{font-size:12px;color:var(--muted)}
@@ -354,3 +343,128 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .inline-step-add input{flex:1 1 210px;min-width:0}
 .inline-step-add button{flex:0 0 auto}
 @media(max-width:600px){.inline-step-add{display:grid;grid-template-columns:1fr}.inline-step-add input,.inline-step-add button{width:100%}}
+
+/* Dish selection and editing share one menu surface. */
+.workspace-dish{background:transparent;padding:0!important;gap:0;overflow:hidden}
+.dish-select{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:transparent;border:0;color:inherit;width:100%;padding:16px;cursor:pointer;min-height:76px}
+.dish-summary{display:grid;gap:5px;min-width:0}.dish-summary strong{color:var(--ink);overflow-wrap:anywhere}.dish-summary>span{overflow-wrap:anywhere}
+.dish-select .dish-toggle{color:var(--accent-dark);font-weight:650;flex-shrink:0}
+.dish-select:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.workspace-dish.is-open{border-color:#c99579}
+.is-open>.dish-header{background:#faf2ec}
+/* Removal is a sibling of selection, never nested inside the dish button/settings. */
+.dish-header{display:flex;align-items:center;min-width:0;padding-right:10px}
+.dish-header .dish-select{flex:1;width:auto;min-width:0}
+.icon-remove{flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);cursor:pointer}
+.icon-remove:hover{color:#9b3e2b;background:#f9ede8}.icon-remove:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media(max-width:600px){.dish-header{padding-right:6px}.dish-header .dish-select .dish-toggle{font-size:0}.dish-header .dish-toggle::after{content:"⌄";font-size:18px}.dish-header .dish-select[aria-expanded=true] .dish-toggle::after{content:"⌃"}}
+.dish-inline-editor{padding:0 16px 16px;min-width:0}
+.dish-advanced{border-bottom:1px solid var(--line);padding:4px 0 10px}
+.dish-advanced summary{cursor:pointer;font-weight:650;padding:12px 0;min-height:44px;color:var(--accent-dark)}
+.dish-advanced input{width:100%;min-width:0}.dish-advanced label{display:block;margin:10px 0 6px;font-size:13px;font-weight:650}
+.menu-guidance{margin:-8px 0 16px}
+.menu-add-dish{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;margin-bottom:16px}
+.menu-add-dish h3{margin:0 0 12px}
+.inline-dish-steps{border:0;margin:0;padding-top:8px;gap:0}
+.compact-task{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:14px 0;box-shadow:none}
+.compact-task .task-top{gap:10px}.compact-task .task-main .between{align-items:start;gap:8px}
+.compact-task .task-main strong{font-size:14px}.compact-task .task-main time{font-size:11px}
+.compact-task .task-main p{margin:6px 0;font-size:12px;line-height:1.5}
+.compact-task .task-actions{margin:8px 0 0 36px;gap:6px}
+.compact-task .task-actions button{min-width:44px;min-height:44px}
+.compact-task .preview-index{width:26px;height:26px;flex:0 0 26px}
+.inline-dish-steps>.button{margin-top:14px;min-height:44px}
+@media(max-width:600px){.dish-select{padding:14px;gap:8px}.dish-select .dish-toggle{font-size:11px}.dish-inline-editor{padding:0 12px 14px}.compact-task .task-main .between{display:grid;gap:3px}.compact-task .task-actions{margin-left:0}}
+
+/* One compact transition from planning to cooking. */
+.cook-actions{padding:0 2px}
+.cook-action-controls{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cook-action-controls .cook-action-button{margin:0;min-width:180px;min-height:48px}
+.cook-action-controls .review-checklist-button{padding:12px 0;min-height:44px;font-weight:650}
+.cook-action-button:disabled{cursor:not-allowed}
+.cook-actions>#cook-start-help{margin:8px 0 0;line-height:1.5}
+.plan-notes{padding:0 2px}
+.plan-notes .warning{margin:0 0 8px}
+.plan-notes .timing-guidance{margin:0;line-height:1.5}
+.guided-main>.checklist-preview{margin:0}
+@media(max-width:600px){.cook-action-controls{gap:2px;flex-direction:column;align-items:stretch}.cook-action-controls .cook-action-button{width:100%}.cook-action-controls .review-checklist-button{align-self:center}}
+
+/* Shared step editor, reached from the dish or the chronological Live Schedule. */
+.step-editor{display:grid;gap:12px;margin-top:12px;padding:16px;background:#fffaf6;border:1px solid var(--line);border-radius:10px;min-width:0}
+.step-editor:focus{outline:none}.step-editor label{display:grid;gap:6px;font-size:12px;font-weight:650;min-width:0}
+.step-editor input,.step-editor textarea,.step-editor select{width:100%;min-width:0;max-width:100%}
+.step-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.step-time-source{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--accent-dark)}
+.step-time-source .link{margin:0;padding:8px 0;min-height:44px}.step-editor p{margin:0;line-height:1.5}
+.step-editor-actions{display:flex;flex-wrap:wrap;gap:10px}.step-editor-actions .button{margin:0;min-height:44px}
+.step-finish{font-size:12px;font-weight:650}.planned-step-details{font-size:11px;color:var(--accent-dark);line-height:1.5}
+.schedule-list .schedule-step{display:grid;width:100%;gap:6px;text-align:left;background:transparent;border:0;padding:0;min-height:60px;color:inherit;cursor:pointer}
+.schedule-step:hover strong,.schedule-step:focus-visible strong{text-decoration:underline}.schedule-step:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.schedule-step .schedule-edit-hint{font-size:11px;color:var(--accent-dark)}
+@media(max-width:600px){.step-field-grid{grid-template-columns:minmax(0,1fr)}.step-editor{padding:12px}.step-editor-actions .button{flex:1}.step-editor input[type=datetime-local]{font-size:14px}}
+.step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
+.step-saved{font-size:12px;color:#456439;margin:8px 0}
+
+.brisket-planner{padding:2px 0 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brisket-planner h3{font-size:17px;margin:5px 0}.brisket-planner p{line-height:1.5}
+.brisket-window{border-left:3px solid var(--accent);padding:10px 13px;margin:16px 0;background:#faf6ee}
+.brisket-window p{margin:8px 0;font-size:13px}.brisket-window time{display:block;font-weight:650;font-variant-numeric:tabular-nums}
+.brisket-planner details{margin-top:14px}.brisket-planner summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
+.brisket-planner ul{padding-left:19px;line-height:1.6}.personal-rule{display:flex;align-items:center;gap:10px;min-height:44px}.personal-rule input{width:22px;height:22px}
+@media(max-width:600px){.brisket-planner .small-grid{grid-template-columns:1fr 1fr}.brisket-planner select{font-size:14px}}
+
+.cook-duration-details{margin:0 0 14px}.cook-duration-details>summary,.cook-extra-tools>summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--accent-dark);font-size:13px;font-weight:650}.cooking-screen .task-actions button{min-height:44px;min-width:44px}.cooking-screen .task-note{min-height:44px}
+.cooking-screen .cook-warnings{display:block}.cooking-screen .condition{color:#63482f;background:#f3e7d6}.cooking-screen .muted{color:#675e55}.cook-duration-details>summary:focus-visible,.cook-extra-tools>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media(max-width:600px){.cooking-screen .brand{margin-bottom:14px}}
+.cooking-screen>.site-header{padding-bottom:14px;margin-bottom:10px}.cooking-screen>.site-header .eyebrow,.cooking-screen>.site-header .subtitle{display:none}.cooking-screen>.site-header h1{font-size:22px;letter-spacing:-.5px}.cooking-screen>.site-header .brand-icon{width:36px;height:36px;font-size:20px}
+.cooking-navigation{display:flex;align-items:center;gap:24px}.cooking-navigation .back-link{min-height:44px}.cooking-screen .cook-header .eyebrow{margin-top:5px}.cooking-screen .cook-header h2{font-size:30px}
+@media(max-width:600px){.cooking-screen .cook-header h2{font-size:25px}.cooking-screen .cook-header{gap:10px}.cooking-screen .cook-progress-chip{min-width:64px;padding:10px}.cooking-screen .cook-target{font-size:12px}.cooking-screen .active-cook-panel{padding:14px}.cooking-screen .focus-now{margin-top:16px}}
+.cooking-screen .task-check-control{display:grid;place-items:center;flex:0 0 44px;min-width:44px;min-height:44px;margin:0;cursor:pointer}.cooking-screen .task-check-control input{margin:0}.cook-mobile-bar button{min-height:44px}
+
+.planned-cook-start{border-top:1px solid var(--line);padding-top:15px;margin-top:15px}.planned-cook-start>.eyebrow{margin:0 0 7px}.planned-cook-start>strong{display:block;font-size:15px}.planned-cook-start p.small{margin:6px 0;line-height:1.5}.planned-cook-start time{display:block;font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.5}.planned-cook-on-heat{margin:14px 0;padding:12px 0;border-top:1px solid var(--line)}.planned-cook-on-heat>span,.planned-cook-on-heat>strong{display:block;font-size:12px;line-height:1.5}.planned-cook-on-heat>span{color:var(--muted)}.save-plan-button{min-height:48px}.home-actions #home-start-help{flex-basis:100%;margin:0}
+
+.cancel-add-dish{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;min-width:64px;min-height:44px;max-width:100px;padding:8px;border:0;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer}.cancel-add-dish>span{font-size:18px;font-weight:400}.cancel-add-dish:hover{color:var(--accent-dark)}.cancel-add-dish:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.cooking-screen{padding-bottom:calc(130px + env(safe-area-inset-bottom))}.cooking-navigation .finish-cook-trigger{margin-left:auto;font-weight:500;color:var(--muted)}.cooking-navigation button:disabled{opacity:.5;cursor:not-allowed}.cook-autosave-note{font-size:11px;margin:8px 0 18px}.guide-step-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}.guide-step-heading h3{margin:0;font-size:15px}.guide-step-heading>span{font-size:12px;color:var(--muted)}.guided-step .cook-task{background:#fffaf2;border-color:#d8b18f}.guide-condition-note{padding:0 4px;line-height:1.5}.step-navigation-note{font-size:12px;line-height:1.5;color:#655646;padding:9px 0}.cook-safety-note{line-height:1.6;margin:0 4px}.cooking-screen .cook-duration-details{margin:0 4px}.cooking-screen .finish-cook .button{min-height:44px}.guided-step:focus,.full-cook-checklist:focus{outline:none}.guided-step .cook-task:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.full-cook-checklist h3{font-size:20px;margin:20px 0 6px}.flat-cook-list{list-style:none;padding:0;margin:18px 0 0}.flat-cook-list>li{display:flex;gap:6px;align-items:start;border-top:1px solid var(--line);padding:9px 0}.flat-step-check{display:grid;place-items:center;flex:0 0 44px;min-height:44px;margin:0;cursor:pointer}.flat-step-check input{width:24px;height:24px;accent-color:var(--accent);margin:0}.flat-cook-list li>button{display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:52px;padding:3px 0;background:transparent;border:0;text-align:left;cursor:pointer}.flat-step-copy{display:grid;gap:5px;flex:1;min-width:0}.flat-step-copy>strong{font-size:14px;line-height:1.4;overflow-wrap:anywhere}.flat-step-copy>span{font-size:11px;color:var(--muted);line-height:1.5}.flat-step-time{font-size:11px;color:#705942;max-width:135px;line-height:1.5;flex:0 0 auto}.flat-cook-list .is-complete .flat-step-copy>strong{text-decoration:line-through;color:#68715e}.flat-step-copy>.flat-step-actual{color:#45603c}.flat-cook-list button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.cook-guide-bar{position:fixed;z-index:30;bottom:12px;left:50%;transform:translateX(-50%);display:flex;align-items:stretch;gap:14px;width:calc(100% - 40px);max-width:1120px;padding:10px 14px;background:#fffdf9;border:1px solid var(--line);border-radius:12px;box-shadow:0 -3px 20px rgba(30,20,10,.06)}.cook-guide-bar button{border:0;cursor:pointer}.cook-guide-bar button:disabled{opacity:.5;cursor:not-allowed}.guide-checklist-button{flex:0 0 132px;min-height:52px;padding:8px;background:var(--accent-light);color:var(--accent-dark);border-radius:8px;font-size:13px;font-weight:650}.guide-checklist-button>span{display:block;font-size:11px;font-weight:400;margin-top:4px}.guide-next-button{display:grid;gap:3px;min-width:0;flex:1;min-height:52px;padding:3px 12px;background:transparent;text-align:left;color:var(--ink)}.guide-next-label{font-size:11px;font-weight:500;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guide-next-button>strong{font-size:14px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guide-next-time{font-size:11px;color:#705942}.guide-next-empty{display:flex;flex:1;justify-content:center;flex-direction:column;gap:4px;padding:0 12px;font-size:13px}.guide-next-empty>span{font-size:11px;color:var(--muted)}.cook-guide-bar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media(max-width:600px){.cook-guide-bar{left:0;right:0;transform:none;width:100%;bottom:0;border-radius:0;border-left:0;border-right:0;padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:8px}.guide-checklist-button{flex-basis:104px;font-size:12px}.guide-next-button{padding:3px 6px}.guide-next-button>strong{font-size:13px}.flat-step-time{max-width:93px}.flat-cook-list li>button{gap:8px}.cooking-screen .cook-sidebar{gap:10px}.cooking-screen .cook-header{margin-bottom:14px}}
+.workspace-heading{position:relative}.workspace-heading .cancel-add-dish{position:absolute;right:0;top:-14px}.flat-step-time{text-align:right}.flat-step-chevron{font-size:19px;color:var(--muted);flex:0 0 8px}.guide-next-button{position:relative;padding-right:30px}.guide-next-button::after{content:'→';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--accent-dark)}
+@media(max-width:600px){.guide-next-button{padding-right:24px}.guide-next-button::after{right:3px;font-size:18px}}
+
+/* Current-step detail uses one content edge and a shared utility-control style. */
+.guided-step .cook-task{background:var(--surface);border-color:var(--line);padding:18px}
+.guided-step .task-top{display:grid;grid-template-columns:36px minmax(0,1fr);gap:6px 10px;cursor:default}
+.guided-step .task-check-control{grid-column:1;grid-row:1 / span 2;min-width:36px;min-height:44px}
+.guided-step .task-check-control input{width:24px;height:24px}
+.guided-step .task-main{display:contents}
+.guided-step .task-main>.between{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.guided-step .task-main strong{font-size:18px;line-height:1.35}
+.guided-step .task-main time{font-size:12px;font-weight:400;color:var(--muted);white-space:normal;line-height:1.5}
+.guided-step .task-main>.task-dish{grid-column:2;grid-row:2;font-size:12px;font-weight:500;color:var(--muted);margin:0}
+.guided-step .task-main>p:not(.task-dish),.guided-step .task-main>.condition{grid-column:1 / -1;margin:6px 0 0;line-height:1.6}
+.guided-step .task-main>p.small{font-size:14px;margin-top:12px}
+.guided-step .task-main>.condition{justify-self:start;font-size:11px}
+.guided-step .task-actions{padding:14px 0 0;margin:16px 0 0;gap:8px;border-top:1px solid var(--line)}
+.guided-step .task-actions>button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12px;line-height:1.3;font-weight:500;color:#75533b}
+.guided-step .note-label{margin:18px 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
+.guided-step .task-note{width:100%;margin-left:0;min-height:44px;font-size:14px;padding:11px 12px}
+@media(max-width:390px){.guided-step .cook-task{padding:14px}.guided-step .task-actions{gap:6px}.guided-step .task-actions>button{padding:8px;font-size:11px}}
+@media(max-width:600px){
+ .guided-step .task-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;align-items:start}
+ .guided-step .task-actions>button{height:44px;padding:6px 8px;line-height:1.2}
+}
+
+.task-actions button.step-remove{display:grid;place-items:center;margin-left:auto;width:44px;height:44px;min-width:44px;padding:0;border:0;background:transparent;color:var(--muted)}
+.task-actions button.step-remove:hover{color:#9b3e2b;background:#f9ede8}
+@media(max-width:600px){.guided-step .task-actions{grid-template-columns:max-content minmax(0,1fr) 44px}}
+
+.timing-choice{margin:18px 0;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.timing-choice>p{display:grid;gap:5px;margin:0 0 12px;font-size:12px;color:var(--muted)}.timing-choice>p>strong{color:var(--ink);font-size:13px;font-weight:650}.timing-choice>p>span{line-height:1.5}
+.timing-choice-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.timing-choice-actions>button{margin:0;min-height:44px}.timing-choice-actions>.link{padding:8px 0;font-weight:500}.timing-choice .button:disabled{opacity:1;color:var(--muted);background:#f2efea;cursor:default}
+
+.cook-actions .cook-action-controls{gap:12px;align-items:center}
+.cook-actions .cook-action-controls>button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin:0;line-height:1.3}
+.cook-actions .cook-action-controls>.button{min-width:180px}
+@media(max-width:600px){.cook-actions .cook-action-controls{align-items:stretch;gap:8px}.cook-actions .review-checklist-button{align-self:center}}
+
+.duration-controls{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:end;min-width:0}.duration-controls label{min-width:0}.duration-controls input,.duration-controls select{min-height:44px}

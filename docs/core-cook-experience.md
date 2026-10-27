@@ -1,25 +1,13 @@
-## Production baseline and next UX backlog (October 26, 2026)
+## Production release and outstanding UX bugs (October 26, 2026)
 
-**Released:** [PR #29](https://github.com/Warconn/how-many-beers/pull/29) merged `dev` to `main` at commit `3e7868d`. The production site is [How Many Beers on GitHub Pages](https://warconn.github.io/how-many-beers/); [Cloudflare Pages](https://how-many-beers.pages.dev/) follows `dev`. The user verified that the release appeared in production. The release includes Home/resume, Guided Cook Planner, unified template/pasted-recipe Add Dish source selection, expandable per-dish task controls and browser regression testing. The existing UI is functional but **not the final approved UX**.
+Core Cook Experience release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) reached `main` at `3e7868d`; user confirmed the GitHub Pages production site reflects the release. Current capabilities include Home/resume, Guided Planner, unified template/text-import Add Dish, expandable step controls, and CI Playwright. This is a functional baseline, **not a polished finished planner**.
 
-### Confirmed production UX bugs, next sprint
+Production bug backlog:
+- [#28](https://github.com/Warconn/how-many-beers/issues/28): Overhaul adding/editing dishes and layered step management. Clarify Add vs contextual Edit and reduce scroll/state confusion.
+- [#30](https://github.com/Warconn/how-many-beers/issues/30): Make live combined schedule directly selectable/editable, sync dish changes, preserve recorded actual timestamps. Do not confuse with full dependency optimization (#3).
+- [#31](https://github.com/Warconn/how-many-beers/issues/31): Remove redundant Ready When You Are card; replace with compact Start/Continue and preserve warnings.
 
-- **[#28](https://github.com/Warconn/how-many-beers/issues/28): Add/Edit dishes and layered step management are unintuitive.** Too many UI layers to choose templates, edit a dish and adjust its steps. Separate Add from contextual dish editing, make menu navigation obvious, and avoid persistent long forms.
-- **[#30](https://github.com/Warconn/how-many-beers/issues/30): Live Schedule is not directly editable.** Make schedule steps selectable and adjustable, keeping dish and combined-schedule views in sync while retaining historical events. This is simpler than future intelligent dependency scheduling in #3.
-- **[#31](https://github.com/Warconn/how-many-beers/issues/31): Ready When You Are is redundant.** Remove oversized summary and duplicate schedule metrics; replace with a compact Start/Continue Cooking action without hiding essential warnings or food-safety reminders.
-
-These are **open follow-up bugs**, not fixed by the production release. Existing issue #24/#25 describes the original capabilities; #28/#30/#31 track the remaining actual friction.
-
-### Engineering and release process
-
-Move away from direct work-in-progress commits to `dev`. Use ChatGPT for UX direction and acceptance criteria; implement on `feature/*` branches (preferably via Codex with the repo installed locally), run TypeScript + Vitest + Playwright + static build before committing, and have GitHub Actions validate a PR targeting `dev`. Merge only a reviewed, passing feature into `dev`, which triggers the Cloudflare preview. Promote `dev` to `main` through a release PR after green CI and product review. Cloudflare's current Git-connected configuration may still deploy on every `dev` push until workflow settings are adjusted; do not claim gated deployments have been implemented.
-
-### Next sprint acceptance priorities
-
-1. Fix #28 as the main editing/adding journey, with Playwright verification and preserved cook/event data.
-2. Introduce direct schedule adjustments in #30 without introducing speculative duration inference.
-3. Remove redundant Ready panel in #31, verifying Start/Continue and warnings.
-4. Review full plan-to-cook-to-resume behavior on desktop/mobile and establish screenshot baselines before the next production promotion.
+Next delivery cycle: product decisions and acceptance tests here, implementation via Codex and feature branches, run TypeScript, unit, Playwright and build before PR to `dev`, approve green CI then merge to `dev` for Cloudflare preview, and promote reviewed candidates to `main`. Current Cloudflare Git integration still triggers on `dev` pushes; deployment gating is planned, not configured. Tests should cover both browsers and responsive layouts, refresh/resume and history retention.
 
 ## Inline dish step planning (October 26, 2026)
 
@@ -66,7 +54,7 @@ Allow one active/planning cook per user or device, with many completed archived 
 1. **Home**: Resume the existing cook prominently (name, planned serving time, dish count, status, meaningful next action). Start new cook, browse history/repeat and access templates indirectly. No full planner or giant form on entry.
 2. **Cook workspace**: The primary planning and overview surface for a particular cook. Name/serving time, menu of dishes, one combined timeline and unambiguous transition to Cooking Mode. A session in progress can also be viewed here without changing its state.
 3. **Add dish**: Pick a starter template (Brisket, Brats, Wings, Turkey) or start blank. Preview and optionally adjust defaults before adding. Return to the same cook.
-4. **Dish details**: Edit name, settings, and its ordered steps, with ownership visible. Provide a clear return to the shared cook view.
+4. **Adjust a dish**: Expand its menu card to work directly with its steps. Keep name and equipment/timing settings in a secondary disclosure within that card. No separate details surface or return navigation.
 5. **Cooking Mode**: Execution-only, emphasizing Now / Next / Later and completion/logging. No competing setup. Easily return to overview and Home. Retain existing event semantics.
 6. **History**: Accessed from Home; previous cooks are immutable until explicitly repeated into a new cook.
 
@@ -148,3 +136,134 @@ The workspace now prioritizes planning actions over a full-width timeline. At de
 
 This release reuses existing cook/session persistence, templates, step actions and cooking mode. The schedule is derived from the same timeline data, not separately persisted. Playwright now covers sidebar placement, responsive stacking and expand/collapse behavior. Follow-up refinements: collapse the detailed checklist preview by default, strengthen per-dish step editing and validate the flow on real devices. Promotion to `main` requires a green CI run, review of visual screenshots and acceptance of the full plan-to-cook journey.
 
+
+## Issue #28: one menu surface
+
+Review feedback on the first PR iteration found that a menu card plus a separate
+Dish details / Edit dish panel still felt layered. The revision uses an inline
+accordion within the menu instead, with a single dish heading and no return navigation.
+
+1. Set serving time.
+2. Add a template or imported text recipe in the menu. Cancel adding does not mutate
+   the cook. After adding, the picker closes and the new dish expands immediately;
+   keyboard focus moves to its header.
+3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
+   header collapses it. Only one dish is expanded at a time.
+4. Use Dish settings for name, equipment, durations and optional reference settings.
+   Settings stay collapsed by default. Step actions are visible directly in the dish.
+   Remove dish is a compact trash icon beside the heading, not hidden in settings;
+   it retains a descriptive accessible label/tooltip and a 44px touch target;
+   confirmation is required. Cancel does not mutate the cook, and removing one dish
+   preserves other dishes, recorded events and the open editor for another dish.
+   Focus returns to a remaining dish or Add a dish after removal.
+5. Add more dishes or start cooking. The responsive Live Schedule stays derived from
+   the same cook; no direct timeline editing (#30) or Ready panel removal (#31).
+
+The step list drops nested cards and repeated dish labels, while keeping instructions,
+condition warnings and existing event semantics. Numbers and reorder boundaries are
+local to the dish; moving a step swaps it with its own dish's neighbor and preserves
+other dishes' relative order and recorded events. Existing global checklist reordering
+continues to use the original behavior. No storage schema or ID changes.
+
+Playwright covers creation, import, cancellation, auto-expansion, one-card selection,
+settings, back/collapse/resume, and editing/reordering/removing steps in a saved cooking
+session without changing completion or temperature events. The inline-menu acceptance
+test first failed against the separate-panel UI. Desktop and phone screenshots are
+saved under docs/screenshots and attached to test runs. CI uses managed Chromium;
+this cloud runner uses system Chromium with optional video disabled.
+
+## Issue #31: compact Start/Continue action
+
+The planner transitions from menu to cooking without a second summary card.
+Start cooking is the primary action directly below the menu; Review checklist
+opens the existing full checklist only when requested. Serving time and combined
+step information remain in their existing header/menu and Live Schedule locations.
+The Ready When You Are panel, duplicate metrics, and separate timing-tip card with
+Start a fresh plan are removed. Starting a replacement cook remains a Home action,
+with the existing confirmation and preservation rules.
+
+Starting requires at least one step and a valid serving time, with a visible disabled
+reason otherwise. Existing general-prep steps still count and can be added without
+a dish. A cook with mode cooking or an existing start time shows Continue cooking;
+continuing does not write a fresh start timestamp or require the plan to pass
+starting validation again. For normal active cooks it only changes the UI view;
+legacy cooks with a start time and missing lifecycle status normalize to cooking. All completion/event/note data
+and legacy saved cooks retain the current storage format.
+
+Plan notes remain visible below the actions: shared-equipment conflicts, untimed
+steps, and the reminder that schedules are estimates and thermometers/food-safety
+checks are still required. Notices are not hidden inside the checklist disclosure.
+An incomplete schedule does not assert readiness or invent timings. The optional
+checklist retains step actions and custom-prep entry; it is not a new timeline owner.
+
+Desktop/mobile Playwright checks cover removal of the old summary, compact placement,
+empty/invalid start reasons, initial start, real step completion and refresh/resume,
+legacy active cooks without a start time, warning visibility and checklist disclosure.
+The tests first failed against the previous UI. Screenshot evidence is saved under
+docs/screenshots/issue-31-*.png. Direct schedule editing (#30) and removal discovery
+(#33) stay separate.
+
+## Issue #30: shared step timing editor
+
+Dish steps and Live Schedule now reach the same inline editor for planned date/time,
+estimated duration, name/instructions, step equipment and an optional target food
+temperature. General prep opens in checklist review. The flat menu remains intact;
+Save/Cancel does not add a separate details page.
+
+Manual times are fixed, plan timing remains derived, and reset restores original timing.
+Duration updates estimated finish and adjusts following timed steps in the dish when
+needed, preserving other dishes and fixed/recorded anchors. Live Schedule is
+chronological; manual checklist order remains distinct. Actual events and completed
+history are preserved. See [Step timing](step-timing.md) for the complete rules,
+calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
+
+## Issue #5: explicit brisket timing comparisons
+
+The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with
+an on-smoker start window. Applying is explicit so draft comparisons cannot silently
+replan an active cook. Unknown/untrimmed weights and unsupported pit settings retain
+manual timing. Fixed step overrides and recorded activity survive applying/reloading.
+See [Brisket timing comparisons](brisket-estimates.md) for policy, sources, provenance,
+unvalidated extrapolation and pending live-source review. Recipe-template content updates
+follow #5 and focused Cooking Mode #26 when the user supplies their actual recipes.
+
+## Issue #39: save now, start later
+
+Planning includes an explicit Save plan for later action. After successful storage
+acknowledgment, Home displays the same planning cook and its next planned start dates.
+Start cooking is an explicit Home action; Resume planning adjusts the same plan.
+Failed writes keep the planner open. Saving does not set lifecycle/start timestamps,
+complete tasks or archive an unfinished cook. Existing device-local autosave, one active
+cook, archived history and replacement confirmation remain intact. See [saved plans](saved-plans.md).
+
+## Issue #26: guided cooking review iteration
+
+User review found the grouped checklist and Save Cook / View plan footer still clunky.
+Cooking now focuses one step, with a fixed Up next preview and a Full checklist action.
+The whole cook is a flat chronological list, including completed/untimed items, with
+in-place selection back into the shared step editor. Checking off advances guidance;
+previewing and navigating never complete a task or reset lifecycle/history. Open edits
+and reading drafts are protected. Finish cook is an explicit archive action, separate
+from editing the plan or autosaving progress. Cancel adding is a quiet compact control.
+See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
+
+Current-step detail (#26) uses one content edge for instructions, controls and notes.
+The title leads; planned time and dish stay secondary. Edit and Log temperature use consistent compact controls. Dish and step removal
+share a quiet trash icon with confirmation and 44px tap targets on desktop/phone.
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.
+
+Planning's Start cooking, Save plan for later and Review checklist align at one
+48px height. On phones, primary/secondary actions stack at equal width with space
+between them; reviewing the checklist remains visually secondary.
+
+
+## Following-step duration adjustment (#41)
+
+Enter a duration in minutes or hours. Extending a step beyond the next planned start
+pushes following timed recipe steps while preserving their spacing. Shortening or
+Use plan timing removes the extra delay. Other dishes, fixed/recorded steps and actual
+activity stay intact; conflicts and a serving-target overrun produce warnings. Untimed
+stages break links; custom/general prep stays independent. See [step timing rules](step-timing.md).
