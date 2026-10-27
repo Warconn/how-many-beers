@@ -41,6 +41,9 @@ describe('following dish timing',()=>{
  it('preserves date-only fixed overrides without automatically moving unknown-duration stages',()=>{
   const m=seed(),task=cookTimeline(m)[0],before=dates(m);const changed=editStep(m,task.id,task.title,task.instructions,details(null,{timingMode:'fixed',scheduledAt:'2026-11-26T05:30:00Z'}));for(const t of cookTimeline(changed).filter(t=>t.id!==task.id))expect(t.scheduledAt).toBe(before[t.id]);
  });
+ it('links a previously untimed recipe stage once its start and duration are explicitly supplied',()=>{
+  const recipe=parseRecipeText('Soup','Chop\nSimmer');recipe.steps![1].minutes=20;const m={...newMeal(),serveAt:'2026-11-25T18:00:00Z',dishes:[recipe]};const first=cookTimeline(m).find(t=>t.title==='Chop')!,second=cookTimeline(m).find(t=>t.title==='Simmer')!;const changed=editStep(m,first.id,first.title,first.instructions,details(120,{timingMode:'fixed',scheduledAt:'2026-11-25T18:00:00Z'}));expect(dates(changed)[second.id]).toBe('2026-11-25T20:00:00.000Z');
+ });
  it('uses elapsed durations across a repeated DST hour',()=>{
   const task=(id:string,at:string,durationMinutes:number|null):PlannedTask=>({id,dishId:'d',dishName:'Dish',title:id,instructions:'',scheduledAt:at,baseScheduledAt:at,durationMinutes,isCondition:false});const result=adjustDishSequence([task('a','2026-11-01T05:30:00Z',120),task('b','2026-11-01T06:00:00Z',null)],new Set());expect(result.tasks[1].scheduledAt).toBe('2026-11-01T07:30:00.000Z');
  });

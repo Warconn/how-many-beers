@@ -11,10 +11,16 @@ export function adjustDishSequence(sequence:PlannedTask[],recorded:ReadonlySet<s
  let shift=0,previous:PlannedTask|undefined;
  for(const task of sequence){
   const base=instant(task.baseScheduledAt===undefined?task.scheduledAt:task.baseScheduledAt),current=instant(task.scheduledAt);
-  if(base===null || current===null){tasks.push({...task});shift=0;previous=undefined;continue;}
-  let planned=base+shift;
+  if(current===null){tasks.push({...task});shift=0;previous=undefined;continue;}
   const previousStart=previous?instant(previous.scheduledAt):null,previousDuration=previous?duration(previous):null;
   const previousEnd=previousStart!==null && previousDuration!==null?previousStart+previousDuration:null;
+  if(base===null){
+   // An explicitly scheduled formerly-untimed stage is now an anchor. Its known
+   // duration can constrain successors without inventing an original start.
+   if(previousEnd!==null && previousEnd>current)warnings.push(`${task.dishName}: duration of “${previous!.title}” runs past fixed step “${task.title}”. Its planned time was kept. Review the conflict before cooking.`);
+   const anchor={...task};tasks.push(anchor);shift=0;previous=anchor;continue;
+  }
+  let planned=base+shift;
   if(previousEnd!==null)planned=Math.max(planned,previousEnd);
   const fixed=task.timingMode==='fixed',locked=fixed||recorded.has(task.id);
   if(locked && previousEnd!==null && previousEnd>current){warnings.push(`${task.dishName}: duration of “${previous!.title}” runs past ${fixed?'fixed':'recorded'} step “${task.title}”. Its planned time was kept. Review the conflict before cooking.`);}

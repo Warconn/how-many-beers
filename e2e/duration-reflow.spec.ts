@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {createDish,newMeal} from '../src/domain/meal';
-import {migrateMeal,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
+import {recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 test.use({timezoneId:'America/New_York'});
 const key='how-many-beers:meal:v1';
 function fixture():ExtendedMeal{const m={...newMeal(),name:'Turkey dinner',serveAt:'2026-10-28T16:00',dishes:[createDish('turkey'),createDish('brats')],mode:'cooking' as const,startedAt:'2026-10-27T12:00:00Z'};return recordEvent({...m,notes:{[m.dishes[1].id+':prep']:'Keep my notes'}},m.dishes[1].id+':prep','completed','2026-10-27T12:01:00Z');}
