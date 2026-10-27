@@ -471,8 +471,8 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 
 /* #45: approved Classic Dial identity. Keep active-cook actions ahead of branding. */
 .site-header,.home-layout,footer{--muted:#6d675f}
-.site-header .brand-icon{width:64px;height:64px;background:transparent;border-radius:0}
-.brand-icon img{display:block;width:100%;height:100%;object-fit:contain}
+.site-header .brand-icon{width:64px;height:64px;background:#eee4d5;border-radius:50%}
+.brand-icon img{display:block;width:100%;height:100%;object-fit:contain;transform:scale(1.2)}
 .site-header h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(24px,2.7vw,32px);letter-spacing:-1px;color:var(--dark)}
 .site-header .subtitle{color:var(--accent-dark);line-height:1.45}
 .home-first-visit .home-intro h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(36px,4.2vw,53px);font-weight:600;line-height:1.08;letter-spacing:-1.8px;margin:15px 0 18px;color:var(--dark)}

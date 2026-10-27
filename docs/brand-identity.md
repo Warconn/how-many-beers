@@ -43,7 +43,7 @@ Preserve the source viewBox/geometry of the primary mark. The favicon uses a tig
 
 ## Implementation and review
 
-Home uses the canonical SVG at a reserved size. `NEXT_PUBLIC_BASE_PATH` follows the existing deployment target so local brand assets work both at Cloudflare's root and GitHub Pages' `/how-many-beers` path. No route or deployment workflow changes are required. Canonical/Open Graph/X URLs intentionally identify the public custom domain, even on a preview build.
+Home uses the canonical SVG at a reserved size, on the same warm circular ground (`#EEE4D5`) as the social card. The header scales the artwork within its existing badge to reduce the source's internal whitespace; the approved SVG geometry remains unchanged. `NEXT_PUBLIC_BASE_PATH` follows the existing deployment target so local brand assets work both at Cloudflare's root and GitHub Pages' `/how-many-beers` path. No route or deployment workflow changes are required. Canonical/Open Graph/X URLs intentionally identify the public custom domain, even on a preview build.
 
 README, Home/header/footer and Next.js metadata share the approved wording. Existing localStorage keys, backup formats, scheduling and cooking behavior stay intact. Broader decorative UI replacement remains #21.
 
