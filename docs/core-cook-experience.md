@@ -247,8 +247,8 @@ from editing the plan or autosaving progress. Cancel adding is a quiet compact c
 See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
 
 Current-step detail (#26) uses one content edge for instructions, controls and notes.
-The title leads; planned time and dish stay secondary. Edit, Log temperature and Step
-options share a consistent compact treatment and 44px tap targets on desktop/phone.
+The title leads; planned time and dish stay secondary. Edit and Log temperature use consistent compact controls. Dish and step removal
+share a quiet trash icon with confirmation and 44px tap targets on desktop/phone.
 
 Brisket timing review: the active manual/estimated choice is explicit above its
 actions. Timing applied stays disabled until the comparison changes; Use manual
@@ -257,3 +257,4 @@ timing appears only for an applied estimate and keeps current step times.
 Planning's Start cooking, Save plan for later and Review checklist align at one
 48px height. On phones, primary/secondary actions stack at equal width with space
 between them; reviewing the checklist remains visually secondary.
+
