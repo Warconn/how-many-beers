@@ -9,6 +9,8 @@ import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, re
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import CookingChecklist from "@/components/CookingChecklist";
 import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
+
+import BrisketPlanner from "@/components/BrisketPlanner";
 import TaskRow from "@/components/TaskRow";
 import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
@@ -573,6 +575,7 @@ export default function Home() {
                 </div>
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
+                  {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
                   <label htmlFor={"name-"+d.id}>Dish name</label>
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
@@ -585,7 +588,7 @@ export default function Home() {
                       <DurationInput id={"cook-"+d.id} minutes={d.cookMinutes}
                         unit={d.preset==="brisket" || d.preset==="ribs" ? "hours" : "minutes"}
                         minMinutes={15} maxMinutes={2880}
-                        onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,cookMinutes:value}:item)}))}
+                        onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,cookMinutes:value,brisketPlan:item.brisketPlan?{...item.brisketPlan,mode:"manual"}:undefined}:item)}))}
                       />
                     </div>
                     <div>
@@ -593,7 +596,7 @@ export default function Home() {
                       <DurationInput id={"rest-"+d.id} minutes={d.restMinutes}
                         unit={d.preset==="brisket" ? "hours" : "minutes"}
                         minMinutes={0} maxMinutes={720}
-                        onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,restMinutes:value}:item)}))}
+                        onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,restMinutes:value,brisketPlan:item.brisketPlan?{...item.brisketPlan,mode:"manual"}:undefined}:item)}))}
                       />
                     </div>
                   </div> : <div className="recipe-steps">
@@ -603,7 +606,7 @@ export default function Home() {
                     </div>)}
                     <p className="muted small">Blank time means the step stays unscheduled. Confirm all timings before relying on this plan.</p>
                   </div>}
-                  {d.preset!=="custom" && presets[d.preset].referenceWeightLb!==undefined && (
+                  {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].referenceWeightLb!==undefined && (
                     <div className="template-settings">
                       <label htmlFor={"weight-"+d.id}>Weight (lb), for reference</label>
                       <input id={"weight-"+d.id} type="number" inputMode="decimal" min={1} max={40} step={0.5}
@@ -613,10 +616,10 @@ export default function Home() {
                       <p className="muted small">Weight is saved with your cook. Automatic weight-based time estimates are tracked in #5, so this doesn't silently change cook time yet.</p>
                     </div>
                   )}
-                  {d.preset!=="custom" && presets[d.preset].cookRangeMinutes && (
+                  {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].cookRangeMinutes && (
                     <p className="muted small">Editable planning window (not a guaranteed or weight-derived estimate): {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Source-method context only; adjust the estimate for your equipment and size.</p>
                   )}
-                  {d.preset!=="custom" && presets[d.preset].pitTempF!==undefined && (
+                  {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].pitTempF!==undefined && (
                     <div className="template-settings">
                       <label htmlFor={"pit-"+d.id}>Starting smoker / oven setting (°F)</label>
                       <input id={"pit-"+d.id} type="number" min={d.preset==="turkey"?325:150} max={450} step={5}

@@ -375,3 +375,17 @@ quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.
 Current-step detail polish (#26): neutral card, quieter planned time/dish metadata,
 full-width instructions and notes, matching Edit / Log temperature controls, and a shared quiet trash icon, all with
 44px targets. See [Cooking Mode](docs/cooking-mode.md).
+
+## Brisket timing comparisons (#5)
+
+An expanded brisket dish now accepts trimmed weight, cut, wrapping and a cooking profile
+and offers an explicit **Use this timing** action. Compare estimated smoke/start windows,
+rest and a separate monitored hold buffer; keep manual timing and fixed step overrides.
+These are transparent planning comparisons, **not calibrated predictions**. Source sites
+were blocked during this implementation; the staged-method weight scaling and uncertainty
+allowances are app assumptions. See [timing rules and evidence limits](docs/brisket-estimates.md).
+Template instruction updates using the user’s own recipes are the next content follow-up.
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.
