@@ -215,3 +215,17 @@ Duration updates estimated finish without shifting unrelated starts. Live Schedu
 chronological; manual checklist order remains distinct. Actual events and completed
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
+
+## Issue #5: explicit brisket timing comparisons
+
+The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with
+an on-smoker start window. Applying is explicit so draft comparisons cannot silently
+replan an active cook. Unknown/untrimmed weights and unsupported pit settings retain
+manual timing. Fixed step overrides and recorded activity survive applying/reloading.
+See [Brisket timing comparisons](brisket-estimates.md) for policy, sources, provenance,
+unvalidated extrapolation and pending live-source review. Recipe-template content updates
+follow #5 and focused Cooking Mode #26 when the user supplies their actual recipes.
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.
