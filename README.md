@@ -362,6 +362,20 @@ Live Schedule is chronological even when checklist steps are manually reordered.
 See [Step timing rules and manual checks](docs/step-timing.md) for timezone/DST handling,
 archive/backup compatibility and the limits of manual planning versus #3 replanning.
 
+## Guided Cooking Mode (#26)
+
+Cooking opens one step with its instructions, notes and readings. A fixed **Up next**
+footer previews the following step, while **Full checklist** shows the whole cook as
+one flat list. Checking off a step advances guidance; previewing never completes it.
+**Edit plan** adjusts setup, and **Finish cook** explicitly archives when ready.
+Progress autosaves in this browser. Open edit/reading drafts are protected, and IDs,
+actual timestamps and history survive navigation/reload. Cancel adding is a small,
+quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).
+
+Current-step detail polish (#26): neutral card, quieter planned time/dish metadata,
+full-width instructions and notes, matching Edit / Log temperature controls, and a shared quiet trash icon, all with
+44px targets. See [Cooking Mode](docs/cooking-mode.md).
+
 ## Brisket timing comparisons (#5)
 
 An expanded brisket dish now accepts trimmed weight, cut, wrapping and a cooking profile

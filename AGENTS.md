@@ -70,3 +70,11 @@ npm run build
 Keep updates concise, plainspoken and product-oriented. Do not use em dashes. Explain tradeoffs and show the actual tested behavior. Distinguish between implementation complete, local tests passing, CI green, Cloudflare preview deployed and production deployed. Link the issue and PR. If an external account action is unavailable, say so instead of claiming Cloudflare or GitHub settings were changed.
 
 This file is the durable working summary of the October 2026 ChatGPT product discussion, not a transcript. For details beyond it, consult the docs and linked issues.
+
+## Cooking Mode review iteration (#26)
+
+The user requested guided cooking after finding the grouped list and Save Cook / View
+plan footer clunky. Prioritize one detailed current step, next-step preview in a fixed
+footer, a flat whole-cook checklist and a distinct Edit plan action. Completion advances
+guidance; preview/navigation do not mutate events. Finish cook archives only after
+confirmation. Keep unsaved edit/reading drafts protected and Cancel adding compact.

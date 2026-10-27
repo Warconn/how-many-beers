@@ -216,6 +216,21 @@ chronological; manual checklist order remains distinct. Actual events and comple
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
 
+## Issue #26: guided cooking review iteration
+
+User review found the grouped checklist and Save Cook / View plan footer still clunky.
+Cooking now focuses one step, with a fixed Up next preview and a Full checklist action.
+The whole cook is a flat chronological list, including completed/untimed items, with
+in-place selection back into the shared step editor. Checking off advances guidance;
+previewing and navigating never complete a task or reset lifecycle/history. Open edits
+and reading drafts are protected. Finish cook is an explicit archive action, separate
+from editing the plan or autosaving progress. Cancel adding is a quiet compact control.
+See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
+
+Current-step detail (#26) uses one content edge for instructions, controls and notes.
+The title leads; planned time and dish stay secondary. Edit and Log temperature use consistent compact controls. Dish and step removal
+share a quiet trash icon with confirmation and 44px tap targets on desktop/phone.
+
 ## Issue #5: explicit brisket timing comparisons
 
 The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with
