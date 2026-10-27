@@ -82,6 +82,7 @@ export default function TaskRow({
     </div>
     <div className="task-actions" aria-label={"Manage "+task.title}>
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={isCooking&&logging} onClick={() => {setSavedMessage(false);onEditingChange(true);}} aria-expanded={false}>Edit</button>}
+      {isCooking && <button type="button" disabled={editing} onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>}
       {isCooking ? <details className="step-options"><summary>Step options</summary><div className="step-option-actions"><p className="muted small">Change the planned time to move this step in the schedule.</p>      <button type="button" className="danger" onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
       }}>Remove</button></div></details> : <>      <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
@@ -90,7 +91,6 @@ export default function TaskRow({
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
       }}>Remove</button></>}
 
-      {isCooking && <button type="button" disabled={editing} onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>}
     </div>
     {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);setSavedMessage(true);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {savedMessage && !editing && <p className="step-saved" role="status">Changes saved.</p>}
