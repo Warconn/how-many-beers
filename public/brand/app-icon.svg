@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256"><title>How Many Beers?</title><path fill="#F7F5F0" d="M0 0h256v256H0z"/><g stroke-linejoin="round" stroke-linecap="round">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256" role="img" aria-label="How Many Beers?"><title>How Many Beers?</title><path fill="#F7F5F0" d="M0 0h256v256H0z"/><g transform="translate(16,16) scale(.875)"><circle cx="128" cy="128" r="128" fill="#EEE4D5"/><g transform="translate(-25.6,-25.6) scale(1.2)"><g stroke-linejoin="round" stroke-linecap="round">
   <path d="M68 75 H188 L177 206 Q128 221 79 206 Z" fill="#DEA15E" stroke="#282722" stroke-width="9"/>
   <path d="M67 78 C61 67 72 57 85 61 C95 49 113 53 119 63 C131 53 144 56 151 66 C167 59 183 63 188 74 C192 87 181 96 169 91 C160 100 147 101 138 92 C126 101 114 100 105 91 C90 101 76 97 67 88 Z" fill="#FFFDF9" stroke="#282722" stroke-width="7"/>
   <circle cx="128" cy="151" r="43" fill="#FFFDF9" stroke="#282722" stroke-width="8"/>
   <path d="M128 128 V151 L149 163" fill="none" stroke="#AF4F27" stroke-width="9"/>
   <circle cx="128" cy="151" r="5.8" fill="#AF4F27"/>
-</g></svg>
+</g></g></g></svg>

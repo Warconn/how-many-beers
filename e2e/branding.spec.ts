@@ -23,7 +23,7 @@ test('brand metadata and share assets identify the public domain',async({page,re
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href','https://howmanybeers.app/');
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content','https://howmanybeers.app/brand/social-card.png');
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content','summary_large_image');
-  for(const path of ['/brand/primary-mark.svg','/brand/social-card.png','/brand/apple-touch-icon.png','/brand/favicon.svg','/favicon.ico']){
+  for(const path of ['/brand/primary-mark.svg','/brand/badge-mark.svg','/brand/social-card.png','/brand/apple-touch-icon.png','/brand/favicon.svg','/favicon.ico']){
     const response=await request.get(path);
     expect(response.ok(),path).toBe(true);
   }

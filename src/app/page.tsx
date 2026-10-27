@@ -94,7 +94,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
   const minutes = durationMinutes % 60;
   return <section className="beerometer" aria-label="Cook duration in beers">
     <div className="beerometer-main">
-      <div className="beerometer-emblem" aria-hidden="true">🍺</div>
+      <div className="beerometer-emblem" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
       <div className="beerometer-copy">
         <p className="eyebrow">THE BEEROMETER</p>
         <h2>How many beers till it&apos;s done?</h2>
@@ -425,7 +425,7 @@ export default function Home() {
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
       {storageError && <div id="storage-warning" tabIndex={-1} className="warning" role="alert">{storageError}</div>}
       <header className="site-header">
-        <div className="brand-icon" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/primary-mark.svg`} width="256" height="256" alt="" /></div>
+        <div className="brand-icon" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
         <div>
           <p className="eyebrow">PLAN · COOK · REPEAT</p>
           <h1>How Many Beers?</h1>
