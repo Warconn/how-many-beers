@@ -13,21 +13,36 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
   if(!steps)return null;
   const cook=Math.max(15,d.cookMinutes);
   const rest=Math.max(0,d.restMinutes);
-  const startOffset=cook+rest;
+  const brisket=d.preset==="brisket" ? d.brisketPlan?.applied : undefined;
+  const buffer=brisket?.inputs.holdBufferMinutes ?? 0;
+  const startOffset=cook+rest+buffer;
   return steps.map(step=>{
     const before=step.anchor==="prep" || step.anchor==="preheat"
-      ? startOffset+(step.beforeStartMin??0)
+      ? startOffset+(brisket ? step.anchor==="prep" ? brisket.inputs.prepMinutes : brisket.inputs.preheatMinutes : step.beforeStartMin??0)
       : step.anchor==="start" ? startOffset
-      : step.anchor==="progress" ? rest+Math.round(cook*(1-(step.progress??0.5)))
-      : step.anchor==="finish" ? rest : 0;
+      : step.anchor==="progress" ? rest+buffer+Math.round(cook*(1-(step.progress??0.5)))
+      : step.anchor==="finish" ? rest+buffer : 0;
     const temp=d.pitTempF ?? null;
+    let title=step.title, instructions=step.instructions;
+    if(brisket){
+      const i=brisket.inputs;
+      if(i.cut==='flat' && step.id==='prep')instructions='Trim and season the flat. Keep refrigerated until ready to cook.';
+      if(i.method==='traeger-225-v1'){
+        if(step.id==='preheat')instructions='Stabilize the smoker at 225°F. This profile uses the Traeger broad planning guide; verify your own recipe and equipment.';
+        if(step.id==='check')instructions='Check bark, internal temperature and the stall. Follow your recipe; elapsed time alone does not establish readiness.';
+        if(step.id==='wrap')instructions='When bark is set, review wrapping according to your recipe. Record the actual reading and decision; no exact wrap time is guaranteed.';
+        if(step.id==='finish')instructions='Verify food safety and probe the flat for tenderness. Timing is only an estimate, not proof of doneness.';
+      }
+      if(step.id==='wrap')instructions=i.wrap==='none'?'No-wrap plan: monitor bark, moisture and stall. Keep cooking until safe and tender; log any change of strategy.':instructions+' Selected wrap: '+(i.wrap==='foil'?'foil':'butcher paper')+'.';
+      if(step.id==='rest')instructions='Rest and, if needed, use the separate hot-hold buffer. Monitor food temperature at 140°F or above during hot holding; do not assume an insulated cooler holds safely.';
+    }
     const subst=(s:string)=>s.replaceAll("{pitTempF}",temp===null?"your chosen pit temperature":String(temp));
     return {
       id:d.id+":"+step.id,
       dishId:d.id,
       dishName:d.name,
-      title:subst(step.title),
-      instructions:subst(step.instructions),
+      title:subst(title),
+      instructions:subst(instructions),
       scheduledAt:at(serveAt,before),
       isCondition:!!step.conditional
     };

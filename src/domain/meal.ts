@@ -1,3 +1,4 @@
+import type { BrisketPlan } from "./brisketEstimate";
 export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "wings" | "brats" | "custom";
 
 export type RecipeStep = {
@@ -16,6 +17,7 @@ export type Dish = {
   pitTempF?: number;
   weightLb?: number;
   steps?: RecipeStep[];
+  brisketPlan?: BrisketPlan;
 };
 
 export type Meal = {
@@ -117,7 +119,7 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
 
 export function createDish(preset: Exclude<PresetId, "custom">): Dish {
   const p = presets[preset];
-  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: p.restMinutes };
+  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: preset === "brisket" ? undefined : p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: p.restMinutes };
 }
 
 export function localDateTime(date: Date): string {

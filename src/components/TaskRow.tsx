@@ -1,10 +1,11 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import type {PlannedTask} from "@/domain/meal";
 import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
 import StepEditor from "./StepEditor";
+import RemoveButton from "./RemoveButton";
 import {estimatedFinish,formatDuration} from "@/domain/stepTiming";
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
   events: CookEvent[];
   note: string;
   onNote: (value:string)=>void;
+  onReadingChange?: (open:boolean)=>void;
   editing: boolean;
   onEditingChange: (open:boolean)=>void;
   editorId: string;
@@ -33,7 +35,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId
+  task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
 }:Props) {
   const [savedMessage,setSavedMessage] = useState(false);
   const [logging,setLogging]=useState(false);
@@ -42,6 +44,8 @@ export default function TaskRow({
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
   const [readingNote,setReadingNote]=useState("");
   const [error,setError]=useState("");
+
+  useEffect(()=>{onReadingChange?.(logging);return ()=>onReadingChange?.(false);},[logging,onReadingChange]);
 
   const done=!!completedAt;
   const started=latestStartedEvent(events,task.id);
@@ -60,10 +64,10 @@ export default function TaskRow({
     setReading("");setReadingNote("");setLogging(false);setError("");
   };
 
-  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title} id={editorId}>
+  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
     <div className="task-top">
-      {isCooking && <input aria-label={"Complete "+task.title} type="checkbox" checked={done}
-        onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/>}
+      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging}
+        onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
         {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
@@ -79,21 +83,20 @@ export default function TaskRow({
       </div>
     </div>
     <div className="task-actions" aria-label={"Manage "+task.title}>
-      {!editing && <button type="button" id={editorId+"-trigger"} onClick={() => {setSavedMessage(false);onEditingChange(true);}} aria-expanded={false}>Edit</button>}
-      <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
-      <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
-      <button type="button" className="danger" onClick={()=>{
+      {!editing && <button type="button" id={editorId+"-trigger"} disabled={isCooking&&logging} onClick={() => {setSavedMessage(false);onEditingChange(true);}} aria-expanded={false}>Edit</button>}
+      {isCooking && <button type="button" disabled={editing} onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>}
+      {!isCooking && <>
+        <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
+        <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
+      </>}
+      <RemoveButton className="step-remove" label={"Remove step: "+task.title} disabled={editing||logging} onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
-      }}>Remove</button>
+      }}/>
+
     </div>
     {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);setSavedMessage(true);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {savedMessage && !editing && <p className="step-saved" role="status">Changes saved.</p>}
     {isCooking && <>
-      <div className="task-actions task-logging-actions">
-        <button type="button" onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>
-          {logging?"Close logging":"+ Log temperature"}
-        </button>
-      </div>
       {logging && <div className="reading-form">
         <div>
           <label htmlFor={"reading-kind-"+task.id}>Reading type</label>

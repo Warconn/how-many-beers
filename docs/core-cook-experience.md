@@ -217,6 +217,49 @@ chronological; manual checklist order remains distinct. Actual events and comple
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
 
+## Issue #5: explicit brisket timing comparisons
+
+The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with
+an on-smoker start window. Applying is explicit so draft comparisons cannot silently
+replan an active cook. Unknown/untrimmed weights and unsupported pit settings retain
+manual timing. Fixed step overrides and recorded activity survive applying/reloading.
+See [Brisket timing comparisons](brisket-estimates.md) for policy, sources, provenance,
+unvalidated extrapolation and pending live-source review. Recipe-template content updates
+follow #5 and focused Cooking Mode #26 when the user supplies their actual recipes.
+
+## Issue #39: save now, start later
+
+Planning includes an explicit Save plan for later action. After successful storage
+acknowledgment, Home displays the same planning cook and its next planned start dates.
+Start cooking is an explicit Home action; Resume planning adjusts the same plan.
+Failed writes keep the planner open. Saving does not set lifecycle/start timestamps,
+complete tasks or archive an unfinished cook. Existing device-local autosave, one active
+cook, archived history and replacement confirmation remain intact. See [saved plans](saved-plans.md).
+
+## Issue #26: guided cooking review iteration
+
+User review found the grouped checklist and Save Cook / View plan footer still clunky.
+Cooking now focuses one step, with a fixed Up next preview and a Full checklist action.
+The whole cook is a flat chronological list, including completed/untimed items, with
+in-place selection back into the shared step editor. Checking off advances guidance;
+previewing and navigating never complete a task or reset lifecycle/history. Open edits
+and reading drafts are protected. Finish cook is an explicit archive action, separate
+from editing the plan or autosaving progress. Cancel adding is a quiet compact control.
+See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
+
+Current-step detail (#26) uses one content edge for instructions, controls and notes.
+The title leads; planned time and dish stay secondary. Edit and Log temperature use consistent compact controls. Dish and step removal
+share a quiet trash icon with confirmation and 44px tap targets on desktop/phone.
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.
+
+Planning's Start cooking, Save plan for later and Review checklist align at one
+48px height. On phones, primary/secondary actions stack at equal width with space
+between them; reviewing the checklist remains visually secondary.
+
+
 ## Following-step duration adjustment (#41)
 
 Enter a duration in minutes or hours. Extending a step beyond the next planned start
