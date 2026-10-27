@@ -6,6 +6,7 @@ const cloudflare = process.env.DEPLOY_TARGET === "cloudflare";
 const nextConfig: NextConfig = {
   output: "export",
   env: {
+    NEXT_PUBLIC_BASE_PATH: cloudflare ? "" : "/how-many-beers",
     NEXT_PUBLIC_BUILD_SHA: process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "local",
     NEXT_PUBLIC_BUILD_BRANCH: process.env.CF_PAGES_BRANCH ?? (process.env.GITHUB_REF_NAME || (cloudflare ? "dev" : "main")),
   },

@@ -1,3 +1,7 @@
+## Brand identity increment (#45)
+
+Home, the shared header/footer, README and site metadata use **How Many Beers?** and **From First Beer to First Bite.** with the approved Classic Dial beer-clock SVG. First-visit Home explains serving time → dishes → plan adjustments → guided cooking. Returning cooks keep a compact header and their existing Resume/Continue actions; branding never changes saved state. See [brand identity and assets](brand-identity.md). This focused increment does not redesign Cooking Mode or implement #21's broader visual cleanup.
+
 ## Production release and outstanding UX bugs (October 26, 2026)
 
 Core Cook Experience release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) reached `main` at `3e7868d`; user confirmed the GitHub Pages production site reflects the release. Current capabilities include Home/resume, Guided Planner, unified template/text-import Add Dish, expandable step controls, and CI Playwright. This is a functional baseline, **not a polished finished planner**.

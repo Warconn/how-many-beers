@@ -1,6 +1,10 @@
-# How Many Beers
+# How Many Beers?
 
-**Dinner timed. Cook guided.**
+![How Many Beers? beer-clock mark](public/brand/wordmark.svg)
+
+**From First Beer to First Bite.**
+
+Plan every dish. Time your dinner. Enjoy the cook.
 
 Cooking dinner is easier when everything works toward the same finish line. **How Many Beers** helps you plan a meal, coordinate multiple dishes in one schedule, and follow a guided checklist when it's time to cook. Less juggling recipes and timelines. More enjoying the cook.
 
