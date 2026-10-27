@@ -224,3 +224,7 @@ Start cooking is an explicit Home action; Resume planning adjusts the same plan.
 Failed writes keep the planner open. Saving does not set lifecycle/start timestamps,
 complete tasks or archive an unfinished cook. Existing device-local autosave, one active
 cook, archived history and replacement confirmation remain intact. See [saved plans](saved-plans.md).
+
+Planning's Start cooking, Save plan for later and Review checklist align at one
+48px height. On phones, primary/secondary actions stack at equal width with space
+between them; reviewing the checklist remains visually secondary.

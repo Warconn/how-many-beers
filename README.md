@@ -369,3 +369,6 @@ return Home without starting. Home shows the first planned step and cooking star
 with full dates/timezone, plus **Start cooking** and **Resume planning**. Existing
 changes still autosave. This keeps one active/planning cook per browser; it does not
 add cloud sync or automatic reminders. See [saved-plan behavior](docs/saved-plans.md).
+
+Planning actions now share a 48px height and align together; on phones Start cooking
+and Save plan for later stack at equal width, with checklist review kept secondary.

@@ -68,3 +68,16 @@ test('a general-prep-only plan stays discoverable and can be saved untimed',asyn
  expect(await saved(page)).toEqual(meal);
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Review checklist',exact:true}).click();await expect(page.getByRole('article',{name:'Set the table',exact:true})).toBeVisible();
 });
+
+test('planning actions align consistently on desktop and stack cleanly on phones',async({page},info)=>{
+ await load(page,fixture());const actions=page.getByRole('region',{name:'Cooking actions',exact:true});const initial=page.viewportSize()!;
+ const buttons=[actions.getByRole('button',{name:'Start cooking',exact:true}),actions.getByRole('button',{name:'Save plan for later',exact:true}),actions.getByRole('button',{name:'Review checklist',exact:true})];
+ for(const width of [375,768,1280]){
+  await page.setViewportSize({width,height:900});const boxes=await Promise.all(buttons.map(b=>b.boundingBox()));
+  for(const box of boxes)expect(box!.height).toBeGreaterThanOrEqual(48);
+  if(width>600){for(const box of boxes){expect(Math.abs(box!.y-boxes[0]!.y)).toBeLessThanOrEqual(1);expect(Math.abs(box!.height-boxes[0]!.height)).toBeLessThanOrEqual(1);}}
+  else{expect(boxes[1]!.y-boxes[0]!.y-boxes[0]!.height).toBeGreaterThanOrEqual(8);expect(Math.abs(boxes[0]!.width-boxes[1]!.width)).toBeLessThanOrEqual(1);}
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ }
+ await page.setViewportSize(initial);await actions.screenshot({path:info.outputPath('planning-actions.png')});
+});
