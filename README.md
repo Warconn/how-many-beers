@@ -355,12 +355,22 @@ editor now includes planned date/time, estimated duration, equipment and an opti
 food-temperature target as well as name and instructions. Save/Cancel is explicit.
 
 A manually edited time stays fixed when serving time changes; Use plan timing restores
-the original/derived timing. Duration determines the step's estimated finish, without
-automatically moving other steps. Unknown durations and untimed steps remain supported.
+the original/derived timing. Duration determines the estimated finish and moves following timed recipe steps
+when needed, preserving other dishes and fixed/recorded anchors. Unknown durations and untimed steps remain supported.
 Live Schedule is chronological even when checklist steps are manually reordered.
 
 See [Step timing rules and manual checks](docs/step-timing.md) for timezone/DST handling,
 archive/backup compatibility and the limits of manual planning versus #3 replanning.
+
+## Brisket timing comparisons (#5)
+
+An expanded brisket dish now accepts trimmed weight, cut, wrapping and a cooking profile
+and offers an explicit **Use this timing** action. Compare estimated smoke/start windows,
+rest and a separate monitored hold buffer; keep manual timing and fixed step overrides.
+These are transparent planning comparisons, **not calibrated predictions**. Source sites
+were blocked during this implementation; the staged-method weight scaling and uncertainty
+allowances are app assumptions. See [timing rules and evidence limits](docs/brisket-estimates.md).
+Template instruction updates using the user’s own recipes are the next content follow-up.
 
 ## Save a plan for later (#39)
 
@@ -369,9 +379,6 @@ return Home without starting. Home shows the first planned step and cooking star
 with full dates/timezone, plus **Start cooking** and **Resume planning**. Existing
 changes still autosave. This keeps one active/planning cook per browser; it does not
 add cloud sync or automatic reminders. See [saved-plan behavior](docs/saved-plans.md).
-
-Planning actions now share a 48px height and align together; on phones Start cooking
-and Save plan for later stack at equal width, with checklist review kept secondary.
 
 ## Guided Cooking Mode (#26)
 
@@ -387,16 +394,17 @@ Current-step detail polish (#26): neutral card, quieter planned time/dish metada
 full-width instructions and notes, matching Edit / Log temperature controls, and a shared quiet trash icon, all with
 44px targets. See [Cooking Mode](docs/cooking-mode.md).
 
-## Brisket timing comparisons (#5)
-
-An expanded brisket dish now accepts trimmed weight, cut, wrapping and a cooking profile
-and offers an explicit **Use this timing** action. Compare estimated smoke/start windows,
-rest and a separate monitored hold buffer; keep manual timing and fixed step overrides.
-These are transparent planning comparisons, **not calibrated predictions**. Source sites
-were blocked during this implementation; the staged-method weight scaling and uncertainty
-allowances are app assumptions. See [timing rules and evidence limits](docs/brisket-estimates.md).
-Template instruction updates using the user’s own recipes are the next content follow-up.
-
 Brisket timing review: the active manual/estimated choice is explicit above its
 actions. Timing applied stays disabled until the comparison changes; Use manual
 timing appears only for an applied estimate and keeps current step times.
+
+Planning actions now share a 48px height and align together; on phones Start cooking
+and Save plan for later stack at equal width, with checklist review kept secondary.
+
+## Following-step duration adjustment (#41)
+
+Enter a duration in minutes or hours. Extending a step beyond the next planned start
+pushes following timed recipe steps while preserving their spacing. Shortening or
+Use plan timing removes the extra delay. Other dishes, fixed/recorded steps and actual
+activity stay intact; conflicts and a serving-target overrun produce warnings. Untimed
+stages break links; custom/general prep stays independent. See [step timing rules](docs/step-timing.md).

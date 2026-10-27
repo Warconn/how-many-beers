@@ -3,16 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
-import { chronologicalTasks } from "@/domain/stepTiming";
+import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
-import { addStep, cookTimeline, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
+import { addStep, cookTimeline, stepTimingWarnings, editStep, migrateMeal, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
+import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
-
 import CookingChecklist from "@/components/CookingChecklist";
 import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
-
-import BrisketPlanner from "@/components/BrisketPlanner";
 import TaskRow from "@/components/TaskRow";
 import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
@@ -194,7 +192,7 @@ export default function Home() {
 
   const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
-  const warnings = useMemo(() => meal ? equipmentWarnings(meal) : [], [meal]);
+  const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal)] : [], [meal]);
   const complete = meal ? timeline.filter(task => !!meal.completed[task.id]).length : 0;
 
   const remaining = meal ? timeline.filter(task => !meal.completed[task.id]) : [];
@@ -716,11 +714,11 @@ export default function Home() {
             <p className="muted small">Serving {when(meal.serveAt || null)}</p>
             {timeline.length ? <>
               <ol className="schedule-list">
-                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+task.durationMinutes+" min":""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}
+                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}
               </ol>
               {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
             </> : <p className="muted small">Add a dish to see your schedule.</p>}
-            {warnings.length>0 && <p className="muted small">Review shared equipment in the plan notes.</p>}
+            {warnings.length>0 && <p className="muted small">Review schedule and equipment warnings in the plan notes.</p>}
           </aside>
           </div>
         </>

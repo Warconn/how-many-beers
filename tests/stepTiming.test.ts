@@ -22,7 +22,7 @@ describe('planned step overrides', () => {
     expect(edited.events).toEqual(active.events);
     expect(edited.completed).toEqual(active.completed);
     expect(edited.dishes).toEqual(active.dishes);
-    expect(cookTimeline(edited).filter(t=>t.id!==task.id)).toEqual(cookTimeline(active).filter(t=>t.id!==task.id));
+    expect(cookTimeline(edited).filter(t=>t.dishId!==task.dishId)).toEqual(cookTimeline(active).filter(t=>t.dishId!==task.dishId));
     expect(JSON.stringify(active)).toBe(before);
   });
   it('keeps fixed dates through serving-time changes and resets only timing overrides', () => {
@@ -36,7 +36,7 @@ describe('planned step overrides', () => {
     expect(cookTimeline(reset).find(t=>t.id===task.id)).toMatchObject({title:'My title',scheduledAt:derived.scheduledAt,equipment:'Patio smoker'});
     expect(reset.taskOverrides![task.id].scheduledAt).toBeUndefined();
   });
-  it('does not invent template durations; changing a duration updates only that step finish', () => {
+  it('does not invent template durations; a duration that fits existing spacing leaves later starts unchanged', () => {
     const meal=seed(), task=cookTimeline(meal)[0];
     expect(task.durationMinutes).toBeNull();
     expect(estimatedFinish(task)).toBeNull();

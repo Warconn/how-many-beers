@@ -405,12 +405,13 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
 .step-saved{font-size:12px;color:#456439;margin:8px 0}
 
-.planned-cook-start{border-top:1px solid var(--line);padding-top:15px;margin-top:15px}.planned-cook-start>.eyebrow{margin:0 0 7px}.planned-cook-start>strong{display:block;font-size:15px}.planned-cook-start p.small{margin:6px 0;line-height:1.5}.planned-cook-start time{display:block;font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.5}.planned-cook-on-heat{margin:14px 0;padding:12px 0;border-top:1px solid var(--line)}.planned-cook-on-heat>span,.planned-cook-on-heat>strong{display:block;font-size:12px;line-height:1.5}.planned-cook-on-heat>span{color:var(--muted)}.save-plan-button{min-height:48px}.home-actions #home-start-help{flex-basis:100%;margin:0}
-
-.cook-actions .cook-action-controls{gap:12px;align-items:center}
-.cook-actions .cook-action-controls>button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin:0;line-height:1.3}
-.cook-actions .cook-action-controls>.button{min-width:180px}
-@media(max-width:600px){.cook-actions .cook-action-controls{align-items:stretch;gap:8px}.cook-actions .review-checklist-button{align-self:center}}
+.brisket-planner{padding:2px 0 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brisket-planner h3{font-size:17px;margin:5px 0}.brisket-planner p{line-height:1.5}
+.brisket-window{border-left:3px solid var(--accent);padding:10px 13px;margin:16px 0;background:#faf6ee}
+.brisket-window p{margin:8px 0;font-size:13px}.brisket-window time{display:block;font-weight:650;font-variant-numeric:tabular-nums}
+.brisket-planner details{margin-top:14px}.brisket-planner summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
+.brisket-planner ul{padding-left:19px;line-height:1.6}.personal-rule{display:flex;align-items:center;gap:10px;min-height:44px}.personal-rule input{width:22px;height:22px}
+@media(max-width:600px){.brisket-planner .small-grid{grid-template-columns:1fr 1fr}.brisket-planner select{font-size:14px}}
 
 .cook-duration-details{margin:0 0 14px}.cook-duration-details>summary,.cook-extra-tools>summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--accent-dark);font-size:13px;font-weight:650}.cooking-screen .task-actions button{min-height:44px;min-width:44px}.cooking-screen .task-note{min-height:44px}
 .cooking-screen .cook-warnings{display:block}.cooking-screen .condition{color:#63482f;background:#f3e7d6}.cooking-screen .muted{color:#675e55}.cook-duration-details>summary:focus-visible,.cook-extra-tools>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -419,6 +420,8 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .cooking-navigation{display:flex;align-items:center;gap:24px}.cooking-navigation .back-link{min-height:44px}.cooking-screen .cook-header .eyebrow{margin-top:5px}.cooking-screen .cook-header h2{font-size:30px}
 @media(max-width:600px){.cooking-screen .cook-header h2{font-size:25px}.cooking-screen .cook-header{gap:10px}.cooking-screen .cook-progress-chip{min-width:64px;padding:10px}.cooking-screen .cook-target{font-size:12px}.cooking-screen .active-cook-panel{padding:14px}.cooking-screen .focus-now{margin-top:16px}}
 .cooking-screen .task-check-control{display:grid;place-items:center;flex:0 0 44px;min-width:44px;min-height:44px;margin:0;cursor:pointer}.cooking-screen .task-check-control input{margin:0}.cook-mobile-bar button{min-height:44px}
+
+.planned-cook-start{border-top:1px solid var(--line);padding-top:15px;margin-top:15px}.planned-cook-start>.eyebrow{margin:0 0 7px}.planned-cook-start>strong{display:block;font-size:15px}.planned-cook-start p.small{margin:6px 0;line-height:1.5}.planned-cook-start time{display:block;font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.5}.planned-cook-on-heat{margin:14px 0;padding:12px 0;border-top:1px solid var(--line)}.planned-cook-on-heat>span,.planned-cook-on-heat>strong{display:block;font-size:12px;line-height:1.5}.planned-cook-on-heat>span{color:var(--muted)}.save-plan-button{min-height:48px}.home-actions #home-start-help{flex-basis:100%;margin:0}
 
 .cancel-add-dish{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;min-width:64px;min-height:44px;max-width:100px;padding:8px;border:0;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer}.cancel-add-dish>span{font-size:18px;font-weight:400}.cancel-add-dish:hover{color:var(--accent-dark)}.cancel-add-dish:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
 .cooking-screen{padding-bottom:calc(130px + env(safe-area-inset-bottom))}.cooking-navigation .finish-cook-trigger{margin-left:auto;font-weight:500;color:var(--muted)}.cooking-navigation button:disabled{opacity:.5;cursor:not-allowed}.cook-autosave-note{font-size:11px;margin:8px 0 18px}.guide-step-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}.guide-step-heading h3{margin:0;font-size:15px}.guide-step-heading>span{font-size:12px;color:var(--muted)}.guided-step .cook-task{background:#fffaf2;border-color:#d8b18f}.guide-condition-note{padding:0 4px;line-height:1.5}.step-navigation-note{font-size:12px;line-height:1.5;color:#655646;padding:9px 0}.cook-safety-note{line-height:1.6;margin:0 4px}.cooking-screen .cook-duration-details{margin:0 4px}.cooking-screen .finish-cook .button{min-height:44px}.guided-step:focus,.full-cook-checklist:focus{outline:none}.guided-step .cook-task:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
@@ -455,14 +458,13 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .task-actions button.step-remove:hover{color:#9b3e2b;background:#f9ede8}
 @media(max-width:600px){.guided-step .task-actions{grid-template-columns:max-content minmax(0,1fr) 44px}}
 
-.brisket-planner{padding:2px 0 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
-.brisket-planner h3{font-size:17px;margin:5px 0}.brisket-planner p{line-height:1.5}
-.brisket-window{border-left:3px solid var(--accent);padding:10px 13px;margin:16px 0;background:#faf6ee}
-.brisket-window p{margin:8px 0;font-size:13px}.brisket-window time{display:block;font-weight:650;font-variant-numeric:tabular-nums}
-.brisket-planner details{margin-top:14px}.brisket-planner summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
-.brisket-planner ul{padding-left:19px;line-height:1.6}.personal-rule{display:flex;align-items:center;gap:10px;min-height:44px}.personal-rule input{width:22px;height:22px}
-@media(max-width:600px){.brisket-planner .small-grid{grid-template-columns:1fr 1fr}.brisket-planner select{font-size:14px}}
-
 .timing-choice{margin:18px 0;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .timing-choice>p{display:grid;gap:5px;margin:0 0 12px;font-size:12px;color:var(--muted)}.timing-choice>p>strong{color:var(--ink);font-size:13px;font-weight:650}.timing-choice>p>span{line-height:1.5}
 .timing-choice-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.timing-choice-actions>button{margin:0;min-height:44px}.timing-choice-actions>.link{padding:8px 0;font-weight:500}.timing-choice .button:disabled{opacity:1;color:var(--muted);background:#f2efea;cursor:default}
+
+.cook-actions .cook-action-controls{gap:12px;align-items:center}
+.cook-actions .cook-action-controls>button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin:0;line-height:1.3}
+.cook-actions .cook-action-controls>.button{min-width:180px}
+@media(max-width:600px){.cook-actions .cook-action-controls{align-items:stretch;gap:8px}.cook-actions .review-checklist-button{align-self:center}}
+
+.duration-controls{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:end;min-width:0}.duration-controls label{min-width:0}.duration-controls input,.duration-controls select{min-height:44px}

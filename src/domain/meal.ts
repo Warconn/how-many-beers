@@ -47,6 +47,8 @@ export type PlannedTask = {
   baseScheduledAt?: string | null;
   baseDurationMinutes?: number | null;
   baseEquipment?: string;
+  recordedPlanAt?: string | null;
+  scheduleAdjustmentMinutes?: number; // Derived, never a fixed-time override.
 };
 
 export const presets: Record<Exclude<PresetId, "custom">, { label: string; equipment: string; cookMinutes: number; restMinutes: number; notice: string; pitTempF?: number; cookRangeMinutes?: [number,number]; referenceWeightLb?: number; sources?: {title:string;url:string}[] }> = {
