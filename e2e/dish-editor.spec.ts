@@ -55,7 +55,7 @@ test('existing cooking events and IDs survive contextual step changes', async ({
   await row.getByRole('button', { name: 'Save & Close' }).click();
   await region.getByRole('button', { name: 'Move Season carefully down' }).click();
   page.once('dialog', dialog => dialog.accept());
-  await region.getByRole('article', { name: 'Season carefully', exact: true }).getByRole('button', { name: 'Remove', exact: true }).click();
+  await region.getByRole('article', { name: 'Season carefully', exact: true }).getByRole('button', { name: 'Remove step: Season carefully', exact: true }).click();
   const after = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
   expect(after.mode).toBe('cooking');
   expect(after.completed).toEqual(saved.completed);

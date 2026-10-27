@@ -40,7 +40,7 @@ test('editing and readings stay protected; completing advances guidance and reta
  await row.getByRole('button',{name:'Save timestamped reading',exact:true}).click();await row.getByLabel('Quick notes',{exact:true}).fill('Bark still soft');await row.getByRole('checkbox',{name:'Complete Check the bark',exact:true}).click();
  await expect(guide.getByRole('article',{name:'Warm the sauce',exact:true})).toBeVisible();const after=await saved(page);expect(after.completed.due).toBeTruthy();expect(after.notes.due).toBe('Bark still soft');expect(after.startedAt).toBe(original.startedAt);expect(after.events!.filter(e=>e.taskId==='due').some(e=>e.kind==='temperature'&&e.value===165)).toBe(true);
  await bar.getByRole('button',{name:'Full checklist',exact:true}).click();const checklist=page.getByRole('region',{name:'Full cook checklist',exact:true});await expect(checklist.getByRole('checkbox',{name:'Complete Check the bark for General prep',exact:true})).toBeChecked();await checklist.getByRole('button',{name:'Open step: Check the bark for General prep',exact:true}).click();await row.locator('.task-activity summary').click();await expect(row.getByRole('listitem').filter({hasText:'165°F'})).toBeVisible();
- await row.getByText('Step options',{exact:true}).click();await expect(row.getByRole('button',{name:'Remove',exact:true})).toBeVisible();await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(page)).toEqual(after);
+ await expect(row.getByRole('button',{name:'Remove step: Check the bark',exact:true})).toBeVisible();await expect(row.getByText('Step options',{exact:true})).toHaveCount(0);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(page)).toEqual(after);
 });
 
 test('finish is separate from navigation and archives only after explicit confirmation',async({page})=>{
@@ -68,12 +68,19 @@ test('current step uses aligned content and consistent compact actions',async({p
  const meal=fixture();Object.assign(meal.customTasks!.find(t=>t.id==='due')!,{title:'Put brisket on smoker',dishName:'Smoked brisket',instructions:'Place the brisket on a stable cooking grate. Log the actual start time and initial smoker temperature.'});
  const original=await load(page,meal);const row=page.getByRole('region',{name:'Current step',exact:true}).getByRole('article');
  const actions=row.locator('.task-actions');const note=row.getByLabel('Quick notes',{exact:true});const instructions=row.getByText('Place the brisket on a stable cooking grate. Log the actual start time and initial smoker temperature.',{exact:true});
- const buttons=[row.getByRole('button',{name:'Edit',exact:true}),row.getByRole('button',{name:'+ Log temperature',exact:true}),row.locator('.step-options>summary')];
+ const buttons=[row.getByRole('button',{name:'Edit',exact:true}),row.getByRole('button',{name:'+ Log temperature',exact:true}),row.getByRole('button',{name:'Remove step: Put brisket on smoker',exact:true})];
  const boxes=await Promise.all(buttons.map(b=>b.boundingBox()));
  for(const box of boxes){expect(box!.height).toBeGreaterThanOrEqual(44);expect(Math.abs(box!.height-boxes[0]!.height)).toBeLessThanOrEqual(1);expect(Math.abs(box!.y-boxes[0]!.y)).toBeLessThanOrEqual(1);}
  const noteBox=await note.boundingBox();const actionBox=await actions.boundingBox();const instructionBox=await instructions.boundingBox();
  expect(Math.abs(noteBox!.x-actionBox!.x)).toBeLessThanOrEqual(1);expect(Math.abs(instructionBox!.x-noteBox!.x)).toBeLessThanOrEqual(1);
- expect(await buttons[2].evaluate(el=>getComputedStyle(el).borderTopStyle)).toBe('solid');
+ expect(await buttons[2].evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');await expect(buttons[2].locator('svg')).toBeVisible();
  for(const width of [375,390,768,1280]){const initial=page.viewportSize()!;await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);const controls=await Promise.all(buttons.map(b=>b.boundingBox()));expect(Math.abs(controls[0]!.y-controls[2]!.y)).toBeLessThanOrEqual(1);await page.setViewportSize(initial);}
  await row.evaluate(el=>el.scrollIntoView({block:'start'}));await row.screenshot({path:info.outputPath('standard-step-card.png')});expect(await saved(page)).toEqual(original);
+});
+
+
+test('step trash action confirms removal and retains recorded activity',async({page})=>{
+ const meal=fixture();await load(page,meal);const remove=page.getByRole('button',{name:'Remove step: Check the bark',exact:true});
+ page.once('dialog',d=>d.dismiss());await remove.click();expect(await saved(page)).toEqual(meal);
+ page.once('dialog',d=>d.accept());await remove.click();const after=await saved(page);expect(after.hiddenTaskIds).toContain('due');expect(after.events!.filter(e=>e.kind!=='removed')).toEqual(meal.events);expect(after.startedAt).toEqual(meal.startedAt);await expect(page.getByRole('article',{name:'Warm the sauce',exact:true})).toBeVisible();
 });

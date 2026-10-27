@@ -25,11 +25,11 @@ that dinner is the first cooking action. Condition-driven steps require actual c
 The shared step editor still supports dates, duration, equipment and planning targets;
 actual events remain separate. The current-step card uses a neutral surface, a clear title
 and subdued planned time/dish metadata. Instructions, action controls and notes share
-one content edge. Edit, Log temperature and Step options use matching compact controls
-with 44px tap targets, in the same visual and keyboard order.
+one content edge. Edit and Log temperature use matching compact controls. A quiet trash icon sits
+beside them. All retain 44px tap targets and consistent visual/keyboard order.
 An open editor or reading form blocks switching steps, Home, Edit plan and finishing,
 with a visible explanation, until saved/cancelled. The completion checkbox also waits
-for those drafts. Clock refreshes do not discard or complete a step. Step removal stays under secondary Step options; manual reordering remains in planning
+for those drafts. Clock refreshes do not discard or complete a step. Step removal uses the shared trash button; manual reordering remains in planning
 and does not override chronological execution.
 
 ## Saving and finishing
@@ -77,3 +77,7 @@ step and verify advancement. Change a planned date and confirm the editor stays 
 step. Review completed actuals, leave Home, reload and resume. Finish only when ready.
 Actual iPhone Safari/outdoor/nighttime sessions remain #4 alpha QA; automated phone
 coverage uses an emulated Chromium viewport.
+
+Dish and step removal now share one small trash-icon component (44px target, accessible
+name, tooltip and confirmation). There is no single-action options disclosure. Step
+removal is disabled during editing/reading drafts and retains recorded activity.

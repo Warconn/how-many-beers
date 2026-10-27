@@ -12,6 +12,7 @@ import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
 import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
 import TaskRow from "@/components/TaskRow";
+import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
 import { commitCompletedCook, emptyHistory, exportBackup, HISTORY_KEY, readHistory, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
@@ -598,9 +599,7 @@ export default function Home() {
                   <span className="dish-summary"><strong>{d.name}</strong><span>{d.equipment} · {timeline.filter(t=>t.dishId===d.id).length} steps</span></span>
                   <span className="dish-toggle">{editingDishId===d.id?"Hide steps ↑":"Adjust steps ↓"}</span>
                 </button>
-                  <button type="button" className="dish-remove" aria-label={"Remove "+d.name} title={"Remove "+d.name} onClick={()=>removeDish(d.id)}>
-                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>
-                  </button>
+                  <RemoveButton className="dish-remove" label={"Remove "+d.name} onClick={()=>removeDish(d.id)}/>
                 </div>
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
