@@ -355,8 +355,8 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 /* Removal is a sibling of selection, never nested inside the dish button/settings. */
 .dish-header{display:flex;align-items:center;min-width:0;padding-right:10px}
 .dish-header .dish-select{flex:1;width:auto;min-width:0}
-.dish-remove{flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);cursor:pointer}
-.dish-remove:hover{color:#9b3e2b;background:#f9ede8}.dish-remove:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.icon-remove{flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);cursor:pointer}
+.icon-remove:hover{color:#9b3e2b;background:#f9ede8}.icon-remove:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 @media(max-width:600px){.dish-header{padding-right:6px}.dish-header .dish-select .dish-toggle{font-size:0}.dish-header .dish-toggle::after{content:"⌄";font-size:18px}.dish-header .dish-select[aria-expanded=true] .dish-toggle::after{content:"⌃"}}
 .dish-inline-editor{padding:0 16px 16px;min-width:0}
 .dish-advanced{border-bottom:1px solid var(--line);padding:4px 0 10px}
@@ -405,11 +405,9 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
 .step-saved{font-size:12px;color:#456439;margin:8px 0}
 
-.cook-duration-details{margin:0 0 14px}.cook-duration-details>summary,.cook-extra-tools>summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--accent-dark);font-size:13px;font-weight:650}
-.step-options>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;padding:8px;color:#75533b;font-size:12px;font-weight:650}.step-option-actions{display:flex;gap:7px;flex-wrap:wrap;margin:5px 0}.cooking-screen .task-actions button{min-height:44px;min-width:44px}.cooking-screen .task-note{min-height:44px}
-.cooking-screen .cook-warnings{display:block}.cooking-screen .condition{color:#63482f;background:#f3e7d6}.cooking-screen .muted{color:#675e55}
-.step-options>summary:focus-visible,.cook-duration-details>summary:focus-visible,.cook-extra-tools>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-@media(max-width:600px){.cooking-screen .brand{margin-bottom:14px}.step-option-actions button{min-width:44px;min-height:44px}}
+.cook-duration-details{margin:0 0 14px}.cook-duration-details>summary,.cook-extra-tools>summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--accent-dark);font-size:13px;font-weight:650}.cooking-screen .task-actions button{min-height:44px;min-width:44px}.cooking-screen .task-note{min-height:44px}
+.cooking-screen .cook-warnings{display:block}.cooking-screen .condition{color:#63482f;background:#f3e7d6}.cooking-screen .muted{color:#675e55}.cook-duration-details>summary:focus-visible,.cook-extra-tools>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media(max-width:600px){.cooking-screen .brand{margin-bottom:14px}}
 .cooking-screen>.site-header{padding-bottom:14px;margin-bottom:10px}.cooking-screen>.site-header .eyebrow,.cooking-screen>.site-header .subtitle{display:none}.cooking-screen>.site-header h1{font-size:22px;letter-spacing:-.5px}.cooking-screen>.site-header .brand-icon{width:36px;height:36px;font-size:20px}
 .cooking-navigation{display:flex;align-items:center;gap:24px}.cooking-navigation .back-link{min-height:44px}.cooking-screen .cook-header .eyebrow{margin-top:5px}.cooking-screen .cook-header h2{font-size:30px}
 @media(max-width:600px){.cooking-screen .cook-header h2{font-size:25px}.cooking-screen .cook-header{gap:10px}.cooking-screen .cook-progress-chip{min-width:64px;padding:10px}.cooking-screen .cook-target{font-size:12px}.cooking-screen .active-cook-panel{padding:14px}.cooking-screen .focus-now{margin-top:16px}}
@@ -437,18 +435,15 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .guided-step .task-main>p.small{font-size:14px;margin-top:12px}
 .guided-step .task-main>.condition{justify-self:start;font-size:11px}
 .guided-step .task-actions{padding:14px 0 0;margin:16px 0 0;gap:8px;border-top:1px solid var(--line)}
-.guided-step .task-actions>button,.guided-step .step-options>summary{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12px;line-height:1.3;font-weight:500;color:#75533b}
-.guided-step .step-options{order:1}
-.guided-step .step-options>summary::after{content:'⌄';margin-left:6px}
-.guided-step .step-options[open]{flex-basis:100%}
-.guided-step .step-options[open]>summary{width:max-content}
-.guided-step .step-option-actions{padding:8px 0;margin:0}
-.guided-step .step-option-actions p{flex-basis:100%;margin:4px 0}
+.guided-step .task-actions>button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12px;line-height:1.3;font-weight:500;color:#75533b}
 .guided-step .note-label{margin:18px 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
 .guided-step .task-note{width:100%;margin-left:0;min-height:44px;font-size:14px;padding:11px 12px}
-@media(max-width:390px){.guided-step .cook-task{padding:14px}.guided-step .task-actions{gap:6px}.guided-step .task-actions>button,.guided-step .step-options>summary{padding:8px;font-size:11px}}
+@media(max-width:390px){.guided-step .cook-task{padding:14px}.guided-step .task-actions{gap:6px}.guided-step .task-actions>button{padding:8px;font-size:11px}}
 @media(max-width:600px){
  .guided-step .task-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;align-items:start}
- .guided-step .task-actions>button,.guided-step .step-options>summary{height:44px;padding:6px 8px;line-height:1.2}
- .guided-step .step-options[open]{grid-column:1 / -1}
+ .guided-step .task-actions>button{height:44px;padding:6px 8px;line-height:1.2}
 }
+
+.task-actions button.step-remove{display:grid;place-items:center;margin-left:auto;width:44px;height:44px;min-width:44px;padding:0;border:0;background:transparent;color:var(--muted)}
+.task-actions button.step-remove:hover{color:#9b3e2b;background:#f9ede8}
+@media(max-width:600px){.guided-step .task-actions{grid-template-columns:max-content minmax(0,1fr) 44px}}

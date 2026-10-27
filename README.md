@@ -373,5 +373,5 @@ actual timestamps and history survive navigation/reload. Cancel adding is a smal
 quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).
 
 Current-step detail polish (#26): neutral card, quieter planned time/dish metadata,
-full-width instructions and notes, and matching Edit / Log temperature / Step options
-controls with 44px targets. See [Cooking Mode](docs/cooking-mode.md).
+full-width instructions and notes, matching Edit / Log temperature controls, and a shared quiet trash icon, all with
+44px targets. See [Cooking Mode](docs/cooking-mode.md).
