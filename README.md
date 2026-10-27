@@ -389,3 +389,7 @@ one flat list. Checking off a step advances guidance; previewing never completes
 Progress autosaves in this browser. Open edit/reading drafts are protected, and IDs,
 actual timestamps and history survive navigation/reload. Cancel adding is a small,
 quiet text action. See [Cooking Mode rules and manual checks](docs/cooking-mode.md).
+
+Current-step detail polish (#26): neutral card, quieter planned time/dish metadata,
+full-width instructions and notes, and matching Edit / Log temperature / Step options
+controls with 44px targets. See [Cooking Mode](docs/cooking-mode.md).

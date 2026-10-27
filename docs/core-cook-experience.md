@@ -245,3 +245,7 @@ previewing and navigating never complete a task or reset lifecycle/history. Open
 and reading drafts are protected. Finish cook is an explicit archive action, separate
 from editing the plan or autosaving progress. Cancel adding is a quiet compact control.
 See [Guided Cooking Mode](cooking-mode.md) for rules, tests and remaining limitations.
+
+Current-step detail (#26) uses one content edge for instructions, controls and notes.
+The title leads; planned time and dish stay secondary. Edit, Log temperature and Step
+options share a consistent compact treatment and 44px tap targets on desktop/phone.

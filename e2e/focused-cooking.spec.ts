@@ -62,3 +62,18 @@ test('Cancel adding is a compact quiet action with a phone-sized hit area',async
  const box=await cancel.boundingBox();expect(box!.width).toBeLessThanOrEqual(100);expect(box!.height).toBeGreaterThanOrEqual(44);expect(await cancel.evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
  const before=await saved(page);await cancel.evaluate(el=>el.scrollIntoView({block:'center'}));await page.screenshot({path:info.outputPath('compact-cancel.png'),fullPage:false});await cancel.click();expect(await saved(page)).toEqual(before);await expect(page.getByRole('button',{name:'+ Add a dish',exact:true})).toBeVisible();
 });
+
+
+test('current step uses aligned content and consistent compact actions',async({page},info)=>{
+ const meal=fixture();Object.assign(meal.customTasks!.find(t=>t.id==='due')!,{title:'Put brisket on smoker',dishName:'Smoked brisket',instructions:'Place the brisket on a stable cooking grate. Log the actual start time and initial smoker temperature.'});
+ const original=await load(page,meal);const row=page.getByRole('region',{name:'Current step',exact:true}).getByRole('article');
+ const actions=row.locator('.task-actions');const note=row.getByLabel('Quick notes',{exact:true});const instructions=row.getByText('Place the brisket on a stable cooking grate. Log the actual start time and initial smoker temperature.',{exact:true});
+ const buttons=[row.getByRole('button',{name:'Edit',exact:true}),row.getByRole('button',{name:'+ Log temperature',exact:true}),row.locator('.step-options>summary')];
+ const boxes=await Promise.all(buttons.map(b=>b.boundingBox()));
+ for(const box of boxes){expect(box!.height).toBeGreaterThanOrEqual(44);expect(Math.abs(box!.height-boxes[0]!.height)).toBeLessThanOrEqual(1);expect(Math.abs(box!.y-boxes[0]!.y)).toBeLessThanOrEqual(1);}
+ const noteBox=await note.boundingBox();const actionBox=await actions.boundingBox();const instructionBox=await instructions.boundingBox();
+ expect(Math.abs(noteBox!.x-actionBox!.x)).toBeLessThanOrEqual(1);expect(Math.abs(instructionBox!.x-noteBox!.x)).toBeLessThanOrEqual(1);
+ expect(await buttons[2].evaluate(el=>getComputedStyle(el).borderTopStyle)).toBe('solid');
+ for(const width of [375,390,768,1280]){const initial=page.viewportSize()!;await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);const controls=await Promise.all(buttons.map(b=>b.boundingBox()));expect(Math.abs(controls[0]!.y-controls[2]!.y)).toBeLessThanOrEqual(1);await page.setViewportSize(initial);}
+ await row.evaluate(el=>el.scrollIntoView({block:'start'}));await row.screenshot({path:info.outputPath('standard-step-card.png')});expect(await saved(page)).toEqual(original);
+});

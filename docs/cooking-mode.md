@@ -23,7 +23,10 @@ that dinner is the first cooking action. Condition-driven steps require actual c
   changes chronological position. Completion resumes guidance from unfinished work.
 
 The shared step editor still supports dates, duration, equipment and planning targets;
-actual events remain separate. Edit and temperature logging share one compact action row.
+actual events remain separate. The current-step card uses a neutral surface, a clear title
+and subdued planned time/dish metadata. Instructions, action controls and notes share
+one content edge. Edit, Log temperature and Step options use matching compact controls
+with 44px tap targets, in the same visual and keyboard order.
 An open editor or reading form blocks switching steps, Home, Edit plan and finishing,
 with a visible explanation, until saved/cancelled. The completion checkbox also waits
 for those drafts. Clock refreshes do not discard or complete a step. Step removal stays under secondary Step options; manual reordering remains in planning
@@ -63,6 +66,8 @@ Desktop/phone Playwright covers the single current card, fixed next-step footer,
 whole-cook list, preview without mutation, dates and selected-step continuity, protected
 editor/reading drafts, temperature/notes/completion, actual history, Home/plan/reload,
 all-checked finishing, archive confirmation/cancel, compact Cancel and narrow layouts.
+Card acceptance first failed on the staggered instruction/note edges; it now checks
+alignment, consistent action heights and a single action row down to 375px.
 Unit checks cover selection, chronological/offset order, untimed recipes, removed steps,
 completed activity, wraparound preview and immutable plans/events.
 

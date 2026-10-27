@@ -432,3 +432,28 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 @media(max-width:600px){.cook-guide-bar{left:0;right:0;transform:none;width:100%;bottom:0;border-radius:0;border-left:0;border-right:0;padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:8px}.guide-checklist-button{flex-basis:104px;font-size:12px}.guide-next-button{padding:3px 6px}.guide-next-button>strong{font-size:13px}.flat-step-time{max-width:93px}.flat-cook-list li>button{gap:8px}.cooking-screen .cook-sidebar{gap:10px}.cooking-screen .cook-header{margin-bottom:14px}}
 .workspace-heading{position:relative}.workspace-heading .cancel-add-dish{position:absolute;right:0;top:-14px}.flat-step-time{text-align:right}.flat-step-chevron{font-size:19px;color:var(--muted);flex:0 0 8px}.guide-next-button{position:relative;padding-right:30px}.guide-next-button::after{content:'→';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--accent-dark)}
 @media(max-width:600px){.guide-next-button{padding-right:24px}.guide-next-button::after{right:3px;font-size:18px}}
+
+/* Current-step detail uses one content edge and a shared utility-control style. */
+.guided-step .cook-task{background:var(--surface);border-color:var(--line);padding:18px}
+.guided-step .task-top{display:grid;grid-template-columns:36px minmax(0,1fr);gap:6px 10px;cursor:default}
+.guided-step .task-check-control{grid-column:1;grid-row:1 / span 2;min-width:36px;min-height:44px}
+.guided-step .task-check-control input{width:24px;height:24px}
+.guided-step .task-main{display:contents}
+.guided-step .task-main>.between{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.guided-step .task-main strong{font-size:18px;line-height:1.35}
+.guided-step .task-main time{font-size:12px;font-weight:400;color:var(--muted);white-space:normal;line-height:1.5}
+.guided-step .task-main>.task-dish{grid-column:2;grid-row:2;font-size:12px;font-weight:500;color:var(--muted);margin:0}
+.guided-step .task-main>p:not(.task-dish),.guided-step .task-main>.condition{grid-column:1 / -1;margin:6px 0 0;line-height:1.6}
+.guided-step .task-main>p.small{font-size:14px;margin-top:12px}
+.guided-step .task-main>.condition{justify-self:start;font-size:11px}
+.guided-step .task-actions{padding:14px 0 0;margin:16px 0 0;gap:8px;border-top:1px solid var(--line)}
+.guided-step .task-actions>button,.guided-step .step-options>summary{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12px;line-height:1.3;font-weight:500;color:#75533b}
+.guided-step .step-options{order:1}
+.guided-step .step-options>summary::after{content:'⌄';margin-left:6px}
+.guided-step .step-options[open]{flex-basis:100%}
+.guided-step .step-options[open]>summary{width:max-content}
+.guided-step .step-option-actions{padding:8px 0;margin:0}
+.guided-step .step-option-actions p{flex-basis:100%;margin:4px 0}
+.guided-step .note-label{margin:18px 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
+.guided-step .task-note{width:100%;margin-left:0;min-height:44px;font-size:14px;padding:11px 12px}
+@media(max-width:390px){.guided-step .cook-task{padding:14px}.guided-step .task-actions{gap:6px}.guided-step .task-actions>button,.guided-step .step-options>summary{padding:8px;font-size:11px}}
