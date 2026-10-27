@@ -50,3 +50,11 @@ export function estimatedFinish(task: { scheduledAt: string | null; durationMinu
 export function chronologicalTasks<T extends { scheduledAt: string | null }>(tasks: T[]): T[] {
   return [...tasks].sort((a, b) => (a.scheduledAt ? Date.parse(a.scheduledAt) : Infinity) - (b.scheduledAt ? Date.parse(b.scheduledAt) : Infinity));
 }
+
+/** Readable elapsed duration; saved values always remain minutes. */
+export function formatDuration(minutes:number):string{
+ const rounded=Math.round(minutes*1000)/1000;
+ if(rounded<60)return rounded+' min';
+ const hours=Math.floor(rounded/60),rest=Math.round((rounded-hours*60)*1000)/1000;
+ return hours+' hr'+(rest?' '+rest+' min':'');
+}

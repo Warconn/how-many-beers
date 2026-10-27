@@ -76,8 +76,12 @@ function importedTasks(d: Dish, serveAt: string): PlannedTask[] {
   return arr;
 }
 
+export function buildDishTimeline(d:Dish,serveAt:string):PlannedTask[]{
+  if(d.preset==='custom')return importedTasks(d,serveAt);
+  return builtinTasks(d,serveAt).sort((a,b)=>Date.parse(a.scheduledAt??'')-Date.parse(b.scheduledAt??''));
+}
 export function buildTimeline(meal:Meal): PlannedTask[]{
-  return meal.dishes.flatMap(d => d.preset === "custom" ? importedTasks(d,meal.serveAt) : builtinTasks(d,meal.serveAt))
+  return meal.dishes.flatMap(d => buildDishTimeline(d,meal.serveAt))
     .sort((a,b)=> (a.scheduledAt === null ? Infinity : new Date(a.scheduledAt).getTime())-
                   (b.scheduledAt === null ? Infinity : new Date(b.scheduledAt).getTime()));
 }

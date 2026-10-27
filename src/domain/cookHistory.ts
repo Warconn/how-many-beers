@@ -94,7 +94,10 @@ export function repeatArchivedCook(entry:ArchivedCook): ExtendedMeal {
   const shiftTime=(value:string|null|undefined)=>value && Number.isFinite(Date.parse(value)) && Number.isFinite(delta)
     ? new Date(Date.parse(value)+delta).toISOString() : value;
   const oldOverrides=previous.taskOverrides??{};
-  const overrides=Object.fromEntries(Object.entries(oldOverrides).map(([id,value])=>[translate(id),{...value,...(value.scheduledAt?{scheduledAt:shiftTime(value.scheduledAt)}:{})}]));
+  const overrides=Object.fromEntries(Object.entries(oldOverrides).map(([id,value])=>{
+    const settings={...value};delete settings.recordedPlanAt;
+    return [translate(id),{...settings,...(value.scheduledAt?{scheduledAt:shiftTime(value.scheduledAt)}:{})}];
+  }));
   return {
     ...base,
     name:entry.meal.name,

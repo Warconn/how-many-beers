@@ -404,3 +404,5 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 @media(max-width:600px){.step-field-grid{grid-template-columns:minmax(0,1fr)}.step-editor{padding:12px}.step-editor-actions .button{flex:1}.step-editor input[type=datetime-local]{font-size:14px}}
 .step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
 .step-saved{font-size:12px;color:#456439;margin:8px 0}
+
+.duration-controls{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:end;min-width:0}.duration-controls label{min-width:0}.duration-controls input,.duration-controls select{min-height:44px}

@@ -68,3 +68,14 @@ npm run build
 Keep updates concise, plainspoken and product-oriented. Do not use em dashes. Explain tradeoffs and show the actual tested behavior. Distinguish between implementation complete, local tests passing, CI green, Cloudflare preview deployed and production deployed. Link the issue and PR. If an external account action is unavailable, say so instead of claiming Cloudflare or GitHub settings were changed.
 
 This file is the durable working summary of the October 2026 ChatGPT product discussion, not a transcript. For details beyond it, consult the docs and linked issues.
+
+## Duration adjustment follow-up (#41)
+
+The user authorized forwarding duration overruns to following timed recipe/template
+steps, superseding #30's display-only duration policy. Keep existing spacing, recipe
+order independent of manual checklist order, other dishes independent, and fixed or
+recorded steps anchored with explicit conflicts. Do not infer physical durations from
+checkpoint gaps or move the serving target. Hours/minutes inputs persist minutes.
+First activity captures optional recordedPlanAt planned-position metadata; actual
+event timestamps remain immutable. Repeat drops those anchors with actuals. Full
+resource/dependency optimization remains #3. See docs/step-timing.md.

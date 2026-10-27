@@ -355,9 +355,17 @@ editor now includes planned date/time, estimated duration, equipment and an opti
 food-temperature target as well as name and instructions. Save/Cancel is explicit.
 
 A manually edited time stays fixed when serving time changes; Use plan timing restores
-the original/derived timing. Duration determines the step's estimated finish, without
-automatically moving other steps. Unknown durations and untimed steps remain supported.
+the original/derived timing. Duration determines the estimated finish and moves following timed recipe steps
+when needed, preserving other dishes and fixed/recorded anchors. Unknown durations and untimed steps remain supported.
 Live Schedule is chronological even when checklist steps are manually reordered.
 
 See [Step timing rules and manual checks](docs/step-timing.md) for timezone/DST handling,
 archive/backup compatibility and the limits of manual planning versus #3 replanning.
+
+## Following-step duration adjustment (#41)
+
+Enter a duration in minutes or hours. Extending a step beyond the next planned start
+pushes following timed recipe steps while preserving their spacing. Shortening or
+Use plan timing removes the extra delay. Other dishes, fixed/recorded steps and actual
+activity stay intact; conflicts and a serving-target overrun produce warnings. Untimed
+stages break links; custom/general prep stays independent. See [step timing rules](docs/step-timing.md).
