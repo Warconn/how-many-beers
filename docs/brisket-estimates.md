@@ -4,7 +4,7 @@ A brisket’s expanded menu card offers weight, cut, wrapping and cooking-profil
 Unknown weight is blank, including on new dishes; old reference weights are not assumed
 to be a measured weight. Untrimmed weights require confirmation after trimming.
 Inputs persist as a comparison draft. **Use this timing** explicitly applies it;
-**Keep manual timing** preserves current times and allows ordinary duration editing.
+**Use manual timing** preserves current times and allows ordinary duration editing.
 The rest/hold settings inside the timing comparison also need applying. Pending inputs
 never silently update a running cook. The applied snapshot is retained as provenance.
 
@@ -78,3 +78,7 @@ inspect assumptions, adjust rest/buffer, apply, then inspect the combined schedu
 Switch to manual and confirm input comparisons do not move steps. During an active cook,
 verify completed timestamps and readings remain unchanged. Recipe/evidence review is
 still required before treating these comparisons as calibrated recommendations.
+
+The timing choice shows which method is currently in the plan before the actions.
+After applying, Timing applied is disabled until the comparison changes; Use manual
+timing appears only while estimated timing is active. It keeps the current times.

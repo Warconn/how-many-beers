@@ -412,3 +412,7 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .brisket-planner details{margin-top:14px}.brisket-planner summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
 .brisket-planner ul{padding-left:19px;line-height:1.6}.personal-rule{display:flex;align-items:center;gap:10px;min-height:44px}.personal-rule input{width:22px;height:22px}
 @media(max-width:600px){.brisket-planner .small-grid{grid-template-columns:1fr 1fr}.brisket-planner select{font-size:14px}}
+
+.timing-choice{margin:18px 0;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.timing-choice>p{display:grid;gap:5px;margin:0 0 12px;font-size:12px;color:var(--muted)}.timing-choice>p>strong{color:var(--ink);font-size:13px;font-weight:650}.timing-choice>p>span{line-height:1.5}
+.timing-choice-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.timing-choice-actions>button{margin:0;min-height:44px}.timing-choice-actions>.link{padding:8px 0;font-weight:500}.timing-choice .button:disabled{opacity:1;color:var(--muted);background:#f2efea;cursor:default}

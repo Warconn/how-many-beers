@@ -225,3 +225,7 @@ manual timing. Fixed step overrides and recorded activity survive applying/reloa
 See [Brisket timing comparisons](brisket-estimates.md) for policy, sources, provenance,
 unvalidated extrapolation and pending live-source review. Recipe-template content updates
 follow #5 and focused Cooking Mode #26 when the user supplies their actual recipes.
+
+Brisket timing review: the active manual/estimated choice is explicit above its
+actions. Timing applied stays disabled until the comparison changes; Use manual
+timing appears only for an applied estimate and keeps current step times.

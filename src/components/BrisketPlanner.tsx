@@ -10,6 +10,8 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
   const id=(field:string)=>'brisket-'+dish.id+'-'+field;
   const applied=dish.brisketPlan?.applied;
   const dirty=!!applied && (JSON.stringify(applied.inputs)!==JSON.stringify(inputs) || applied.recommendedStart!==estimate.recommendedStart);
+  const estimated=dish.brisketPlan?.mode==='estimate';
+  const current=estimated && !dirty;
   return <section className="brisket-planner" aria-label="Brisket timing">
     <h3>Plan brisket timing</h3>
     <p className="muted small">Compare a start window, then use it in your plan. Your fixed step times and recorded activity stay intact.</p>
@@ -29,8 +31,13 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <p className="muted small">The plan uses the longer smoke estimate plus rest and a separate hold buffer. Neither start guarantees dinner on time.</p>
       {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The recommended start has passed. Serving time may be at risk; review your plan.</p>}
     </div>}
-    <div className="cook-action-controls"><button type="button" className="button secondary" disabled={estimate.smokeMax===null} onClick={()=>onChange(applyBrisketTiming({...dish,brisketPlan:{...dish.brisketPlan,mode:'manual',inputs}},serveAt))}>Use this timing</button><button type="button" className="back-link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Keep manual timing</button></div>
-    <p className="muted small" role="status">{dish.brisketPlan?.mode==='estimate' ? dirty?'Inputs changed. Use this timing to update the plan.':'Timing applied to the plan. Changes to serving time shift derived steps.' : 'Manual timing is active. Comparing inputs does not change your schedule.'}</p>
+    <div className="timing-choice">
+      <p role="status"><strong>{estimated?'Using estimated timing':'Using manual timing'}</strong><span>{estimated ? dirty?'Comparison changed. Apply it to update your plan.':'This estimate is in your plan. Changing serving time shifts derived steps.' : 'Your current step timings stay in place until you apply this comparison.'}</span></p>
+      <div className="timing-choice-actions">
+        <button type="button" className="button secondary" disabled={estimate.smokeMax===null || current} onClick={()=>onChange(applyBrisketTiming({...dish,brisketPlan:{...dish.brisketPlan,mode:'manual',inputs}},serveAt))}>{current?'Timing applied':'Use this timing'}</button>
+        {estimated && <button type="button" className="link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Use manual timing</button>}
+      </div>
+    </div>
     <details><summary>Timing assumptions &amp; options</summary>
       <div className="small-grid">{(['prepMinutes','preheatMinutes','restMinutes','holdBufferMinutes'] as const).map((field,index)=><div key={field}><label htmlFor={id(field)}>{['Prep (minutes)','Preheat (minutes)','Rest (minutes)','Extra hot-hold buffer (minutes)'][index]}</label><input id={id(field)} type="number" min="0" max="720" value={inputs[field]} onChange={e=>set({[field]:e.target.value===''?0:Number(e.target.value)})}/></div>)}
         <div><label htmlFor={id('pit')}>Profile starting pit (°F)</label><input id={id('pit')} type="number" min="150" max="450" value={inputs.pitTempF} onChange={e=>set({pitTempF:Number(e.target.value)})}/></div>
