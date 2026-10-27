@@ -1,0 +1,43 @@
+import {test,expect,type Page} from '@playwright/test';
+import {createDish,newMeal} from '../src/domain/meal';
+import {recordEvent,type ExtendedMeal} from '../src/domain/cookState';
+test.use({timezoneId:'America/New_York'});
+const key='how-many-beers:meal:v1';
+function fixture():ExtendedMeal{const m={...newMeal(),name:'Turkey dinner',serveAt:'2026-10-28T16:00',dishes:[createDish('turkey'),createDish('brats')],mode:'cooking' as const,startedAt:'2026-10-27T12:00:00Z'};return recordEvent({...m,notes:{[m.dishes[1].id+':prep']:'Keep my notes'}},m.dishes[1].id+':prep','completed','2026-10-27T12:01:00Z');}
+async function load(page:Page,m=fixture()){await page.goto('/');await page.evaluate(({m,key})=>{localStorage.clear();localStorage.setItem(key,JSON.stringify(m));},{m,key});await page.reload();await page.getByRole('button',{name:'View cook',exact:true}).click();await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();return m;}
+const saved=(page:Page)=>page.evaluate(k=>JSON.parse(localStorage.getItem(k)!) as ExtendedMeal,key);
+const row=(page:Page,title:string)=>page.getByRole('region',{name:'Turkey (oven) steps',exact:true}).getByRole('article',{name:title,exact:true});
+const thaw='Check turkey is fully thawed and safely refrigerated',prep='Prepare and season the turkey';
+const time=async(page:Page,title:string)=>Date.parse((await row(page,title).locator('time[datetime]').first().getAttribute('datetime'))!);
+
+test('14 hour thaw moves following turkey steps, updates schedule and survives reload without changing another dish or actuals',async({page},info)=>{
+ const m=await load(page);const start=await time(page,thaw);const beforePrep=await time(page,prep);await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
+ await form.getByLabel('Duration unit',{exact:true}).selectOption('hours');await form.getByLabel('Estimated duration (hours)',{exact:true}).fill('14');await form.screenshot({path:info.outputPath('duration-hours.png')});await form.getByRole('button',{name:'Save & Close',exact:true}).click();
+ expect(await time(page,thaw)).toBe(start);expect(await time(page,prep)).toBe(start+840*60000);expect(await time(page,prep)).toBeGreaterThan(beforePrep);
+ await expect(page.getByText(/Turkey \(oven\).*after.*serving target/i).first()).toBeVisible();const schedule=page.getByRole('complementary',{name:'Live schedule'});await schedule.getByRole('button',{name:/Show full schedule/}).click();await expect(schedule.locator('time[datetime="'+new Date(start+840*60000).toISOString()+'"]').first()).toBeVisible();await expect(schedule.getByRole('button',{name:'Edit '+thaw+' for Turkey (oven)',exact:true})).toContainText('14 hr');
+ const after=await saved(page);expect(after.events).toEqual(m.events);expect(after.completed).toEqual(m.completed);expect(after.notes).toEqual(m.notes);expect(after.dishes).toEqual(m.dishes);expect(after.taskOverrides![m.dishes[0].id+':thaw'].durationMinutes).toBe(840);expect(after.taskOverrides![m.dishes[0].id+':prep']).toBeUndefined();
+ await row(page,prep).scrollIntoViewIfNeeded();await page.screenshot({path:info.outputPath('turkey-reflow.png'),fullPage:false});
+ await page.reload();await page.getByRole('button',{name:'View cook',exact:true}).click();await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();expect(await time(page,prep)).toBe(start+840*60000);
+ await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();await expect(form.getByLabel('Estimated duration (hours)',{exact:true})).toHaveValue('14');await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('840');await form.getByRole('button',{name:'Cancel',exact:true}).click();expect(await saved(page)).toEqual(after);
+});
+
+test('shortening or resetting a duration removes extra delay; units preserve values and invalid drafts do not save',async({page},info)=>{
+ await load(page);const start=await time(page,thaw),original=await time(page,prep);await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
+ await form.getByLabel('Duration unit',{exact:true}).selectOption('hours');await form.getByLabel('Estimated duration (hours)',{exact:true}).fill('14');await form.getByRole('button',{name:'Save & Close',exact:true}).click();await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();await form.getByLabel('Estimated duration (hours)',{exact:true}).fill('1');await form.getByRole('button',{name:'Save & Close',exact:true}).click();expect(await time(page,prep)).toBe(start+60*60000);
+ await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();await form.getByLabel('Duration unit',{exact:true}).selectOption('hours');await form.getByLabel('Estimated duration (hours)',{exact:true}).fill('1.5');await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('90');await form.getByLabel('Duration unit',{exact:true}).selectOption('hours');await form.getByLabel('Estimated duration (hours)',{exact:true}).fill('721');const before=await saved(page);await form.getByRole('button',{name:'Save & Close',exact:true}).click();await expect(form.getByRole('alert')).toBeVisible();expect(await saved(page)).toEqual(before);
+ await form.getByRole('button',{name:'Use plan timing',exact:true}).click();await form.screenshot({path:info.outputPath('duration-units.png')});await form.getByRole('button',{name:'Save & Close',exact:true}).click();expect(await time(page,prep)).toBe(original);await expect(page.getByText(/Turkey \(oven\).*after.*serving target/i)).toHaveCount(0);
+});
+
+test('a fixed following step remains fixed and reports the duration conflict',async({page})=>{
+ const m=fixture();m.taskOverrides={[m.dishes[0].id+':prep']:{scheduledAt:'2026-10-28T16:20:00Z'}};await load(page,m);const original=await time(page,prep);await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('840');await form.getByRole('button',{name:'Save & Close',exact:true}).click();expect(await time(page,prep)).toBe(original);await expect(page.getByRole('region',{name:'Plan notes'}).getByText(/fixed.*Prepare and season the turkey/i).first()).toBeVisible();expect((await saved(page)).events).toEqual(m.events);
+});
+
+
+test('recording a shifted step keeps its planned position and subsequent spacing through reload and another duration change',async({page})=>{
+ const m=await load(page);await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('840');await form.getByRole('button',{name:'Save & Close',exact:true}).click();const prepAt=await time(page,prep),roastAt=await time(page,'Begin roasting turkey');
+ await page.getByRole('button',{name:'Continue cooking',exact:true}).click();const guide=page.getByRole('navigation',{name:'Cooking guide',exact:true});
+ if(await guide.count()){await guide.getByRole('button',{name:'Full checklist',exact:true}).click();await page.getByRole('button',{name:'Open step: '+prep+' for Turkey (oven)',exact:true}).click();}
+ await page.getByRole('checkbox',{name:'Complete '+prep,exact:true}).click();const active=await saved(page);expect(Date.parse(active.taskOverrides![m.dishes[0].id+':prep'].recordedPlanAt!)).toBe(prepAt);expect(active.completed[m.dishes[0].id+':prep']).toBeTruthy();
+ await page.getByRole('button',{name:'← Home',exact:true}).click();await page.reload();await page.getByRole('button',{name:'View cook',exact:true}).click();await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();expect(await time(page,prep)).toBe(prepAt);expect(await time(page,'Begin roasting turkey')).toBe(roastAt);
+ await row(page,thaw).getByRole('button',{name:'Edit',exact:true}).click();await form.getByLabel('Estimated duration (hours)',{exact:true}).fill('15');await form.getByRole('button',{name:'Save & Close',exact:true}).click();expect(await time(page,prep)).toBe(prepAt);expect(await time(page,'Begin roasting turkey')).toBe(roastAt);expect((await saved(page)).events).toEqual(active.events);await expect(page.getByRole('region',{name:'Plan notes'}).getByText(/recorded step.*Prepare and season/i)).toBeVisible();
+});

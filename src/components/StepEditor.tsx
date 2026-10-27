@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PlannedTask } from '@/domain/meal';
 import type { StepPlanEdit } from '@/domain/cookState';
-import { estimatedFinish, formatLocalDateTime, localTimeCandidates, offsetLabel, resolvePlannedTime } from '@/domain/stepTiming';
+import { estimatedFinish, formatDuration, formatLocalDateTime, localTimeCandidates, offsetLabel, resolvePlannedTime } from '@/domain/stepTiming';
 
 type Props = {
   task: PlannedTask;
@@ -16,7 +16,10 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
   const [instructions, setInstructions] = useState(task.instructions);
   const [timingMode, setTimingMode] = useState<StepPlanEdit['timingMode']>(task.timingMode ?? 'plan');
   const [localTime, setLocalTime] = useState(formatLocalDateTime(task.scheduledAt, zone));
-  const [duration, setDuration] = useState(task.durationMinutes == null ? '' : String(task.durationMinutes));
+  const initialUnit=task.durationMinutes!=null && task.durationMinutes>=120 && task.durationMinutes%60===0?'hours':'minutes';
+  const [durationUnit,setDurationUnit]=useState<'minutes'|'hours'>(initialUnit);
+  const [duration, setDuration] = useState(task.durationMinutes == null ? '' : String(task.durationMinutes/(initialUnit==='hours'?60:1)));
+  const durationMinutes=duration===''?null:Math.round(Number(duration)*(durationUnit==='hours'?60:1)*1000000)/1000000;
   const [equipment, setEquipment] = useState(task.equipment ?? '');
   const [target, setTarget] = useState(task.targetTempF == null ? '' : String(task.targetTempF));
   const [offsetChoice, setOffsetChoice] = useState(task.scheduledAt ? new Date(Math.floor(Date.parse(task.scheduledAt) / 60000) * 60000).toISOString() : '');
@@ -27,10 +30,10 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
   try { if (localTime) candidates = localTimeCandidates(localTime, zone); } catch { /* Report invalid drafts on Save without losing their contents. */ }
   let previewTime: string | null = null;
   try { previewTime = timingMode === 'plan' ? task.baseScheduledAt ?? null : localTime ? resolvePlannedTime(localTime, zone, offsetChoice, task.scheduledAt) : null; } catch { /* No estimate until a valid local time is chosen. */ }
-  const end = estimatedFinish({ scheduledAt: previewTime, durationMinutes: duration === '' ? null : Number(duration) });
+  const end = estimatedFinish({ scheduledAt: previewTime, durationMinutes });
   const resetTiming = () => {
     setTimingMode('plan');setLocalTime(formatLocalDateTime(task.baseScheduledAt, zone));
-    setDuration(task.baseDurationMinutes == null ? '' : String(task.baseDurationMinutes));setOffsetChoice('');setError('');
+    setDurationUnit('minutes');setDuration(task.baseDurationMinutes == null ? '' : String(task.baseDurationMinutes));setOffsetChoice('');setError('');
   };
   return <form ref={form} tabIndex={-1} className="task-editor step-editor" aria-label="Edit step" noValidate
     onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation();onCancel(); } }}
@@ -39,8 +42,8 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
       try {
         if (!title.trim()) throw new Error('Please enter a task title.');
         if (title.trim().length > 160) throw new Error('Keep titles under 160 characters.');
-        const minutes = duration === '' ? null : Number(duration);
-        if (minutes !== null && (!Number.isFinite(minutes) || minutes < 0 || minutes > 43200)) throw new Error('Duration must be between 0 and 43200 minutes, or blank for unknown.');
+        const minutes = durationMinutes;
+        if (minutes !== null && (!Number.isFinite(minutes) || minutes < 0 || minutes > 43200)) throw new Error('Duration must be between 0 and 720 hours (43200 minutes), or blank for unknown.');
         const temp = target === '' ? null : Number(target);
         if (temp !== null && (!Number.isFinite(temp) || temp <= 0 || temp > 600)) throw new Error('Target food temperature must be between 1 and 600°F, or blank.');
         if (equipment.trim().length > 80) throw new Error('Keep equipment names under 80 characters.');
@@ -54,7 +57,14 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
       <label>Planned date and time<input type="datetime-local" value={localTime} onChange={e => {
         setLocalTime(e.target.value);setTimingMode(e.target.value ? 'fixed' : 'unscheduled');setOffsetChoice('');setError('');
       }}/></label>
-      <label>Estimated duration (minutes)<input type="number" min="0" max="43200" step="any" value={duration} placeholder="Unknown" onChange={e => setDuration(e.target.value)}/></label>
+      <div className="duration-controls">
+        <label>Estimated duration ({durationUnit})<input type="number" min="0" max={durationUnit==='hours'?720:43200} step="any" value={duration} placeholder="Unknown" onChange={e => setDuration(e.target.value)}/></label>
+        <label>Duration unit<select aria-label="Duration unit" value={durationUnit} onChange={e=>{
+          const next=e.target.value as 'minutes'|'hours';
+          if(duration!=='' && Number.isFinite(Number(duration)))setDuration(String(Number(duration)*(durationUnit==='hours'?60:1)/(next==='hours'?60:1)));
+          setDurationUnit(next);setError('');
+        }}><option value="minutes">Minutes</option><option value="hours">Hours</option></select></label>
+      </div>
     </div>
     <div className="step-time-source"><span>{timingMode === 'plan' ? 'Follows dish / original plan' : timingMode === 'fixed' ? 'Fixed time; stays put when serving time changes' : 'Unscheduled'}</span>
       <button type="button" className="link" onClick={resetTiming}>Use plan timing</button></div>
@@ -62,8 +72,8 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
     {timingMode === 'fixed' && candidates.length > 1 && <label>UTC offset for this time<select aria-label="UTC offset for this time" value={candidates.includes(offsetChoice) ? offsetChoice : ''} onChange={e => setOffsetChoice(e.target.value)}>
       <option value="">Choose which occurrence</option>{candidates.map((iso, i) => <option value={iso} key={iso}>{offsetLabel(iso, zone)} ({i === 0 ? 'first' : 'second'} occurrence)</option>)}
     </select></label>}
-    {end && <p className="step-finish">Estimated finish: {new Date(end).toLocaleString()} ({duration} min)</p>}
-    <p className="muted small">Duration changes this step's estimated finish, not other steps' start times. Condition checks still require actual verification.</p>
+    {end && <p className="step-finish">Estimated finish: {new Date(end).toLocaleString()} ({formatDuration(durationMinutes!)})</p>}
+    <p className="muted small">Longer durations move following timed steps in this dish when needed. Fixed or recorded steps stay anchored; check schedule warnings. Untimed and general prep steps have no automatic links. Condition checks still require actual verification.</p>
     <div className="step-field-grid">
       <label>Equipment for this step<input value={equipment} maxLength={80} placeholder={task.baseEquipment || 'Optional'} onChange={e => setEquipment(e.target.value)}/></label>
       <label>Target food temperature (°F)<input type="number" min="1" max="600" step="any" placeholder="Optional" value={target} onChange={e => setTarget(e.target.value)}/></label>

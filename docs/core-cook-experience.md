@@ -211,7 +211,8 @@ temperature. General prep opens in checklist review. The flat menu remains intac
 Save/Cancel does not add a separate details page.
 
 Manual times are fixed, plan timing remains derived, and reset restores original timing.
-Duration updates estimated finish without shifting unrelated starts. Live Schedule is
+Duration updates estimated finish and adjusts following timed steps in the dish when
+needed, preserving other dishes and fixed/recorded anchors. Live Schedule is
 chronological; manual checklist order remains distinct. Actual events and completed
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
@@ -258,3 +259,11 @@ Planning's Start cooking, Save plan for later and Review checklist align at one
 48px height. On phones, primary/secondary actions stack at equal width with space
 between them; reviewing the checklist remains visually secondary.
 
+
+## Following-step duration adjustment (#41)
+
+Enter a duration in minutes or hours. Extending a step beyond the next planned start
+pushes following timed recipe steps while preserving their spacing. Shortening or
+Use plan timing removes the extra delay. Other dishes, fixed/recorded steps and actual
+activity stay intact; conflicts and a serving-target overrun produce warnings. Untimed
+stages break links; custom/general prep stays independent. See [step timing rules](step-timing.md).

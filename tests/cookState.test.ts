@@ -41,7 +41,7 @@ describe("cooking checklist and history",()=>{
     expect(cookTimeline(moved).map(t=>t.id).sort()).toEqual(cookTimeline(meal).map(t=>t.id).sort());
   });
 
-  it("retains completion timestamps and activity logs after serving-time edits",()=>{
+  it("retains recorded planned positions, completion timestamps and activity logs after serving-time edits",()=>{
     let meal:ExtendedMeal=seed();
     const task=cookTimeline(meal)[0];
     meal=recordEvent(meal,task.id,"started","2026-11-25T04:00:00.000Z");
@@ -51,7 +51,7 @@ describe("cooking checklist and history",()=>{
     const before=cookTimeline(meal).find(t=>t.id===task.id)!.scheduledAt;
     const changed={...meal,serveAt:"2026-11-25T17:00"};
     const after=cookTimeline(changed).find(t=>t.id===task.id)!.scheduledAt;
-    expect(after).not.toBe(before);
+    expect(after).toBe(before);
     expect(changed.completed[task.id]).toBe("2026-11-25T05:00:00.000Z");
     expect(changed.events?.map(e=>e.occurredAt)).toEqual(meal.events?.map(e=>e.occurredAt));
     expect(changed.events?.filter(e=>e.kind==="equipment")[0]).toMatchObject({value:250,unit:"°F"});

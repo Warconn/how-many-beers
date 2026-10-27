@@ -87,3 +87,14 @@ plan footer clunky. Prioritize one detailed current step, next-step preview in a
 footer, a flat whole-cook checklist and a distinct Edit plan action. Completion advances
 guidance; preview/navigation do not mutate events. Finish cook archives only after
 confirmation. Keep unsaved edit/reading drafts protected and Cancel adding compact.
+
+## Duration adjustment follow-up (#41)
+
+The user authorized forwarding duration overruns to following timed recipe/template
+steps, superseding #30's display-only duration policy. Keep existing spacing, recipe
+order independent of manual checklist order, other dishes independent, and fixed or
+recorded steps anchored with explicit conflicts. Do not infer physical durations from
+checkpoint gaps or move the serving target. Hours/minutes inputs persist minutes.
+First activity captures optional recordedPlanAt planned-position metadata; actual
+event timestamps remain immutable. Repeat drops those anchors with actuals. Full
+resource/dependency optimization remains #3. See docs/step-timing.md.
