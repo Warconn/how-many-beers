@@ -14,11 +14,13 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 Production release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) delivered Home/resume, the Guided Cook Planner, persistent Live Schedule, template/recipe selection in one Add Dish experience, expandable per-dish steps, cooking checklist/history, and Playwright regression tests. User confirmed GitHub Pages production deployment. These features are a functional baseline, **not UX approval of every interaction**.
 
-Current prioritized backlog:
+Current prioritized backlog (user confirmed #5, then #26; recipe-template content updates follow when the user supplies their actual recipes):
+- [#5](https://github.com/Warconn/how-many-beers/issues/5): explicit weight-based brisket timing comparisons; distinguish source facts from unvalidated app assumptions.
+- [#26](https://github.com/Warconn/how-many-beers/issues/26): focused Cooking Mode with Now, Next and Later, safe navigation and preserved history.
 - [#28](https://github.com/Warconn/how-many-beers/issues/28): completed in `dev` through PR #32 after user review. Keep the flattened inline dish menu; do not restore a separate details panel.
-- [#30](https://github.com/Warconn/how-many-beers/issues/30): step dates, duration and details from dish and Live Schedule are in review in PR #35. Read its timing rules before extending scheduling; do not silently invent durations or automatic dependency shifting.
+- [#30](https://github.com/Warconn/how-many-beers/issues/30): step dates, duration and details from dish and Live Schedule were merged into `dev` in PR #35 with user approval. Read its timing rules before extending scheduling; do not silently invent durations or automatic dependency shifting.
 - [#31](https://github.com/Warconn/how-many-beers/issues/31): completed in `dev` through user-approved PR #34. Keep one compact Start/Continue action and visible plan warnings.
-- [#33](https://github.com/Warconn/how-many-beers/issues/33): low-priority follow-up to make Remove dish visible beside its heading, with confirmation and recorded-history preservation.
+- [#33](https://github.com/Warconn/how-many-beers/issues/33): completed in `dev` through PR #36 with user approval. Keep the small trash icon, 44px target, confirmation and recorded-history preservation.
 - [#3](https://github.com/Warconn/how-many-beers/issues/3): advanced dependency-aware replanning is later, **not** a prerequisite for #30.
 
 For #28, preserve the useful high-level flow and live schedule. Do not combine a broad redesign of Cooking Mode or advanced scheduling into that PR. Ask for product direction only when a genuine irreversible UX choice remains; otherwise implement the smallest coherent change based on acceptance criteria.
@@ -77,3 +79,11 @@ same cook later. Keep one active/planning cook per browser, existing autosave,
 archive/history, IDs and actual timestamps. Failed writes must not claim success.
 Suggested times do not automatically start a session. Cloud sync, background reminders
 and a library of multiple future plans remain separate work.
+
+## Cooking Mode review iteration (#26)
+
+The user requested guided cooking after finding the grouped list and Save Cook / View
+plan footer clunky. Prioritize one detailed current step, next-step preview in a fixed
+footer, a flat whole-cook checklist and a distinct Edit plan action. Completion advances
+guidance; preview/navigation do not mutate events. Finish cook archives only after
+confirmation. Keep unsaved edit/reading drafts protected and Cancel adding compact.

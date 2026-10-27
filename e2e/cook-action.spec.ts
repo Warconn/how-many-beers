@@ -63,7 +63,7 @@ test('planned cook has one compact action beneath the menu and optional checklis
   await expect.poll(async () => page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!).completed).length)).toBe(1);
   const progress = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
   expect(progress.events.some((event: { kind: string }) => event.kind === 'completed')).toBe(true);
-  await page.getByRole('button', { name: '← View your cook', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit plan', exact: true }).click();
   await page.getByRole('button', { name: 'Continue cooking', exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
   await page.reload();
