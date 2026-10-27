@@ -216,6 +216,19 @@ chronological; manual checklist order remains distinct. Actual events and comple
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
 
+## Issue #39: save now, start later
+
+Planning includes an explicit Save plan for later action. After successful storage
+acknowledgment, Home displays the same planning cook and its next planned start dates.
+Start cooking is an explicit Home action; Resume planning adjusts the same plan.
+Failed writes keep the planner open. Saving does not set lifecycle/start timestamps,
+complete tasks or archive an unfinished cook. Existing device-local autosave, one active
+cook, archived history and replacement confirmation remain intact. See [saved plans](saved-plans.md).
+
+Planning's Start cooking, Save plan for later and Review checklist align at one
+48px height. On phones, primary/secondary actions stack at equal width with space
+between them; reviewing the checklist remains visually secondary.
+
 ## Issue #26: guided cooking review iteration
 
 User review found the grouped checklist and Save Cook / View plan footer still clunky.

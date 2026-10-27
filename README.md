@@ -362,6 +362,17 @@ Live Schedule is chronological even when checklist steps are manually reordered.
 See [Step timing rules and manual checks](docs/step-timing.md) for timezone/DST handling,
 archive/backup compatibility and the limits of manual planning versus #3 replanning.
 
+## Save a plan for later (#39)
+
+Use **Save plan for later** beside Start cooking to confirm a device-local save and
+return Home without starting. Home shows the first planned step and cooking start,
+with full dates/timezone, plus **Start cooking** and **Resume planning**. Existing
+changes still autosave. This keeps one active/planning cook per browser; it does not
+add cloud sync or automatic reminders. See [saved-plan behavior](docs/saved-plans.md).
+
+Planning actions now share a 48px height and align together; on phones Start cooking
+and Save plan for later stack at equal width, with checklist review kept secondary.
+
 ## Guided Cooking Mode (#26)
 
 Cooking opens one step with its instructions, notes and readings. A fixed **Up next**
