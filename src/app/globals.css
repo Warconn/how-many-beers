@@ -457,3 +457,8 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .guided-step .note-label{margin:18px 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
 .guided-step .task-note{width:100%;margin-left:0;min-height:44px;font-size:14px;padding:11px 12px}
 @media(max-width:390px){.guided-step .cook-task{padding:14px}.guided-step .task-actions{gap:6px}.guided-step .task-actions>button,.guided-step .step-options>summary{padding:8px;font-size:11px}}
+@media(max-width:600px){
+ .guided-step .task-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;align-items:start}
+ .guided-step .task-actions>button,.guided-step .step-options>summary{height:44px;padding:6px 8px;line-height:1.2}
+ .guided-step .step-options[open]{grid-column:1 / -1}
+}
