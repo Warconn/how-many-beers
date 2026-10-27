@@ -253,3 +253,7 @@ options share a consistent compact treatment and 44px tap targets on desktop/pho
 Brisket timing review: the active manual/estimated choice is explicit above its
 actions. Timing applied stays disabled until the comparison changes; Use manual
 timing appears only for an applied estimate and keeps current step times.
+
+Planning's Start cooking, Save plan for later and Review checklist align at one
+48px height. On phones, primary/secondary actions stack at equal width with space
+between them; reviewing the checklist remains visually secondary.

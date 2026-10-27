@@ -44,3 +44,7 @@ plan not appearing on Home.
 Manual journey: add brisket and brats, set serving time, adjust steps, Save plan for
 later, close and reopen the same URL/browser, inspect the planned prep and cooking
 start dates, then tap Start cooking when ready. Review/adjust still opens the planner.
+
+Planning actions share a 48px height and zero top margin. Start cooking and Save plan
+for later align on desktop and stack at equal width on phones with an 8px gap;
+Review checklist remains a quieter text action with the same tap height.

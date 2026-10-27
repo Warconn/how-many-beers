@@ -397,3 +397,6 @@ full-width instructions and notes, matching Edit / Log temperature controls, and
 Brisket timing review: the active manual/estimated choice is explicit above its
 actions. Timing applied stays disabled until the comparison changes; Use manual
 timing appears only for an applied estimate and keeps current step times.
+
+Planning actions now share a 48px height and align together; on phones Start cooking
+and Save plan for later stack at equal width, with checklist review kept secondary.
