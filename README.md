@@ -38,21 +38,15 @@ These desktop and mobile screenshots show the current dev workspace, including t
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 
-### Your cooks stay on this device
+### Saving and recovery
 
-How Many Beers currently saves your active plan, progress, and cook history **in this browser's local storage**. You can refresh or return later in the same browser and site without an account.
+The account feature preview supports one saved active/planning cook, completed history and retrieval on another device. It is opt-in and requires the dev setup below; production/default builds retain existing browser-backed saving until rollout. In account-enabled builds, new guests can try planning and cooking without persistent saves. Optional earlier-cook import/backup tools live in Account → Earlier cooks. Sign-in opens account cooks directly.
 
-There is **no automatic account sync or transfer between devices or browsers**. Clearing browser/site data, using a private browsing session, or changing to a different site origin can leave those saved cooks unavailable. Use the in-app **JSON backup/export** if you want a copy you can restore. Browser-local storage is convenient, but it is not a cloud backup.
-
-### Offline cooking and recovery
-
-Offline files prepare in the background after an online visit. You can keep using an existing cook, record progress and finish/save it without a connection once the shell is cached. The app has no install/offline help panel or routine readiness messages. Browser storage and cached files can still be cleared or evicted.
-
-Routine save-status labels are hidden. If a write fails, keep the tab open, download a backup and retry. Unreadable saved data opens a protected recovery screen instead of being replaced. App updates wait for an explicit reload, with open drafts protected. Keep one cooking tab open; another tab's newer data must be reloaded before saving. See [offline reliability and recovery](docs/offline-reliability.md) for behavior and test coverage.
+Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 
 ## Run it locally
 
-The project uses **Next.js, React, and TypeScript**. Use Node.js 20 or newer.
+The project uses **Next.js, React, and TypeScript**. Use Node.js 22 or newer.
 
 ```bash
 npm install
@@ -75,6 +69,8 @@ For browser regression tests, install Playwright’s Chromium and WebKit browser
 npx playwright install chromium webkit
 npm run test:e2e
 npm run test:offline
+npx playwright test --config playwright.auth.config.ts
+npx playwright test --config playwright.accounts.config.ts
 ```
 
 The build uses Next.js static export. The canonical production site is https://howmanybeers.app on Cloudflare. `dev` is the integration and QA branch; `main` is the stable release branch. GitHub Pages is a legacy deployment target. Set `DEPLOY_TARGET=cloudflare` for a domain-root build; the legacy build uses `/how-many-beers/`. See [agent/development guidance](AGENTS.md) for the branch and review workflow.
@@ -82,6 +78,12 @@ The build uses Next.js static export. The canonical production site is https://h
 ## Current work queue
 
 The immediate coding sequence is **#50 Home cleanup → #19 free account foundation → #20 initial account-backed cooks/history**. The Home implementation is merged into dev for final QA. QA/reliability, timing validation and branding verification run alongside account work. Timers, URL import, deeper scheduling and advanced sync remain **Next**, with their order chosen separately. See [the detailed work queue](docs/work-queue.md) and [agent guidance](AGENTS.md).
+
+## Account foundation work
+
+The #19/#20 feature branch adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has confirmed live dev email-link sign-in; code-only delivery needs the Supabase template update, and hosted cloud-save/two-account QA remains pending.
+
+See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature has not been merged or released to production.
 
 ## Documentation
 

@@ -403,7 +403,6 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 .schedule-step .schedule-edit-hint{font-size:11px;color:var(--accent-dark)}
 @media(max-width:600px){.step-field-grid{grid-template-columns:minmax(0,1fr)}.step-editor{padding:12px}.step-editor-actions .button{flex:1}.step-editor input[type=datetime-local]{font-size:14px}}
 .step-editor input,.step-editor textarea,.step-editor select{font-weight:400}
-.step-saved{font-size:12px;color:#456439;margin:8px 0}
 
 .brisket-planner{padding:2px 0 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
 .brisket-planner h3{font-size:17px;margin:5px 0}.brisket-planner p{line-height:1.5}
@@ -524,3 +523,25 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .shell:has(.beerometer)>.back-link{margin:0 0 8px;min-height:36px}
 .cooking-navigation{gap:18px;margin:0 0 8px}.cooking-screen .cook-header{margin:0 0 12px}
 .cooking-screen .cook-header .eyebrow{margin-top:0}.cooking-screen .cook-header h2{margin:3px 0 5px}
+
+/* Account access shares the header; the modal leaves cook drafts mounted. */
+.account-page{max-width:640px}.account-page>.panel{margin-top:20px}
+.account-panel h1{font-size:26px;margin:12px 0 16px}.account-panel .notice{line-height:1.5}
+.account-panel button{min-height:44px;margin-right:8px}.account-panel p{line-height:1.5;overflow-wrap:anywhere}
+.account-control{margin-left:auto;flex:0 0 auto;align-self:center}
+.account-trigger,.account-close{min-height:44px;min-width:64px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;color:var(--accent-dark);font-weight:700;font-size:13px}
+.account-trigger{display:inline-flex;align-items:center;gap:7px}.account-trigger svg{width:20px;height:20px;flex:none}
+.account-trigger:focus-visible,.account-close:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.account-dialog{width:min(520px,calc(100% - 24px));max-height:calc(100dvh - 32px);overflow-y:auto;border:1px solid var(--line);border-radius:20px;padding:24px;background:var(--surface);color:var(--ink);box-shadow:0 18px 70px #28272230;overscroll-behavior:contain}
+.account-dialog::backdrop{background:#28272280}.account-close{display:block;margin-left:auto}
+@media(max-width:600px){.site-header:has(.account-control){gap:8px}.site-header:has(.account-control)>div:nth-child(2){flex:1;min-width:0}.site-header:has(.account-control) .brand-icon{width:44px;height:44px}.site-header:has(.account-control) h1{font-size:clamp(21px,5.8vw,26px)}.account-trigger{min-width:44px;padding:10px;justify-content:center}.account-trigger-label{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.account-dialog{padding:18px}.account-panel h1{font-size:24px}}
+
+/* Account saving stays compact; recovery and import choices are explicit. */
+.cook-content{display:contents}.cook-content[inert]{opacity:.55}
+.cook-content>.back-link{margin:0 0 8px;min-height:36px}
+.guest-limit{font-size:12px;color:var(--muted);line-height:1.4;margin:0 0 12px}
+.account-import{margin:12px 0 18px}.account-import h2{font-size:21px;margin-top:0}.account-import p{font-size:14px;line-height:1.5}.account-import button{margin-right:8px;min-height:44px}
+
+.account-earlier-cooks{margin:18px 0;border-top:1px solid var(--line);padding-top:12px}.account-earlier-cooks summary{cursor:pointer;min-height:44px;display:list-item;padding:12px 0;font-weight:700;color:var(--accent-dark)}.account-earlier-cooks p{font-size:13px}.account-dialog .offline-access{border-top:1px solid var(--line);padding-top:12px;margin-top:18px;margin-bottom:0}
+
+.account-control{display:flex;align-items:center;gap:12px}.account-save-indicator{display:inline-flex;align-items:center;justify-content:center;width:28px;height:32px;color:#8b5d25;flex:none}.account-save-indicator svg{width:24px;height:24px}.account-save-indicator[data-state=saved]{color:#65745d}.account-save-indicator[data-state=loading],.account-save-indicator[data-state=syncing],.account-save-indicator[data-state=saving]{color:var(--muted)}.save-in-progress{animation:save-progress 1.8s linear infinite}@keyframes save-progress{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.save-in-progress{animation:none}}@media(max-width:600px){.account-control{gap:7px}.account-save-indicator{width:24px}.account-save-indicator svg{width:22px;height:22px}}

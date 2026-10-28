@@ -53,7 +53,7 @@ self.addEventListener('fetch',event=>{
       finally{clearTimeout(timer);}
       let cached;
       try{cached=await (await caches.open(CACHE_NAME)).match(HOME);}catch{/* No usable offline shell. */}
-      return cached??new Response('Reconnect once to prepare offline cooking. Your saved cooks remain on this device.',{status:503,headers:{'Content-Type':'text/plain'}});
+      return cached??new Response('Reconnect to open How Many Beers? Keep any cooking tabs open until saving is confirmed.',{status:503,headers:{'Content-Type':'text/plain'}});
     })());
   }else if(staticAsset(url)){
     event.respondWith((async()=>{

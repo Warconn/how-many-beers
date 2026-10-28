@@ -1,0 +1,64 @@
+\set ON_ERROR_STOP on
+begin;
+create function pg_temp.ok(value boolean,label text) returns void language plpgsql as $$begin if value is distinct from true then raise exception 'FAIL: %',label;end if;raise notice 'PASS: %',label;end$$;
+create function pg_temp.denied(statement text,label text) returns void language plpgsql as $$begin
+ begin execute statement;exception when insufficient_privilege or check_violation or unique_violation or serialization_failure or invalid_text_representation or invalid_datetime_format or datetime_field_overflow then raise notice 'PASS: %',label;return;end;
+ raise exception 'FAIL: expected denial: %',label;
+end$$;
+create function pg_temp.meal(cook text,name text default 'A brisket') returns jsonb language sql as $$ select jsonb_build_object('version',1,'id',cook,'name',name,'serveAt','2026-10-28T18:00','dishes','[]'::jsonb,'completed','{}'::jsonb,'notes','{}'::jsonb,'mode','planning','events','[]'::jsonb) $$;
+create function pg_temp.doc(cook text,name text default 'A brisket') returns jsonb language sql as $$ select jsonb_build_object('active',jsonb_build_object('meal',pg_temp.meal(cook,name),'serveInstant','2026-10-28T22:00:00Z'),'history','[]'::jsonb) $$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+select pg_temp.ok((public.load_cook_workspace(auth.uid())->>'revision')::int=0,'new account starts empty');
+select pg_temp.denied($q$select public.load_cook_workspace('00000000-0000-4000-8000-000000000002')$q$,'load cannot forge owner');
+select public.save_cook_workspace(auth.uid(),0,'30000000-0000-4000-8000-000000000001',pg_temp.doc('10000000-0000-4000-8000-000000000001'),'America/New_York');
+select pg_temp.ok((public.load_cook_workspace(auth.uid())->>'revision')::int=1,'account save acknowledged with revision');
+select public.save_cook_workspace(auth.uid(),0,'30000000-0000-4000-8000-000000000001',pg_temp.doc('10000000-0000-4000-8000-000000000001'),'America/New_York');
+select pg_temp.ok((public.load_cook_workspace(auth.uid())->>'revision')::int=1,'lost response retry does not duplicate write');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),0,'30000000-0000-4000-8000-000000000002',pg_temp.doc('10000000-0000-4000-8000-000000000001','STALE'),'UTC')$q$,'stale device cannot overwrite cook');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->'active'->'meal'->>'name'='A brisket','stale rejection leaves current data intact');
+select pg_temp.denied($q$update public.cook_sessions set name='Bypass'$q$,'raw clients cannot bypass revision API');
+select pg_temp.denied($q$update public.cook_workspaces set revision=0$q$,'workspace metadata is server controlled');
+select pg_temp.denied($q$select public.account_workspace_snapshot('00000000-0000-4000-8000-000000000002')$q$,'internal snapshot helper is private');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002','{"active":{"meal":{}},"history":[]}','UTC')$q$,'malformed meal rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',pg_temp.doc('10000000-0000-4000-8000-000000000001'),'Invented/Zone')$q$,'invalid time zone rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000001'),'{active,meal,version}','null'),'UTC')$q$,'null schema version rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000001'),'{active,meal,customTasks}','[null]'),'UTC')$q$,'malformed custom task rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000001'),'{active,meal,taskOverrides}','{"prep":{"durationMinutes":"forever"}}'),'UTC')$q$,'malformed task override rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000001'),'{active,meal,notes}','{"prep":[]}'),'UTC')$q$,'malformed notes rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000001'),'{active,meal,events}','[null]'),'UTC')$q$,'malformed event rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',null,'UTC')$q$,'SQL null workspace cannot erase cooks');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002','null','UTC')$q$,'JSON null workspace rejected');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002','{"active":null,"history":null}','UTC')$q$,'null history cannot erase cooks');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',pg_temp.doc('10000000-0000-4000-8000-000000000001')#-'{active,serveInstant}','UTC')$q$,'missing serving instant rejected');
+-- Preserve actual event identity and time while deduplicating deterministic legacy IDs.
+select public.save_cook_workspace(auth.uid(),1,'30000000-0000-4000-8000-000000000002',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000001'),'{active,meal,events}','[{"id":"legacy:prep","taskId":"prep","kind":"completed","occurredAt":"2021-04-04T03:07:00Z"}]'),'UTC');
+select pg_temp.ok((select count(*)=1 and min(occurred_at)='2021-04-04T03:07:00Z'::timestamptz from public.cook_events),'legacy event ID and actual timestamp preserved');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),2,'30000000-0000-4000-8000-000000000003',pg_temp.doc('10000000-0000-4000-8000-000000000001'),'UTC')$q$,'recorded event cannot be removed from snapshot');
+select pg_temp.ok((public.load_cook_workspace(auth.uid())->>'revision')::int=2,'failed mutation does not advance revision');
+select public.load_cook_workspace(auth.uid())->'active' as active \gset
+select jsonb_build_object('id','10000000-0000-4000-8000-000000000001','meal',:'active'::jsonb->'meal','serveInstant',:'active'::jsonb->'serveInstant','archivedAt','2026-10-28T23:00:00Z','plannedTimeline','[]'::jsonb,'feedback','Delicious') as archive \gset
+select public.save_cook_workspace(auth.uid(),2,'30000000-0000-4000-8000-000000000003',jsonb_build_object('active',pg_temp.doc('10000000-0000-4000-8000-000000000002')->'active','history',jsonb_build_array(:'archive'::jsonb)),'UTC');
+select pg_temp.ok((select count(*)=1 from public.cook_sessions where state='completed') and (select count(*)=1 from public.cook_sessions where state<>'completed'),'finish and next cook commit atomically');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->'history'->0->>'feedback'='Delicious','completed history recalled with outcome');
+select pg_temp.denied(format('select public.save_cook_workspace(auth.uid(),3,%L,jsonb_build_object(''active'',pg_temp.doc(''10000000-0000-4000-8000-000000000002'')->''active'',''history'',jsonb_build_array(%L::jsonb)),''UTC'')','30000000-0000-4000-8000-000000000004',jsonb_set(:'archive'::jsonb,'{feedback}','"Changed"')),'completed history cannot be rewritten');
+select pg_temp.ok((public.load_cook_workspace(auth.uid())->>'revision')::int=3,'failed archive rewrite rolls back whole transition');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),3,'30000000-0000-4000-8000-000000000006',jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000003'),'{active,serveInstant}','"invalid time"'),'UTC')$q$,'late failure rolls back deletions and replacement');
+select pg_temp.ok((select count(*)=1 from public.cook_sessions where state='completed') and (select count(*)=1 from public.cook_sessions where id='10000000-0000-4000-8000-000000000002') and(public.load_cook_workspace(auth.uid())->>'revision')::int=3,'failed transition keeps original active and history');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->'active'='null'::jsonb and public.load_cook_workspace(auth.uid())->'history'='[]'::jsonb,'second account sees an empty independent workspace');
+select pg_temp.ok((select count(*)=0 from public.cook_sessions) and(select count(*)=0 from public.cook_events),'RLS hides first account sessions and events');
+select pg_temp.denied($q$select public.save_cook_workspace('00000000-0000-4000-8000-000000000001',3,'30000000-0000-4000-8000-000000000004',pg_temp.doc('10000000-0000-4000-8000-000000000003'),'UTC')$q$,'write cannot forge owner');
+select pg_temp.denied($q$select public.save_cook_workspace(auth.uid(),0,'30000000-0000-4000-8000-000000000004',pg_temp.doc('10000000-0000-4000-8000-000000000002'),'UTC')$q$,'second account cannot claim a known private cook ID');
+select pg_temp.ok((public.load_cook_workspace(auth.uid())->>'revision')::int=0,'cross-owner denial leaves second account unchanged');
+set local role anon;
+select pg_temp.denied($q$select public.load_cook_workspace('00000000-0000-4000-8000-000000000001')$q$,'anonymous cannot call private read API');
+select pg_temp.denied($q$select * from public.cook_workspaces$q$,'anonymous cannot enumerate workspace metadata');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.denied($q$select public.load_cook_workspace('00000000-0000-4000-8000-000000000001')$q$,'missing JWT identity cannot read through definer API');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+select public.save_cook_workspace(auth.uid(),3,'30000000-0000-4000-8000-000000000004',pg_temp.doc('10000000-0000-4000-8000-000000000002'),'UTC');
+select pg_temp.ok(jsonb_array_length(public.load_cook_workspace(auth.uid())->'history')=0 and(select count(*)=0 from public.cook_events),'explicit archive deletion removes events and cannot resurrect on stale retry');
+select pg_temp.denied(format('select public.save_cook_workspace(auth.uid(),3,%L,jsonb_build_object(''active'',pg_temp.doc(''10000000-0000-4000-8000-000000000002'')->''active'',''history'',jsonb_build_array(%L::jsonb)),''UTC'')','30000000-0000-4000-8000-000000000005',:'archive'),'stale snapshot cannot resurrect deleted history');
+rollback;

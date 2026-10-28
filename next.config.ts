@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 // GitHub Pages serves /how-many-beers/. Cloudflare Pages serves at the domain root.
 // Set DEPLOY_TARGET=cloudflare in the Cloudflare Pages build environment.
+const accountKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+if (accountKey && !accountKey.startsWith("sb_publishable_")) {
+  throw new Error("Only a Supabase publishable key may be included in the browser build.");
+}
 const cloudflare = process.env.DEPLOY_TARGET === "cloudflare";
 const nextConfig: NextConfig = {
   output: "export",

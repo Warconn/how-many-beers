@@ -1,3 +1,9 @@
+## Account cook increment (#19/#20, October 28, 2026)
+
+The opt-in account preview adds code-first email sign-in and one account-backed active/planning cook with searchable completed history, details and Cook Again. Acknowledged server writes precede critical transitions; automatic edits retain pending recovery and offer retry/export on failure. Another device retrieves account data after verified sign-in. Stale clients cannot silently replace newer data.
+
+Fresh guests try cooking temporarily and sign in to keep it. Sign-in opens account cooks directly. Optional earlier-cook import/backup lives under Account → Earlier cooks and never blocks the workspace. App updates are available inside that same menu, with no main-screen banner; background caching and draft/save protection remain. Existing records are left intact. Routine device/local-save wording is removed. Saving state is a compact, accessible icon beside Account rather than a text row. Step editors omit the repeated Changes saved confirmation; inline validation errors remain. The account rollout is disabled by default, with hosted dev setup/QA still required. See [account cooks](account-cooks.md) for the exact flow, security, recovery and technical limits. This supersedes browser-only persistence assumptions below only in builds with cloud cooks enabled. The Beerometer remains prominent through planning and cooking.
+
 ## Local reliability increment (#10)
 
 Committed actions acknowledge browser writes; failures remain visibly unsaved and exportable. Malformed saves are protected, restore/archive transitions use a recovery journal, and modern browsers allow one cooking writer tab. The built app adds scoped offline caching and installation with an explicit, draft-safe app-update action. Existing cook IDs, actual events, version-one saves and JSON backups are retained. See [offline reliability](offline-reliability.md) for the recovery protocol, automated tests and remaining real-hardware alpha checks.
@@ -292,3 +298,10 @@ Planning and Cooking Mode show the approved circle-mark Beerometer as a compact 
 
 
 Workspace refinement: routine saved-on-device labels are removed from all views. Save failures/recovery and explicit Save plan acknowledgements remain. Planning and Cooking Mode include the prominent sticky Beerometer in the same combined preview; compact header/navigation spacing brings it closer to the primary workspace.
+
+
+## Integrated account access (#19, October 28, 2026)
+
+The shared header has a compact Sign in / Account control on Home, planning, cooking and history, on explicitly trusted dev/feature origins. It opens a native dialog without unmounting the cook or open editors. Email code sign-in completes in place; closing or Escape restores focus and preserves recipe drafts and exact saved progress. App-update reloads remain blocked while the account dialog is open. Disabled account builds retain the existing UI.
+
+Email links and configured social providers return through a same-origin PKCE callback. Back to cook restores a valid one-use, tab-scoped previous view for the same cook; invalid, expired or unavailable hints fall back to Home. Navigation away still uses existing unsaved-draft guards. A shared provider verifies identity, handles sign-out across tabs, and offers retry after verification failure without changing the cook. The account panel explains that sign-in does not yet sync cooks across devices; no account-save success is invented. Existing cook/history data is neither uploaded nor removed. Google/Apple remain hidden until enabled in build configuration. Identity linking, account deletion and account-backed persistence remain unfinished work. See [account setup and security gates](account-foundation.md).
