@@ -1,6 +1,6 @@
 # Account foundation: #19, schema and sign-in preview
 
-This branch implements identity/ownership, email-code sign-in and the initial #20 account cook workspace behind separate disabled-by-default flags. The owner confirmed real dev email-link sign-in; Google/Apple and hosted account-save QA remain pending. See [account cooks](account-cooks.md) for migration 002, the code-only mail template, rollout steps and recovery limits. Neither issue is fully closed by this delivery.
+The delivery merged into dev implements identity/ownership, email-code sign-in and the initial #20 account cook workspace behind separate disabled-by-default flags. The owner confirmed real dev email-link sign-in; Google/Apple and hosted account-save QA remain pending. See [account cooks](account-cooks.md) for migration 002, the code-only mail template, rollout steps and recovery limits. Neither issue is fully closed by this delivery.
 
 ## Free-plan fit
 
@@ -61,14 +61,14 @@ The owner created dev project `txwfjuolsuauzeridxkv`. Its URL and publishable ke
    NEXT_PUBLIC_AUTH_ENV=development
    NEXT_PUBLIC_SUPABASE_URL=https://txwfjuolsuauzeridxkv.supabase.co
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<dev publishable key already supplied>
-   NEXT_PUBLIC_ACCOUNT_ORIGINS=https://feat-19-account-foundation.how-many-beers.pages.dev
+   NEXT_PUBLIC_ACCOUNT_ORIGINS=https://dev.how-many-beers.pages.dev,https://feat-19-account-foundation.how-many-beers.pages.dev
    NEXT_PUBLIC_AUTH_PROVIDERS=
    ```
 
-   Leave providers blank for email-only testing; use `google` or `google,apple` after those providers are configured. Origins are comma-separated exact origins without trailing slashes. Add stable dev only when intentionally enabling it. Preview deployment URLs containing a commit hash are not implicitly trusted; use the allowlisted stable branch alias. Keep `DEPLOY_TARGET=cloudflare` as in existing root builds. `.env.example` lists the defaults for local builds.
+   Leave providers blank for email-only testing; use `google` or `google,apple` after those providers are configured. Origins are comma-separated exact origins without trailing slashes. The owner has approved enabling stable dev; keep both exact origins while testing both sites. Preview deployment URLs containing a commit hash are not implicitly trusted; use the allowlisted stable branch alias. Keep `DEPLOY_TARGET=cloudflare` as in existing root builds. `.env.example` lists the defaults for local builds.
 6. Open the feature branch alias and choose **Sign in** in the header, or visit `/account/`. Test email delivery/link/code, reload, sign-out, cancelled/expired links, and each configured provider on desktop and iPhone. Use two separate test accounts to verify hosted PostgREST ownership once the migration is applied. Follow the additional [hosted saving checks](account-cooks.md#verification) before relying on account history.
 
-Cloudflare's Production/Preview labels do not establish database isolation: this project currently builds `dev` as its Pages production branch. Do not enable accounts in that build environment without mapping its actual served origins. The canonical `https://howmanybeers.app` rejects dev auth configuration even if accidentally allowlisted; production requires a separate project and explicit `NEXT_PUBLIC_AUTH_ENV=production`. Keep canonical production disabled for this delivery. The origin/feature gates control rollout; verified JWTs and RLS remain the authorization boundary.
+The owner confirmed Cloudflare's Production branch is `main`. Both `dev` and feature branches use Preview variables, sharing the existing dev Supabase project. Leave Production variables unchanged. See [dev and feature setup](dev-account-testing.md) for the exact settings; these labels do not establish database isolation. The canonical `https://howmanybeers.app` rejects dev auth configuration even if accidentally allowlisted; production requires a separate project and explicit `NEXT_PUBLIC_AUTH_ENV=production`. Keep canonical production disabled for this delivery. The origin/feature gates control rollout; verified JWTs and RLS remain the authorization boundary.
 
 ## Remaining #19 and #20 gates
 
