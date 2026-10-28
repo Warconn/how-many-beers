@@ -37,7 +37,6 @@ function formatted(iso:string):string {
 export default function TaskRow({
   task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
 }:Props) {
-  const [savedMessage,setSavedMessage] = useState(false);
   const [logging,setLogging]=useState(false);
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
   const [reading,setReading]=useState("");
@@ -83,7 +82,7 @@ export default function TaskRow({
       </div>
     </div>
     <div className="task-actions" aria-label={"Manage "+task.title}>
-      {!editing && <button type="button" id={editorId+"-trigger"} disabled={isCooking&&logging} onClick={() => {setSavedMessage(false);onEditingChange(true);}} aria-expanded={false}>Edit</button>}
+      {!editing && <button type="button" id={editorId+"-trigger"} disabled={isCooking&&logging} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
       {isCooking && <button type="button" disabled={editing} onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>}
       {!isCooking && <>
         <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
@@ -94,8 +93,7 @@ export default function TaskRow({
       }}/>
 
     </div>
-    {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);setSavedMessage(true);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
-    {savedMessage && !editing && <p className="step-saved" role="status">Changes saved.</p>}
+    {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {isCooking && <>
       {logging && <div className="reading-form">
         <div>

@@ -34,6 +34,8 @@ test('schedule opens the shared editor; overnight timing and details preserve ac
   await info.attach('step-timing.png', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
   await form.getByRole('button', { name: 'Save & Close', exact: true }).click();
   await expect(form).toHaveCount(0);
+  await expect(page.getByText('Changes saved.', {exact:true})).toHaveCount(0);
+  await page.getByRole('region', {name:'Smoked brisket steps'}).getByRole('article', {name:task.title,exact:true}).screenshot({path:info.outputPath('step-after-save.png')});
   await expect(page.getByRole('region', { name: 'Smoked brisket steps' }).getByRole('article', { name: task.title, exact: true }).getByText(/1 hr 30 min/)).toBeVisible();
   const after = await saved(page);
   expect(after.taskOverrides![task.id]).toMatchObject({ scheduledAt: '2026-11-26T05:30:00.000Z', durationMinutes: 90, equipment: 'Patio smoker', targetTempF: 170 });
