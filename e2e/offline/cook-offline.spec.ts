@@ -85,3 +85,16 @@ test('an unsaved custom-step draft also blocks app updates until cancelled',asyn
  await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeDisabled();await expect(page.getByLabel('Step title',{exact:true})).toHaveValue('Do not discard my sauce step');
  await page.getByRole('button',{name:'Cancel step',exact:true}).click();await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeEnabled();
 });
+
+
+test('Home keeps offline details in a collapsed footer while preparation stays functional',async({page},info)=>{
+ await page.goto('/');await ready(page);
+ expect(await page.locator('.site-header').evaluate(e=>e.nextElementSibling?.getAttribute('aria-label'))).toBe('Home');
+ await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('A LITTLE LESS JUGGLING. A BETTER COOK.',{exact:true})).toHaveCount(0);
+ const footer=page.locator('footer'),help=footer.getByText('Install and offline help',{exact:true});await expect(help).toBeVisible();
+ await expect(footer.getByText('Offline ready on this device',{exact:true})).not.toBeVisible();await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
+ await page.screenshot({path:info.outputPath('clean-home-production.png'),fullPage:true});
+ await help.click();await expect(footer.getByText('Offline ready on this device',{exact:true})).toBeVisible();await expect(footer.getByText(/Safari’s Share menu/)).toBeVisible();
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toBeVisible();
+});

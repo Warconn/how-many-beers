@@ -386,6 +386,8 @@ export default function Home() {
     }
   };
 
+  const offlineSupport=<OfflineSupport discreet={view==="home"} canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
+
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
       {storageError && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
@@ -412,8 +414,9 @@ export default function Home() {
         </div>
         
       </header>
-      <p className="device-save-state" aria-live="polite">{storageStatus==='saved'?'Saved on this device':storageStatus==='recovery'?'Saved data protected':storageStatus==='conflict'?'Another tab has newer saved data':'Changes not saved on this device'}</p>
-      <OfflineSupport canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>
+      {view!=="home"&&<p className="device-save-state" aria-live="polite">{storageStatus==='saved'?'Saved on this device':storageStatus==='recovery'?'Saved data protected':storageStatus==='conflict'?'Another tab has newer saved data':'Changes not saved on this device'}</p>}
+      {view!=="home"&&offlineSupport}
+
 
       {storageStatus==='recovery' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
@@ -424,7 +427,6 @@ export default function Home() {
         <section className={`home-layout ${hasActiveWork ? "home-returning" : "home-first-visit"}`} aria-label="Home">
           <div className="home-primary">
           <div className="home-intro">{hasActiveWork ? <><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></> : <>
-            <p className="eyebrow">A LITTLE LESS JUGGLING. A BETTER COOK.</p>
             <h2>From First Beer<br className="brand-line-break" /> to First Bite.</h2>
             <p className="home-product-line">Plan every dish. Time your dinner. Enjoy the cook.</p>
             <p className="muted">Set your serving time, bring your dishes into one plan, and follow a guided checklist when it’s time to cook.</p>
@@ -715,7 +717,7 @@ export default function Home() {
           </div>
         </>
       )}
-      <footer>How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      <footer>{view==="home"&&<div className="home-footer-help">{offlineSupport}</div>}How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
     </main>
   );
 }

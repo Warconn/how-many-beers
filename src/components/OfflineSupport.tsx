@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 type InstallEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:string}>};
-export default function OfflineSupport({canReload}:{canReload:boolean}){
+export default function OfflineSupport({canReload,discreet=false}:{canReload:boolean;discreet?:boolean}){
   const [online,setOnline]=useState(true),[ready,setReady]=useState(false),[failed,setFailed]=useState(false);
   const [waiting,setWaiting]=useState<ServiceWorker|null>(null),[install,setInstall]=useState<InstallEvent|null>(null);
   const requested=useRef(false);
@@ -51,14 +51,18 @@ export default function OfflineSupport({canReload}:{canReload:boolean}){
     return ()=>{alive=false;window.removeEventListener('online',connection);window.removeEventListener('offline',check);window.removeEventListener('beforeinstallprompt',installed);window.removeEventListener('focus',connection);navigator.serviceWorker?.removeEventListener('controllerchange',controller);};
   },[]);
   if(process.env.NODE_ENV!=='production')return null;
-  return <section className="offline-access" aria-label="Offline access">
+  const feedback=<>
     <p aria-live="polite">{!online?(ready?'Offline. Your cook can still save on this device.':'Offline access is not ready. Keep this tab open and back up your cook.'):
       ready?'Offline ready on this device':failed?'Offline access could not be prepared. Keep a backup of your cook.':'Preparing offline access…'}</p>
     {waiting&&<div className="notice"><p>An app update is ready. Your cook will resume after reloading.</p>
       <button type="button" disabled={!canReload} onClick={()=>{requested.current=true;waiting.postMessage({type:'SKIP_WAITING'});}}>Update app</button>
       {!canReload&&<p>Save or cancel open forms and save your changes before updating.</p>}
     </div>}
+  </>;
+  return <section className="offline-access" aria-label="Offline access">
+    {!discreet&&feedback}
     <details><summary>Install and offline help</summary>
+      {discreet&&feedback}
       <p>Visit once online and wait for “Offline ready” before relying on offline access. Saved cooks belong to this browser and site; export a backup before switching devices or clearing site data.</p>
       {install?<button type="button" onClick={()=>{void install.prompt().then(()=>install.userChoice).then(()=>setInstall(null));}}>Install app</button>:<p>On iPhone, use Safari’s Share menu → Add to Home Screen. On Android, use the browser menu → Install app or Add to Home screen when available.</p>}
       <p>Browser storage and offline files can be cleared or evicted by the device. Background timers and notifications are not provided.</p>

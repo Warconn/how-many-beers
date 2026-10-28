@@ -510,3 +510,6 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .offline-access summary{cursor:pointer;padding:8px 0;min-height:44px;color:#873a1e}
 .offline-access details p{max-width:650px}
 .offline-access button:disabled{opacity:.55;cursor:not-allowed}
+
+/* Home keeps device/install details in a quiet footer disclosure (#50). */
+.home-footer-help{max-width:650px;margin:0 0 16px;text-align:left}.home-footer-help .offline-access{margin:0}.home-footer-help .offline-access summary{color:var(--muted);font-size:12px;font-weight:400}.home-footer-help .offline-access details[open]{padding-bottom:10px}

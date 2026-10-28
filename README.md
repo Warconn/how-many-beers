@@ -80,6 +80,7 @@ The build uses Next.js static export. The `dev` branch is the integration branch
 
 ## Documentation
 
+- [Work queue](docs/work-queue.md): tonight’s priority and the prepared implementation order
 - [Core cooking experience](docs/core-cook-experience.md): product flows and interaction principles
 - [Cooking Mode](docs/cooking-mode.md): guided steps, progress, and finishing
 - [Step timing](docs/step-timing.md): edits, duration handling, and schedule limitations
