@@ -232,8 +232,6 @@ body{min-width:320px}
 .home-storage-note{font-size:12px;color:var(--muted);margin:18px 2px 0;line-height:1.6}
 .home-storage-note button{border:0;background:transparent;padding:0;text-decoration:underline;color:inherit;cursor:pointer;font-size:inherit}
 .home-layout .button{border-radius:8px;padding:12px 17px;font-size:14px;font-weight:650}
-/* Home keeps device/install details in a quiet footer disclosure (#50). */
-.home-footer-help{max-width:650px;margin:0 0 16px;text-align:left}.home-footer-help .offline-access{margin:0}.home-footer-help .offline-access summary{color:var(--muted);font-size:12px;font-weight:400}.home-footer-help .offline-access details[open]{padding-bottom:10px}
 footer{text-align:left;border-top:1px solid var(--line);padding:23px 0;color:var(--muted)}
 @media(min-width:1100px){
  .home-layout{padding-left:clamp(0px,4vw,58px)}

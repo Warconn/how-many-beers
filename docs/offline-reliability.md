@@ -31,13 +31,13 @@ Where Web Locks is available, one tab holds the origin's cooking write lock. Oth
 
 `npm run build` generates a scoped, content-versioned `sw.js` after Next.js static export. Installation caches the complete HTML/JavaScript/CSS/manifest/brand asset set; an incomplete install never replaces the last working worker. No private cook data is put into CacheStorage or sent to a server.
 
-After an online visit, wait for **Offline ready on this device**. An existing cook can then reopen, log actions, finish/archive and export backups offline in the same browser/site. A cold first visit while offline cannot install the app. Cleared/evicted browser data or caches can still remove local availability; the status check detects missing cache entries and attempts preparation again when connected.
+Offline shell preparation runs in the background after an online visit. Install/offline help and routine readiness messages are intentionally absent from the app. An existing cook can then reopen, log actions, finish/archive and export backups offline in the same browser/site. A cold first visit while offline cannot install the app. Cleared/evicted browser data or caches can still remove local availability; the status check detects missing cache entries and attempts preparation again when connected.
 
 Navigation tries the network, then uses the cached app after an error, unavailable response or four-second connection stall. Immutable assets are cached; other origins, API routes and non-GET requests are not intercepted. Root and supported GitHub Pages subpath builds each use their own scope and cache prefix.
 
 An installed update waits. **Update app** is an explicit reload action and is disabled for unsaved edits/readings, pending custom steps, unfinished recipe entry or an open finish form. No other open tab is automatically reloaded. Old static assets are retained while old tabs might still need them; old caches are reclaimed on activation when no old tab remains. The service worker never clears cook storage. Cloudflare cache headers and `updateViaCache: none` keep the worker script updateable.
 
-Use the browser install action when offered. Safari users can choose **Share → Add to Home Screen**. The manifest uses the approved circle-highlighted 192/512 icons; Apple retains its touch icon. Browser installation prompts and storage durability vary by platform, and installation is not a cloud backup.
+Installation uses the browser’s own controls; the app provides no install prompt or help section. The manifest uses the approved circle-highlighted 192/512 icons; Apple retains its touch icon. Browser installation prompts and storage durability vary by platform, and installation is not a cloud backup.
 
 ## Regression checks
 

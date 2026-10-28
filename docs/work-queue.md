@@ -4,7 +4,7 @@ Owner priority: **#50 first tonight, then #19 and the initial #20 slice**. This 
 
 ## Tonight
 
-1. **#50: Home cleanup.** Remove the redundant hero eyebrow and top-of-Home local/offline status block. Keep install/offline help in a quiet footer disclosure, preserve active-cook feedback, errors, storage and PWA behavior. Verify first-visit/returning Home, responsive screenshots, resume, failed saves and built-app offline/update behavior.
+1. **#50: Home cleanup.** Remove the redundant hero eyebrow and top-of-Home local/offline status block. Remove install/offline help and routine offline-readiness text everywhere; preserve active-cook save feedback, errors, storage, background PWA behavior and safe app updates. Verify first-visit/returning Home, responsive screenshots, resume, failed saves and built-app offline/update behavior.
 2. Review the independently prepared Home change, **PR #49** (personal templates + prominent Beerometer), and **PR #51** (durable execution priorities). Integrate approved PRs into dev before branching the next work. Production promotion remains separate.
 
 ## Overnight implementation order

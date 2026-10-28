@@ -79,7 +79,7 @@ Allow one active/planning cook per user or device, with many completed archived 
 
 ## Home cleanup (#50)
 
-Home flows directly from the brand header into its first-visit/returning content. The redundant hero eyebrow and routine local/offline status block are removed from that prime space. Install/offline help and readiness are available in a collapsed footer disclosure. Planning/cooking retain functional save/offline feedback, and critical storage/recovery warnings stay visible on Home and throughout the cook. This is a presentation change; persistence, backup and worker policies are unchanged.
+Home flows directly from the brand header into its first-visit/returning content. The redundant hero eyebrow and routine local/offline status block are removed from that prime space. Install/offline help, install prompts and routine offline-readiness text are removed from all screens. Offline preparation and cache repair run in the background. Planning/cooking retain functional save feedback and safe app-update controls, and critical storage/recovery warnings stay visible on Home and throughout the cook. This is a presentation change; persistence, backup and worker policies are unchanged.
 
 ## First UX change: Home and session entry (P0)
 **Objective:** Replace the current immediate planner/form landing with a distinct Home state that routes into the existing workspace or cooking view.

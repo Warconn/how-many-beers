@@ -45,7 +45,7 @@ There is **no automatic account sync or transfer between devices or browsers**. 
 
 ### Offline cooking and recovery
 
-After visiting online, wait for **Offline ready on this device** before relying on an offline reopen. You can keep using an existing cook, record progress and finish/save it without a connection. Install through the browser when offered, or use Safari's **Share → Add to Home Screen**. Installation does not create a cloud backup, and browser storage/cached files can still be cleared or evicted.
+Offline files prepare in the background after an online visit. You can keep using an existing cook, record progress and finish/save it without a connection once the shell is cached. The app has no install/offline help panel or routine readiness messages. Browser storage and cached files can still be cleared or evicted.
 
 The app shows whether edits saved. If a write fails, keep the tab open, download a backup and retry. Unreadable saved data opens a protected recovery screen instead of being replaced. App updates wait for an explicit reload, with open drafts protected. Keep one cooking tab open; another tab's newer data must be reloaded before saving. See [offline reliability and recovery](docs/offline-reliability.md) for behavior and test coverage.
 

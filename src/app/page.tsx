@@ -386,7 +386,7 @@ export default function Home() {
     }
   };
 
-  const offlineSupport=<OfflineSupport discreet={view==="home"} canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
+  const offlineSupport=<OfflineSupport canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
@@ -717,7 +717,7 @@ export default function Home() {
           </div>
         </>
       )}
-      <footer>{view==="home"&&<div className="home-footer-help">{offlineSupport}</div>}How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      <footer>{view==="home"&&offlineSupport}How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
     </main>
   );
 }
