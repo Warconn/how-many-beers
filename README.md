@@ -34,7 +34,7 @@ These are actual desktop and mobile screenshots from the project.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
-- **The Beerometer.** A little personality alongside the practical cooking tools.
+- **The Beerometer.** A prominent banner stays visible through planning and cooking, showing the selected dish’s cook duration in beers and hours. The playful time scale is explicit: one beer equals 90 minutes.
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 

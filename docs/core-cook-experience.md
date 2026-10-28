@@ -280,3 +280,8 @@ stages break links; custom/general prep stays independent. See [step timing rule
 ## Personal template content (October 28, 2026)
 
 Brisket, turkey and brats starters now reflect user-supplied methods. Turkey preparation has thawing status and editable remaining thaw days, brine hours and refrigerated air-dry hours, scheduled before roast day. The brat tray precedes Blackstone searing; brisket guessed weights are not measured estimator inputs. Personal notes and app timing allowances remain explicit. No historical completions are invented. See [personal template provenance](personal-templates.md).
+
+
+## Prominent Beerometer (October 28, 2026)
+
+Planning and Cooking Mode show the approved circle-mark Beerometer as a compact sticky banner. It stays visible through dish editing, checklist navigation and scrolling. The existing selected-dish start-to-finish calculation remains unchanged (brisket preferred, otherwise first dish); it is a time scale of 90 minutes per beer, not a prediction of beers remaining until dinner. Empty/untimed plans show a dash. Critical unsaved/conflict warnings take precedence over the sticky banner.

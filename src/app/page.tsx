@@ -99,7 +99,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
       <div className="beerometer-emblem" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
       <div className="beerometer-copy">
         <p className="eyebrow">THE BEEROMETER</p>
-        <h2>How many beers till it&apos;s done?</h2>
+        <h2>How many beers?</h2>
         <p>{dish ? (completedAt ? "Actual " : "Planned ") + dish.name.toLowerCase() + " start-to-finish duration." : "Add a dish to fire up the Beerometer."}</p>
       </div>
     </div>
@@ -111,6 +111,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
       <p className="beerometer-clock">{dish && valid
         ? `${hours}h ${String(minutes).padStart(2, "0")}m ${completedAt ? "actual" : "planned"} cook`
         : "Set a cook start and finish time."}</p>
+      <p className="beerometer-scale">Time scale: 1 beer = 90 min</p>
     </div>
   </section>;
 }
@@ -482,6 +483,7 @@ export default function Home() {
             <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
+          <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="cook-layout">
             <section className="panel active-cook-panel">
               <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
@@ -507,7 +509,6 @@ export default function Home() {
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
-              <details className="cook-duration-details"><summary>Cook duration &amp; Beerometer</summary><BeerEstimator meal={meal} timeline={timeline}/></details>
               <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>
             </aside>
           </div>
@@ -524,6 +525,7 @@ export default function Home() {
         <>
           <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
+          <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="guided-planner"><div className="guided-main">
           <section className="hero panel">
             <div>

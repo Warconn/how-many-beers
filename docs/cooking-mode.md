@@ -42,7 +42,7 @@ snapshot and rotates to an empty plan. **Keep cooking** dismisses it without mut
 A failed archive retains the active cook through the existing recovery path.
 Planning’s Save plan for later (#39) remains a separate action; it does not finish a cook.
 
-Menu/equipment warnings, thermometer/holding reminders, optional Beerometer and adding a
+Menu/equipment warnings, thermometer/holding reminders and adding a
 custom step remain secondary. The responsive planner and Live Schedule are preserved.
 Cancel adding is now a quiet **× Cancel** text control beside the menu heading, with a
 44px hit area and a descriptive accessible name. It closes the picker without mutation.
@@ -81,3 +81,5 @@ coverage uses an emulated Chromium viewport.
 Dish and step removal now share one small trash-icon component (44px target, accessible
 name, tooltip and confirmation). There is no single-action options disclosure. Step
 removal is disabled during editing/reading drafts and retains recorded activity.
+
+The Beerometer is now a compact, always-expanded sticky banner above the cooking workspace, also shown in planning. It retains the approved circle mark and labels the dish, duration and 90-minute time scale. Step scrolling leaves room for the banner; storage-failure warnings take precedence.
