@@ -83,6 +83,10 @@ The build uses Next.js static export. The canonical production site is https://h
 
 The immediate coding sequence is **#50 Home cleanup → #19 free account foundation → #20 initial account-backed cooks/history**. The Home implementation is merged into dev for final QA. QA/reliability, timing validation and branding verification run alongside account work. Timers, URL import, deeper scheduling and advanced sync remain **Next**, with their order chosen separately. See [the detailed work queue](docs/work-queue.md) and [agent guidance](AGENTS.md).
 
+## Account foundation work
+
+The first #19 delivery adds a private cook schema and database ownership tests; sign-in and cloud saving are not enabled yet. See [account setup, Free-plan limits and security gates](docs/account-foundation.md). Run `bash scripts/test-account-security.sh` to exercise the migration against isolated PostgreSQL with Docker.
+
 ## Documentation
 
 - [Work queue](docs/work-queue.md): tonight’s priority and the prepared implementation order
