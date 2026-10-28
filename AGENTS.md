@@ -10,30 +10,56 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current state and decisions (October 26, 2026)
+## Current priorities and decision rules (October 27, 2026)
 
-Production release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) delivered Home/resume, the Guided Cook Planner, persistent Live Schedule, template/recipe selection in one Add Dish experience, expandable per-dish steps, cooking checklist/history, and Playwright regression tests. User confirmed GitHub Pages production deployment. These features are a functional baseline, **not UX approval of every interaction**.
+**This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-Current prioritized backlog (user confirmed #5, then #26; recipe-template content updates follow when the user supplies their actual recipes):
-- [#5](https://github.com/Warconn/how-many-beers/issues/5): explicit weight-based brisket timing comparisons; distinguish source facts from unvalidated app assumptions.
-- [#26](https://github.com/Warconn/how-many-beers/issues/26): focused Cooking Mode with Now, Next and Later, safe navigation and preserved history.
-- [#28](https://github.com/Warconn/how-many-beers/issues/28): completed in `dev` through PR #32 after user review. Keep the flattened inline dish menu; do not restore a separate details panel.
-- [#30](https://github.com/Warconn/how-many-beers/issues/30): step dates, duration and details from dish and Live Schedule were merged into `dev` in PR #35 with user approval. Read its timing rules before extending scheduling; do not silently invent durations or automatic dependency shifting.
-- [#31](https://github.com/Warconn/how-many-beers/issues/31): completed in `dev` through user-approved PR #34. Keep one compact Start/Continue action and visible plan warnings.
-- [#33](https://github.com/Warconn/how-many-beers/issues/33): completed in `dev` through PR #36 with user approval. Keep the small trash icon, 44px target, confirmation and recorded-history preservation.
-- [#3](https://github.com/Warconn/how-many-beers/issues/3): advanced dependency-aware replanning is later, **not** a prerequisite for #30.
+### NOW: explicit execution sequence
 
-For #28, preserve the useful high-level flow and live schedule. Do not combine a broad redesign of Cooking Mode or advanced scheduling into that PR. Ask for product direction only when a genuine irreversible UX choice remains; otherwise implement the smallest coherent change based on acceptance criteria.
+1. **Fast-track [#50 Homepage clutter cleanup](https://github.com/Warconn/how-many-beers/issues/50)** as one small, isolated UI PR. Remove the prominent local/offline status block and "A little less juggling" eyebrow; keep backup/offline behavior and existing user records intact. Coordinate with in-progress [#45 branding](https://github.com/Warconn/how-many-beers/issues/45), but do not block account work on cosmetic polish.
+2. **[#19 Free account foundation](https://github.com/Warconn/how-many-beers/issues/19)**: sign-in, secure ownership/authorization, free account lifecycle and schema. This is the highest-priority substantial feature.
+3. **[#20 Account-backed cooks/history, NOW slice](https://github.com/Warconn/how-many-beers/issues/20)**: depends on #19. Exactly **one** active/planning cook per signed-in account; a chronological/searchable **list of completed cooks**, open details and Cook Again; recover data on a second device. Preserve meaningful progress and actual event timestamps. Do not attempt all future concurrent-edit/outbox requirements in this release.
+
+**NOW, parallel/release-readiness work:** [#10 PWA/offline data reliability](https://github.com/Warconn/how-many-beers/issues/10), [#4 real-phone and full-cook alpha QA](https://github.com/Warconn/how-many-beers/issues/4), [#5 validation of delivered brisket estimates](https://github.com/Warconn/how-many-beers/issues/5), and [#45 homepage branding](https://github.com/Warconn/how-many-beers/issues/45). These are important open Now items but should not be inserted ahead of #19/#20 just because they are also labeled Now. Work can be parallelized when branches and risk permit.
+
+### NEXT, not immediate coding queue
+
+- [#11 timers and overdue cues](https://github.com/Warconn/how-many-beers/issues/11).
+- [#2 URL recipe import](https://github.com/Warconn/how-many-beers/issues/2).
+- [#3 deeper cross-dish scheduling](https://github.com/Warconn/how-many-beers/issues/3).
+- A separate reusable saved-recipe library (requires account/cook persistence; create/scope an implementation ticket before coding).
+- Advanced portion of [#20](https://github.com/Warconn/how-many-beers/issues/20): robust offline outbox/replay, simultaneous live multi-device editing and merge/conflict resolution.
+- [#21 cross-app design cleanup](https://github.com/Warconn/how-many-beers/issues/21) after #45 establishes brand components.
+
+**No fixed relative order among Next tickets** has been approved; obtain a fresh product-priority choice before starting one. #11 and #2 appearing in a Codex "next coding priorities" recommendation ahead of unfinished Now scope is a priority mistake. "Later" and monetization [#46](https://github.com/Warconn/how-many-beers/issues/46) do not block free launch.
+
+### Approved free-tier product boundary
+
+- **All accounts are free for now. No paid tier, subscriptions or billing implementation.**
+- Guests can try the cooking workflow without sign-in, but the intended **new guest experience** has no persistent saves, tracked completed-cook history or account tracking. Clearly disclose that mode's limits.
+- Signed-in users have exactly **one** saved active/planning cook, plus a list of **unlimited completed cooks** (subject to reasonable technical limits). View details and Cook Again stay free.
+- **No cooking analytics dashboard** required. A simple, useful Previous Cooks list is the focus.
+- Multiple saved future plans and a separate personal recipe library are not Now.
+- **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
+- Scope of #19 is identity/ownership/security; scope of #20's Now slice is saving, retrieval, history and basic cross-device access. Do not make full advanced sync a prerequisite to first account-backed history.
+- The live public origin is **https://howmanybeers.app** on Cloudflare. The preview deployment is **https://how-many-beers.pages.dev/** from `dev`. Any legacy GitHub Pages references are historical, not current production routing.
+
+### Working with the backlog
+
+1. For "what next?", verify the top issue and its open PRs/status, then recommend the first unfinished NOW item above.
+2. Use explicit acceptance criteria in the corresponding issue for implementation details. An issue's broad technical wish list is not permission to expand an approved Now slice.
+3. Keep feature branches small and PRs targeted to `dev`. Do not silently merge, deploy, or reprioritize work.
+4. Once the Now queue changes, update this section **in the same planning change** so Codex, issues and user-facing recommendations agree.
 
 ## Branches, review and deployment
 
-- `main` is stable production, deployed to GitHub Pages at https://warconn.github.io/how-many-beers/.
+- `main` is the stable release branch. The canonical live site is https://howmanybeers.app on Cloudflare. GitHub Pages URLs, if still reachable, are legacy.
 - `dev` is the integrated preview branch. Cloudflare Pages uses `dev` as its production branch at https://how-many-beers.pages.dev/.
-- Work from an up-to-date `dev` on an isolated `feat/*` branch. Suggested first name: `feat/28-dish-editor`. Codex may use a `codex/*` branch if required by the environment. Point the PR at **`dev`, never `main`**.
+- Work from an up-to-date `dev` on an isolated `feat/*` branch. Use a feature branch named for the active issue, e.g. `feat/19-free-accounts`. Codex may use a `codex/*` branch if required by the environment. Point the PR at **`dev`, never `main`**.
 - Do not commit work in progress directly to `dev` or `main`. Do not merge a PR or deploy to production without explicit approval.
 - GitHub Actions should run on feature PRs, and Cloudflare should update the primary dev URL only when reviewed changes merge to `dev`.
 - Cloudflare custom preview branches have been discussed/configured by the user for `feat/*` and potentially `codex/*`; **verify the actual saved branch filters before assuming** any branch is published. A feature preview may be available via a branch-specific Pages URL.
-- The user intends to exclude test-only and docs-only commits from Cloudflare builds using Build watch paths (for example `e2e/**`, `.github/**`, `docs/**`, etc.). Treat these as **desired settings, not proven configuration**. Cloudflare settings are external and cannot be assumed changed by editing this repo. Any change containing application code should still deploy when merged to `dev`.
+- The user has considered excluding test-only and docs-only commits from Cloudflare builds using Build watch paths (for example `e2e/**`, `.github/**`, `docs/**`, etc.). Treat these as **desired settings, not proven configuration**. Cloudflare settings are external and cannot be assumed changed by editing this repo. Any change containing application code should still deploy when merged to `dev`.
 - Run tests against the feature code locally/in the Codex cloud environment before pushing. Playwright browser tests run against the application server in the task environment; public preview deployment is optional for hands-on user review.
 
 ## Engineering and data integrity
@@ -69,7 +95,7 @@ npm run build
 
 Keep updates concise, plainspoken and product-oriented. Do not use em dashes. Explain tradeoffs and show the actual tested behavior. Distinguish between implementation complete, local tests passing, CI green, Cloudflare preview deployed and production deployed. Link the issue and PR. If an external account action is unavailable, say so instead of claiming Cloudflare or GitHub settings were changed.
 
-This file is the durable working summary of the October 2026 ChatGPT product discussion, not a transcript. For details beyond it, consult the docs and linked issues.
+This file is the durable working summary of the October 2026 product discussion, not a transcript. For details beyond it, consult the docs and linked issues.
 
 ## Save planned cook follow-up (#39)
 
