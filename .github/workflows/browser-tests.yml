@@ -29,6 +29,8 @@ jobs:
         run: npm run test
       - name: Feature account sign-in tests (mock Auth responses)
         run: npx playwright test --config playwright.auth.config.ts
+      - name: Account cook saving and recovery (mock API responses)
+        run: npx playwright test --config playwright.accounts.config.ts
       - name: Browser tests
         run: npm run test:e2e
       - name: Built-app offline and update tests (Android Chromium / iPhone WebKit)
@@ -42,6 +44,7 @@ jobs:
             test-results/
             test-results-offline/
             test-results-auth/
+            test-results-accounts/
             playwright-report/
             playwright-offline-report/
           if-no-files-found: ignore

@@ -536,3 +536,10 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .account-dialog{width:min(520px,calc(100% - 24px));max-height:calc(100dvh - 32px);overflow-y:auto;border:1px solid var(--line);border-radius:20px;padding:24px;background:var(--surface);color:var(--ink);box-shadow:0 18px 70px #28272230;overscroll-behavior:contain}
 .account-dialog::backdrop{background:#28272280}.account-close{display:block;margin-left:auto}
 @media(max-width:600px){.site-header:has(.account-control){gap:8px}.site-header:has(.account-control)>div:nth-child(2){flex:1;min-width:0}.site-header:has(.account-control) .brand-icon{width:44px;height:44px}.site-header:has(.account-control) h1{font-size:clamp(21px,5.8vw,26px)}.account-trigger{min-width:44px;padding:10px;justify-content:center}.account-trigger-label{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.account-dialog{padding:18px}.account-panel h1{font-size:24px}}
+
+/* Account saving stays compact; recovery and import choices are explicit. */
+.cook-content{display:contents}.cook-content[inert]{opacity:.55}
+.cook-content>.back-link{margin:0 0 8px;min-height:36px}
+.account-save-state{font-size:12px;color:var(--muted);min-height:16px;margin:0 0 8px}
+.guest-limit{font-size:12px;color:var(--muted);line-height:1.4;margin:0 0 12px}
+.account-import{margin:12px 0 18px}.account-import h2{font-size:21px;margin-top:0}.account-import p{font-size:14px;line-height:1.5}.account-import button{margin-right:8px;min-height:44px}

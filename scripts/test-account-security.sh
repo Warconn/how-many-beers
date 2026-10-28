@@ -19,6 +19,12 @@ for attempt in {1..30}; do
  if [ "$attempt" = 30 ]; then echo 'Test PostgreSQL did not start' >&2; exit 1; fi
  sleep 1
 done
-for sql_file in supabase/tests/bootstrap.sql supabase/migrations/*.sql supabase/tests/ownership.sql; do
+docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < supabase/tests/bootstrap.sql
+for sql_file in supabase/migrations/*.sql; do
  docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < "$sql_file"
+ # Check the original RLS contract before upgrading it to RPC-only writes.
+ if [ "$sql_file" = supabase/migrations/202610280001_account_foundation.sql ]; then
+  docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < supabase/tests/ownership.sql
+ fi
 done
+docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < supabase/tests/account-workspace.sql

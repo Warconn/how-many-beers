@@ -24,7 +24,7 @@ test('save for later returns Home without starting, survives reopening and start
  await step.getByRole('button',{name:'Cancel',exact:true}).click();
  await page.getByRole('button',{name:'Save plan for later',exact:true}).click();
  await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();
- await expect(page.getByRole('status')).toContainText('Plan saved on this device');
+ await expect(page.getByRole('status')).toContainText('Plan saved.');
  expect(await saved(page)).toEqual(meal);expect((await saved(page)).startedAt).toBeUndefined();
  const summary=page.getByRole('region',{name:'Planned start',exact:true});await expect(summary).toContainText('Trim the brisket');
  await expect(summary.locator('time[datetime="2026-11-25T06:00:00.000Z"]')).toBeVisible();await expect(summary).toContainText('EST');
@@ -43,8 +43,8 @@ test('storage failure stays in planning and retry saves without a false success'
  await load(page,fixture());const before=await saved(page);
  await page.evaluate(k=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key===k)throw new DOMException('Full','QuotaExceededError');return original.call(this,key,value);};},key);
  await page.getByRole('button',{name:'Save plan for later',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'Could not save the plan'})).toBeInViewport();
- await expect(page.getByRole('region',{name:'Cooking actions'})).toBeVisible();await expect(page.getByText(/Plan saved on this device/)).toHaveCount(0);expect(await saved(page)).toEqual(before);
- await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Save plan for later',exact:true}).click();await expect(page.getByRole('status')).toContainText('Plan saved on this device');
+ await expect(page.getByRole('region',{name:'Cooking actions'})).toBeVisible();await expect(page.getByText(/Plan saved./)).toHaveCount(0);expect(await saved(page)).toEqual(before);
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Save plan for later',exact:true}).click();await expect(page.getByRole('status')).toContainText('Plan saved.');
  await page.evaluate(k=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key===k)throw new DOMException('Full','QuotaExceededError');return original.call(this,key,value);};},key);
  await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'Could not save the cook start'})).toBeVisible();
  await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();expect((await saved(page)).startedAt).toBeUndefined();

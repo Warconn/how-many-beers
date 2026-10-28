@@ -34,7 +34,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
       <span className="section-icon" aria-hidden="true">📖</span>
       <div><p className="eyebrow">PAST SESSIONS</p><h2>Cook History</h2></div>
     </div>
-    <p className="muted small">Finished cooks stay on this device. Open one for actual times, temperatures and notes, or start a fresh copy.</p>
+    <p className="muted small">Open a completed cook for its actual times, temperatures and notes, or cook it again.</p>
     <div className="history-toolbar">
       <button type="button" className="button secondary" onClick={onExport}>Download backup</button>
       <label className="history-import">Restore a backup

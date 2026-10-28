@@ -23,18 +23,21 @@ type Account = {
   client: SupabaseClient | null;
   refresh: () => Promise<void>;
   signOutVersion: number;
+  ownerId: string | null;
 };
 const Context = createContext<Account | null>(null);
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<Phase>("loading"),
+    [ownerId, setOwnerId] = useState<string | null>(null),
     [user, setUser] = useState<User | null>(null),
     [client, setClient] = useState<SupabaseClient | null>(null),
     [signOutVersion, setSignOutVersion] = useState(0),
     [attempt, setAttempt] = useState(0);
   const clientRef = useRef<SupabaseClient | null>(null),
     alive = useRef(false),
-    generation = useRef(0);
+    generation = useRef(0),
+    ownerRef = useRef<string | null>(null);
   const refresh = useCallback(async () => {
     const sdk = clientRef.current;
     if (!alive.current) return;
@@ -50,6 +53,14 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await sdk.auth.getUser();
       if (!alive.current || request !== generation.current) return;
       if (error) {
+        if (
+          error.name === "AuthSessionMissingError" ||
+          error.status === 401 ||
+          error.status === 403
+        ) {
+          ownerRef.current = null;
+          setOwnerId(null);
+        }
         setPhase(
           error.name === "AuthSessionMissingError" ||
             error.status === 401 ||
@@ -59,6 +70,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         );
       } else {
         setUser(data.user);
+        ownerRef.current = data.user?.id ?? null;
+        setOwnerId(ownerRef.current);
         setPhase(data.user ? "authenticated" : "guest");
       }
     } catch {
@@ -87,14 +100,25 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         }
         clientRef.current = sdk;
         setClient(sdk);
-        const { data } = sdk.auth.onAuthStateChange((event) => {
+        const { data } = sdk.auth.onAuthStateChange((event, session) => {
           if (!alive.current) return;
           if (event === "SIGNED_OUT") {
             generation.current++;
             setUser(null);
+            ownerRef.current = null;
+            setOwnerId(null);
             setPhase("guest");
             setSignOutVersion((v) => v + 1);
           } else if (event !== "INITIAL_SESSION") {
+            // A cached event may invalidate identity but never authorizes another owner.
+            if (
+              event === "SIGNED_IN" &&
+              session?.user.id !== ownerRef.current
+            ) {
+              ownerRef.current = null;
+              setOwnerId(null);
+            }
+
             // Avoid calling asynchronous Auth methods while the SDK holds its auth lock.
             queueMicrotask(() => {
               if (alive.current) void refresh();
@@ -115,7 +139,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refresh, attempt]);
   return (
-    <Context.Provider value={{ phase, user, client, refresh, signOutVersion }}>
+    <Context.Provider
+      value={{ phase, user, client, refresh, signOutVersion, ownerId }}
+    >
       {children}
     </Context.Provider>
   );

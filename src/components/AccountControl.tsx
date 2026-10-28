@@ -32,6 +32,11 @@ export default function AccountControl({
       document.body.style.overflow = overflow;
     };
   }, [open]);
+  useEffect(()=>{
+    const requested=()=>trigger.current?.click();
+    window.addEventListener('hmb-open-account',requested);
+    return ()=>window.removeEventListener('hmb-open-account',requested);
+  },[]);
   const close = () => {
     dialog.current?.close();
     setOpen(false);

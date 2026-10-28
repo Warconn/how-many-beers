@@ -8,7 +8,9 @@ export default function AccountPanel() {
     [sentTo, setSentTo] = useState(""),
     [code, setCode] = useState(""),
     [busy, setBusy] = useState(false),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [forceSignOut, setForceSignOut] = useState(false),
+    [earlierAvailable, setEarlierAvailable] = useState(false);
   const alive = useRef(false);
   useEffect(() => {
     alive.current = true;
@@ -21,7 +23,57 @@ export default function AccountPanel() {
     setSentTo("");
     setCode("");
     setMessage("");
+    setForceSignOut(false);
   }, [user?.id, signOutVersion]);
+  useEffect(() => {
+    let available = false;
+    if (user && process.env.NEXT_PUBLIC_ENABLE_CLOUD_COOKS === "true") {
+      try {
+        const raw = window.localStorage.getItem(
+            "how-many-beers:legacy-owner:v1",
+          ),
+          claim = raw ? JSON.parse(raw) : null;
+        available =
+          (!claim || (claim.owner === user.id && !claim.imported)) &&
+          (window.localStorage.getItem("how-many-beers:meal:v1") !== null ||
+            window.localStorage.getItem("how-many-beers:history:v1") !== null);
+      } catch {
+        /* Never expose earlier records when their ownership cannot be checked. */
+      }
+    }
+    setEarlierAvailable(available);
+  }, [user?.id]);
+  const downloadEarlier = async () => {
+    if (!user) return;
+    const raw = window.localStorage.getItem("how-many-beers:legacy-owner:v1"),
+      claim = raw ? JSON.parse(raw) : null;
+    if (claim && (claim.owner !== user.id || claim.imported))
+      throw Error("Earlier cooks are protected.");
+    const [{ LocalCookStore }, { exportBackup }] = await Promise.all([
+      import("@/domain/localPersistence"),
+      import("@/domain/cookHistory"),
+    ]);
+    const store = new LocalCookStore(window.localStorage);
+    let contents: string;
+    try {
+      const snapshot = store.load(false);
+      contents = exportBackup(
+        snapshot.active,
+        snapshot.history,
+        new Date().toISOString(),
+      );
+    } catch {
+      contents = store.recoveryExport();
+    }
+    const url = URL.createObjectURL(
+        new Blob([contents], { type: "application/json" }),
+      ),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = "earlier-cooks-backup.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  };
   const perform = async (action: () => Promise<void>) => {
     if (busy) return;
     setBusy(true);
@@ -37,10 +89,11 @@ export default function AccountPanel() {
   return (
     <section className="account-panel">
       <h1>Your account</h1>
-      <p className="notice">
-        Cook saving is still browser-local. Signing in does not yet sync cooks
-        or history between devices.
-      </p>
+      {process.env.NEXT_PUBLIC_ENABLE_CLOUD_COOKS !== "true" && (
+        <p className="notice">
+          Account cook saving isn’t available on this preview yet.
+        </p>
+      )}
       {phase === "loading" || phase === "checking" ? (
         <p role="status">Checking your session…</p>
       ) : phase === "disabled" ? (
@@ -67,6 +120,17 @@ export default function AccountPanel() {
             disabled={busy}
             onClick={() =>
               void perform(async () => {
+                if (
+                  !window.dispatchEvent(
+                    new Event("hmb-before-signout", { cancelable: true }),
+                  )
+                ) {
+                  setForceSignOut(true);
+                  setMessage(
+                    "This cook has unsaved changes. Close account and retry saving or download a backup before signing out.",
+                  );
+                  return;
+                }
                 const result = await client!.auth.signOut({
                   scope: "local",
                 });
@@ -76,6 +140,16 @@ export default function AccountPanel() {
           >
             Sign out on this device
           </button>
+          {earlierAvailable && (
+            <button
+              type="button"
+              className="button secondary"
+              disabled={busy}
+              onClick={() => void perform(downloadEarlier)}
+            >
+              Download earlier cooks
+            </button>
+          )}
         </>
       ) : (
         <>
@@ -115,7 +189,7 @@ export default function AccountPanel() {
                 if (result.error) throw result.error;
                 setSentTo(recipient);
                 setCode("");
-                setMessage("Check your email for a sign-in link or code.");
+                setMessage("Check your email for your sign-in code.");
               });
             }}
           >
@@ -131,7 +205,7 @@ export default function AccountPanel() {
               disabled={busy}
             />
             <button className="button primary" disabled={busy}>
-              Send sign-in email
+              Send sign-in code
             </button>
           </form>
           {sentTo && (
@@ -146,7 +220,7 @@ export default function AccountPanel() {
                   });
                   if (result.error) {
                     setMessage(
-                      "That code is invalid or expired. Request a new sign-in email.",
+                      "That code is invalid or expired. Request a new sign-in code.",
                     );
                     return;
                   }
@@ -154,13 +228,11 @@ export default function AccountPanel() {
                 });
               }}
             >
-              <p>
-                Enter the code sent to {sentTo}, or open the link in this
-                browser.
-              </p>
+              <p>Enter the code sent to {sentTo}.</p>
               <label htmlFor="account-code">Email code</label>
               <input
                 id="account-code"
+                inputMode="numeric"
                 autoComplete="one-time-code"
                 required
                 maxLength={128}
@@ -188,6 +260,27 @@ export default function AccountPanel() {
         </>
       )}
       {message && <p role="status">{message}</p>}
+      {forceSignOut && user && (
+        <button
+          type="button"
+          className="button secondary"
+          disabled={busy}
+          onClick={() =>
+            void perform(async () => {
+              if (
+                !window.confirm(
+                  "Sign out with unsaved changes? Download a backup first. Recovery stays protected by this account.",
+                )
+              )
+                return;
+              const result = await client!.auth.signOut({ scope: "local" });
+              if (result.error) throw result.error;
+            })
+          }
+        >
+          Sign out anyway
+        </button>
+      )}
     </section>
   );
 }

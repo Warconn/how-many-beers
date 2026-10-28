@@ -1,3 +1,9 @@
+## Account cook increment (#19/#20, October 28, 2026)
+
+The opt-in account preview adds code-first email sign-in and one account-backed active/planning cook with searchable completed history, details and Cook Again. Acknowledged server writes precede critical transitions; automatic edits retain pending recovery and offer retry/export on failure. Another device retrieves account data after verified sign-in. Stale clients cannot silently replace newer data.
+
+Fresh guests try cooking temporarily and sign in to keep it. Existing pre-account records receive an explicit import/backup decision and are never silently erased. Routine device/local-save wording is removed. The account rollout is disabled by default, with hosted dev setup/QA still required. See [account cooks](account-cooks.md) for the exact flow, security, recovery and technical limits. This supersedes browser-only persistence assumptions below only in builds with cloud cooks enabled. The Beerometer remains prominent through planning and cooking.
+
 ## Local reliability increment (#10)
 
 Committed actions acknowledge browser writes; failures remain visibly unsaved and exportable. Malformed saves are protected, restore/archive transitions use a recovery journal, and modern browsers allow one cooking writer tab. The built app adds scoped offline caching and installation with an explicit, draft-safe app-update action. Existing cook IDs, actual events, version-one saves and JSON backups are retained. See [offline reliability](offline-reliability.md) for the recovery protocol, automated tests and remaining real-hardware alpha checks.

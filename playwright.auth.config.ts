@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e/auth",
+  testMatch:"**/sign-in.spec.ts",
   outputDir: "test-results-auth",
   workers: 1,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
