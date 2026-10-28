@@ -49,13 +49,19 @@ async function backend(page: Page, { invalid = false } = {}) {
             json: { error: "invalid_grant", error_description: "Expired" },
           })
         : route.fulfill({ json: session() });
-    if (path.pathname.endsWith("/authorize"))
+    if (path.pathname.endsWith("/authorize")) {
+      expect(path.searchParams.get("redirect_to")).toBe(
+        "http://127.0.0.1:3108/account/callback/",
+      );
+      expect(path.searchParams.get("code_challenge_method")).toBe("s256");
+      expect(path.searchParams.get("code_challenge")).toMatch(/^[\w-]+$/);
+      // WebKit interception cannot fulfill a 302. Simulate the provider's
+      // completion page instead; the app still exchanges the returned code.
       return route.fulfill({
-        status: 302,
-        headers: {
-          location: "http://127.0.0.1:3108/account/callback/?code=fixture-code",
-        },
+        contentType: "text/html",
+        body: '<!doctype html><title>Provider fixture</title><script>location.replace("http://127.0.0.1:3108/account/callback/?code=fixture-code")</script>',
       });
+    }
     throw Error("Unexpected auth endpoint " + path.pathname);
   });
 }
