@@ -2,10 +2,12 @@ import {cookTimeline, migrateMeal} from "./cookState";
 import type {ExtendedMeal} from "./cookState";
 import {newMeal} from "./meal";
 import type {Meal, PlannedTask} from "./meal";
+import {isStoredMeal,isStoredTask} from './storageValidation';
 
 export const HISTORY_KEY = "how-many-beers:history:v1";
 export const ACTIVE_KEY = "how-many-beers:meal:v1";
 export const BACKUP_FORMAT = "how-many-beers-backup";
+export const MAX_BACKUP_BYTES=32*1024*1024;
 
 export type ArchivedCook = {
   id: string;
@@ -27,12 +29,7 @@ export type CookBackup = {
 export const emptyHistory = ():HistoryLibrary=>({version:1,cooks:[]});
 
 export function isMeal(value:unknown): value is Meal {
-  if(!value || typeof value!=="object")return false;
-  const o=value as Partial<Meal>;
-  return o.version===1 && typeof o.id==="string" && !!o.id && typeof o.serveAt==="string"
-    && Array.isArray(o.dishes) && o.dishes.every(d=>d && typeof d.id==="string" && typeof d.name==="string" && typeof d.preset==="string")
-    && !!o.notes && typeof o.notes==="object" && !Array.isArray(o.notes)
-    && !!o.completed && typeof o.completed==="object" && !Array.isArray(o.completed);
+  return isStoredMeal(value);
 }
 
 export function readHistory(value:unknown):HistoryLibrary {
@@ -40,7 +37,7 @@ export function readHistory(value:unknown):HistoryLibrary {
   const v=value as Partial<HistoryLibrary>;
   if(v.version!==1 || !Array.isArray(v.cooks))throw new Error("Unsupported cook history format.");
   if(!v.cooks.every(c=>c && typeof c.id==="string" && typeof c.archivedAt==="string" &&
-    isMeal(c.meal) && Array.isArray(c.plannedTimeline) && typeof c.feedback==="string")) {
+    isMeal(c.meal) && Array.isArray(c.plannedTimeline) && c.plannedTimeline.every(isStoredTask) && typeof c.feedback==="string")) {
     throw new Error("Cook history contains an incomplete entry.");
   }
   return v as HistoryLibrary;
@@ -63,7 +60,9 @@ export function archiveCook(meal: Meal, history:HistoryLibrary, feedback:string,
 
 export type StorageWriter = Pick<Storage, "setItem">;
 
-/** Archive before rotating the active cook. A failure writing the next active
+/** @deprecated Compatibility writer. The application uses LocalCookStore.write
+ * for recoverable atomic active/history transitions. Do not use this for new UI.
+ * Archive before rotating the active cook. A failure writing the next active
  * meal leaves the original active key untouched and the archive available.
  * Retrying is idempotent because archive IDs are the original meal IDs. */
 export function commitCompletedCook(
@@ -117,7 +116,7 @@ export function exportBackup(active:Meal,history:HistoryLibrary,exportedAt:strin
 }
 
 export function validateBackup(text:string):{active:ExtendedMeal;history:HistoryLibrary} {
-  if(text.length>4_000_000)throw new Error("Backup file is too large.");
+  if(new TextEncoder().encode(text).byteLength>MAX_BACKUP_BYTES)throw new Error("Backup file is too large (32 MB maximum).");
   const parsed:unknown=JSON.parse(text);
   if(!parsed || typeof parsed!=="object")throw new Error("Invalid backup.");
   const b=parsed as Partial<CookBackup>;

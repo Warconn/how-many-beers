@@ -9,3 +9,5 @@ out
 
 playwright-report/
 test-results/
+test-results-offline/
+playwright-offline-report/

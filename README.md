@@ -43,6 +43,12 @@ How Many Beers currently saves your active plan, progress, and cook history **in
 
 There is **no automatic account sync or transfer between devices or browsers**. Clearing browser/site data, using a private browsing session, or changing to a different site origin can leave those saved cooks unavailable. Use the in-app **JSON backup/export** if you want a copy you can restore. Browser-local storage is convenient, but it is not a cloud backup.
 
+### Offline cooking and recovery
+
+After visiting online, wait for **Offline ready on this device** before relying on an offline reopen. You can keep using an existing cook, record progress and finish/save it without a connection. Install through the browser when offered, or use Safari's **Share → Add to Home Screen**. Installation does not create a cloud backup, and browser storage/cached files can still be cleared or evicted.
+
+The app shows whether edits saved. If a write fails, keep the tab open, download a backup and retry. Unreadable saved data opens a protected recovery screen instead of being replaced. App updates wait for an explicit reload, with open drafts protected. Keep one cooking tab open; another tab's newer data must be reloaded before saving. See [offline reliability and recovery](docs/offline-reliability.md) for behavior and test coverage.
+
 ## Run it locally
 
 The project uses **Next.js, React, and TypeScript**. Use Node.js 20 or newer.
@@ -65,8 +71,9 @@ npm run build
 For browser regression tests, install Playwright's Chromium browser and run:
 
 ```bash
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:e2e
+npm run test:offline
 ```
 
 The build uses Next.js static export. The `dev` branch is the integration branch for previews; `main` is used for the GitHub Pages production deployment. See [agent/development guidance](AGENTS.md) for the branch and review workflow.
@@ -77,6 +84,7 @@ The build uses Next.js static export. The `dev` branch is the integration branch
 - [Cooking Mode](docs/cooking-mode.md): guided steps, progress, and finishing
 - [Step timing](docs/step-timing.md): edits, duration handling, and schedule limitations
 - [Saved plans](docs/saved-plans.md): browser-local persistence and resuming
+- [Offline reliability](docs/offline-reliability.md): installation, offline use, recovery and regression tests
 - [Brisket estimates](docs/brisket-estimates.md): method assumptions and uncertainty
 - [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
 

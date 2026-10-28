@@ -498,3 +498,15 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
  .home-first-visit .home-new .button{width:100%}
  .home-returning .home-intro{margin-bottom:18px}
 }
+
+/* Device-local durability and offline access. */
+.device-save-state{font-size:12px;color:#57524b;margin:-18px 0 16px;line-height:1.5}
+.storage-recovery-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.storage-alert{position:sticky;top:8px;z-index:50;box-shadow:0 5px 20px #28272220}
+main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
+.storage-recovery-actions button,.offline-access button{border:1px solid #c5ad91;border-radius:8px;padding:10px 13px;min-height:44px;background:#fffdf9;color:#873a1e;font-weight:600}
+.offline-access{font-size:12px;color:#57524b;margin:0 0 20px;line-height:1.5}
+.offline-access>p{min-height:18px;margin:0 0 5px}
+.offline-access summary{cursor:pointer;padding:8px 0;min-height:44px;color:#873a1e}
+.offline-access details p{max-width:650px}
+.offline-access button:disabled{opacity:.55;cursor:not-allowed}
