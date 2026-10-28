@@ -3,6 +3,7 @@ export default defineConfig({
   testDir: "./e2e/auth",
   outputDir: "test-results-auth",
   workers: 1,
+  reporter: process.env.CI ? [["github"], ["list"]] : "list",
   timeout: 30_000,
   retries: process.env.CI ? 1 : 0,
   use: {
