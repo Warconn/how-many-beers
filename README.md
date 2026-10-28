@@ -40,7 +40,7 @@ These desktop and mobile screenshots show the current dev workspace, including t
 
 ### Saving and recovery
 
-The account feature preview supports one saved active/planning cook, completed history and retrieval on another device. It is opt-in and requires the dev setup below; production/default builds retain existing browser-backed saving until rollout. In account-enabled builds, new guests can try planning and cooking without persistent saves. Earlier saved cooks receive an explicit import/backup choice.
+The account feature preview supports one saved active/planning cook, completed history and retrieval on another device. It is opt-in and requires the dev setup below; production/default builds retain existing browser-backed saving until rollout. In account-enabled builds, new guests can try planning and cooking without persistent saves. Optional earlier-cook import/backup tools live in Account → Earlier cooks. Sign-in opens account cooks directly.
 
 Account edits save automatically with acknowledged status and retry/export on failure. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 

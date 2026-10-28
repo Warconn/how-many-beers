@@ -24,7 +24,6 @@ import {takeCookReturn} from '@/auth/returnToCook';
 import {useCookWorkspace} from '@/account/useCookWorkspace';
 import {useAccount} from '@/auth/AccountProvider';
 import AccountPanel from '@/components/AccountPanel';
-import OfflineSupport from '@/components/OfflineSupport';
 
 type BuiltIn = Exclude<PresetId, "custom">;
 
@@ -131,7 +130,6 @@ function CookExperience() {
   const workspace=useCookWorkspace();
   const {meal,history,status:storageStatus,error:storageError,setError:setStorageError,patch,save,retry,reset,restore,recoveryExport}=workspace;
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
-  const [accountOpen,setAccountOpen]=useState(false);
   useEffect(()=>{setView('home');setEditingStep(null);setNewStepDishId(null);setShowDishSetup(false);setRecipeText('');setRecipeName('');},[workspace.selection]);
   const accountReturnHandled=useRef(false);
   useEffect(()=>{
@@ -414,7 +412,21 @@ function CookExperience() {
     }
   };
 
-  const offlineSupport=<OfflineSupport canReload={!workspace.locked&&!accountOpen&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
+  const canUpdate=!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
+  const earlierTools=workspace.earlierAvailable ? <details className="account-earlier-cooks">
+    <summary>Earlier cooks</summary>
+    <p>{workspace.candidate?.snapshot.history.cooks.length??0} completed cooks and an earlier plan are available. Importing is optional.</p>
+    {workspace.accountHasCook&&<p>Importing replaces your unfinished account cook. Completed history is combined without duplicates.</p>}
+    <button type="button" className="button secondary" disabled={workspace.locked} onClick={()=>{
+      if(workspace.accountHasCook&&!window.confirm('Replace the unfinished account cook with this earlier plan? Download a backup first if you want to keep both.'))return;
+      void workspace.importCooks().catch(error=>setStorageError(error instanceof Error?error.message:'Could not import cooks.'));
+    }}>Import these cooks</button>
+    <button type="button" className="button secondary" onClick={()=>{
+      const snapshot=workspace.candidate?.snapshot;if(!snapshot)return;
+      const url=URL.createObjectURL(new Blob([exportBackup(snapshot.active,snapshot.history,new Date().toISOString())],{type:'application/json'}));
+      const a=document.createElement('a');a.href=url;a.download='earlier-cooks-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
+    }}>Download earlier cooks</button>
+  </details> : null;
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
@@ -440,14 +452,13 @@ function CookExperience() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-        {meal&&<AccountControl view={view} cookId={meal.id} onOpenChange={setAccountOpen}/>}
+        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} cookTools={earlierTools}/>}
       </header>
-      {view!=="home"&&offlineSupport}
 
 
       {workspace.kind==='account'&&<div className="account-save-state" role="status" aria-live="polite">{workspace.cloudPhase==='saved'?'Saved to account':workspace.cloudPhase==='syncing'?'Saving to account…':workspace.cloudPhase==='saving'?'Saving cook…':workspace.cloudPhase==='loading'?'Loading account cooks…':''}</div>}
       {workspace.kind==='trial'&&<p className="guest-limit">Guest cooks aren’t kept after you leave. Sign in to keep this cook.</p>}
-      {workspace.needsImport&&<section className="panel account-import" aria-label="Choose your account cook"><h2>Bring your earlier cooks into your account?</h2><p>{workspace.candidate?.snapshot.history.cooks.length??0} completed cooks and your current plan are available to import. Nothing is imported until you choose.</p>{workspace.accountHasCook&&<p>Your account already has an unfinished cook. Importing this plan will replace it; completed history is combined without duplicates.</p>}<button type="button" className="button primary" disabled={!workspace.accountSnapshot||workspace.cloudPhase==='saving'} onClick={()=>{if(workspace.accountHasCook&&!window.confirm('Replace the unfinished account cook with this plan? Download a backup first if you want to keep both.'))return;void workspace.importCooks().catch(error=>setStorageError(error instanceof Error?error.message:'Could not import cooks.'));}}>Import these cooks</button><button type="button" className="button secondary" disabled={!workspace.accountSnapshot} onClick={()=>{if(workspace.candidate&&!workspace.candidate.legacy&&!window.confirm('Use account cooks instead? This guest cook will not be added to your account. Download a backup first if you want to keep it.'))return;workspace.useAccountCooks();}}>Use account cooks</button><button type="button" className="button secondary" onClick={downloadBackup}>Download backup first</button></section>}
+
       {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}
       {workspace.kind==='account'&&['conflict','blocked'].includes(workspace.cloudPhase)&&<section className="panel" aria-label="Account cook recovery"><h2>Keep your cook safe</h2><p>{workspace.cloudPhase==='conflict'?'Another device has a newer version. Download a backup before loading it.':'The last action has not been confirmed. Retry it before continuing.'}</p><button type="button" className="button primary" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" className="button secondary" onClick={downloadBackup}>Download backup</button><button type="button" className="button secondary" onClick={()=>{if(window.confirm('Load the latest account cooks and discard this tab’s pending changes? Download a backup first.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your backup and retry.'));}}>Load account version</button></section>}
       <div className="cook-content" inert={workspace.locked}>
@@ -751,7 +762,7 @@ function CookExperience() {
           </div>
         </>
       )}
-      <footer>{view==="home"&&offlineSupport}How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      <footer>How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
       </div>
     </main>
   );

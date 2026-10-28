@@ -289,10 +289,11 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
     page.getByRole("button", { name: /Resume planning/ }),
   ).toBeVisible();
   await signIn(page);
-  await expect(
-    page.getByRole("region", { name: "Choose your account cook" }),
-  ).toBeVisible();
+  await expect(page.getByRole("region", {name:"Choose your account cook"})).toHaveCount(0);
+  await expect(page.getByRole("button", {name:/Plan a new cook/})).toBeEnabled();
   expect(remote.state.active).toBeNull();
+  await page.getByRole("button", {name:"Account",exact:true}).click();
+  await page.getByText("Earlier cooks", {exact:true}).click();
   await page
     .getByRole("button", { name: "Import these cooks", exact: true })
     .click();
@@ -308,7 +309,6 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
       () => JSON.parse(localStorage.getItem("how-many-beers:meal:v1")!).name,
     ),
   ).toBe("Earlier family brisket");
-  await page.getByRole("button", { name: "Account", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Your account" })
     .getByRole("button", { name: "Sign out on this device", exact: true })
@@ -544,10 +544,10 @@ test("confirmed logout hides pending work from another account and restores it f
   ).toBeVisible();
 });
 
-test("choosing the account cook keeps earlier guest cooks available as a backup", async ({
+test("account cooks open directly and earlier guest cooks stay optional in the menu", async ({
   page,
   context,
-}) => {
+}, testInfo) => {
   const remote = server();
   await remote.attach(context);
   await backend(page);
@@ -574,16 +574,16 @@ test("choosing the account cook keeps earlier guest cooks available as a backup"
   };
   remote.state.revision = 1;
   await signIn(page);
-  await expect(
-    page.getByRole("region", { name: "Choose your account cook" }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Use account cooks", exact: true })
-    .click();
-  await expect(
-    page.getByText("Existing account cook", { exact: true }).first(),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Account", exact: true }).click();
+  await expect(page.getByRole("region", {name:"Choose your account cook"})).toHaveCount(0);
+  await expect(page.getByText("Existing account cook", {exact:true}).first()).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Existing account cook", {exact:true}).first()).toBeVisible();
+  await expect(page.getByRole("button", {name:/Resume planning/})).toBeEnabled();
+  await expect(page.getByText("Earlier cooks", {exact:true})).toBeHidden();
+  await page.screenshot({path:testInfo.outputPath("account-home-clean.png"),fullPage:true});
+  await page.getByRole("button", {name:"Account",exact:true}).click();
+  await page.getByText("Earlier cooks", {exact:true}).click();
+  await page.screenshot({path:testInfo.outputPath("account-earlier-cooks-menu.png"),fullPage:true});
   const download = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "Download earlier cooks", exact: true })
@@ -595,4 +595,12 @@ test("choosing the account cook keeps earlier guest cooks available as a backup"
   expect((remote.state.active as { meal: { name: string } }).meal.name).toBe(
     "Existing account cook",
   );
+  page.once("dialog",dialog=>dialog.dismiss());
+  await page.getByRole("button",{name:"Import these cooks",exact:true}).click();
+  expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Existing account cook");
+  await page.getByRole("button",{name:"Close account",exact:true}).click();
+  await page.getByRole("button",{name:/Resume planning/}).click();
+  await page.getByLabel("Meal name").fill("Official account cook");
+  await expect(page.getByText("Saved to account",{exact:true})).toBeVisible();
+  expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Official account cook");
 });

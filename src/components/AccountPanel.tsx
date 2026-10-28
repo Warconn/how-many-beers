@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAccount } from "@/auth/AccountProvider";
 import { accountConfig, callbackUrl } from "@/auth/config";
-export default function AccountPanel() {
+export default function AccountPanel({cookTools, onDraftChange}: {cookTools?: ReactNode; onDraftChange?: (dirty: boolean) => void}) {
   const { phase, user, client, refresh, signOutVersion } = useAccount();
   const [email, setEmail] = useState(""),
     [sentTo, setSentTo] = useState(""),
@@ -11,6 +11,9 @@ export default function AccountPanel() {
     [message, setMessage] = useState(""),
     [forceSignOut, setForceSignOut] = useState(false),
     [earlierAvailable, setEarlierAvailable] = useState(false);
+  useEffect(() => {
+    onDraftChange?.(!!email || !!sentTo || !!code || busy);
+  }, [email, sentTo, code, busy, onDraftChange]);
   const alive = useRef(false);
   useEffect(() => {
     alive.current = true;
@@ -140,7 +143,7 @@ export default function AccountPanel() {
           >
             Sign out on this device
           </button>
-          {earlierAvailable && (
+          {cookTools !== undefined ? cookTools : earlierAvailable && (
             <button
               type="button"
               className="button secondary"

@@ -70,10 +70,14 @@ test('ready updates never reload a cook automatically and protect open forms',as
  await step.getByLabel('Instructions',{exact:true}).fill('Keep my unsaved draft');
  const before=await page.evaluate(k=>localStorage.getItem(k),ACTIVE_KEY);
  await request.post('/__test__/worker-mode?mode=update');await page.evaluate(async()=>{await (await navigator.serviceWorker.getRegistration())!.update();});
+ await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeHidden();
+ await page.getByRole('button',{name:'Menu',exact:true}).click();
  await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'Close account',exact:true}).click();
  await expect(step.getByLabel('Instructions',{exact:true})).toHaveValue('Keep my unsaved draft');
  expect(await page.evaluate(k=>localStorage.getItem(k),ACTIVE_KEY)).toBe(before);
  await step.getByRole('button',{name:'Cancel',exact:true}).click();
+ await page.getByRole('button',{name:'Menu',exact:true}).click();
  const update=page.getByRole('button',{name:'Update app',exact:true});await expect(update).toBeEnabled();
  await update.click();await page.waitForLoadState('domcontentloaded');
  await expect(page.getByRole('button',{name:/Resume planning/})).toBeVisible();
@@ -84,8 +88,14 @@ test('an unsaved custom-step draft also blocks app updates until cancelled',asyn
  await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
  await page.getByRole('button',{name:/Add a checklist step/}).click();await page.getByLabel('Step title',{exact:true}).fill('Do not discard my sauce step');
  await request.post('/__test__/worker-mode?mode=custom-draft');await page.evaluate(async()=>{await (await navigator.serviceWorker.getRegistration())!.update();});
- await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeDisabled();await expect(page.getByLabel('Step title',{exact:true})).toHaveValue('Do not discard my sauce step');
- await page.getByRole('button',{name:'Cancel step',exact:true}).click();await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeEnabled();
+ await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeHidden();
+ await page.getByRole('button',{name:'Menu',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'Close account',exact:true}).click();
+ await expect(page.getByLabel('Step title',{exact:true})).toHaveValue('Do not discard my sauce step');
+ await page.getByRole('button',{name:'Cancel step',exact:true}).click();
+ await page.getByRole('button',{name:'Menu',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeEnabled();
 });
 
 

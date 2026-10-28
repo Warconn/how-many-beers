@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import OfflineSupport from "./OfflineSupport";
 import { useAccount } from "@/auth/AccountProvider";
 import { rememberCookReturn, type CookView } from "@/auth/returnToCook";
 const AccountPanel = dynamic(() => import("./AccountPanel"), {
@@ -9,14 +10,17 @@ const AccountPanel = dynamic(() => import("./AccountPanel"), {
 export default function AccountControl({
   view,
   cookId,
-  onOpenChange,
+  canReload,
+  cookTools,
 }: {
   view: CookView;
   cookId: string;
-  onOpenChange: (open: boolean) => void;
+  canReload: boolean;
+  cookTools?: ReactNode;
 }) {
   const { phase, user } = useAccount(),
-    [open, setOpen] = useState(false);
+    [open, setOpen] = useState(false),
+    [accountDraft, setAccountDraft] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null),
     trigger = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -40,10 +44,10 @@ export default function AccountControl({
   const close = () => {
     dialog.current?.close();
     setOpen(false);
-    onOpenChange(false);
+    setAccountDraft(false);
     trigger.current?.focus();
   };
-  if (phase === "loading" || phase === "disabled") return null;
+  if (phase === "loading") return null;
   return (
     <div className="account-control">
       <button
@@ -59,7 +63,7 @@ export default function AccountControl({
             /* Tab storage is optional. */
           }
           setOpen(true);
-          onOpenChange(true);
+
         }}
       >
         <svg
@@ -73,10 +77,9 @@ export default function AccountControl({
           <path d="M4.5 21v-2.5a7.5 7.5 0 0 1 15 0V21" />
         </svg>
         <span className="account-trigger-label">
-          {user ? "Account" : phase === "guest" ? "Sign in" : "Account"}
+          {phase === "disabled" ? "Menu" : user ? "Account" : phase === "guest" ? "Sign in" : "Account"}
         </span>
       </button>
-      {open && (
         <dialog
           className="account-dialog"
           ref={dialog}
@@ -87,7 +90,7 @@ export default function AccountControl({
           }}
         >
           <h2 id="account-dialog-title" className="sr-only">
-            Your account
+            {phase === "disabled" ? "App menu" : "Your account"}
           </h2>
           <button
             type="button"
@@ -97,9 +100,9 @@ export default function AccountControl({
           >
             Close
           </button>
-          <AccountPanel />
+          {open && phase !== "disabled" && <AccountPanel cookTools={cookTools} onDraftChange={setAccountDraft} />}
+          <OfflineSupport canReload={canReload && !accountDraft} />
         </dialog>
-      )}
     </div>
   );
 }

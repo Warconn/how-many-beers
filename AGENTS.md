@@ -124,3 +124,7 @@ checkpoint gaps or move the serving target. Hours/minutes inputs persist minutes
 First activity captures optional recordedPlanAt planned-position metadata; actual
 event timestamps remain immutable. Repeat drops those anchors with actuals. Full
 resource/dependency optimization remains #3. See docs/step-timing.md.
+
+## Account menu refinement (October 28, 2026)
+
+The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/backup is optional under Account → Earlier cooks, with no blocking banner. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.

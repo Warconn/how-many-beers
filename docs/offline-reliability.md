@@ -50,3 +50,7 @@ Installation uses the browser’s own controls; the app provides no install prom
 Run `npm test`, `npm run typecheck`, and `npm run test:e2e`. Install Chromium and WebKit with `npx playwright install --with-deps chromium webkit`, then run `npm run test:offline`. The latter builds the real static export and starts a localhost-only test server. Its worker-update controls are test fixtures and are never deployed. Offline tests use separate output/report directories from the development-server suite.
 
 Real iPhone/Android hardware suspension, storage-pressure eviction and outdoor usability remain hands-on alpha checks under #4. Automated engine tests and injected failures do not certify those device-specific conditions. Main/production promotion is separate from a feature preview or dev merge.
+
+## Menu-based updates (October 28, 2026)
+
+App updates are offered inside Account (Menu when accounts are disabled), never as a workspace banner. Worker registration and update detection stay mounted while the menu is closed. Updating is an optional explicit reload for an already-open app; normal service-worker activation after old tabs close needs no button. Open cook forms, pending saving and unfinished sign-in forms disable the action. Closing/reopening the menu retains the waiting update and cooking drafts.

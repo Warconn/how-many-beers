@@ -17,7 +17,7 @@ A signed-in account has one active/planning cook and a searchable list of comple
 
 A fresh guest can plan and cook in memory. Sign-in is offered when keeping a plan or completed cook; Finish without saving discards that cook. Guests do not accumulate persistent cook/history records. Routine UI does not describe browser storage. Account users see a compact saving/saved indicator, and actual failures have retry/export actions.
 
-Existing pre-account saved cooks are protected. On sign-in, an explicit choice previews the earlier cook/history counts: import, or use account cooks. Replacing a meaningful account cook requires confirmation. History is combined by stable archive ID with the account copy taking precedence. Original legacy records remain intact, and earlier unimported records remain downloadable through Account. A durable ownership reservation precedes upload so another account/guest cannot claim the same original private records after a failed upload. Backup/export remains available for account cooks and recovery data.
+Existing pre-account saved cooks are protected. Sign-in opens account cooks directly. Optional import/backup tools, including earlier cook/history counts, live under Account → Earlier cooks; they never block planning or cooking. Replacing a meaningful account cook requires confirmation. History is combined by stable archive ID with the account copy taking precedence. Original legacy records remain intact, and earlier unimported records remain downloadable through Account. A durable ownership reservation precedes upload so another account/guest cannot claim the same original private records after a failed upload. Backup/export remains available for account cooks and recovery data.
 
 ## Storage and access
 

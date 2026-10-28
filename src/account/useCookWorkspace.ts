@@ -12,7 +12,7 @@ import {
 import { newMeal, type Meal } from "@/domain/meal";
 import { migrateMeal } from "@/domain/cookState";
 import { useAccountCook } from "./useAccountCook";
-import { fingerprint, meaningful, mergeHistory } from "./workspace";
+import { meaningful, mergeHistory } from "./workspace";
 const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
 type Candidate = { snapshot: LocalSnapshot; legacy: boolean };
 export function useCookWorkspace() {
@@ -29,8 +29,8 @@ export function useCookWorkspace() {
   const trialRef = useRef(trial);
   trialRef.current = trial;
   const guestRef = useRef<Candidate | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null),
-    [selection, setSelection] = useState(0),
+  const [imported, setImported] = useState(false);
+  const [selection, setSelection] = useState(0),
     [transitionError, setTransitionError] = useState("");
   const mode =
     !enabled || account.phase === "disabled"
@@ -86,31 +86,20 @@ export function useCookWorkspace() {
         ? guestRef.current
         : legacyCandidate
       : null;
-  const candidateKey = candidate
-    ? account.ownerId + ":" + fingerprint(candidate.snapshot)
-    : null;
-  let skipped = false;
-  if (candidateKey) {
-    try {
-      skipped =
-        typeof window !== "undefined" &&
-        window.localStorage.getItem(
-          "how-many-beers:import-skip:" + account.ownerId,
-        ) === candidateKey;
-    } catch {
-      /* A decision can still be kept in memory. */
-    }
-  }
-  const needsImport = !!candidateKey && candidateKey !== dismissed && !skipped;
+  const earlierAvailable = !!candidate && !imported;
+  const selectedOwner = useRef<string | null>(null);
+  useEffect(() => {
+    if (!account.ownerId || !cloud.state.snapshot || selectedOwner.current === account.ownerId) return;
+    selectedOwner.current = account.ownerId;
+    setSelection(v => v + 1);
+  }, [account.ownerId, cloud.state.snapshot]);
   const data =
     mode === "disabled"
       ? local.meal
         ? { active: migrateMeal(local.meal), history: local.history }
         : null
       : account.ownerId
-        ? needsImport
-          ? candidate!.snapshot
-          : (cloud.state.snapshot ?? guestRef.current?.snapshot ?? trial)
+        ? (cloud.state.snapshot ?? guestRef.current?.snapshot ?? trial)
         : mode === "guest" && legacyScope === "guest"
           ? guest
           : mode === "checking"
@@ -118,9 +107,7 @@ export function useCookWorkspace() {
             : null;
   const backup =
     enabled && account.ownerId
-      ? needsImport
-        ? candidate!.snapshot
-        : cloud.state.backup
+      ? cloud.state.backup
       : data;
   const status =
     mode === "disabled" || (mode === "guest" && legacyAllowed)
@@ -149,12 +136,8 @@ export function useCookWorkspace() {
     enabled &&
     (mode === "checking" ||
       (!!account.ownerId &&
-        (needsImport ||
-          ["loading", "load-error", "saving", "blocked", "conflict"].includes(
-            cloud.state.phase,
-          ))));
+        ["loading", "load-error", "saving", "blocked", "conflict"].includes(cloud.state.phase)));
   const save = async (change: { active?: Meal; history?: HistoryLibrary }) => {
-    if (needsImport) throw Error("Choose which cook to use first.");
     if (enabled && account.ownerId) {
       if (!cloud.store.current) throw Error("Account cooks are loading.");
       await cloud.store.current.save(change);
@@ -170,10 +153,6 @@ export function useCookWorkspace() {
     setTransitionError("");
   };
   const patch = (fn: (m: Meal) => Meal) => {
-    if (needsImport) {
-      setTransitionError("Choose which cook to use first.");
-      return;
-    }
     try {
       if (enabled && account.ownerId) cloud.store.current?.edit(fn);
       else if (mode === "disabled" || legacyAllowed) local.patch(fn);
@@ -204,24 +183,10 @@ export function useCookWorkspace() {
     window.addEventListener("beforeunload", leave);
     return () => window.removeEventListener("beforeunload", leave);
   }, [trialDirty]);
-  const useAccountCooks = () => {
-    if (!candidateKey) return;
-    try {
-      window.localStorage.setItem(
-        "how-many-beers:import-skip:" + account.ownerId,
-        candidateKey,
-      );
-    } catch {
-      /* Keep the choice for this visit. */
-    }
-    setDismissed(candidateKey);
-    setTransitionError("");
-    setSelection((v) => v + 1);
-  };
   const importCooks = async () => {
     if (
       !candidate ||
-      !candidateKey ||
+      !earlierAvailable ||
       !cloud.state.snapshot ||
       !cloud.store.current ||
       !account.ownerId
@@ -258,7 +223,8 @@ export function useCookWorkspace() {
         /* Reserved owner remains safe; re-import is explicit and deduplicated. */
       }
     }
-    setDismissed(candidateKey);
+    setImported(true);
+    setSelection(v => v + 1);
     guestRef.current = null;
     setLegacyCandidate(null);
     setTransitionError("");
@@ -313,14 +279,13 @@ export function useCookWorkspace() {
           : "trial",
     locked,
     cloudPhase: cloud.state.phase,
-    needsImport,
+    earlierAvailable,
     candidate,
     accountSnapshot: cloud.state.snapshot,
     accountHasCook:
       !!cloud.state.snapshot &&
       meaningful({ ...cloud.state.snapshot, history: emptyHistory() }),
     importCooks,
-    useAccountCooks,
     reloadAccount,
     selection,
   };
