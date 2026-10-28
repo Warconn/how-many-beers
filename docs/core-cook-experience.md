@@ -292,3 +292,8 @@ Planning and Cooking Mode show the approved circle-mark Beerometer as a compact 
 
 
 Workspace refinement: routine saved-on-device labels are removed from all views. Save failures/recovery and explicit Save plan acknowledgements remain. Planning and Cooking Mode include the prominent sticky Beerometer in the same combined preview; compact header/navigation spacing brings it closer to the primary workspace.
+
+
+## Account sign-in preview (#19)
+
+An opt-in Account preview link leads to a separate email/social sign-in screen on explicitly trusted dev/feature origins. Email links/codes and configured Google/Apple providers return through a same-origin PKCE callback; session identity is verified and sign-out clears same-origin tabs. The screen explains that cooks still save locally. Login/logout never uploads, resets or removes existing cook data. Production stays disabled until separate setup and hosted tests. Identity linking, account deletion and account-backed persistence remain separate unfinished work. See [account setup and security gates](account-foundation.md).

@@ -524,3 +524,5 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .shell:has(.beerometer)>.back-link{margin:0 0 8px;min-height:36px}
 .cooking-navigation{gap:18px;margin:0 0 8px}.cooking-screen .cook-header{margin:0 0 12px}
 .cooking-screen .cook-header .eyebrow{margin-top:0}.cooking-screen .cook-header h2{margin:3px 0 5px}
+
+.account-page{max-width:640px}.account-page>.panel{margin-top:20px}.account-page button{margin-right:8px}.account-link{float:right;font-size:12px;min-height:44px;display:flex;align-items:center;color:var(--accent-dark)}

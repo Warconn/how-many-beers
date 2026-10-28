@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium webkit
       - name: Typecheck
@@ -29,6 +29,8 @@ jobs:
         run: npm run test
       - name: Browser tests
         run: npm run test:e2e
+      - name: Feature account sign-in tests (mock Auth responses)
+        run: npx playwright test --config playwright.auth.config.ts
       - name: Built-app offline and update tests (Android Chromium / iPhone WebKit)
         run: npm run test:offline
       - name: Upload browser report, screenshots and traces
@@ -39,6 +41,7 @@ jobs:
           path: |
             test-results/
             test-results-offline/
+            test-results-auth/
             playwright-report/
             playwright-offline-report/
           if-no-files-found: ignore

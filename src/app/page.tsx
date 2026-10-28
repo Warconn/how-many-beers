@@ -19,6 +19,7 @@ import { parseRecipeText } from "@/domain/recipe";
 import { archiveCook, exportBackup, MAX_BACKUP_BYTES, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
 import type { ArchivedCook } from "@/domain/cookHistory";
 import CookHistoryPanel from "@/components/CookHistoryPanel";
+import AccountLink from '@/components/AccountLink';
 import {useLocalCook} from '@/components/useLocalCook';
 import OfflineSupport from '@/components/OfflineSupport';
 
@@ -407,6 +408,7 @@ export default function Home() {
           </>}
         </div>
       </div>}
+      <AccountLink/>
       <header className="site-header">
         <div className="brand-icon" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
         <div>

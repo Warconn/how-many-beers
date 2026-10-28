@@ -1,6 +1,6 @@
-# Account foundation: #19, first delivery
+# Account foundation: #19, schema and sign-in preview
 
-This branch introduces the database ownership foundation and real PostgreSQL regression tests. It does **not** enable sign-in, deploy a hosted database, change guest saving, or complete #19/#20. The existing app remains browser-local until the auth and persistence integrations are reviewed.
+This branch introduces the database ownership foundation, real PostgreSQL regression tests and an opt-in sign-in preview. Email links/codes, configured Google/Apple buttons, PKCE callbacks, verified session display and device sign-out are implemented. Accounts default to disabled. No hosted migration has been applied by this branch, and cook saving remains browser-local even after signing in. #19 and #20 are not complete.
 
 ## Free-plan fit
 
@@ -33,28 +33,45 @@ Run `bash scripts/test-account-security.sh` with Docker available. The script us
 
 The suite covers cross-account reads/updates/deletes, forged ownership, cross-cook event insertion, missing identity, anonymous access, append-only events, invalid/oversized payloads, authoritative metadata, stale revisions, one-open-cook enforcement, completed snapshots and deletion cascades. An isolated negative-control run with RLS disabled fails at forged-owner insertion as expected.
 
-## Hosted setup handoff
+## Auth preview and verification
 
-1. Owner creates a Supabase organization and two **Free** projects: `how-many-beers-dev` and `how-many-beers-prod`. Select the same appropriate region for both. Keep dashboard access protected with MFA.
-2. After reviewing this migration, apply only `supabase/migrations/*.sql` to **dev** using the migration workflow/SQL editor. Never apply `supabase/tests/bootstrap.sql` to a hosted project. Production rollout waits for dev Auth/API integration tests.
-3. Configure dev and production separately. The upcoming browser client needs only each project's URL and publishable key. Secret/service-role keys and database passwords belong in protected server/environment configuration, never public code or chat.
-4. Configure Google, Apple and email authentication with exact callback allowlists. Production origin is `https://howmanybeers.app`; use an explicit dev origin rather than granting every preview access to production Auth. Use PKCE, verified identity linking and email recovery. Evaluate Facebook explicitly.
-5. #19's next delivery adds actual login/callback/session/logout/linking/account-deletion flows and two-account hosted API tests. Admin account deletion uses a protected server function, never a browser service-role key.
-6. #20 then connects acknowledged cloud saves, per-account recovery state, revision conflicts, previous cooks/search/details and Cook Again. Keep current guest data protected until that transition is explicit. Do not introduce the temporary new-guest behavior before account persistence/recovery works.
+The `/account/` screen offers email sign-in and only the social providers enabled in build configuration. `/account/callback/` exchanges a PKCE code, clears URL parameters immediately and returns to the same origin's account screen. Arbitrary return URLs are ignored. Identity display is verified through Auth `getUser`, rather than trusted from a cached profile. Session refresh uses the official SDK. Sign-out clears this origin's session across same-origin tabs; other website origins/devices retain their own sessions. Browser-local cooks are neither uploaded nor removed by login/logout.
 
-Migrations and test code live in GitHub. User records, real provider credentials and database backups do not. Use schema expansion/backups and reviewed forward fixes for production changes; do not drop private tables as a rollback shortcut.
+Run `npx playwright test --config playwright.auth.config.ts` for desktop Chromium and iPhone WebKit tests with **simulated Auth responses**. They cover email sign-in, reload, sign-out preserving legacy data, invalid codes, OAuth return, cancelled/failed callbacks, cached-profile verification and cross-tab sign-out. These tests do not establish real provider, SMTP, JWT or hosted API behavior. CI also runs existing application/offline regression suites. `npm install` uses a compatible PostCSS 8 patch override to address transitive security advisories without changing the Next.js major version.
 
-## Feature-preview testing with the dev project
+## Dev setup handoff
 
-The owner has created a dev project. Its URL and publishable key are prepared in ignored local environment configuration only; they are not consumed by this database-only slice. No database password or admin key has been supplied, and no hosted migration has been applied by this branch.
+The owner created dev project `txwfjuolsuauzeridxkv`. Its URL and publishable key are prepared in ignored `.env.local`; credentials are not committed. At this delivery, the owner reports that the migration and providers are **not configured**. No hosted setup has been performed from this workspace. A publishable key cannot perform administrative setup.
 
-Feature previews and the stable dev site can share that dev Supabase project. A user signs in separately on each website origin, while resolving to the same dev Auth user ID and owned database records. Edits are shared between these dev frontends, including the one-active-cook constraint. Use separate dev test accounts when independent cooks are needed. Shared-schema migrations must stay compatible with the dev app and other active previews.
+1. In the **dev Supabase SQL editor**, review and run [`202610280001_account_foundation.sql`](../supabase/migrations/202610280001_account_foundation.sql). Never run `supabase/tests/bootstrap.sql` or the local test scripts against hosted Supabase. Keep a record of the applied migration; reconcile the CLI migration baseline before future `db push` use. Production can wait until dev works.
+2. Under **Authentication → URL Configuration**, set the dev Site URL to `https://dev.how-many-beers.pages.dev`. Add exact redirect URLs:
+   - `https://feat-19-account-foundation.how-many-beers.pages.dev/account/callback/`
+   - `https://dev.how-many-beers.pages.dev/account/callback/` when testing integrated dev
+   - `http://localhost:3000/account/callback/` only when running locally with `DEPLOY_TARGET=cloudflare`
+   The branch alias was observed in the Cloudflare deployment check; changing branches or origins requires an explicit allowlist update. Do not broadly permit arbitrary preview origins.
+3. Start with **email** enabled. The built-in mail service restricts test recipients; use an allowed organization/team email for initial testing or configure custom SMTP for other recipients. The default magic-link template supports opening the link in the same browser that requested it. To offer code entry, the template must also include `{{ .Token }}`. PKCE links opened in another browser cannot use the original browser's verifier; request another email or enter the code in the original browser.
+4. Configure Google and/or Apple in **Authentication → Sign In / Providers** when ready. Their provider console redirect is **`https://txwfjuolsuauzeridxkv.supabase.co/auth/v1/callback`**, which differs from the frontend callback above. Keep client secrets in Supabase's provider settings. Enable only configured providers in the frontend. Google requests basic identity, not Gmail access. Apple membership/relay-email behavior needs separate verification.
+5. In the **Cloudflare Pages Preview build variables**, set the following and rebuild this branch. These are build-time values; changing them requires another build:
 
-Two different callback settings are involved:
+   ```dotenv
+   NEXT_PUBLIC_ENABLE_ACCOUNTS=true
+   NEXT_PUBLIC_AUTH_ENV=development
+   NEXT_PUBLIC_SUPABASE_URL=https://txwfjuolsuauzeridxkv.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<dev publishable key already supplied>
+   NEXT_PUBLIC_ACCOUNT_ORIGINS=https://feat-19-account-foundation.how-many-beers.pages.dev
+   NEXT_PUBLIC_AUTH_PROVIDERS=
+   ```
 
-- Google/Apple provider consoles use the **dev Supabase Auth callback**, `https://<dev-project-ref>.supabase.co/auth/v1/callback`.
-- Supabase Auth permits the frontend callback for each trusted preview and stable dev origin. The upcoming client will return to that same origin's `/auth/callback/` route to exchange its PKCE code. Add exact callback URLs after confirming the deployed preview URL; do not allow arbitrary preview code to authenticate against production.
+   Leave providers blank for email-only testing; use `google` or `google,apple` after those providers are configured. Origins are comma-separated exact origins without trailing slashes. Add stable dev only when intentionally enabling it. Preview deployment URLs containing a commit hash are not implicitly trusted; use the allowlisted stable branch alias. Keep `DEPLOY_TARGET=cloudflare` as in existing root builds. `.env.example` lists the defaults for local builds.
+6. Open the feature branch alias and choose **Account preview**, or visit `/account/`. Test email delivery/link/code, reload, sign-out, cancelled/expired links, and each configured provider on desktop and iPhone. Use two separate test accounts to verify hosted PostgREST ownership once the migration is applied. The account page explicitly explains that cloud cook saving is not available yet.
 
-Cloudflare build variables for trusted feature previews/stable dev will use the dev project's public URL and publishable key. The live canonical site must keep accounts disabled until its separate production project and provider settings are tested. Cloudflare's labels for production/preview environments do not by themselves establish database isolation: map each actual build/origin explicitly, especially while the Pages production branch is `dev`.
+Cloudflare's Production/Preview labels do not establish database isolation: this project currently builds `dev` as its Pages production branch. Do not enable accounts in that build environment without mapping its actual served origins. The canonical `https://howmanybeers.app` rejects dev auth configuration even if accidentally allowlisted; production requires a separate project and explicit `NEXT_PUBLIC_AUTH_ENV=production`. Keep canonical production disabled for this delivery. The origin/feature gates control rollout; verified JWTs and RLS remain the authorization boundary.
 
-The feature flag is a rollout control, not an authorization boundary. Even if someone accesses the public project endpoint directly, RLS must enforce ownership. This branch adds no login form or working callback route yet; those come in the next #19 slice after the dev migration is reviewed/applied.
+## Remaining #19 and #20 gates
+
+- Real hosted Auth/API tests, including two-user/anonymous isolation, actual JWT expiry/refresh, provider failures and iPhone callbacks.
+- Verified identity linking, linked-method settings, safe unlink/recovery rules and Apple relay-email cases. Signing in with another provider must not imply histories have been merged. Evaluate Facebook provider inclusion explicitly before marking #19 complete.
+- Authenticated export/account deletion and privacy/retention instructions. Admin deletion needs a protected server function; never put a service-role key in the static app.
+- #20: acknowledged cloud saves, validated plan payloads, per-account recovery, safe legacy-data migration, revision conflicts, history/details and Cook Again. Temporary guest behavior must wait for a safe transition.
+
+Feature previews and stable dev can share the dev Auth users and eventual owned cooks, while each origin maintains its own session. Use separate test accounts when independent active cooks are needed. Shared migrations must remain compatible with active dev/preview code. User records, provider secrets and backups stay outside GitHub. Use reviewed forward fixes and restore plans for production changes rather than dropping private data as a rollback.

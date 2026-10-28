@@ -52,7 +52,7 @@ Routine save-status labels are hidden. If a write fails, keep the tab open, down
 
 ## Run it locally
 
-The project uses **Next.js, React, and TypeScript**. Use Node.js 20 or newer.
+The project uses **Next.js, React, and TypeScript**. Use Node.js 22 or newer.
 
 ```bash
 npm install
@@ -75,6 +75,7 @@ For browser regression tests, install Playwright’s Chromium and WebKit browser
 npx playwright install chromium webkit
 npm run test:e2e
 npm run test:offline
+npx playwright test --config playwright.auth.config.ts
 ```
 
 The build uses Next.js static export. The canonical production site is https://howmanybeers.app on Cloudflare. `dev` is the integration and QA branch; `main` is the stable release branch. GitHub Pages is a legacy deployment target. Set `DEPLOY_TARGET=cloudflare` for a domain-root build; the legacy build uses `/how-many-beers/`. See [agent/development guidance](AGENTS.md) for the branch and review workflow.
@@ -85,7 +86,7 @@ The immediate coding sequence is **#50 Home cleanup → #19 free account foundat
 
 ## Account foundation work
 
-The first #19 delivery adds a private cook schema and database ownership tests; sign-in and cloud saving are not enabled yet. See [account setup, Free-plan limits and security gates](docs/account-foundation.md). Run `bash scripts/test-account-security.sh` to exercise the migration against isolated PostgreSQL with Docker.
+The #19 feature branch adds a private cook schema, database ownership tests and an opt-in account preview with email sign-in, configured Google/Apple providers, PKCE callbacks and device sign-out. Accounts remain disabled by default; signing in does not yet upload or sync cooks. Hosted migration/provider setup and real integration tests are pending. See [account setup, Free-plan limits and security gates](docs/account-foundation.md). Run `bash scripts/test-account-security.sh` to exercise the migration against isolated PostgreSQL with Docker.
 
 ## Documentation
 
