@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e/auth",
-  testMatch:"**/sign-in.spec.ts",
+  testMatch:["**/sign-in.spec.ts", "**/preview-origins.spec.ts"],
   outputDir: "test-results-auth",
   workers: 1,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
@@ -26,7 +26,7 @@ export default defineConfig({
       NEXT_PUBLIC_AUTH_ENV: "development",
       NEXT_PUBLIC_SUPABASE_URL: "https://auth.example.test",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_fixture",
-      NEXT_PUBLIC_ACCOUNT_ORIGINS: "http://127.0.0.1:3108",
+      NEXT_PUBLIC_ACCOUNT_ORIGINS: "http://127.0.0.1:3108,https://dev.how-many-beers.pages.dev,https://feat-*.how-many-beers.pages.dev",
       NEXT_PUBLIC_AUTH_PROVIDERS: "google,apple",
     },
   },

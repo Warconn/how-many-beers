@@ -50,3 +50,38 @@ it("offers email alone until social providers are explicitly configured", () => 
     "google",
   ]);
 });
+
+it("accepts any feat preview in the configured Pages project while keeping dev exact", () => {
+  configured();
+  vi.stubEnv("NEXT_PUBLIC_ACCOUNT_ORIGINS", "https://dev.how-many-beers.pages.dev,https://feat-*.how-many-beers.pages.dev");
+  for (const origin of ["https://dev.how-many-beers.pages.dev", "https://feat-19-account-foundation.how-many-beers.pages.dev", "https://feat-new-cook-history.how-many-beers.pages.dev"]) {
+    expect(accountConfig(origin), origin).not.toBeNull();
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "");
+    expect(callbackUrl(origin)).toBe(origin + "/account/callback/");
+  }
+});
+it("rejects unrelated, nested, malformed and non-HTTPS origins under a feat wildcard", () => {
+  configured();
+  vi.stubEnv("NEXT_PUBLIC_ACCOUNT_ORIGINS", "https://feat-*.how-many-beers.pages.dev");
+  for (const origin of [
+    "https://howmanybeers.app", "https://how-many-beers.pages.dev", "https://main.how-many-beers.pages.dev",
+    "https://dev.how-many-beers.pages.dev", "https://a4b9b55.how-many-beers.pages.dev", "https://fix-bug.how-many-beers.pages.dev",
+    "https://feat-test.other-project.pages.dev", "https://feat-test.how-many-beers.pages.dev.evil.example",
+    "https://feat-test.nested.how-many-beers.pages.dev", "https://feat-.how-many-beers.pages.dev", "https://feat-trailing-.how-many-beers.pages.dev",
+    "https://feat-" + "a".repeat(60) + ".how-many-beers.pages.dev",
+    "http://feat-test.how-many-beers.pages.dev", "https://feat-test.how-many-beers.pages.dev:8443",
+    "https://user@feat-test.how-many-beers.pages.dev", "https://feat-test.how-many-beers.pages.dev/path", "https://feat-test.how-many-beers.pages.dev?test=1",
+  ]) expect(accountConfig(origin), origin).toBeNull();
+});
+it("does not interpret broader wildcard rules or enable feat patterns in production", () => {
+  configured();
+  const origin="https://feat-test.how-many-beers.pages.dev";
+  for (const rule of ["*", "https://*.pages.dev", "https://*.how-many-beers.pages.dev", "http://feat-*.how-many-beers.pages.dev", "https://feat-*.how-many-beers.pages.dev/**"]) {
+    vi.stubEnv("NEXT_PUBLIC_ACCOUNT_ORIGINS", rule);
+    expect(accountConfig(origin), rule).toBeNull();
+  }
+  vi.stubEnv("NEXT_PUBLIC_AUTH_ENV", "production");
+  vi.stubEnv("NEXT_PUBLIC_ACCOUNT_ORIGINS", "https://howmanybeers.app,https://feat-*.how-many-beers.pages.dev");
+  expect(accountConfig(origin)).toBeNull();
+  expect(accountConfig("https://howmanybeers.app")).not.toBeNull();
+});

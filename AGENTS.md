@@ -132,3 +132,7 @@ The owner confirmed existing cooks are throwaway and migration must not dominate
 Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
 
 For account environment setup, follow [dev and feature testing](docs/dev-account-testing.md). The default how-many-beers.pages.dev origin follows main, not dev. Dev and trusted feature previews share the dev Supabase project/data but have separate origin sessions.
+
+## Dynamic feature account previews (October 28, 2026)
+
+The owner requested automatic account access for future feat branches. Preview configuration supports `https://feat-*.how-many-beers.pages.dev` alongside exact dev, only with development auth settings. Supabase redirects use the matching pattern with the fixed `/account/callback/` path. Keep production exact; do not expand to all pages.dev hosts, hash deployments or unrelated branch prefixes. New feature branches must include the updated matcher from dev.
