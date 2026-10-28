@@ -100,7 +100,7 @@ test('Home has no install or offline help while preparation stays functional',as
  await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
  await page.screenshot({path:info.outputPath('clean-home-production.png'),fullPage:true});
- await page.getByRole('button',{name:/Plan a new cook/}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();

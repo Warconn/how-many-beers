@@ -518,3 +518,9 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 @media(max-width:650px){.beerometer{top:4px;padding:12px;gap:10px}.beerometer-main{flex-basis:auto;gap:8px}.beerometer-emblem{width:36px;height:36px}.beerometer h2{font-size:17px}.beerometer-copy>p:last-child{font-size:10px;line-height:1.4}.beerometer-reading{margin-left:auto;max-width:45%}.beerometer-figure{gap:5px}.beerometer-figure strong{font-size:31px}.beerometer-figure span{font-size:11px}.beerometer-clock{font-size:10px;text-align:right}.beerometer-scale{font-size:9px;text-align:right}.guided-step .cook-task,.full-cook-checklist{scroll-margin-top:140px}}
 
 @media(min-width:901px){.planning-screen .guided-schedule{top:132px}}
+
+/* Compact active-workspace header; the Beerometer leads the working area. */
+.shell:has(.beerometer) .site-header{margin-bottom:8px;padding-bottom:10px}
+.shell:has(.beerometer)>.back-link{margin:0 0 8px;min-height:36px}
+.cooking-navigation{gap:18px;margin:0 0 8px}.cooking-screen .cook-header{margin:0 0 12px}
+.cooking-screen .cook-header .eyebrow{margin-top:0}.cooking-screen .cook-header h2{margin:3px 0 5px}

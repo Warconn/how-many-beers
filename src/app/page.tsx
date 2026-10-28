@@ -416,7 +416,6 @@ export default function Home() {
         </div>
         
       </header>
-      {view!=="home"&&<p className="device-save-state" aria-live="polite">{storageStatus==='saved'?'Saved on this device':storageStatus==='recovery'?'Saved data protected':storageStatus==='conflict'?'Another tab has newer saved data':'Changes not saved on this device'}</p>}
       {view!=="home"&&offlineSupport}
 
 
@@ -457,7 +456,6 @@ export default function Home() {
             <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
           </section>
           <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <span aria-hidden="true">→</span></button>
-          <p className="home-storage-note">Saved on this device only. <button type="button" onClick={()=>setView("history")}>Back up your cooks</button> before switching browsers.</p>
           </div>
           <aside className="home-guide" aria-label="How it works">
             <p className="eyebrow">THE GAME PLAN</p>
@@ -490,7 +488,7 @@ export default function Home() {
             <section className="panel active-cook-panel">
               <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
               <div className="progress-track"><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div>
-              <p className="cook-autosave-note muted small">{storageStatus==='saved'?'Changes save automatically on this device.':'Your latest changes are not saved. Keep this tab open and download a backup.'}</p>
+              {storageStatus!=='saved'&&<p className="cook-autosave-note muted small">Your latest changes are not saved. Keep this tab open and download a backup.</p>}
               {cookingDraftOpen && <p className="notice" id="cooking-draft-help">Save or cancel the open edit or reading before switching steps.</p>}
               {message && <p className="form-error" role="alert">{message}</p>}
               {navigationNote && <p className="step-navigation-note" role="status">{navigationNote}</p>}

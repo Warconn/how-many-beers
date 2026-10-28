@@ -289,3 +289,6 @@ Brisket, turkey and brats starters now reflect user-supplied methods. Turkey pre
 ## Prominent Beerometer (October 28, 2026)
 
 Planning and Cooking Mode show the approved circle-mark Beerometer as a compact sticky banner. It stays visible through dish editing, checklist navigation and scrolling. The existing selected-dish start-to-finish calculation remains unchanged (brisket preferred, otherwise first dish); it is a time scale of 90 minutes per beer, not a prediction of beers remaining until dinner. Empty/untimed plans show a dash. Critical unsaved/conflict warnings take precedence over the sticky banner.
+
+
+Workspace refinement: routine saved-on-device labels are removed from all views. Save failures/recovery and explicit Save plan acknowledgements remain. Planning and Cooking Mode include the prominent sticky Beerometer in the same combined preview; compact header/navigation spacing brings it closer to the primary workspace.

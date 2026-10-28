@@ -48,7 +48,7 @@ test('failed critical writes remain visibly unsaved, exportable and retryable',a
   const backup=JSON.parse(await readFile((await (await download).path())!,'utf8'));expect(Object.keys(backup.active.completed)).toHaveLength(1);
   await page.evaluate(()=>(window as unknown as {restoreWrites:()=>void}).restoreWrites());
   await page.getByRole('button',{name:'Retry saving',exact:true}).click();
-  await expect(page.getByText('Saved on this device',{exact:true})).toBeVisible();
+  await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
   await page.reload();
   expect(Object.keys(await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!).completed,ACTIVE_KEY))).toHaveLength(1);
 });
