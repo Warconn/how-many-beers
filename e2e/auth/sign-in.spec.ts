@@ -74,7 +74,9 @@ test("email sign-in, reload and local sign-out preserve browser-local cook data"
     localStorage.setItem("how-many-beers:meal:v1", '{"fixture":"legacy-data"}'),
   );
   await page.goto("/account/");
-  await expect(page.getByText(/Account preview: cook saving/)).toBeVisible();
+  await expect(
+    page.getByText(/Cook saving is still browser-local/),
+  ).toBeVisible();
   await page.getByLabel("Email address").fill(user.email);
   await page
     .getByRole("button", { name: "Send sign-in email", exact: true })
@@ -213,4 +215,171 @@ test("failed PKCE exchange clears its code and offers another sign-in attempt", 
   await expect(
     page.getByRole("button", { name: "Send sign-in email", exact: true }),
   ).toBeVisible();
+});
+
+test("planner sign-in stays in the workspace and preserves an open recipe draft", async ({
+  page,
+}, info) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page
+    .getByRole("button", { name: "Add smoked brisket", exact: true })
+    .click();
+  await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Import a recipe", exact: true })
+    .click();
+  await page.getByLabel("Recipe title").fill("Friday beans");
+  const before = await page.evaluate(() =>
+    localStorage.getItem("how-many-beers:meal:v1"),
+  );
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Your account" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Email address").fill(user.email);
+  await dialog
+    .getByRole("button", { name: "Send sign-in email", exact: true })
+    .click();
+  await dialog.getByLabel("Email code").fill("123456");
+  await dialog
+    .getByRole("button", { name: "Verify code", exact: true })
+    .click();
+  await expect(
+    dialog.getByText("Signed in as " + user.email, { exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: info.outputPath("account-planning-dialog.png"),
+  });
+  await dialog
+    .getByRole("button", { name: "Close account", exact: true })
+    .click();
+  await expect(page.getByLabel("Recipe title")).toHaveValue("Friday beans");
+  await expect(
+    page.getByRole("button", { name: "Account", exact: true }),
+  ).toBeFocused();
+  expect(
+    await page.evaluate(() => localStorage.getItem("how-many-beers:meal:v1")),
+  ).toBe(before);
+  expect(page.url()).toBe("http://127.0.0.1:3108/");
+});
+
+test("account access works in cooking and history without changing cook progress", async ({
+  page,
+}, info) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page
+    .getByRole("button", { name: "Add smoked brisket", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Start cooking", exact: true })
+    .click();
+  const before = await page.evaluate(() =>
+    localStorage.getItem("how-many-beers:meal:v1"),
+  );
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Your account" });
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole("button", { name: "Close account", exact: true })
+    .click();
+  await expect(
+    page.getByText("Today's checklist", { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("how-many-beers:meal:v1")),
+  ).toBe(before);
+  await page.screenshot({
+    path: info.outputPath("account-cooking-header.png"),
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: /Home/ }).first().click();
+  await page.getByRole("button", { name: /Past cooks and backups/ }).click();
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Cook History", exact: true }),
+  ).toBeVisible();
+});
+
+test("redirected sign-in can return to the same cooking view with exact saved progress", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page
+    .getByRole("button", { name: "Add smoked brisket", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Start cooking", exact: true })
+    .click();
+  const before = await page.evaluate(() =>
+    localStorage.getItem("how-many-beers:meal:v1"),
+  );
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Your account" })
+    .getByRole("button", { name: "Continue with Google", exact: true })
+    .click();
+  await expect(
+    page.getByText("Signed in as " + user.email, { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "← Back to cook", exact: true }).click();
+  await expect(
+    page.getByText("Today's checklist", { exact: true }),
+  ).toBeVisible();
+  expect(page.url()).toBe("http://127.0.0.1:3108/");
+  expect(
+    await page.evaluate(() => localStorage.getItem("how-many-beers:meal:v1")),
+  ).toBe(before);
+});
+
+test("verification errors hide cached identity and offer retry without touching the cook", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.goto("/");
+  await page.evaluate(
+    ({ value }) =>
+      localStorage.setItem("how-many-beers:auth:v1", JSON.stringify(value)),
+    {
+      value: { ...session(), expires_at: Math.floor(Date.now() / 1000) + 3600 },
+    },
+  );
+  let unavailable = true;
+  await page.route(api + "user", (route) =>
+    unavailable
+      ? route.fulfill({
+          status: 400,
+          json: { code: "unexpected_failure", msg: "Temporary auth failure" },
+        })
+      : route.fulfill({ json: user }),
+  );
+  await page.reload();
+  const before = await page.evaluate(() =>
+    localStorage.getItem("how-many-beers:meal:v1"),
+  );
+  await page.getByRole("button", { name: "Account", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Your account" });
+  await expect(
+    dialog.getByText(/Reconnect to confirm your account/),
+  ).toBeVisible();
+  await expect(
+    dialog.getByText("Signed in as " + user.email, { exact: true }),
+  ).toHaveCount(0);
+  unavailable = false;
+  await dialog
+    .getByRole("button", { name: "Retry account connection", exact: true })
+    .click();
+  await expect(
+    dialog.getByText("Signed in as " + user.email, { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("how-many-beers:meal:v1")),
+  ).toBe(before);
 });

@@ -86,7 +86,7 @@ The immediate coding sequence is **#50 Home cleanup → #19 free account foundat
 
 ## Account foundation work
 
-The #19 feature branch adds a private cook schema, database ownership tests and an opt-in account preview with email sign-in, configured Google/Apple providers, PKCE callbacks and device sign-out. Accounts remain disabled by default; signing in does not yet upload or sync cooks. Hosted migration/provider setup and real integration tests are pending. See [account setup, Free-plan limits and security gates](docs/account-foundation.md). Run `bash scripts/test-account-security.sh` to exercise the migration against isolated PostgreSQL with Docker.
+The #19 feature branch adds a private cook schema, database ownership tests and an opt-in account preview with email sign-in, configured Google/Apple providers, PKCE callbacks and device sign-out. A shared header account control opens sign-in in place across Home, planning, cooking and history while preserving drafts; redirected sign-in can return to the same cook view. Accounts remain disabled by default; signing in does not yet upload or sync cooks. The owner has confirmed live dev email-link sign-in. Google/Apple setup and hosted ownership/refresh integration checks remain pending. See [account setup, Free-plan limits and security gates](docs/account-foundation.md). Run `bash scripts/test-account-security.sh` to exercise the migration against isolated PostgreSQL with Docker.
 
 ## Documentation
 

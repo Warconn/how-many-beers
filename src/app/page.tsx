@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
 import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
@@ -19,7 +19,8 @@ import { parseRecipeText } from "@/domain/recipe";
 import { archiveCook, exportBackup, MAX_BACKUP_BYTES, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
 import type { ArchivedCook } from "@/domain/cookHistory";
 import CookHistoryPanel from "@/components/CookHistoryPanel";
-import AccountLink from '@/components/AccountLink';
+import AccountControl from '@/components/AccountControl';
+import {takeCookReturn} from '@/auth/returnToCook';
 import {useLocalCook} from '@/components/useLocalCook';
 import OfflineSupport from '@/components/OfflineSupport';
 
@@ -120,6 +121,17 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
 export default function Home() {
   const {meal,history,status:storageStatus,error:storageError,setError:setStorageError,patch,save,retry,reset,restore,recoveryExport}=useLocalCook();
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
+  const [accountOpen,setAccountOpen]=useState(false);
+  const accountReturnHandled=useRef(false);
+  useEffect(()=>{
+    if(!meal||accountReturnHandled.current)return;
+    accountReturnHandled.current=true;
+    const url=new URL(window.location.href);
+    if(url.searchParams.get("account-return")!=="1")return;
+    url.searchParams.delete("account-return");
+    window.history.replaceState(null,"",url.pathname+url.search+url.hash);
+    try{const returning=takeCookReturn(window.sessionStorage,meal.id);if(returning)setView(returning==="cooking"&&meal.mode!=="cooking"?"planning":returning);}catch{/* Fall back to Home if tab storage is unavailable. */}
+  },[meal]);
   const [showDishSetup, setShowDishSetup] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [showChecklistPreview, setShowChecklistPreview] = useState(false);
@@ -389,7 +401,7 @@ export default function Home() {
     }
   };
 
-  const offlineSupport=<OfflineSupport canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
+  const offlineSupport=<OfflineSupport canReload={!accountOpen&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
@@ -408,7 +420,6 @@ export default function Home() {
           </>}
         </div>
       </div>}
-      <AccountLink/>
       <header className="site-header">
         <div className="brand-icon" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
         <div>
@@ -416,7 +427,7 @@ export default function Home() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-        
+        {meal&&<AccountControl view={view} cookId={meal.id} onOpenChange={setAccountOpen}/>}
       </header>
       {view!=="home"&&offlineSupport}
 

@@ -41,3 +41,12 @@ it("callbacks retain the supported deployment base and fixed account destination
     "https://preview.example/how-many-beers/account/callback/",
   );
 });
+it("offers email alone until social providers are explicitly configured", () => {
+  configured();
+  vi.stubEnv("NEXT_PUBLIC_AUTH_PROVIDERS", "");
+  expect(accountConfig("https://preview.example")?.providers).toEqual([]);
+  vi.stubEnv("NEXT_PUBLIC_AUTH_PROVIDERS", "google,unknown");
+  expect(accountConfig("https://preview.example")?.providers).toEqual([
+    "google",
+  ]);
+});
