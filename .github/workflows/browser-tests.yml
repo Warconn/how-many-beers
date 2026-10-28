@@ -22,13 +22,15 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
         run: npm run test
       - name: Browser tests
         run: npm run test:e2e
+      - name: Built-app offline and update tests (Android Chromium / iPhone WebKit)
+        run: npm run test:offline
       - name: Upload browser report, screenshots and traces
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,6 +38,8 @@ jobs:
           name: playwright-browser-report
           path: |
             test-results/
+            test-results-offline/
             playwright-report/
+            playwright-offline-report/
           if-no-files-found: ignore
           retention-days: 14

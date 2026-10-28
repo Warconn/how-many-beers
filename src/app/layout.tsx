@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title,
   description,
   applicationName: "How Many Beers?",
+  manifest: asset('/manifest.webmanifest'),
   alternates: { canonical: `${site}/` },
   openGraph: {
     type: "website", url: `${site}/`, siteName: "How Many Beers?", title, description,

@@ -1,3 +1,7 @@
+## Local reliability increment (#10)
+
+Committed actions acknowledge browser writes; failures remain visibly unsaved and exportable. Malformed saves are protected, restore/archive transitions use a recovery journal, and modern browsers allow one cooking writer tab. The built app adds scoped offline caching and installation with an explicit, draft-safe app-update action. Existing cook IDs, actual events, version-one saves and JSON backups are retained. See [offline reliability](offline-reliability.md) for the recovery protocol, automated tests and remaining real-hardware alpha checks.
+
 ## Brand identity increment (#45)
 
 Home, the shared header/footer, README and site metadata use **How Many Beers?** and **From First Beer to First Bite.** with the approved Classic Dial beer-clock SVG. First-visit Home explains serving time → dishes → plan adjustments → guided cooking. Returning cooks keep a compact header and their existing Resume/Continue actions; branding never changes saved state. See [brand identity and assets](brand-identity.md). This focused increment does not redesign Cooking Mode or implement #21's broader visual cleanup.
