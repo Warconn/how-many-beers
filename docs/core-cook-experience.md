@@ -1,3 +1,11 @@
+## Local reliability increment (#10)
+
+Committed actions acknowledge browser writes; failures remain visibly unsaved and exportable. Malformed saves are protected, restore/archive transitions use a recovery journal, and modern browsers allow one cooking writer tab. The built app adds scoped offline caching and installation with an explicit, draft-safe app-update action. Existing cook IDs, actual events, version-one saves and JSON backups are retained. See [offline reliability](offline-reliability.md) for the recovery protocol, automated tests and remaining real-hardware alpha checks.
+
+## Brand identity increment (#45)
+
+Home, the shared header/footer, README and site metadata use **How Many Beers?** and **From First Beer to First Bite.** with the approved Classic Dial beer-clock SVG. First-visit Home explains serving time → dishes → plan adjustments → guided cooking. Returning cooks keep a compact header and their existing Resume/Continue actions; branding never changes saved state. See [brand identity and assets](brand-identity.md). This focused increment does not redesign Cooking Mode or implement #21's broader visual cleanup.
+
 ## Production release and outstanding UX bugs (October 26, 2026)
 
 Core Cook Experience release [PR #29](https://github.com/Warconn/how-many-beers/pull/29) reached `main` at `3e7868d`; user confirmed the GitHub Pages production site reflects the release. Current capabilities include Home/resume, Guided Planner, unified template/text-import Add Dish, expandable step controls, and CI Playwright. This is a functional baseline, **not a polished finished planner**.
@@ -68,6 +76,10 @@ Allow one active/planning cook per user or device, with many completed archived 
 - Show the difference between planned schedule and actual observations. Never auto-complete a food-safety check based on elapsed time.
 - Single-device persistence should be preserved, with candid warning and export for risks. Cloud auth remains optional and later.
 - Mobile-first, usable one-handed near a grill, no obligatory "Start Step" ceremony.
+
+## Home cleanup (#50)
+
+Home flows directly from the brand header into its first-visit/returning content. The redundant hero eyebrow and routine local/offline status block are removed from that prime space. Install/offline help, install prompts and routine offline-readiness text are removed from all screens. Offline preparation and cache repair run in the background. Planning/cooking retain functional save feedback and safe app-update controls, and critical storage/recovery warnings stay visible on Home and throughout the cook. This is a presentation change; persistence, backup and worker policies are unchanged.
 
 ## First UX change: Home and session entry (P0)
 **Objective:** Replace the current immediate planner/form landing with a distinct Home state that routes into the existing workspace or cooking view.
@@ -267,3 +279,16 @@ pushes following timed recipe steps while preserving their spacing. Shortening o
 Use plan timing removes the extra delay. Other dishes, fixed/recorded steps and actual
 activity stay intact; conflicts and a serving-target overrun produce warnings. Untimed
 stages break links; custom/general prep stays independent. See [step timing rules](step-timing.md).
+
+
+## Personal template content (October 28, 2026)
+
+Brisket, turkey and brats starters now reflect user-supplied methods. Turkey preparation has thawing status and editable remaining thaw days, brine hours and refrigerated air-dry hours, scheduled before roast day. The brat tray precedes Blackstone searing; brisket guessed weights are not measured estimator inputs. Personal notes and app timing allowances remain explicit. No historical completions are invented. See [personal template provenance](personal-templates.md).
+
+
+## Prominent Beerometer (October 28, 2026)
+
+Planning and Cooking Mode show the approved circle-mark Beerometer as a compact sticky banner. It stays visible through dish editing, checklist navigation and scrolling. The existing selected-dish start-to-finish calculation remains unchanged (brisket preferred, otherwise first dish); it is a time scale of 90 minutes per beer, not a prediction of beers remaining until dinner. Empty/untimed plans show a dash. Critical unsaved/conflict warnings take precedence over the sticky banner.
+
+
+Workspace refinement: routine saved-on-device labels are removed from all views. Save failures/recovery and explicit Save plan acknowledgements remain. Planning and Cooking Mode include the prominent sticky Beerometer in the same combined preview; compact header/navigation spacing brings it closer to the primary workspace.

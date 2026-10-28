@@ -1,0 +1,21 @@
+import {test,expect} from '@playwright/test';
+test.use({timezoneId:'America/New_York'});
+test('personal methods appear in one cook and turkey prep responds to thawing status',async({page},info)=>{
+ await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await page.getByRole('button',{name:'Add turkey (oven)',exact:true}).click();
+ const prep=page.getByRole('region',{name:'Turkey preparation',exact:true});
+ await expect(prep.getByLabel('Turkey thawing status')).toHaveValue('frozen');
+ await expect(prep.getByLabel('Refrigerator thaw days remaining')).toHaveValue('6');
+ await expect(page.getByRole('article',{name:'Turkey (oven)',exact:true})).toContainText('Start refrigerated brine');
+ await prep.getByLabel('Turkey thawing status').selectOption('thawed');
+ await expect(page.getByRole('article',{name:'Turkey (oven)',exact:true})).toContainText('Confirm turkey is fully thawed');
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();
+ const brats=page.getByRole('article',{name:'Grilled beer-bath brats',exact:true});
+ await expect(brats).toContainText('Cover and cook the brat tray');await expect(brats).toContainText('Drain and sear on the Blackstone');await expect(brats).toContainText('2 hours');
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ const brisket=page.getByRole('article',{name:'Smoked brisket',exact:true});await expect(brisket).toContainText('Cow Cover');await expect(brisket).toContainText('180');
+ await page.screenshot({path:info.outputPath('personal-brisket.png'),fullPage:true});
+ await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();await prep.screenshot({path:info.outputPath('turkey-preparation.png')});
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();await expect(prep.getByLabel('Turkey thawing status')).toHaveValue('thawed');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.dishes).toHaveLength(3);
+});

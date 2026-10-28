@@ -468,3 +468,59 @@ footer .build-version{float:right;margin-left:16px;font-family:ui-monospace,SFMo
 @media(max-width:600px){.cook-actions .cook-action-controls{align-items:stretch;gap:8px}.cook-actions .review-checklist-button{align-self:center}}
 
 .duration-controls{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:end;min-width:0}.duration-controls label{min-width:0}.duration-controls input,.duration-controls select{min-height:44px}
+
+/* #45: approved Classic Dial identity. Keep active-cook actions ahead of branding. */
+.site-header,.home-layout,footer{--muted:#6d675f}
+.site-header .brand-icon{width:64px;height:64px;background:transparent;border-radius:50%}
+.brand-icon img,.beerometer-emblem img{display:block;width:100%;height:100%;object-fit:contain}
+.beerometer-emblem{background:transparent;border:0;border-radius:50%}
+.site-header h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(24px,2.7vw,32px);letter-spacing:-1px;color:var(--dark)}
+.site-header .subtitle{color:var(--accent-dark);line-height:1.45}
+.home-first-visit .home-intro h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(36px,4.2vw,53px);font-weight:600;line-height:1.08;letter-spacing:-1.8px;margin:15px 0 18px;color:var(--dark)}
+.home-first-visit .home-intro .eyebrow{font-size:10px;letter-spacing:1.1px}
+.home-product-line{font-size:16px;font-weight:600;line-height:1.55;color:var(--ink);margin:0 0 12px}
+.home-first-visit .home-intro .muted{max-width:490px;font-size:15px}
+.home-first-visit .home-new{background:transparent;padding:0;border:0;border-radius:0}
+.home-first-visit .home-new h3,.home-first-visit .home-new>.muted{display:none}
+.home-first-visit .home-new .button{margin-top:0;min-height:48px;padding:13px 23px}
+.home-first-visit .home-intro{margin-bottom:22px}
+.home-guide h3{font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:600;line-height:1.15}
+.home-guide-step strong{color:var(--dark)}
+.home-layout button:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+@media(max-width:700px){
+ .site-header .brand-icon{width:54px;height:54px}
+ .site-header h1{font-size:26px}
+ .site-header .subtitle{font-size:12px}
+ .home-first-visit .home-intro h2{font-size:clamp(34px,8.8vw,44px);letter-spacing:-1.2px}
+ .home-first-visit .home-intro{margin-bottom:20px}
+ .home-first-visit .home-intro .muted{font-size:14px}
+ .home-product-line{font-size:15px}
+ .home-first-visit .home-new .button{width:100%}
+ .home-returning .home-intro{margin-bottom:18px}
+}
+
+/* Device-local durability and offline access. */
+.device-save-state{font-size:12px;color:#57524b;margin:-18px 0 16px;line-height:1.5}
+.storage-recovery-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.storage-alert{position:sticky;top:8px;z-index:50;box-shadow:0 5px 20px #28272220}
+main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
+.storage-recovery-actions button,.offline-access button{border:1px solid #c5ad91;border-radius:8px;padding:10px 13px;min-height:44px;background:#fffdf9;color:#873a1e;font-weight:600}
+.offline-access{font-size:12px;color:#57524b;margin:0 0 20px;line-height:1.5}
+.offline-access>p{min-height:18px;margin:0 0 5px}
+.offline-access summary{cursor:pointer;padding:8px 0;min-height:44px;color:#873a1e}
+.offline-access details p{max-width:650px}
+.offline-access button:disabled{opacity:.55;cursor:not-allowed}
+
+/* The branded time scale stays in view without covering cook actions. */
+.beerometer{position:sticky;top:8px;z-index:25;flex-wrap:nowrap;gap:16px;padding:14px 20px;margin:0 0 18px;border-radius:14px}
+.beerometer-main{flex:1 1 auto;gap:12px}.beerometer-emblem{width:46px;height:46px}.beerometer h2{font-size:21px;margin:2px 0 4px}.beerometer .eyebrow{font-size:10px;margin:0}.beerometer-copy>p:last-child{font-size:11px}.beerometer-reading{flex:0 0 auto;align-items:flex-end}.beerometer-figure strong{font-size:36px}.beerometer-figure span{font-size:13px}.beerometer-clock{font-size:11px}.beerometer-scale{margin:0;color:#dac8af;font-size:10px;line-height:1.4}
+.guided-step .cook-task,.full-cook-checklist{scroll-margin-top:150px}.shell:has(.storage-alert) .beerometer{position:static}
+@media(max-width:650px){.beerometer{top:4px;padding:12px;gap:10px}.beerometer-main{flex-basis:auto;gap:8px}.beerometer-emblem{width:36px;height:36px}.beerometer h2{font-size:17px}.beerometer-copy>p:last-child{font-size:10px;line-height:1.4}.beerometer-reading{margin-left:auto;max-width:45%}.beerometer-figure{gap:5px}.beerometer-figure strong{font-size:31px}.beerometer-figure span{font-size:11px}.beerometer-clock{font-size:10px;text-align:right}.beerometer-scale{font-size:9px;text-align:right}.guided-step .cook-task,.full-cook-checklist{scroll-margin-top:140px}}
+
+@media(min-width:901px){.planning-screen .guided-schedule{top:132px}}
+
+/* Compact active-workspace header; the Beerometer leads the working area. */
+.shell:has(.beerometer) .site-header{margin-bottom:8px;padding-bottom:10px}
+.shell:has(.beerometer)>.back-link{margin:0 0 8px;min-height:36px}
+.cooking-navigation{gap:18px;margin:0 0 8px}.cooking-screen .cook-header{margin:0 0 12px}
+.cooking-screen .cook-header .eyebrow{margin-top:0}.cooking-screen .cook-header h2{margin:3px 0 5px}

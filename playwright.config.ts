@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const port = 3100;
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: '**/offline/**',
   timeout: 30_000,
   expect: { timeout: 8_000 },
   fullyParallel: true,

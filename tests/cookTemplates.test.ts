@@ -3,7 +3,7 @@ import {createDish, newMeal, presets} from "../src/domain/meal";
 import {buildTimeline} from "../src/domain/schedule";
 import {templateSteps} from "../src/data/cookTemplates";
 
-describe("researched starter templates",()=>{
+describe("starter cooking templates",()=>{
   for(const preset of ["brisket","wings","brats","turkey"] as const){
     it(preset+" has sourced, ordered stages with a verified finish check",()=>{
       const meal=newMeal();
@@ -39,7 +39,7 @@ describe("researched starter templates",()=>{
     expect(ids.indexOf("check")).toBeLessThan(ids.indexOf("oil"));
     expect(ids.indexOf("oil")).toBeLessThan(ids.indexOf("fry"));
   });
-  it("grilled brats reach their checked safe temperature before the beer bath",()=>{
+  it("tray brats are temperature-checked before draining and searing",()=>{
     const meal=newMeal();meal.dishes=[createDish("brats")];
     const ids=buildTimeline(meal).map(t=>t.id.split(":").at(-1));
     expect(ids.indexOf("check")).toBeLessThan(ids.indexOf("bath"));

@@ -1,19 +1,23 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect,useState} from "react";
 
 export default function AddStepForm({
   onAdd,
-  compact=false
+  compact=false,
+  onDraftChange
 }:{
   onAdd:(title:string,instructions:string,scheduledAt:string|null)=>void;
   compact?:boolean;
+  onDraftChange?:(dirty:boolean)=>void;
 }){
   const [open,setOpen]=useState(false);
   const [title,setTitle]=useState("");
   const [instructions,setInstructions]=useState("");
   const [localTime,setLocalTime]=useState("");
   const [error,setError]=useState("");
+  useEffect(()=>{onDraftChange?.(open||!!title||!!instructions||!!localTime);},[open,title,instructions,localTime,onDraftChange]);
+  useEffect(()=>()=>onDraftChange?.(false),[onDraftChange]);
 
   return <section className={"add-step-block "+(compact?"compact":"")}>
     <button type="button" className="add-step-trigger" aria-expanded={open} onClick={()=>{setOpen(v=>!v);setError("");}}>
@@ -35,6 +39,7 @@ export default function AddStepForm({
       <p className="muted small">Leave timing blank for an unscheduled step. You can reorder it afterward.</p>
       {error && <p role="alert" className="form-error">{error}</p>}
       <button type="submit" className="button primary">Add step</button>
+      <button type="button" className="button secondary" onClick={()=>{setTitle('');setInstructions('');setLocalTime('');setError('');setOpen(false);}}>Cancel step</button>
     </form>}
   </section>;
 }
