@@ -5,9 +5,12 @@ import {ACTIVE_KEY,HISTORY_KEY} from '../../src/domain/cookHistory';
 
 test.use({timezoneId:'America/New_York'});
 async function ready(page:Page){
- await expect(page.getByRole('region',{name:'Offline access'})).toContainText('Offline ready on this device');
- await expect.poll(()=>page.evaluate(()=>!!navigator.serviceWorker.controller)).toBe(true);
+ await expect.poll(()=>page.evaluate(async()=>{
+  const worker=navigator.serviceWorker.controller;if(!worker)return false;
+  return new Promise<boolean>(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=e=>{channel.port1.close();resolve(e.data?.ready===true);};worker.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);});
+ })).toBe(true);
 }
+
 test.beforeEach(async({request})=>{await request.post('/__test__/worker-mode?mode=original');});
 
 test('installed shell resumes an overnight cook offline, including notes, readings and archive',async({page,context},info)=>{
@@ -18,7 +21,6 @@ test('installed shell resumes an overnight cook offline, including notes, readin
  const active=recordEvent(original,id,'temperature','2026-10-31T23:00:00Z',165,'°F');active.notes[id]='Bark set';
  await page.evaluate(({active,key})=>localStorage.setItem(key,JSON.stringify(active)),{active,key:ACTIVE_KEY});await page.reload();await ready(page);
  await context.setOffline(true);await page.clock.fastForward(8*60*60*1000);await page.reload();
- await expect(page.getByRole('region',{name:'Offline access'})).toContainText('Offline.');
  await page.getByRole('button',{name:/Continue cooking/}).click();
  await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox').click();
  const current=page.getByRole('region',{name:'Current step',exact:true});
@@ -44,8 +46,8 @@ test('manifest and icons describe a standalone app with the correct scope',async
  for(const icon of manifest.icons){expect((await request.get(icon.src)).ok()).toBe(true);}
  await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
  await page.screenshot({path:info.outputPath('offline-home.png'),fullPage:true});
- await page.getByText('Install and offline help',{exact:true}).click();
- await expect(page.getByText(/Safari’s Share menu/)).toBeVisible();
+ await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
 });
 
 test('failed worker update leaves the saved cook and previous offline shell usable',async({page,request,context})=>{
@@ -84,4 +86,28 @@ test('an unsaved custom-step draft also blocks app updates until cancelled',asyn
  await request.post('/__test__/worker-mode?mode=custom-draft');await page.evaluate(async()=>{await (await navigator.serviceWorker.getRegistration())!.update();});
  await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeDisabled();await expect(page.getByLabel('Step title',{exact:true})).toHaveValue('Do not discard my sauce step');
  await page.getByRole('button',{name:'Cancel step',exact:true}).click();await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeEnabled();
+});
+
+
+test('Home has no install or offline help while preparation stays functional',async({page},info)=>{
+ await page.goto('/');await ready(page);
+ expect(await page.locator('.site-header').evaluate(e=>e.nextElementSibling?.getAttribute('aria-label'))).toBe('Home');
+ await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('A LITTLE LESS JUGGLING. A BETTER COOK.',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
+ await expect(page.getByText(/Safari’s Share menu/)).toHaveCount(0);
+ await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
+ await page.screenshot({path:info.outputPath('clean-home-production.png'),fullPage:true});
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
+ await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'← Home',exact:true}).click();await page.getByRole('button',{name:/Past cooks and backups/}).click();
+ await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
 });

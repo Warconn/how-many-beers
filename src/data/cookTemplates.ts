@@ -1,5 +1,5 @@
 /**
- * Curated, independently authored planning steps informed by linked public sources.
+ * Curated planning steps informed by user-supplied cook notes and linked public sources.
  * Durations remain user-editable planning placeholders, not guaranteed endpoints.
  * The references are for the original cooking methods, not a claim of endorsement.
  */
@@ -14,14 +14,18 @@ export type TemplateStep = {
 };
 export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
   brisket: [
-    {id:"prep",title:"Trim and season the brisket",anchor:"prep",beforeStartMin:75,instructions:"Trim the full packer and season. Refrigerate until ready; an overnight seasoning period is optional."},
-    {id:"preheat",title:"Preheat pellet smoker",anchor:"preheat",beforeStartMin:35,instructions:"Prepare the pellet smoker around {pitTempF}°F for the first smoke phase. Meat Church's pellet brisket uses staged heat; adjust to your chosen method."},
-    {id:"start",title:"Put brisket on smoker",anchor:"start",instructions:"Place the brisket on a stable cooking grate. Log the actual start time and initial smoker temperature."},
-    {id:"check",title:"Check bark and brisket temperature",anchor:"progress",progress:0.55,conditional:true,instructions:"Check the bark, temperature and stall. Meat Church's pellet method raises the pit to about 225°F once internal temperature is near 165°F. This is a checkpoint, not a timer."},
-    {id:"wrap",title:"Decide whether to wrap",anchor:"progress",progress:0.75,conditional:true,instructions:"When bark is set, commonly around 175°F internal in Meat Church's pellet method, wrap in butcher paper if desired. Consider raising pit to 250–275°F. Log the actual reading and decision."},
-    {id:"finish",title:"Probe the flat for tenderness",anchor:"finish",conditional:true,instructions:"Verify food safety and look for a very tender flat; Meat Church often observes roughly 203°F, but tenderness rather than a fixed number determines barbecue texture."},
-    {id:"rest",title:"Begin safe, monitored rest or hold",anchor:"finish",conditional:true,instructions:"Rest briefly or use temperature-controlled hot holding at 140°F or above. Never assume a cooler maintains a safe temperature; use a thermometer and food-safe time limits."},
-    {id:"serve",title:"Slice and serve",anchor:"serve",instructions:"Slice across the grain and serve. Record whether bark, tenderness and timing met your goals."}
+    {id:"prep",title:"Trim the brisket",anchor:"prep",beforeStartMin:565,instructions:"Trim excess fat while retaining a protective layer. Easter 2021 notes questioned over-trimming. Large Costco briskets were later guessed at about 18 lb untrimmed; this is not a measured weight."},
+    {id:"season",title:"Season with SPG and Cow Cover",anchor:"prep",beforeStartMin:325,instructions:"Apply SPG to both sides and Cow Cover on top. Refrigerate uncovered until cooking; add a little more rub before loading if needed."},
+    {id:"preheat",title:"Preheat pellet smoker",anchor:"preheat",beforeStartMin:35,instructions:"Stabilize near {pitTempF}°F for the initial smoke phase. Personal Easter 2021 method: about 180 → 225 → 250°F. These are editable planning checkpoints."},
+    {id:"start",title:"Put brisket on smoker",anchor:"start",instructions:"Load the brisket in smoke mode and record the actual time. Fat side up and injecting the flat were ideas for a future cook, not confirmed steps from the logged cook."},
+    {id:"raise225",title:"Raise smoker to 225°F",anchor:"progress",progress:0.18,conditional:true,instructions:"The logged cook raised the smoker to 225°F about two hours after loading. Review smoke, bark and progress before changing heat; this is a planning reminder."},
+    {id:"spritz",title:"Inspect and spritz if needed",anchor:"progress",progress:0.25,conditional:true,instructions:"Inspect bark and moisture; spritz if needed. Repeat checks as appropriate without keeping the lid open. Record actual temperatures and changes."},
+    {id:"check",title:"Check bark and brisket temperature",anchor:"progress",progress:0.55,conditional:true,instructions:"Check the flat in multiple spots. The 2021 cook stalled around 145–147°F; moving the probe later gave 169°F. Record observations without treating one reading as proof of doneness."},
+    {id:"wrap",title:"Decide whether to wrap",anchor:"progress",progress:0.8,conditional:true,instructions:"When bark and your method call for it, wrap in butcher paper. The 2021 cook wrapped during the stall and returned to the hot side. The scheduled checkpoint is approximate."},
+    {id:"raise250",title:"Review heat after wrapping",anchor:"progress",progress:0.83,conditional:true,instructions:"The personal cook raised the smoker to 250°F shortly after wrapping. Check actual progress and record any setpoint change."},
+    {id:"finish",title:"Probe the flat for tenderness",anchor:"finish",conditional:true,instructions:"Probe multiple spots for tenderness and verify food safety. Logged readings ranged from 190 to 210°F; neither one reading nor the clock proves readiness. Around 203°F is a common texture checkpoint, not a guarantee."},
+    {id:"rest",title:"Begin safe, monitored rest or hold",anchor:"finish",conditional:true,instructions:"The logged cooler rest was about 2 h 40 min. Plan a monitored rest/hold; use temperature-controlled hot holding at 140°F or above. A cooler alone does not guarantee safe holding."},
+    {id:"serve",title:"Slice and serve",anchor:"serve",instructions:"Slice across the grain. Record bark, tenderness, timing and next-cook ideas separately from completed actions."}
   ],
   wings: [
     {id:"dry",title:"Optional: air-dry wings ahead of time",anchor:"prep",beforeStartMin:500,instructions:"For extra crisp skin, leave wings on a rack in the refrigerator for about 8 hours. Keep refrigerated; skip this optional step if cooking today."},
@@ -35,22 +39,26 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"serve",title:"Serve wings",anchor:"serve",instructions:"Serve promptly while crisp and hot."}
   ],
   brats: [
-    {id:"prep",title:"Slice onions and make beer bath",anchor:"prep",beforeStartMin:45,instructions:"Prepare beer, onions, and butter in a heat-safe pan or saucepan. The Traeger method simmers onions in beer while grilling the brats."},
-    {id:"preheat",title:"Preheat grill to {pitTempF}°F",anchor:"preheat",beforeStartMin:25,instructions:"Traeger's grill-and-beer-bath method calls for about 350°F. Use a suitable pan for the beer bath."},
-    {id:"start",title:"Place brats on the grill",anchor:"start",instructions:"Grill raw bratwurst, turning with tongs. Traeger's example starts with roughly 20–25 minutes, then continues in the beer bath."},
-    {id:"check",title:"Verify brats are cooked through",anchor:"progress",progress:0.3,conditional:true,instructions:"Check center temperature: raw ground-pork or beef brats should reach at least 160°F. Verify before the beer bath; timing alone does not confirm doneness."},
-    {id:"bath",title:"Transfer cooked brats to simmering beer and onions",anchor:"progress",progress:0.34,instructions:"Transfer brats to the beer pan with tongs and simmer until the onions are tender, often another 45–60 minutes in the source recipe."},
-    {id:"finish",title:"Check serving temperature and beer bath",anchor:"finish",conditional:true,instructions:"Confirm the brats stay safely hot and onions are ready. Raw ground-pork/beef brats should already have reached 160°F before the beer bath."},
-    {id:"serve",title:"Toast buns and serve",anchor:"serve",instructions:"Toast buns shortly before serving; top brats with onions and condiments."}
+    {id:"prep",title:"Build the brat and vegetable tray",anchor:"prep",beforeStartMin:30,instructions:"Place brats, sliced peppers/vegetables and onions in a large grill-safe tray with beer, butter and seasoning. Cover for the initial cook."},
+    {id:"preheat",title:"Preheat grill to {pitTempF}°F",anchor:"preheat",beforeStartMin:20,instructions:"Stabilize the grill around {pitTempF}°F. This personal method cooks in a covered tray before searing."},
+    {id:"start",title:"Cover and cook the brat tray",anchor:"start",instructions:"Cook covered for about 2 hours until the liquid is bubbling. This is the user's recalled method; bubbling is a process checkpoint, not a doneness test."},
+    {id:"check",title:"Check brats and bubbling tray",anchor:"progress",progress:120/135,conditional:true,instructions:"Around two hours, check the tray and the center of several brats. Verify at least 160°F for raw pork/beef brats, or 165°F for poultry sausage. Continue cooking if needed."},
+    {id:"bath",title:"Drain and sear on the Blackstone",anchor:"progress",progress:120/135,instructions:"Remove the tray, carefully drain liquid and sear the brats and vegetables on the Blackstone. The final 15 minutes in this schedule is an editable app allowance for draining/searing, not a measured duration."},
+    {id:"finish",title:"Verify doneness and return to the tray",anchor:"finish",conditional:true,instructions:"Verify internal doneness with a thermometer, then return the seared brats and vegetables to a clean serving tray. Searing color alone is not a temperature check."},
+    {id:"hold",title:"Hold safely until guests are ready",anchor:"finish",conditional:true,instructions:"If serving is delayed, keep the tray actively hot at 140°F or above and monitor it. Holding duration is unspecified; adjust the plan to your guests."},
+    {id:"serve",title:"Serve brats and vegetables",anchor:"serve",instructions:"Serve with the seared vegetables and onions when guests are ready."}
   ],
   turkey: [
-    {id:"thaw",title:"Check turkey is fully thawed and safely refrigerated",anchor:"prep",beforeStartMin:80,instructions:"Before cooking day, verify the turkey is safely thawed, at 40°F or below while refrigerated. Thawing can take several days, so schedule that separately."},
-    {id:"prep",title:"Prepare and season the turkey",anchor:"prep",beforeStartMin:50,instructions:"Use a fully thawed bird. Remove packaging and giblets if present, pat dry, season, and set in a shallow roasting pan. Avoid washing raw poultry."},
-    {id:"preheat",title:"Set oven to {pitTempF}°F",anchor:"preheat",beforeStartMin:25,instructions:"USDA recommends roasting whole turkey at an oven temperature no lower than 325°F. This template assumes an unstuffed bird."},
-    {id:"start",title:"Begin roasting turkey",anchor:"start",instructions:"Roast in a stable pan/rack. Actual duration depends strongly on turkey weight, stuffing, oven and pan; treat this schedule as an editable starting estimate."},
-    {id:"check",title:"Check breast, thigh and wing temperatures",anchor:"progress",progress:0.75,conditional:true,instructions:"Use a food thermometer in the thickest part of the breast, innermost thigh and wing, avoiding bone. Continue cooking until all checked locations reach 165°F."},
-    {id:"finish",title:"Verify 165°F in all required locations",anchor:"finish",conditional:true,instructions:"The USDA safe minimum is 165°F in the thickest breast and innermost thigh and wing; stuffing, if any, must independently reach 165°F."},
-    {id:"rest",title:"Rest before carving",anchor:"finish",instructions:"A roughly 20-minute stand improves carving. For longer waits, follow safe hot-holding or refrigeration guidance."},
-    {id:"serve",title:"Carve and serve turkey",anchor:"serve",instructions:"Carve and serve after verifying safe internal temperature."}
+    {id:"thaw",title:"Start refrigerator thawing",anchor:"prep",conditional:true,instructions:"Allow about 24 hours per 4–5 lb in a refrigerator at 40°F or below. A 20–22 lb bird may need 5–6 days. Confirm it is fully thawed before brining; never thaw on the counter."},
+    {id:"brine",title:"Start refrigerated brine",anchor:"prep",instructions:"Follow your Meat Church brine product/recipe directions and label quantities. Personal notes include Bird Bath, peppercorns, poultry bouquet and three small oranges. Keep the bird at 40°F or below; check whether it is already enhanced or salted."},
+    {id:"dry",title:"End brine, pat dry and refrigerate uncovered",anchor:"prep",instructions:"Remove from brine, pat dry, season with SPG as appropriate for the brine's salt level, and refrigerate uncovered to air-dry. Avoid washing raw poultry. The 2025 plan brined about 22 hours; confirm the duration for your product."},
+    {id:"preheat",title:"Set oven to {pitTempF}°F",anchor:"preheat",beforeStartMin:60,instructions:"Personal oven-roasted, unstuffed method uses 350°F. Keep the oven at least 325°F. Prepare the roasting pan and rack."},
+    {id:"prep",title:"Prepare and season the turkey",anchor:"prep",beforeStartMin:15,instructions:"Use a fully thawed, unstuffed bird. Remove giblets, add oil and butter under the skin as desired, season and place in the roasting pan. Keep raw poultry separate from ready-to-eat food."},
+    {id:"start",title:"Begin roasting turkey",anchor:"start",instructions:"Roast unstuffed and record the actual start. Historical birds were 20 lb (2023) and 22 lb (2024). The default 4½-hour cook is a conservative editable planning placeholder, not a prediction from the graphs."},
+    {id:"check",title:"Check breast, thigh and wing temperatures",anchor:"progress",progress:0.45,conditional:true,instructions:"Begin checking around two hours and continue as needed. The 2025 bird finished earlier than planned with some over-browning. Check the thickest breast and innermost thigh/wing, avoiding bone; shield browned areas if needed."},
+    {id:"baste",title:"Optional: baste and check browning",anchor:"progress",progress:0.5,conditional:true,instructions:"If following your butter-basting method, baste periodically and check browning. Keep oven openings brief. Basting times do not determine doneness."},
+    {id:"finish",title:"Verify 165°F in all required locations",anchor:"finish",conditional:true,instructions:"Verify at least 165°F in the thickest breast and innermost thigh and wing. Do not rely on a 155–162°F reading plus assumed carryover. Log the actual removal time when ready."},
+    {id:"rest",title:"Rest before carving",anchor:"finish",instructions:"Personal plan allows 45–60 minutes before carving; the default reserves 60 minutes. Monitor safe holding for a longer wait at 140°F or above; if done early, revise the hold rather than leaving the bird unattended."},
+    {id:"serve",title:"Carve and serve turkey",anchor:"serve",instructions:"Carve after resting and verifying safe doneness. Use drippings for gravy as desired."}
   ]
 };

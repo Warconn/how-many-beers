@@ -7,6 +7,7 @@ import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, stepTimingWarnings, editStep, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
+import TurkeyPreparation from "@/components/TurkeyPreparation";
 import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
@@ -98,7 +99,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
       <div className="beerometer-emblem" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
       <div className="beerometer-copy">
         <p className="eyebrow">THE BEEROMETER</p>
-        <h2>How many beers till it&apos;s done?</h2>
+        <h2>How many beers?</h2>
         <p>{dish ? (completedAt ? "Actual " : "Planned ") + dish.name.toLowerCase() + " start-to-finish duration." : "Add a dish to fire up the Beerometer."}</p>
       </div>
     </div>
@@ -110,6 +111,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
       <p className="beerometer-clock">{dish && valid
         ? `${hours}h ${String(minutes).padStart(2, "0")}m ${completedAt ? "actual" : "planned"} cook`
         : "Set a cook start and finish time."}</p>
+      <p className="beerometer-scale">Time scale: 1 beer = 90 min</p>
     </div>
   </section>;
 }
@@ -386,6 +388,8 @@ export default function Home() {
     }
   };
 
+  const offlineSupport=<OfflineSupport canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
+
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
       {storageError && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
@@ -412,8 +416,8 @@ export default function Home() {
         </div>
         
       </header>
-      <p className="device-save-state" aria-live="polite">{storageStatus==='saved'?'Saved on this device':storageStatus==='recovery'?'Saved data protected':storageStatus==='conflict'?'Another tab has newer saved data':'Changes not saved on this device'}</p>
-      <OfflineSupport canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>
+      {view!=="home"&&offlineSupport}
+
 
       {storageStatus==='recovery' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
@@ -424,7 +428,6 @@ export default function Home() {
         <section className={`home-layout ${hasActiveWork ? "home-returning" : "home-first-visit"}`} aria-label="Home">
           <div className="home-primary">
           <div className="home-intro">{hasActiveWork ? <><h2>What&apos;s cooking?</h2><p className="muted">Pick up where you left off or plan something new.</p></> : <>
-            <p className="eyebrow">A LITTLE LESS JUGGLING. A BETTER COOK.</p>
             <h2>From First Beer<br className="brand-line-break" /> to First Bite.</h2>
             <p className="home-product-line">Plan every dish. Time your dinner. Enjoy the cook.</p>
             <p className="muted">Set your serving time, bring your dishes into one plan, and follow a guided checklist when it’s time to cook.</p>
@@ -453,7 +456,6 @@ export default function Home() {
             <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
           </section>
           <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <span aria-hidden="true">→</span></button>
-          <p className="home-storage-note">Saved on this device only. <button type="button" onClick={()=>setView("history")}>Back up your cooks</button> before switching browsers.</p>
           </div>
           <aside className="home-guide" aria-label="How it works">
             <p className="eyebrow">THE GAME PLAN</p>
@@ -481,11 +483,12 @@ export default function Home() {
             <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
+          <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="cook-layout">
             <section className="panel active-cook-panel">
               <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
               <div className="progress-track"><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div>
-              <p className="cook-autosave-note muted small">{storageStatus==='saved'?'Changes save automatically on this device.':'Your latest changes are not saved. Keep this tab open and download a backup.'}</p>
+              {storageStatus!=='saved'&&<p className="cook-autosave-note muted small">Your latest changes are not saved. Keep this tab open and download a backup.</p>}
               {cookingDraftOpen && <p className="notice" id="cooking-draft-help">Save or cancel the open edit or reading before switching steps.</p>}
               {message && <p className="form-error" role="alert">{message}</p>}
               {navigationNote && <p className="step-navigation-note" role="status">{navigationNote}</p>}
@@ -506,7 +509,6 @@ export default function Home() {
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
-              <details className="cook-duration-details"><summary>Cook duration &amp; Beerometer</summary><BeerEstimator meal={meal} timeline={timeline}/></details>
               <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>
             </aside>
           </div>
@@ -523,6 +525,7 @@ export default function Home() {
         <>
           <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
+          <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="guided-planner"><div className="guided-main">
           <section className="hero panel">
             <div>
@@ -596,6 +599,7 @@ export default function Home() {
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
                   {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
+                  {d.preset==="turkey" && <TurkeyPreparation dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
                   <label htmlFor={"name-"+d.id}>Dish name</label>
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
@@ -637,7 +641,7 @@ export default function Home() {
                     </div>
                   )}
                   {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].cookRangeMinutes && (
-                    <p className="muted small">Editable planning window (not a guaranteed or weight-derived estimate): {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Source-method context only; adjust the estimate for your equipment and size.</p>
+                    <p className="muted small">Editable planning window (not a guaranteed or weight-derived estimate): {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Planning context only; adjust the estimate for your equipment and size.</p>
                   )}
                   {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].pitTempF!==undefined && (
                     <div className="template-settings">
@@ -715,7 +719,7 @@ export default function Home() {
           </div>
         </>
       )}
-      <footer>How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      <footer>{view==="home"&&offlineSupport}How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
     </main>
   );
 }

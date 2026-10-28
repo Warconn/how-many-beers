@@ -29,11 +29,12 @@ These are actual desktop and mobile screenshots from the project.
 ## What works today
 
 - **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
+- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. Timings remain editable; see [method notes](docs/personal-templates.md).
 - **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Text import is basic and may need review.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
-- **The Beerometer.** A little personality alongside the practical cooking tools.
+- **The Beerometer.** A prominent banner stays visible through planning and cooking, showing the selected dish’s cook duration in beers and hours. The playful time scale is explicit: one beer equals 90 minutes.
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 
@@ -45,7 +46,7 @@ There is **no automatic account sync or transfer between devices or browsers**. 
 
 ### Offline cooking and recovery
 
-After visiting online, wait for **Offline ready on this device** before relying on an offline reopen. You can keep using an existing cook, record progress and finish/save it without a connection. Install through the browser when offered, or use Safari's **Share → Add to Home Screen**. Installation does not create a cloud backup, and browser storage/cached files can still be cleared or evicted.
+Offline files prepare in the background after an online visit. You can keep using an existing cook, record progress and finish/save it without a connection once the shell is cached. The app has no install/offline help panel or routine readiness messages. Browser storage and cached files can still be cleared or evicted.
 
 The app shows whether edits saved. If a write fails, keep the tab open, download a backup and retry. Unreadable saved data opens a protected recovery screen instead of being replaced. App updates wait for an explicit reload, with open drafts protected. Keep one cooking tab open; another tab's newer data must be reloaded before saving. See [offline reliability and recovery](docs/offline-reliability.md) for behavior and test coverage.
 
@@ -80,6 +81,7 @@ The build uses Next.js static export. The `dev` branch is the integration branch
 
 ## Documentation
 
+- [Work queue](docs/work-queue.md): tonight’s priority and the prepared implementation order
 - [Core cooking experience](docs/core-cook-experience.md): product flows and interaction principles
 - [Cooking Mode](docs/cooking-mode.md): guided steps, progress, and finishing
 - [Step timing](docs/step-timing.md): edits, duration handling, and schedule limitations

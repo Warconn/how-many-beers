@@ -510,3 +510,17 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .offline-access summary{cursor:pointer;padding:8px 0;min-height:44px;color:#873a1e}
 .offline-access details p{max-width:650px}
 .offline-access button:disabled{opacity:.55;cursor:not-allowed}
+
+/* The branded time scale stays in view without covering cook actions. */
+.beerometer{position:sticky;top:8px;z-index:25;flex-wrap:nowrap;gap:16px;padding:14px 20px;margin:0 0 18px;border-radius:14px}
+.beerometer-main{flex:1 1 auto;gap:12px}.beerometer-emblem{width:46px;height:46px}.beerometer h2{font-size:21px;margin:2px 0 4px}.beerometer .eyebrow{font-size:10px;margin:0}.beerometer-copy>p:last-child{font-size:11px}.beerometer-reading{flex:0 0 auto;align-items:flex-end}.beerometer-figure strong{font-size:36px}.beerometer-figure span{font-size:13px}.beerometer-clock{font-size:11px}.beerometer-scale{margin:0;color:#dac8af;font-size:10px;line-height:1.4}
+.guided-step .cook-task,.full-cook-checklist{scroll-margin-top:150px}.shell:has(.storage-alert) .beerometer{position:static}
+@media(max-width:650px){.beerometer{top:4px;padding:12px;gap:10px}.beerometer-main{flex-basis:auto;gap:8px}.beerometer-emblem{width:36px;height:36px}.beerometer h2{font-size:17px}.beerometer-copy>p:last-child{font-size:10px;line-height:1.4}.beerometer-reading{margin-left:auto;max-width:45%}.beerometer-figure{gap:5px}.beerometer-figure strong{font-size:31px}.beerometer-figure span{font-size:11px}.beerometer-clock{font-size:10px;text-align:right}.beerometer-scale{font-size:9px;text-align:right}.guided-step .cook-task,.full-cook-checklist{scroll-margin-top:140px}}
+
+@media(min-width:901px){.planning-screen .guided-schedule{top:132px}}
+
+/* Compact active-workspace header; the Beerometer leads the working area. */
+.shell:has(.beerometer) .site-header{margin-bottom:8px;padding-bottom:10px}
+.shell:has(.beerometer)>.back-link{margin:0 0 8px;min-height:36px}
+.cooking-navigation{gap:18px;margin:0 0 8px}.cooking-screen .cook-header{margin:0 0 12px}
+.cooking-screen .cook-header .eyebrow{margin-top:0}.cooking-screen .cook-header h2{margin:3px 0 5px}
