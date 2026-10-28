@@ -18,6 +18,7 @@ export type Dish = {
   weightLb?: number;
   steps?: RecipeStep[];
   brisketPlan?: BrisketPlan;
+  turkeyPrep?: {state:"frozen"|"thawing"|"thawed";thawDays:number;brineHours:number;dryHours:number};
 };
 
 export type Meal = {
@@ -56,23 +57,23 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
     label: "Smoked brisket",
     equipment: "Pellet smoker",
     cookMinutes: 780,
-    restMinutes: 120,
-    pitTempF: 200,
+    restMinutes: 160,
+    pitTempF: 180,
     cookRangeMinutes: [600,1080],
     referenceWeightLb: 16,
     sources: [{title:"Meat Church · Pellet Grill Brisket",url:"https://www.meatchurch.com/blogs/recipes/pellet-grill-brisket"},{title:"USDA · Food safety",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/steps-keep-food-safe"}],
-    notice: "Stage guidance inspired by Meat Church. 13 h is an editable placeholder, not weight-derived. Wrap and doneness depend on bark and probe."
+    notice: "Personal Easter 2021 method: 180 → 225 → 250°F, SPG + Cow Cover and butcher paper. 13 h is a planning allowance; ~18 lb untrimmed is a historical guess, not a measured input. Weight comparisons use separate researched profiles."
   },
   turkey: {
     label: "Turkey (oven)",
     equipment: "Oven",
-    cookMinutes: 210,
-    restMinutes: 20,
-    pitTempF: 325,
-    cookRangeMinutes: [180,225],
-    referenceWeightLb: 13,
+    cookMinutes: 270,
+    restMinutes: 60,
+    pitTempF: 350,
+    cookRangeMinutes: [240,300],
+    referenceWeightLb: 22,
     sources: [{title:"USDA · Turkey roasting",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/poultry/lets-talk-turkey-roasting"}],
-    notice: "Unstuffed oven roast. Around 3.5 h is only a planning placeholder for a mid-sized turkey; time depends on weight. Verify 165°F with a probe."
+    notice: "Personal brined, unstuffed oven method. 20–22 lb historical birds; 4½ h roast + 1 h rest is an editable planning allowance, not a fit to the graphs. Plan thawing and brining ahead; verify 165°F."
   },
   ribs: {
     label: "Smoked ribs",
@@ -100,13 +101,13 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
   },
   brats: {
     label: "Grilled beer-bath brats",
-    equipment: "Pellet grill",
-    pitTempF: 350,
-    cookRangeMinutes: [70,85],
-    cookMinutes: 80,
+    equipment: "Grill + Blackstone",
+    pitTempF: 250,
+    cookRangeMinutes: [120,150],
+    cookMinutes: 135,
     restMinutes: 0,
-    sources:[{title:"Traeger · Brats in Beer",url:"https://www.traeger.com/recipes/brats-beer-bath"},{title:"USDA · Safe temperatures",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/safe-temperature-chart"}],
-    notice:"Traeger-inspired grill then beer bath (~20–25 min + 45–60 min). Verify 160°F for raw ground-meat brats."
+    sources:[{title:"USDA · Safe temperatures",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/safe-temperature-chart"}],
+    notice:"Personal covered-tray method: ~2 h with beer, butter, onions, vegetables and seasoning, then drain and Blackstone-sear. Schedule adds a 15 min adjustable searing allowance; actual searing/holding times are unknown."
   },
   side: {
     label: "Oven side dish",

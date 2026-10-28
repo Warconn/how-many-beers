@@ -26,7 +26,7 @@ test('save for later returns Home without starting, survives reopening and start
  await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();
  await expect(page.getByRole('status')).toContainText('Plan saved on this device');
  expect(await saved(page)).toEqual(meal);expect((await saved(page)).startedAt).toBeUndefined();
- const summary=page.getByRole('region',{name:'Planned start',exact:true});await expect(summary).toContainText('Trim and season the brisket');
+ const summary=page.getByRole('region',{name:'Planned start',exact:true});await expect(summary).toContainText('Trim the brisket');
  await expect(summary.locator('time[datetime="2026-11-25T06:00:00.000Z"]')).toBeVisible();await expect(summary).toContainText('EST');
  await page.screenshot({path:info.outputPath('saved-plan.png'),fullPage:true});
  const url=page.url();const reopened=await context.newPage();await page.close();await reopened.goto(url);

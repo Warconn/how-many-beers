@@ -7,6 +7,7 @@ import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, stepTimingWarnings, editStep, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
+import TurkeyPreparation from "@/components/TurkeyPreparation";
 import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
@@ -98,7 +99,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
       <div className="beerometer-emblem" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
       <div className="beerometer-copy">
         <p className="eyebrow">THE BEEROMETER</p>
-        <h2>How many beers till it&apos;s done?</h2>
+        <h2>How many beers?</h2>
         <p>{dish ? (completedAt ? "Actual " : "Planned ") + dish.name.toLowerCase() + " start-to-finish duration." : "Add a dish to fire up the Beerometer."}</p>
       </div>
     </div>
@@ -110,6 +111,7 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
       <p className="beerometer-clock">{dish && valid
         ? `${hours}h ${String(minutes).padStart(2, "0")}m ${completedAt ? "actual" : "planned"} cook`
         : "Set a cook start and finish time."}</p>
+      <p className="beerometer-scale">Time scale: 1 beer = 90 min</p>
     </div>
   </section>;
 }
@@ -483,6 +485,7 @@ export default function Home() {
             <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
+          <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="cook-layout">
             <section className="panel active-cook-panel">
               <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
@@ -508,7 +511,6 @@ export default function Home() {
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
-              <details className="cook-duration-details"><summary>Cook duration &amp; Beerometer</summary><BeerEstimator meal={meal} timeline={timeline}/></details>
               <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>
             </aside>
           </div>
@@ -525,6 +527,7 @@ export default function Home() {
         <>
           <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
+          <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="guided-planner"><div className="guided-main">
           <section className="hero panel">
             <div>
@@ -598,6 +601,7 @@ export default function Home() {
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
                   {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
+                  {d.preset==="turkey" && <TurkeyPreparation dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
                   <label htmlFor={"name-"+d.id}>Dish name</label>
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
@@ -639,7 +643,7 @@ export default function Home() {
                     </div>
                   )}
                   {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].cookRangeMinutes && (
-                    <p className="muted small">Editable planning window (not a guaranteed or weight-derived estimate): {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Source-method context only; adjust the estimate for your equipment and size.</p>
+                    <p className="muted small">Editable planning window (not a guaranteed or weight-derived estimate): {Math.round(presets[d.preset].cookRangeMinutes![0]/60*10)/10}–{Math.round(presets[d.preset].cookRangeMinutes![1]/60*10)/10} hours. Planning context only; adjust the estimate for your equipment and size.</p>
                   )}
                   {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].pitTempF!==undefined && (
                     <div className="template-settings">

@@ -14,6 +14,7 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
   const current=estimated && !dirty;
   return <section className="brisket-planner" aria-label="Brisket timing">
     <h3>Plan brisket timing</h3>
+    {!applied&&<p className="muted small">The manual starter uses your personal 180 → 225 → 250°F method. These comparisons use separate researched profiles.</p>}
     <p className="muted small">Compare a start window, then use it in your plan. Your fixed step times and recorded activity stay intact.</p>
     <div className="small-grid">
       <div><label htmlFor={id('weight')}>Brisket weight (lb)</label><input id={id('weight')} type="number" inputMode="decimal" min="1" max="40" step="0.5" placeholder="Unknown" value={inputs.weightLb??''} onChange={e=>set({weightLb:e.target.value===''?undefined:Number(e.target.value)})}/></div>
