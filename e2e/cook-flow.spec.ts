@@ -112,7 +112,7 @@ test("guided planner keeps menu beside schedule and allows full schedule expansi
   expect(schedule.x).toBeGreaterThan(planner.x+planner.width-10);
   await expect(page.getByRole("button",{name:/Show full schedule/})).toBeVisible();
   await page.getByRole("button",{name:/Show full schedule/}).click();
-  await expect(page.locator(".schedule-list li")).toHaveCount(8);
+  await expect(page.locator(".schedule-list li")).toHaveCount(12);
   await page.getByRole("button",{name:/Show less/}).click();
   await expect(page.locator(".schedule-list li")).toHaveCount(4);
 });

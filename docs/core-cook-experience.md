@@ -275,3 +275,8 @@ pushes following timed recipe steps while preserving their spacing. Shortening o
 Use plan timing removes the extra delay. Other dishes, fixed/recorded steps and actual
 activity stay intact; conflicts and a serving-target overrun produce warnings. Untimed
 stages break links; custom/general prep stays independent. See [step timing rules](step-timing.md).
+
+
+## Personal template content (October 28, 2026)
+
+Brisket, turkey and brats starters now reflect user-supplied methods. Turkey preparation has thawing status and editable remaining thaw days, brine hours and refrigerated air-dry hours, scheduled before roast day. The brat tray precedes Blackstone searing; brisket guessed weights are not measured estimator inputs. Personal notes and app timing allowances remain explicit. No historical completions are invented. See [personal template provenance](personal-templates.md).

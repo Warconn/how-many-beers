@@ -1,4 +1,5 @@
 import type { Dish, Meal, PlannedTask } from "./meal";
+import {turkeyPreparation} from "./turkeyPrep";
 import { templateSteps } from "../data/cookTemplates";
 
 const minute = 60_000;
@@ -16,16 +17,38 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
   const brisket=d.preset==="brisket" ? d.brisketPlan?.applied : undefined;
   const buffer=brisket?.inputs.holdBufferMinutes ?? 0;
   const startOffset=cook+rest+buffer;
+  const turkey=d.preset==="turkey"?turkeyPreparation(d):undefined;
   return steps.map(step=>{
-    const before=step.anchor==="prep" || step.anchor==="preheat"
-      ? startOffset+(brisket ? step.anchor==="prep" ? brisket.inputs.prepMinutes : brisket.inputs.preheatMinutes : step.beforeStartMin??0)
+    let before=step.anchor==="prep" || step.anchor==="preheat"
+      ? startOffset+(brisket && (step.id==="prep"||step.id==="preheat") ? step.anchor==="prep" ? brisket.inputs.prepMinutes : brisket.inputs.preheatMinutes : step.beforeStartMin??0)
       : step.anchor==="start" ? startOffset
       : step.anchor==="progress" ? rest+buffer+Math.round(cook*(1-(step.progress??0.5)))
       : step.anchor==="finish" ? rest+buffer : 0;
     const temp=d.pitTempF ?? null;
     let title=step.title, instructions=step.instructions;
+    if(turkey){
+      if(step.id==='thaw'){
+        before=startOffset+(turkey.brineHours+turkey.dryHours)*60+(turkey.state==='thawed'?0:turkey.thawDays*1440);
+        if(turkey.state==='thawed')title='Confirm turkey is fully thawed';
+        else if(turkey.state==='thawing')title='Continue refrigerator thawing';
+      }
+      if(step.id==='brine'){before=startOffset+(turkey.brineHours+turkey.dryHours)*60;if(turkey.brineHours===0){title='Brining skipped';instructions='No brining time reserved. Keep the thawed turkey refrigerated before preparation.';}}
+      if(step.id==='dry')before=startOffset+turkey.dryHours*60;
+    }
     if(brisket){
       const i=brisket.inputs;
+      // An explicitly applied researched estimate uses that source's profile,
+      // independently of the personal manual template.
+      if(step.id==='prep')instructions='Trim and season; keep refrigerated. Use the measured trimmed weight for the researched comparison.';
+      if(step.id==='season'){before=startOffset+i.prepMinutes;instructions='Season for your chosen method and keep refrigerated. Adjust preparation times as needed.';}
+      if(step.id==='preheat')instructions='Stabilize the smoker at '+i.pitTempF+'°F for the selected researched profile.';
+      if(step.id==='raise225'&&i.method==='traeger-225-v1')title='Maintain smoker at 225°F';
+      if(step.id==='start')instructions='Load the brisket and record the actual start and initial pit temperature for the selected profile.';
+      if(step.id==='finish')instructions='Verify food safety and probe the flat for tenderness. The selected profile is a planning comparison, not proof of doneness.';
+      if(step.id==='raise225')instructions=i.method==='traeger-225-v1'?'Maintain the selected 225°F profile; check progress.':'Review raising to 225°F near 165°F internal according to the selected Meat Church method, not elapsed time.';
+      if(step.id==='raise250')instructions=i.method==='traeger-225-v1'?'Review heat according to your chosen recipe; the comparison assumes 225°F.':'After wrapping when bark is ready, review raising the pit to 250–275°F for the selected Meat Church profile.';
+      if(step.id==='wrap')instructions='Review wrapping when bark is ready according to the selected recipe; no exact time is guaranteed.';
+      if(step.id==='check')instructions='Check bark, internal temperature and the stall. The researched profile is a planning comparison, not a fit to the personal cook logs.';
       if(i.cut==='flat' && step.id==='prep')instructions='Trim and season the flat. Keep refrigerated until ready to cook.';
       if(i.method==='traeger-225-v1'){
         if(step.id==='preheat')instructions='Stabilize the smoker at 225°F. This profile uses the Traeger broad planning guide; verify your own recipe and equipment.';
