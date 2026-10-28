@@ -109,9 +109,10 @@ test("a signed-in cook is acknowledged and recovered in a fresh browser context"
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   await page.evaluate(()=>window.scrollTo(0,0));
+  await page.locator('.site-header').screenshot({path:testInfo.outputPath('account-saved-header.png')});
   await page.screenshot({path:testInfo.outputPath("account-planning.png"),fullPage:true});
   const other = await browser.newContext();
   await remote.attach(other);
@@ -150,7 +151,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
     .click();
   await page.getByLabel("Meal name").fill("Friday brisket");
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Start cooking", exact: true })
@@ -159,7 +160,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
     .getByRole("checkbox", { name: "Complete Trim the brisket", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:testInfo.outputPath("account-cooking.png"),fullPage:true});
@@ -224,16 +225,17 @@ test("failed account writes remain unsaved, block logout and recover through ret
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   remote.setFail(true);
   await page.getByLabel("Meal name").fill("Keep these unsaved changes");
+  await expect(page.getByRole("status", {name:"Saving needs attention", exact:true})).toBeVisible();
   await expect(
     page
       .getByRole("alert")
       .filter({ hasText: "Could not reach account saving" }),
   ).toBeVisible();
-  await expect(page.getByText("Saved to account", { exact: true })).toHaveCount(
+  await expect(page.getByRole("status", { name: "Cook saved", exact: true })).toHaveCount(
     0,
   );
   await page.getByRole("button", { name: "Account", exact: true }).click();
@@ -248,7 +250,7 @@ test("failed account writes remain unsaved, block logout and recover through ret
   remote.setFail(false);
   await page.getByRole("button", { name: "Retry saving", exact: true }).click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   expect((remote.state.active as { meal: { name: string } }).meal.name).toBe(
     "Keep these unsaved changes",
@@ -298,7 +300,7 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
     .getByRole("button", { name: "Import these cooks", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   expect(
     (remote.state.active as { meal: { id: string } } | null)?.meal.id,
@@ -349,7 +351,7 @@ test("a stale device exports pending work and loads the newer account version ex
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   remote.state.revision++;
   (remote.state.active as { meal: { name: string } }).meal.name =
@@ -382,7 +384,7 @@ test("a pending account edit survives reload in IndexedDB and saves after reconn
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   remote.setFail(true);
   await page.getByLabel("Meal name").fill("Survives an outage");
@@ -396,13 +398,13 @@ test("a pending account edit survives reload in IndexedDB and saves after reconn
   await expect(
     page.getByText("Survives an outage", { exact: true }).first(),
   ).toBeVisible();
-  await expect(page.getByText("Saved to account", { exact: true })).toHaveCount(
+  await expect(page.getByRole("status", { name: "Cook saved", exact: true })).toHaveCount(
     0,
   );
   remote.setFail(false);
   await page.getByRole("button", { name: "Retry saving", exact: true }).click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   expect((remote.state.active as { meal: { name: string } }).meal.name).toBe(
     "Survives an outage",
@@ -442,7 +444,7 @@ test("an unconfirmed finish retries once without duplicating completed history",
     .getByRole("button", { name: "Retry account saving", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /Past cooks and backups/ }),
@@ -494,7 +496,7 @@ test("confirmed logout hides pending work from another account and restores it f
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   remote.setFail(true);
   await page.getByLabel("Meal name").fill("A private pending cook");
@@ -540,7 +542,7 @@ test("confirmed logout hides pending work from another account and restores it f
     page.getByText("A private pending cook", { exact: true }).first(),
   ).toBeVisible();
   await expect(
-    page.getByText("Saved to account", { exact: true }),
+    page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
 });
 
@@ -601,6 +603,6 @@ test("account cooks open directly and earlier guest cooks stay optional in the m
   await page.getByRole("button",{name:"Close account",exact:true}).click();
   await page.getByRole("button",{name:/Resume planning/}).click();
   await page.getByLabel("Meal name").fill("Official account cook");
-  await expect(page.getByText("Saved to account",{exact:true})).toBeVisible();
+  await expect(page.getByRole("status",{name:"Cook saved",exact:true})).toBeVisible();
   expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Official account cook");
 });

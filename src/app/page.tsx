@@ -452,11 +452,11 @@ function CookExperience() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} cookTools={earlierTools}/>}
+        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} cookTools={earlierTools} savePhase={workspace.kind==='account'?workspace.cloudPhase:undefined}/>}
       </header>
 
 
-      {workspace.kind==='account'&&<div className="account-save-state" role="status" aria-live="polite">{workspace.cloudPhase==='saved'?'Saved to account':workspace.cloudPhase==='syncing'?'Saving to account…':workspace.cloudPhase==='saving'?'Saving cook…':workspace.cloudPhase==='loading'?'Loading account cooks…':''}</div>}
+
       {workspace.kind==='trial'&&<p className="guest-limit">Guest cooks aren’t kept after you leave. Sign in to keep this cook.</p>}
 
       {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}

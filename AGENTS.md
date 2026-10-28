@@ -128,3 +128,5 @@ resource/dependency optimization remains #3. See docs/step-timing.md.
 ## Account menu refinement (October 28, 2026)
 
 The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/backup is optional under Account → Earlier cooks, with no blocking banner. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.
+
+Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
