@@ -3,13 +3,30 @@ export type AccountConfig = {
   key: string;
   providers: ("google" | "apple")[];
 };
+/** Only the explicitly configured project's feat aliases may use dev accounts.
+ * This is deliberately narrower than a general URL glob or a pages.dev wildcard. */
+function featurePreviewMatches(origin: string, rule: string): boolean {
+  if (process.env.NEXT_PUBLIC_AUTH_ENV !== "development") return false;
+  const project = /^https:\/\/feat-\*\.([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)\.pages\.dev$/.exec(rule)?.[1];
+  if (!project) return false;
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:" || url.origin !== origin || url.port || url.username || url.password) return false;
+    const suffix = "." + project + ".pages.dev";
+    if (!url.hostname.endsWith(suffix)) return false;
+    const label = url.hostname.slice(0, -suffix.length);
+    return label.length <= 63 && /^feat-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label);
+  } catch {
+    return false;
+  }
+}
 /** Rollout allowlist is a UI guard. Supabase JWT validation and RLS remain authoritative. */
 export function accountConfig(origin: string): AccountConfig | null {
   if (process.env.NEXT_PUBLIC_ENABLE_ACCOUNTS !== "true") return null;
   const origins = (process.env.NEXT_PUBLIC_ACCOUNT_ORIGINS ?? "")
     .split(",")
     .map((s) => s.trim());
-  if (!origins.includes(origin)) return null;
+  if (!origins.some(rule => rule === origin || featurePreviewMatches(origin, rule))) return null;
   if (
     origin === "https://howmanybeers.app" &&
     process.env.NEXT_PUBLIC_AUTH_ENV !== "production"

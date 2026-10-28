@@ -21,11 +21,11 @@ NEXT_PUBLIC_ENABLE_CLOUD_COOKS=true
 NEXT_PUBLIC_AUTH_ENV=development
 NEXT_PUBLIC_SUPABASE_URL=https://txwfjuolsuauzeridxkv.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<same dev publishable key used by the feature preview>
-NEXT_PUBLIC_ACCOUNT_ORIGINS=https://dev.how-many-beers.pages.dev,https://feat-19-account-foundation.how-many-beers.pages.dev
+NEXT_PUBLIC_ACCOUNT_ORIGINS=https://dev.how-many-beers.pages.dev,https://feat-*.how-many-beers.pages.dev
 NEXT_PUBLIC_AUTH_PROVIDERS=
 ```
 
-The key placeholder must be replaced with the existing `sb_publishable_…` value. Keep providers blank for the current email-only setup. These are exact origins without trailing slashes; the origin setting is one comma-separated value. Preserve any other intentionally trusted test origins.
+The key placeholder must be replaced with the existing `sb_publishable_…` value. Keep providers blank for the current email-only setup. The origin setting is one comma-separated value without trailing slashes. Dev stays exact; the supported feature pattern accepts one `feat-…` hostname label inside this Pages project, only when `NEXT_PUBLIC_AUTH_ENV=development`. Preserve any other intentionally trusted exact test origins. Broader wildcards are not supported.
 
 Leave **Production** variables unchanged. In particular, do not enable the dev account configuration on `https://howmanybeers.app`. No new DNS entry, Supabase project, SMTP key or sending domain is needed for the dev alias.
 
@@ -43,10 +43,10 @@ Allow these exact **Redirect URLs**:
 
 ```text
 https://dev.how-many-beers.pages.dev/account/callback/
-https://feat-19-account-foundation.how-many-beers.pages.dev/account/callback/
+https://feat-*.how-many-beers.pages.dev/account/callback/
 ```
 
-Keep the feature callback while testing there. Add `http://localhost:3000/account/callback/` only if local sign-in testing is intended. The Site URL is the default destination; it does not prevent explicitly allowed feature callbacks. Code entry finishes inside the requesting origin.
+The feature pattern covers future branch aliases without adding each branch. Add `http://localhost:3000/account/callback/` only if local sign-in testing is intended. The Site URL is the default destination; it does not prevent explicitly allowed feature callbacks. Code entry finishes inside the requesting origin.
 
 Keep the existing custom SMTP and code-only email templates. They are project-wide and serve dev and feature previews together. Changing frontend branches does not require reapplying migrations: if cloud saves already work on the feature preview, both builds use those same tables/RPCs. If setup is incomplete, apply the reviewed migrations once in order as described in [account cooks](account-cooks.md); do not rerun already-applied migrations or run the local Auth bootstrap on hosted Supabase.
 
@@ -67,8 +67,10 @@ Sessions are separate per website origin, so signing in on a feature preview doe
 
 ## Future feature branches
 
-Build the branch and copy its stable branch alias from Cloudflare. Add its exact origin to Preview's `NEXT_PUBLIC_ACCOUNT_ORIGINS` and its `/account/callback/` URL to Supabase's Redirect URLs, then rebuild that preview. Use the stable branch alias, not a commit-hash deployment URL. The existing feature alias is already observed; future aliases should be copied from the actual deployment rather than guessed.
+Create feature branches from updated dev, or merge/rebase updated dev into an older branch so it includes the wildcard matcher. Once the Preview origin pattern and Supabase redirect pattern above are saved, future `feat/*` branch builds connect automatically; no per-branch URL edits are needed. Use the stable `feat-…how-many-beers.pages.dev` branch alias shown by Cloudflare, not a commit-hash deployment URL.
 
-If Preview branch filters are enabled, ensure they include `dev` and the intended `feat/*` branches. A shared Preview variable set does not automatically authorize every branch origin. Future schema changes also need to remain compatible with dev and any feature builds sharing the dev project.
+Only `https://feat-*.PROJECT.pages.dev` is recognized by the frontend, and only in development configuration. It does not authorize unrelated projects, non-feature branches, nested hosts, insecure URLs or production. Supabase's `*` excludes `.` and `/`, so the backend redirect pattern also stays within one hostname label and the exact callback path. See [Supabase's redirect wildcard documentation](https://github.com/supabase/supabase/blob/master/apps/docs/content/guides/auth/redirect-urls.mdx). Keep production redirects exact.
+
+If Preview branch filters are enabled, ensure they include `dev` and the intended `feat/*` branches. The restricted feature pattern authorizes only matching feature aliases; it does not enable arbitrary preview origins. Future schema changes also need to remain compatible with dev and any feature builds sharing the dev project.
 
 Dashboard changes are owner actions; this guide does not claim that Cloudflare variables, Supabase URLs or SMTP settings were changed from the coding workspace. Production account rollout remains a separate delivery using a separate Supabase project.
