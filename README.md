@@ -81,9 +81,9 @@ The immediate coding sequence is **#50 Home cleanup → #19 free account foundat
 
 ## Account foundation work
 
-The #19/#20 feature branch adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has confirmed live dev email-link sign-in; code-only delivery needs the Supabase template update, and hosted cloud-save/two-account QA remains pending.
+The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has confirmed live dev email-link sign-in; code-only delivery needs the Supabase template update, and hosted cloud-save/two-account QA remains pending.
 
-See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature has not been merged or released to production.
+See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature is merged into dev and has not been released to production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs.
 
 ## Documentation
 

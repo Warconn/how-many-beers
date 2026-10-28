@@ -42,7 +42,7 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 - Multiple saved future plans and a separate personal recipe library are not Now.
 - **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
 - Scope of #19 is identity/ownership/security; scope of #20's Now slice is saving, retrieval, history and basic cross-device access. Do not make full advanced sync a prerequisite to first account-backed history.
-- The live public origin is **https://howmanybeers.app** on Cloudflare. The preview deployment is **https://how-many-beers.pages.dev/** from `dev`. Any legacy GitHub Pages references are historical, not current production routing.
+- The live public origin is **https://howmanybeers.app** on Cloudflare. The integrated dev preview is **https://dev.how-many-beers.pages.dev/**. The owner confirmed Cloudflare Pages uses `main` as its Production branch; `dev` and feature branches use Preview variables. Any legacy GitHub Pages references are historical, not current production routing.
 
 ### Working with the backlog
 
@@ -54,7 +54,7 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 ## Branches, review and deployment
 
 - `main` is the stable release branch. The canonical live site is https://howmanybeers.app on Cloudflare. GitHub Pages URLs, if still reachable, are legacy.
-- `dev` is the integrated preview branch. Cloudflare Pages uses `dev` as its production branch at https://how-many-beers.pages.dev/.
+- `dev` is the integrated preview branch at https://dev.how-many-beers.pages.dev/. Cloudflare Pages uses `main` as its Production branch (owner-confirmed October 28, 2026). Configure dev and feature account builds through Preview variables; leave Production account rollout disabled until a separate production Supabase project is ready.
 - Work from an up-to-date `dev` on an isolated `feat/*` branch. Use a feature branch named for the active issue, e.g. `feat/19-free-accounts`. Codex may use a `codex/*` branch if required by the environment. Point the PR at **`dev`, never `main`**.
 - Do not commit work in progress directly to `dev` or `main`. Do not merge a PR or deploy to production without explicit approval.
 - GitHub Actions should run on feature PRs, and Cloudflare should update the primary dev URL only when reviewed changes merge to `dev`.
@@ -130,3 +130,5 @@ resource/dependency optimization remains #3. See docs/step-timing.md.
 The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/backup is optional under Account → Earlier cooks, with no blocking banner. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.
 
 Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
+
+For account environment setup, follow [dev and feature testing](docs/dev-account-testing.md). The default how-many-beers.pages.dev origin follows main, not dev. Dev and trusted feature previews share the dev Supabase project/data but have separate origin sessions.
