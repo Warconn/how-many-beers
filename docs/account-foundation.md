@@ -27,7 +27,7 @@ The schema bounds names, outcome text and JSON sizes, but is not the complete pl
 
 ## Local verification
 
-Run `bash scripts/test-account-security.sh` with Docker available. The script uses a temporary PostgreSQL 16 container with networking disabled and no host port. Its trust authentication exists only inside that disposable test container. It never connects to a hosted project.
+Run `bash scripts/test-account-security.sh` with Docker available. The script uses a temporary PostgreSQL 16 container with networking disabled and no host port. Its trust authentication exists only inside that disposable test container. It never connects to a hosted project. Readiness checks use container-local TCP so the entrypoint's temporary Unix-socket initialization server cannot race the tests; failed runs retain startup logs in test output.
 
 `supabase/tests/bootstrap.sql` emulates the required Supabase Auth role/user/UID interface solely for local SQL testing. It is **not** a hosted migration. The tests exercise actual PostgreSQL grants, constraints, triggers and RLS under two identities and an anonymous role. They do not yet verify real JWT validation, PostgREST requests, social providers or hosted Auth configuration; those are explicit #19 integration gates.
 
