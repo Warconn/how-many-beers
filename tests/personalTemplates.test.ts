@@ -25,6 +25,7 @@ describe('personal cooking templates',()=>{
   expect(at(steps,'brine')-at(steps,'thaw')).toBe(6*86400000);expect(at(steps,'dry')-at(steps,'brine')).toBe(22*3600000);expect(at(steps,'start')-at(steps,'dry')).toBe(2.25*3600000);
   expect(at(steps,'serve')-at(steps,'rest')).toBe(3600000);
   const thawed=buildDishTimeline({...d,turkeyPrep:{state:'thawed',thawDays:6,brineHours:22,dryHours:2.25}},serve);expect(at(thawed,'thaw')).toBe(at(thawed,'brine'));
+  const skipped=buildDishTimeline({...d,turkeyPrep:{state:'thawed',thawDays:0,brineHours:0,dryHours:2}},serve);expect(skipped.find(t=>t.id.endsWith(':dry'))!.instructions).toContain('No brining');
   const remaining=buildDishTimeline({...d,turkeyPrep:{state:'thawing',thawDays:2,brineHours:12,dryHours:3}},serve);expect(at(remaining,'brine')-at(remaining,'thaw')).toBe(2*86400000);expect(at(remaining,'dry')-at(remaining,'brine')).toBe(12*3600000);
  });
  it('round trips prep settings and rejects malformed prep before restore',()=>{

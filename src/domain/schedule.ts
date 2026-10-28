@@ -33,7 +33,10 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
         else if(turkey.state==='thawing')title='Continue refrigerator thawing';
       }
       if(step.id==='brine'){before=startOffset+(turkey.brineHours+turkey.dryHours)*60;if(turkey.brineHours===0){title='Brining skipped';instructions='No brining time reserved. Keep the thawed turkey refrigerated before preparation.';}}
-      if(step.id==='dry')before=startOffset+turkey.dryHours*60;
+      if(step.id==='dry'){
+        before=startOffset+turkey.dryHours*60;
+        if(turkey.brineHours===0){title='Pat dry, season and refrigerate uncovered';instructions='Pat the thawed bird dry, season and refrigerate uncovered until preparation. No brining is included in this plan.';}
+      }
     }
     if(brisket){
       const i=brisket.inputs;
