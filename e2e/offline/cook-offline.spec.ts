@@ -91,7 +91,7 @@ test('an unsaved custom-step draft also blocks app updates until cancelled',asyn
 
 test('Home has no install or offline help while preparation stays functional',async({page},info)=>{
  await page.goto('/');await ready(page);
- expect(await page.locator('.site-header').evaluate(e=>e.nextElementSibling?.getAttribute('aria-label'))).toBe('Home');
+ expect(await page.locator('.site-header').evaluate(e=>{const next=e.nextElementSibling;return (next?.matches('.cook-content')?next.firstElementChild:next)?.getAttribute('aria-label');})).toBe('Home');
  await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
  await expect(page.getByText('A LITTLE LESS JUGGLING. A BETTER COOK.',{exact:true})).toHaveCount(0);
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
