@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {parseRecipeText} from '../src/domain/recipe';
 import {newMeal} from '../src/domain/meal';
 import {cookTimeline,editStep,addStep,removeStep,recordEvent,moveStep,type ExtendedMeal,type StepPlanEdit} from '../src/domain/cookState';
-import {cookDuration} from '../src/domain/cookDuration';
+import {cookDuration,remainingCook} from '../src/domain/cookDuration';
 const make=():ExtendedMeal=>({...newMeal(),serveAt:'2026-11-26T00:05Z',dishes:[parseRecipeText('Pumpkin seeds','Clean seeds\nRoast seeds\nCool completely')]});
 const change=(m:ExtendedMeal,i:number,durationMinutes:number|null,extra:Partial<StepPlanEdit>={})=>{
  const id=m.dishes[0].id+':'+m.dishes[0].steps![i].id,t=cookTimeline(m).find(t=>t.id===id)!;
@@ -31,6 +31,12 @@ describe('manually confirmed imported durations',()=>{
   let m=change(change(make(),0,5),1,15,{timingMode:'fixed',scheduledAt:'2026-11-25T23:40Z'});
   expect(cookDuration(m,cookTimeline(m),Date.now()).label).toContain('Partial');expect(stages(m)[2].durationMinutes).toBeNull();
   const t=stages(m)[0];m=editStep(m,t.id,t.title,'Keep refrigerated; use clean utensils.');m=change(m,0,10,{timingMode:'unscheduled'});expect(stages(m)[0].scheduledAt).toBeNull();expect(stages(m)[0].instructions).toContain('Keep refrigerated');
+ });
+ it('does not claim precise remaining time for unknown cooling, and handles a final serving milestone',()=>{
+  const m=change(change(make(),0,5),1,15,{timingMode:'fixed',scheduledAt:'2026-11-25T23:40Z'});
+  expect(remainingCook({...m,mode:'cooking'},cookTimeline(m),Date.parse('2026-11-25T23:45Z')).minutes).toBeNull();
+  const timed=complete();const completed=Object.fromEntries(stages(timed).map(t=>[t.id,'2026-11-26T00:00Z']));
+  expect(remainingCook({...timed,completed,mode:'cooking'},cookTimeline(timed),Date.parse('2026-11-26T00:00Z')).minutes).toBe(5);
  });
  it('reset to unknown removes fabricated timing; hidden steps and display reordering do not corrupt recipe order',()=>{
   const m=complete(),first=stages(m)[0];expect(stages(change(m,0,null))[0].scheduledAt).toBeNull();
