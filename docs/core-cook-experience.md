@@ -244,6 +244,15 @@ chronological; manual checklist order remains distinct. Actual events and comple
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
 
+
+## Brisket recommendation hierarchy (#55)
+Brisket timing leads with recommended on-smoker start, estimated cook duration and
+one deliberate Use recommended timing action. Measured weight remains editable;
+profile/cut/wrap, start windows, prep, rest/hold, manual timing explanation and
+source/uncertainty evidence live in collapsed Timing details. A passed recommended
+start remains a visible warning. Calculations and application/reversal semantics
+are unchanged; selecting manual mode retains current times for further editing.
+
 ## Issue #5: explicit brisket timing comparisons
 
 The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with
