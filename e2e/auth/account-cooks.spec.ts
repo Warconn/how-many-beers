@@ -295,6 +295,7 @@ test("earlier records stay untouched without migration prompts across account sw
   await expect(page.getByRole("button", {name:/Plan a new cook/})).toBeEnabled();
   expect(remote.state.active).toBeNull();
   await page.getByRole("button", {name:"Account",exact:true}).click();
+  await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
   await expect(page.getByText('Earlier cooks',{exact:true})).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Import these cooks',exact:true})).toHaveCount(0);
   expect(remote.state.active).toBeNull();expect(remote.state.history).toHaveLength(0);
@@ -571,6 +572,7 @@ test("account menu stays clean while earlier records remain untouched", async ({
   await expect(page.getByText("Earlier cooks", {exact:true})).toBeHidden();
   await page.screenshot({path:testInfo.outputPath("account-home-clean.png"),fullPage:true});
   await page.getByRole("button", {name:"Account",exact:true}).click();
+  await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
   await expect(page.getByText('Earlier cooks',{exact:true})).toHaveCount(0);
   await expect(page.getByText('No update is waiting.',{exact:true})).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Download earlier cooks',exact:true})).toHaveCount(0);
