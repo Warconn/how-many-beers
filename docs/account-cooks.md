@@ -17,7 +17,7 @@ A signed-in account has one active/planning cook and a searchable list of comple
 
 A fresh guest can plan and cook in memory. Sign-in is offered when keeping a plan or completed cook; Finish without saving discards that cook. Guests do not accumulate persistent cook/history records. Routine UI does not describe browser storage. Account users see a compact icon beside Account: a cloud check after acknowledgment, an activity indicator while saving/loading, or a warning when attention is needed. Accessible labels and hover text explain it; there is no separate status row. Actual failures still have visible retry/export actions.
 
-Existing pre-account saved cooks are protected. Sign-in opens account cooks directly. Optional import/backup tools, including earlier cook/history counts, live under Account → Earlier cooks; they never block planning or cooking. Replacing a meaningful account cook requires confirmation. History is combined by stable archive ID with the account copy taking precedence. Original legacy records remain intact, and earlier unimported records remain downloadable through Account. A durable ownership reservation precedes upload so another account/guest cannot claim the same original private records after a failed upload. Backup/export remains available for account cooks and recovery data.
+Existing pre-account saved cooks are protected. Sign-in opens account cooks directly. Earlier-cook import/download UI is removed during pre-1.0 (#60); existing records remain untouched. Replacing a meaningful account cook requires confirmation. History is combined by stable archive ID with the account copy taking precedence. Original legacy records remain intact, and earlier unimported records remain downloadable through Account. A durable ownership reservation precedes upload so another account/guest cannot claim the same original private records after a failed upload. Backup/export remains available for account cooks and recovery data.
 
 ## Storage and access
 
@@ -52,3 +52,11 @@ Full offline cold-start authorization, an extended event outbox/backoff system, 
 - `npx playwright test --config playwright.accounts.config.ts`: desktop Chromium/iPhone WebKit UI with simulated Auth/RPC responses. Exercises fresh-browser retrieval, history/Cook Again, guest import, account switching, IndexedDB recovery, failed writes, stale-device recovery and lost Finish responses. Separate Auth, cooking and built-offline suites remain required.
 
 Before enabling real dev account saving, verify with two actual accounts on phone and desktop: code delivery/expiry; save/start/finish; recall on a second device; identical notes/events/outcome; failure/retry; sign-out/switch; and denied cross-owner/anonymous PostgREST requests. Simulated browser responses and the PostgreSQL Auth shim do not establish hosted JWT, SMTP, schema-cache or provider behavior. No hosted administrative setup was performed from this workspace.
+
+## Pre-1.0 account menu cleanup (#60)
+Earlier Cooks import/download prompts are no longer exposed in the account menu
+or standalone account page. No automatic import replaces them. Legacy browser
+records and ownership/recovery mechanisms remain intact; normal history backups,
+account retrieval and sign-in/sign-out are unchanged. App-update detection stays
+mounted silently, and only an available update produces an action with existing
+save/draft guards. No routine “No update is waiting” message is shown.

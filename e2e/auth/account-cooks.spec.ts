@@ -261,7 +261,7 @@ test("failed account writes remain unsaved, block logout and recover through ret
   );
 });
 
-test("earlier guest cooks import only by choice and stay hidden after account switching", async ({
+test("earlier records stay untouched without migration prompts across account switching", async ({
   page,
   context,
 }) => {
@@ -299,22 +299,12 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
   await expect(page.getByRole("button", {name:/Plan a new cook/})).toBeEnabled();
   expect(remote.state.active).toBeNull();
   await page.getByRole("button", {name:"Account",exact:true}).click();
-  await page.getByText("Earlier cooks", {exact:true}).click();
-  await page
-    .getByRole("button", { name: "Import these cooks", exact: true })
-    .click();
-  await expect(
-    page.getByRole("status", { name: "Cook saved", exact: true }),
-  ).toBeVisible();
-  expect(
-    (remote.state.active as { meal: { id: string } } | null)?.meal.id,
-  ).toBe(guest.id);
-  expect(remote.state.history).toHaveLength(1);
-  expect(
-    await page.evaluate(
-      () => JSON.parse(localStorage.getItem("how-many-beers:meal:v1")!).name,
-    ),
-  ).toBe("Earlier family brisket");
+  await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
+  await expect(page.getByText('Earlier cooks',{exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Import these cooks',exact:true})).toHaveCount(0);
+  expect(remote.state.active).toBeNull();expect(remote.state.history).toHaveLength(0);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(guest);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:history:v1')!))).toEqual(history);
   await page
     .getByRole("dialog", { name: "Your account" })
     .getByRole("button", { name: "Sign out on this device", exact: true })
@@ -322,9 +312,7 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
   await expect(
     page.getByRole("button", { name: "Sign in", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Earlier family brisket", { exact: true }),
-  ).toHaveCount(0);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("how-many-beers:meal:v1")!).name)).toBe("Earlier family brisket");
   const other = {
     ...user,
     id: "00000000-0000-4000-8000-000000000002",
@@ -555,7 +543,7 @@ test("confirmed logout hides pending work from another account and restores it f
   ).toBeVisible();
 });
 
-test("account cooks open directly and earlier guest cooks stay optional in the menu", async ({
+test("account menu stays clean while earlier records remain untouched", async ({
   page,
   context,
 }, testInfo) => {
@@ -593,22 +581,14 @@ test("account cooks open directly and earlier guest cooks stay optional in the m
   await expect(page.getByText("Earlier cooks", {exact:true})).toBeHidden();
   await page.screenshot({path:testInfo.outputPath("account-home-clean.png"),fullPage:true});
   await page.getByRole("button", {name:"Account",exact:true}).click();
-  await page.getByText("Earlier cooks", {exact:true}).click();
-  await page.screenshot({path:testInfo.outputPath("account-earlier-cooks-menu.png"),fullPage:true});
-  const download = page.waitForEvent("download");
-  await page
-    .getByRole("button", { name: "Download earlier cooks", exact: true })
-    .click();
-  const file = await download;
-  const { readFile } = await import("node:fs/promises");
-  const backup = JSON.parse(await readFile((await file.path())!, "utf8"));
-  expect(backup.active.name).toBe("Earlier cook for safekeeping");
-  expect((remote.state.active as { meal: { name: string } }).meal.name).toBe(
-    "Existing account cook",
-  );
-  page.once("dialog",dialog=>dialog.dismiss());
-  await page.getByRole("button",{name:"Import these cooks",exact:true}).click();
-  expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Existing account cook");
+  await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
+  await expect(page.getByText('Earlier cooks',{exact:true})).toHaveCount(0);
+  await expect(page.getByText('No update is waiting.',{exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Download earlier cooks',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Import these cooks',exact:true})).toHaveCount(0);
+  await page.screenshot({path:testInfo.outputPath('account-clean-menu.png'),fullPage:true});
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(earlier);
+  expect((remote.state.active as {meal:{name:string}}).meal.name).toBe('Existing account cook');
   await page.getByRole("button",{name:"Close account",exact:true}).click();
   await page.getByRole("button",{name:/Resume planning/}).click();
   await page.getByLabel("Meal name").fill("Official account cook");
