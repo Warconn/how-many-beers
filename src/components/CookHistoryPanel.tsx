@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useRef,useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
 import type {CookEvent} from "@/domain/cookState";
 
@@ -23,6 +23,7 @@ function eventDetail(e:CookEvent):string{
 }
 
 export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onImport}:Props){
+  const importInput=useRef<HTMLInputElement>(null);
   const [search,setSearch]=useState("");
   const [selected,setSelected]=useState<string|null>(null);
   const [busy,setBusy]=useState(false);
@@ -35,17 +36,6 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
       <div><p className="eyebrow">PAST SESSIONS</p><h2>Cook History</h2></div>
     </div>
     <p className="muted small">Open a completed cook for its actual times, temperatures and notes, or cook it again.</p>
-    <div className="history-toolbar">
-      <button type="button" className="button secondary" onClick={onExport}>Download backup</button>
-      <label className="history-import">Restore a backup
-        <input type="file" accept=".json,application/json" disabled={busy} onChange={async e=>{
-          const file=e.target.files?.[0];
-          if(!file)return;
-          setBusy(true);
-          try{await onImport(file);}finally{setBusy(false);e.target.value="";}
-        }}/>
-      </label>
-    </div>
     {history.cooks.length===0
       ? <p className="history-empty">No saved cooks yet. After your next brisket, select <strong>Finish & Save Cook</strong>.</p>
       : <>
@@ -61,14 +51,25 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
                 <span className="history-count">{entry.plannedTimeline.length} steps</span>
               </div>
               <div className="history-actions">
-                <button type="button" onClick={()=>setSelected(selected===entry.id?null:entry.id)}>{selected===entry.id?"Hide details":"View cook"}</button>
-                <button type="button" onClick={()=>onRepeat(entry)}>Cook again</button>
-                <button type="button" className="danger" onClick={()=>onDelete(entry)}>Delete</button>
+                <button type="button" className="button primary" aria-expanded={selected===entry.id} onClick={()=>setSelected(selected===entry.id?null:entry.id)}>{selected===entry.id?"Hide details":"View cook"}</button>
+                <button type="button" className="button secondary" onClick={()=>onRepeat(entry)}>Cook again</button>
+                <button type="button" className="button history-delete" onClick={()=>onDelete(entry)}>Delete</button>
               </div>
             </article>)}
             {!shown.length && <p className="muted small">No matching cooks.</p>}
           </div>
         </>}
+    <section className="history-backups" aria-label="Cook backups"><h3>Backups</h3><div className="history-toolbar">
+      <button type="button" className="button secondary" onClick={onExport}>Download backup</button>
+      <button type="button" className="button secondary" disabled={busy} onClick={()=>importInput.current?.click()}>Restore a backup</button>
+        <input ref={importInput} className="sr-only" aria-label="Restore a backup" type="file" accept=".json,application/json" disabled={busy} onChange={async e=>{
+          const file=e.target.files?.[0];
+          if(!file)return;
+          setBusy(true);
+          try{await onImport(file);}finally{setBusy(false);e.target.value="";}
+        }}/>
+
+    </div></section>
     {detailed && <section className="history-detail" aria-label="Saved cook details">
       <h3>{detailed.meal.name}</h3>
       <p className="muted small">Planned serving: {fmt(detailed.meal.serveAt)} · Saved: {fmt(detailed.archivedAt)}</p>

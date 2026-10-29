@@ -182,6 +182,18 @@
 .history-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px}
 .history-actions button{background:#fdf6ee;border:1px solid #e3d7c9;color:#814c32;border-radius:9px;font-size:12px;font-weight:800;padding:9px 12px}
 .history-actions .danger{color:#ad4133;background:#fff7f5}
+
+.history-actions { gap:12px; margin-top:16px; align-items:center; }
+.history-actions button { min-height:44px; padding:10px 16px; font-size:14px; border-radius:10px; }
+.history-actions .primary { background:var(--accent,#a64e2a); color:white; border-color:transparent; }
+.history-actions .secondary { background:#f6ede5; color:#814c32; }
+.history-actions .history-delete { background:transparent; border-color:transparent; color:#a13e32; margin-left:auto; }
+.history-backups { border-top:1px solid #e3d7c9; margin-top:24px; padding-top:16px; }
+.history-backups h3 { font-size:14px; color:#6b655e; }
+.history-toolbar .button { min-height:44px; font-size:14px; padding:10px 16px; }
+.history-item strong { overflow-wrap:anywhere; }
+@media(max-width:600px){.history-actions .primary,.history-actions .secondary { flex:1; } .history-actions .history-delete { margin-left:0; } .history-toolbar .button { flex:1; }}
+
 .history-detail{border-radius:15px;border:1px solid #e1d4c5;background:#f8f4ed;margin-top:18px;padding:17px;overflow-wrap:anywhere}
 .history-detail h3{font-size:20px;margin:0 0 8px}
 .history-detail h4{font-size:14px;margin:17px 0 7px}
