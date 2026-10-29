@@ -545,3 +545,14 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .account-earlier-cooks{margin:18px 0;border-top:1px solid var(--line);padding-top:12px}.account-earlier-cooks summary{cursor:pointer;min-height:44px;display:list-item;padding:12px 0;font-weight:700;color:var(--accent-dark)}.account-earlier-cooks p{font-size:13px}.account-dialog .offline-access{border-top:1px solid var(--line);padding-top:12px;margin-top:18px;margin-bottom:0}
 
 .account-control{display:flex;align-items:center;gap:12px}.account-save-indicator{display:inline-flex;align-items:center;justify-content:center;width:28px;height:32px;color:#8b5d25;flex:none}.account-save-indicator svg{width:24px;height:24px}.account-save-indicator[data-state=saved]{color:#65745d}.account-save-indicator[data-state=loading],.account-save-indicator[data-state=syncing],.account-save-indicator[data-state=saving]{color:var(--muted)}.save-in-progress{animation:save-progress 1.8s linear infinite}@keyframes save-progress{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.save-in-progress{animation:none}}@media(max-width:600px){.account-control{gap:7px}.account-save-indicator{width:24px}.account-save-indicator svg{width:22px;height:22px}}
+
+/* Empty plans invite the first dish before showing execution tools. */
+.empty-planner { max-width: 780px; margin: 0 auto; }
+.empty-planner-choices { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
+.empty-planner-choices p { flex-basis:100%; margin:0; }
+@media(max-width:600px){.empty-planner-choices .button { width:100%; min-height:48px; }}
+
+.empty-planner .hero-fields label { color:#625c54; }
+.empty-planner .hero > div:first-child { display:none; }
+.empty-planner .hero { display:block; padding:24px; }
+.empty-prep { margin:16px 0; color:#625c54; }

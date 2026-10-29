@@ -36,6 +36,15 @@ The Guided Cook Planner now treats planning as editable by default. Each menu di
 
 The compact Start Cooking and complete cooking-mode redesign are separate follow-up work. Only promote `dev` to `main` after green CI and visual review.
 
+## Empty planner entry (#56)
+Empty planning shows “What do you want to cook?” with Start with a template and
+Upload a recipe, both entering the existing chooser. Zero-dish metrics, empty
+schedule and inactive cooking actions are hidden. Serving time remains editable,
+Cancel preserves it, and an empty saved account plan can reopen without resetting
+its time. General preparation remains available under Other preparation. First
+and later dishes share the same template/import implementation. Guest sessions
+stay ephemeral; account saving and existing history are unchanged.
+
 ## Add Dish consolidation (October 26, 2026)
 
 The Add Dish editor now has two choices inside one surface: **Start from template** (existing starter methods) or **Import a recipe** (paste instructions or upload a .txt/.md file). Selecting an existing dish remains an Edit action on the menu card. The separate full-page Import a Recipe section has been removed to keep the Guided Planner focused. URL import is not yet implemented and must not be presented as a working feature.

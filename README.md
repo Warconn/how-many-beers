@@ -44,6 +44,8 @@ The account feature preview supports one saved active/planning cook, completed h
 
 Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 
+Empty plans ask **What do you want to cook?** with template and recipe-upload choices. Serving time stays editable; the schedule and cooking controls appear once there are steps.
+
 ## Run it locally
 
 The project uses **Next.js, React, and TypeScript**. Use Node.js 22 or newer.
@@ -79,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The immediate coding sequence is **#50 Home cleanup → #19 free account foundation → #20 initial account-backed cooks/history**. The Home implementation is merged into dev for final QA. QA/reliability, timing validation and branding verification run alongside account work. Timers, URL import, deeper scheduling and advanced sync remain **Next**, with their order chosen separately. See [the detailed work queue](docs/work-queue.md) and [agent guidance](AGENTS.md).
+The approved evening queue is **#57 whole-cook Beerometer → #56 empty planner → #55 brisket recommendation → #59 history actions → #60 remove Earlier Cooks UI**. Account foundation, initial cloud saving/history and CI optimization (#19/#20/#54) are complete. Each change goes through a feature PR to dev for review.
 
 ## Account foundation work
 

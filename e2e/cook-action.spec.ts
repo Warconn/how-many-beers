@@ -9,12 +9,13 @@ test.beforeEach(async ({ page }) => {
   await page.reload();
 });
 
-test('empty and invalid plans explain why starting is disabled', async ({ page }) => {
+test('empty plans invite dishes; prep-only plans and invalid serving times keep start validation', async ({ page }) => {
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await expect(page.getByText('READY WHEN YOU ARE', { exact: true })).toHaveCount(0);
   const start = page.getByRole('button', { name: 'Start cooking', exact: true });
-  await expect(start).toBeDisabled();
-  await expect(page.getByText('Add a dish or prep step to start.', { exact: true })).toBeVisible();
+  await expect(start).toHaveCount(0);
+  await page.getByText('Other preparation',{exact:true}).click();
   await page.getByRole('button', { name: /Add a checklist step/ }).click();
   await page.getByLabel('Step title', { exact: true }).fill('Set the table');
   await page.getByRole('button', { name: 'Add step', exact: true }).click();
@@ -29,6 +30,7 @@ test('empty and invalid plans explain why starting is disabled', async ({ page }
 
 test('planned cook has one compact action beneath the menu and optional checklist', async ({ page }, info) => {
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page.getByRole('button', { name: 'Add smoked brisket' }).click();
   await page.getByRole('button', { name: '+ Add a dish', exact: true }).click();
   await page.getByRole('button', { name: 'Add grilled beer-bath brats' }).click();
