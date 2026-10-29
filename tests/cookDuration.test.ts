@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {createDish,newMeal} from '../src/domain/meal';
 import type {ExtendedMeal} from '../src/domain/cookState';
 import {cookTimeline,recordEvent} from '../src/domain/cookState';
-import {cookDuration} from '../src/domain/cookDuration';
+import {cookDuration,remainingCook} from '../src/domain/cookDuration';
 const now=Date.parse('2026-11-25T10:00Z');
 const read=(m:ExtendedMeal)=>cookDuration(m,cookTimeline(m),now);
 describe('whole cook duration',()=>{
@@ -31,5 +31,32 @@ describe('whole cook duration',()=>{
   expect(cookDuration(updated,timeline,now+9999999,'2026-11-25T13:00Z').minutes).toBe(240);
   expect(cookDuration({...m,startedAt:undefined},timeline,now,'2026-11-25T13:00Z').label).toBe('Planned cook');
   expect(read({...m,startedAt:'invalid'}).minutes).toBeGreaterThan(0);
+ });
+});
+
+
+describe('remaining whole-cook window',()=>{
+ const m={...newMeal(),mode:'cooking' as const};
+ const task=(id:string,at:string|null,durationMinutes=0)=>({id,dishId:id,dishName:id,title:id,instructions:'',scheduledAt:at,durationMinutes,isCondition:false});
+ const timeline=[task('prep','2026-11-25T10:00Z',120),task('overlap','2026-11-25T11:00Z',180),task('serve','2026-11-25T14:00Z')];
+ it('counts overlap once, advances past completed early work and keeps totals separate',()=>{
+  const at=Date.parse('2026-11-25T09:00Z');
+  expect(remainingCook(m,timeline,at).minutes).toBe(240);
+  const partial={...m,completed:{prep:'2026-11-25T09:00Z'}};
+  expect(remainingCook(partial,timeline,at).minutes).toBe(180);
+  expect(cookDuration(partial,timeline,at).minutes).toBe(240);
+  expect(remainingCook(m,timeline,Date.parse('2026-11-25T12:00Z')).minutes).toBe(120);
+ });
+ it('reaches zero when all steps are checked early, persists through reload and reopens',()=>{
+  const completed=Object.fromEntries(timeline.map(t=>[t.id,'2026-11-25T09:01Z']));
+  expect(remainingCook({...m,completed},timeline,now).minutes).toBe(0);
+  expect(remainingCook(JSON.parse(JSON.stringify({...m,completed})),timeline,now).minutes).toBe(0);
+  delete completed.prep;expect(remainingCook({...m,completed},timeline,now).minutes).toBe(120);
+  expect(remainingCook(m,timeline,now,'2026-11-25T09:02Z').minutes).toBe(0);
+ });
+ it('does not claim an overdue or untimed unfinished cook is complete',()=>{
+  expect(remainingCook(m,timeline,Date.parse('2026-11-26T12:00Z')).minutes).toBeNull();
+  expect(remainingCook(m,[...timeline,task('unknown',null)],now).minutes).toBeNull();
+  expect(remainingCook({...m,completed:{unknown:'2026-11-25T09:00Z'}},[...timeline,task('unknown',null)],now).minutes).toBe(240);
  });
 });

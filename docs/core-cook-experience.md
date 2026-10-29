@@ -311,8 +311,13 @@ The Beerometer measures elapsed time across all dishes, from the earliest schedu
 preparation to the latest serving/task end, counting overlaps once. Refrigerated
 brine, air drying and advance trimming/seasoning count; turkey thaw reminders and
 explicitly skipped brining do not. Removed/unscheduled tasks do not define planned
-bounds. Active cooks show projected total plus actual elapsed from the earliest
-recorded session/step start; intermediate completions do not subtract from total.
-History uses the archived timeline and archive time to freeze actual duration when
-a start was recorded, otherwise labels the planned estimate. Existing events and
+bounds. During cooking the primary reading is estimated beers remaining across unfinished
+work. Completing the earliest/latest unfinished steps advances the remaining
+window without double-counting overlaps; all eligible steps checked gives zero,
+even before Finish cook or the serving target. Unknown timing or overdue unfinished
+steps require review rather than falsely claiming completion. Projected total and
+actual elapsed remain separate supporting readings, so completion does not rewrite
+total duration. History shows zero remaining and uses the archived timeline and
+archive time to freeze actual duration when a start was recorded, otherwise labels
+the planned estimate. Existing events and
 storage schemas are unchanged. The 90-minute conversion stays internal.
