@@ -87,8 +87,6 @@ The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-onl
 
 See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature is merged into dev and has not been released to production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs, including automatic access for future `feat/*` previews.
 
-History now emphasizes **View cook**, keeps **Cook again** secondary, and places backup/restore in a separate utility area. See [history actions](docs/history-actions.md).
-
 ## Documentation
 
 - [Work queue](docs/work-queue.md): tonight’s priority and the prepared implementation order
