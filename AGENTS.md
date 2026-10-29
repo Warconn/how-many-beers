@@ -18,13 +18,9 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 Owner-approved October 28 evening queue: #19 account foundation, #20 initial cloud cooks/history and #54 CI optimization are complete and closed. Production sign-in, cloud saving and cross-device history are owner-verified.
 
-1. **[#57 Whole-cook Beerometer](https://github.com/Warconn/how-many-beers/issues/57)**: all dishes, planned versus actual, immutable recorded events.
-2. **[#56 Empty planner](https://github.com/Warconn/how-many-beers/issues/56)**: “What do you want to cook?”, shared template/import entry.
-3. **[#55 Brisket recommendation](https://github.com/Warconn/how-many-beers/issues/55)**: compact start-time presentation; retain estimator semantics.
-4. **[#59 History actions](https://github.com/Warconn/how-many-beers/issues/59)**: hierarchy and spacing, unchanged persistence/deletion behavior.
-5. **[#60 Remove Earlier Cooks UI](https://github.com/Warconn/how-many-beers/issues/60)**: no migration controls or automatic import; retain stored records and recovery.
+The approved #57/#56/#55/#59/#60 batch is merged into `dev` through PRs #72/#76/#73/#74/#75. Production has not been promoted for this batch.
 
-Each has an independent feature branch and PR to dev for review. Coordinate shared planner tests/components and validate their combined behavior before merging. No automatic production promotion.
+**Current owner-directed follow-up: [#78 imported duration/timeline consistency](https://github.com/Warconn/how-many-beers/issues/78).** Verify on merged dev, then fix manually confirmed imported/custom durations, anchors, partial-plan labels and Beerometer updates on a feature branch with PR to dev. Preserve fixed times, actual events, guest limits and account/history storage. [#77 structured recipe extraction](https://github.com/Warconn/how-many-beers/issues/77) remains separate Next work; do not expand #78 into parser extraction.
 
 **NOW, parallel/release-readiness work:** [#10 PWA/offline data reliability](https://github.com/Warconn/how-many-beers/issues/10), [#4 real-phone and full-cook alpha QA](https://github.com/Warconn/how-many-beers/issues/4), [#5 validation of delivered brisket estimates](https://github.com/Warconn/how-many-beers/issues/5), and [#45 homepage branding](https://github.com/Warconn/how-many-beers/issues/45). These are important open Now items but should not be inserted ahead of #19/#20 just because they are also labeled Now. Work can be parallelized when branches and risk permit.
 

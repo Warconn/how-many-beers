@@ -253,6 +253,13 @@ source/uncertainty evidence live in collapsed Timing details. A passed recommend
 start remains a visible warning. Calculations and application/reversal semantics
 are unchanged; selecting manual mode retains current times for further editing.
 
+## Imported duration consistency (#78)
+Manually confirmed imported durations now participate in deriving the timeline
+from serving/fixed starts. Step cards distinguish a missing start from an unknown
+duration, and show partial Beerometer windows honestly. Unknown cooling does not
+become zero; actual events and fixed times stay anchored. See [Step timing](step-timing.md).
+Automatic recipe field extraction remains #77 and is not part of this correction.
+
 ## Issue #5: explicit brisket timing comparisons
 
 The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with

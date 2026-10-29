@@ -19,7 +19,7 @@ export default function Beerometer({meal,timeline,finishedAt}:{meal:Meal;timelin
       </div>
     </div>
     <div className="beerometer-reading"><div className="beerometer-figure"><strong>{minutes===null?'—':(minutes/90).toFixed(1)}</strong><span>{remaining?'beers remaining':'beers'}</span></div>
-      <p className="beerometer-clock">{minutes===null?(remaining?label:'Set a cook start and finish time.'):`${duration(minutes)} · ${label}`}</p>
+      <p className="beerometer-clock">{minutes===null?(remaining?label:result.label.includes('Partial')?'Set serving time or a fixed start; confirm missing durations.':'Set a cook start and finish time.'):`${duration(minutes)} · ${label}`}</p>
       {remaining && remaining.label!=='All steps checked' && result.minutes!==null && <p className="small">{duration(result.minutes)} · {result.label}</p>}
       {result.elapsed!==null && <p className="small">{duration(result.elapsed)} elapsed</p>}
     </div>

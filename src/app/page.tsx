@@ -334,6 +334,8 @@ function CookExperience() {
     return <TaskRow
       key={task.id}
       task={task}
+      showTimingDetails={task.dishId==='custom'||meal.dishes.some(d=>d.id===task.dishId&&d.preset==='custom')}
+      hasServeTarget={Number.isFinite(Date.parse(meal.serveAt))}
       index={index}
       count={visibleTasks.length}
       compact={compact}
@@ -624,7 +626,14 @@ function CookExperience() {
                   </div> : <div className="recipe-steps">
                     {(d.steps||[]).map(s=><div className="recipe-row" key={s.id}>
                       <span>{s.title}</span>
-                      <label><span className="sr-only">Minutes for {s.title}</span><input type="number" min="1" max="1440" placeholder="min?" value={s.minutes??""} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id!==d.id?item:{...item,steps:item.steps?.map(step=>step.id===s.id?{...step,minutes:e.target.value===""?null:Math.max(1,Number(e.target.value)||1)}:step)})}))}/></label>
+                      <label><span className="sr-only">Minutes for {s.title}</span><input type="number" min="1" max="43200" placeholder="Unknown" value={timeline.find(t=>t.id===d.id+":"+s.id)?.durationMinutes??""} onChange={e=>{
+                        const minutes=e.target.value===""?null:Math.max(1,Number(e.target.value)||1);
+                        patch(m=>{
+                          const taskId=d.id+":"+s.id,overrides={...(m as ExtendedMeal).taskOverrides};
+                          if(overrides[taskId]){overrides[taskId]={...overrides[taskId]};delete overrides[taskId].durationMinutes;}
+                          return {...m,taskOverrides:overrides,dishes:m.dishes.map(item=>item.id!==d.id?item:{...item,steps:item.steps?.map(step=>step.id===s.id?{...step,minutes}:step)})};
+                        });
+                      }}/></label>
                     </div>)}
                     <p className="muted small">Blank time means the step stays unscheduled. Confirm all timings before relying on this plan.</p>
                   </div>}
@@ -711,7 +720,7 @@ function CookExperience() {
             <p className="muted small">Serving {when(meal.serveAt || null)}</p>
             {timeline.length ? <>
               <ol className="schedule-list">
-                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{when(task.scheduledAt)}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}
+                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?when(task.scheduledAt):"Start time not set"}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}
               </ol>
               {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
             </> : <p className="muted small">Add a dish to see your schedule.</p>}

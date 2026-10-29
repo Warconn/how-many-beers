@@ -98,27 +98,54 @@ function builtinTasks(d: Dish, serveAt: string): PlannedTask[] {
   return entries.map(e=>({ id: d.id + ":" + e.key, dishId:d.id, dishName:d.name, title:e.title, instructions:e.instructions, scheduledAt:at(serveAt,e.before), isCondition:!!e.conditional }));
 }
 
-function importedTasks(d: Dish, serveAt: string): PlannedTask[] {
-  let offset = 0;
-  const arr = (d.steps ?? []).map((step) => ({
-    id: d.id + ":" + step.id, dishId:d.id, dishName:d.name, title:step.title,
-    durationMinutes: step.minutes,
-    instructions: step.minutes === null ? "Timing needed: edit the recipe before relying on this timeline." : "Imported recipe step. Confirm instructions and timing.",
-    scheduledAt:null as string|null, isCondition:step.minutes === null
-  }));
-  for(let i=arr.length-1; i>=0; i--){
-    const value=d.steps?.[i]?.minutes;
-    if(value !== null && value !== undefined && value > 0){
-      offset += value;
-      arr[i].scheduledAt=at(serveAt,offset);
+export type ImportedTimingContext = {
+  overrides?: Record<string,{durationMinutes?:number|null;scheduledAt?:string|null;recordedPlanAt?:string|null}>;
+  recorded?: ReadonlySet<string>;
+  hidden?: ReadonlySet<string>;
+};
+function importedTasks(d:Dish,serveAt:string,context:ImportedTimingContext={}):PlannedTask[]{
+  const source=(d.steps??[]).filter(s=>!context.hidden?.has(d.id+':'+s.id));
+  const tasks:PlannedTask[]=source.map(step=>{
+    const edit=context.overrides?.[d.id+':'+step.id];
+    // Originally timed recipes retain their original cadence (#41). A previously
+    // unknown duration becomes usable as soon as it is manually confirmed.
+    const minutes=edit?.durationMinutes===null?null:step.minutes===null && edit?.durationMinutes!==undefined?edit.durationMinutes:step.minutes;
+    return {id:d.id+':'+step.id,dishId:d.id,dishName:d.name,title:step.title,
+      durationMinutes:minutes,baseDurationMinutes:step.minutes,
+      instructions:'Imported recipe step. Confirm instructions and timing.',scheduledAt:null,isCondition:false};
+  });
+  if(!context.hidden?.has(d.id+':serve'))tasks.push({id:d.id+':serve',dishId:d.id,dishName:d.name,title:'Serve',durationMinutes:null,instructions:'Confirm safe doneness and plate.',scheduledAt:at(serveAt,0),isCondition:false});
+  const finite=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
+  const durations=tasks.map(t=>t.id===d.id+':serve'?0:t.durationMinutes==null?null:t.durationMinutes*minute);
+  const derive=(useFixed:boolean)=>{
+    const blocked=tasks.map(t=>{
+      const o=context.overrides?.[t.id];return o?.scheduledAt===null || (context.recorded?.has(t.id)&&o?.recordedPlanAt===null&&o.scheduledAt===undefined);
+    });
+    const times=tasks.map((t,i)=>{
+      if(blocked[i])return null;
+      const o=context.overrides?.[t.id];
+      if(useFixed&&o?.scheduledAt!==undefined)return finite(o.scheduledAt);
+      if(context.recorded?.has(t.id)&&o?.recordedPlanAt!==undefined)return finite(o.recordedPlanAt);
+      return t.id===d.id+':serve'?finite(t.scheduledAt):null;
+    });
+    // Work backward through known durations to the next serving/fixed/recorded
+    // anchor. An unknown interval breaks this chain; it is never treated as zero.
+    for(let i=times.length-2;i>=0;i--){
+      if(!blocked[i]&&times[i]===null&&times[i+1]!==null&&durations[i]!==null)times[i]=times[i+1]!-durations[i]!;
     }
-  }
-  arr.push({id:d.id+":serve",dishId:d.id,dishName:d.name,title:"Serve",durationMinutes:null,instructions:"Confirm safe doneness and plate.",scheduledAt:at(serveAt,0),isCondition:false});
-  return arr;
+    // A known preceding finish can locate the next start even if that next
+    // step's duration is unknown (for example cooling after a fixed roast).
+    for(let i=1;i<times.length;i++){
+      if(!blocked[i]&&times[i]===null&&times[i-1]!==null&&durations[i-1]!==null)times[i]=times[i-1]!+durations[i-1]!;
+    }
+    return times.map(n=>n!==null&&Number.isFinite(n)&&Math.abs(n)<=8640000000000000?new Date(n).toISOString():null);
+  };
+  const dates=derive(true),defaults=derive(false);
+  return tasks.map((t,i)=>({...t,scheduledAt:dates[i],baseScheduledAt:context.overrides?.[t.id]?.scheduledAt?defaults[i]:dates[i]}));
 }
 
-export function buildDishTimeline(d:Dish,serveAt:string):PlannedTask[]{
-  if(d.preset==='custom')return importedTasks(d,serveAt);
+export function buildDishTimeline(d:Dish,serveAt:string,context?:ImportedTimingContext):PlannedTask[]{
+  if(d.preset==='custom')return importedTasks(d,serveAt,context);
   return builtinTasks(d,serveAt).sort((a,b)=>Date.parse(a.scheduledAt??'')-Date.parse(b.scheduledAt??''));
 }
 export function buildTimeline(meal:Meal): PlannedTask[]{
