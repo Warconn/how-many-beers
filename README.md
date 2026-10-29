@@ -87,6 +87,10 @@ The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-onl
 
 See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature is merged into dev and has not been released to production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs, including automatic access for future `feat/*` previews.
 
+
+Brisket planning now puts the recommended start first; open **Timing details** for
+profile settings, buffers, evidence and limitations. Applying remains explicit.
+
 ## Documentation
 
 - [Work queue](docs/work-queue.md): tonight’s priority and the prepared implementation order
@@ -99,6 +103,3 @@ See [account setup and security gates](docs/account-foundation.md) and [account 
 - [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
 
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
-
-Brisket planning now puts the recommended start first; open **Timing details** for
-profile settings, buffers, evidence and limitations. Applying remains explicit.

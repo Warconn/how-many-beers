@@ -235,6 +235,15 @@ chronological; manual checklist order remains distinct. Actual events and comple
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
 
+
+## Brisket recommendation hierarchy (#55)
+Brisket timing leads with recommended on-smoker start, estimated cook duration and
+one deliberate Use recommended timing action. Measured weight remains editable;
+profile/cut/wrap, start windows, prep, rest/hold, manual timing explanation and
+source/uncertainty evidence live in collapsed Timing details. A passed recommended
+start remains a visible warning. Calculations and application/reversal semantics
+are unchanged; selecting manual mode retains current times for further editing.
+
 ## Issue #5: explicit brisket timing comparisons
 
 The expanded brisket menu includes an optional weight/cut/profile/wrap comparison with
@@ -305,11 +314,3 @@ Workspace refinement: routine saved-on-device labels are removed from all views.
 The shared header has a compact Sign in / Account control on Home, planning, cooking and history, on explicitly trusted dev/feature origins. It opens a native dialog without unmounting the cook or open editors. Email code sign-in completes in place; closing or Escape restores focus and preserves recipe drafts and exact saved progress. App-update reloads remain blocked while the account dialog is open. Disabled account builds retain the existing UI.
 
 Email links and configured social providers return through a same-origin PKCE callback. Back to cook restores a valid one-use, tab-scoped previous view for the same cook; invalid, expired or unavailable hints fall back to Home. Navigation away still uses existing unsaved-draft guards. A shared provider verifies identity, handles sign-out across tabs, and offers retry after verification failure without changing the cook. The account panel explains that sign-in does not yet sync cooks across devices; no account-save success is invented. Existing cook/history data is neither uploaded nor removed. Google/Apple remain hidden until enabled in build configuration. Identity linking, account deletion and account-backed persistence remain unfinished work. See [account setup and security gates](account-foundation.md).
-
-## Brisket recommendation hierarchy (#55)
-Brisket timing leads with recommended on-smoker start, estimated cook duration and
-one deliberate Use recommended timing action. Measured weight remains editable;
-profile/cut/wrap, start windows, prep, rest/hold, manual timing explanation and
-source/uncertainty evidence live in collapsed Timing details. A passed recommended
-start remains a visible warning. Calculations and application/reversal semantics
-are unchanged; selecting manual mode retains current times for further editing.
