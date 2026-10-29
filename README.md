@@ -99,3 +99,6 @@ See [account setup and security gates](docs/account-foundation.md) and [account 
 - [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
 
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
+
+Brisket planning now puts the recommended start first; open **Timing details** for
+profile settings, buffers, evidence and limitations. Applying remains explicit.
