@@ -4,8 +4,8 @@ import {cookTimeline} from '../src/domain/cookState';
 test('Beerometer is prominent and stays visible while planning and cooking',async({page},info)=>{
  const dish=createDish('brisket'),meal={...newMeal(),serveAt:'2026-11-25T15:00',dishes:[dish]};
  await page.goto('/');await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
- const meter=page.getByRole('region',{name:'Cook duration in beers',exact:true});await expect(meter).toBeVisible();await expect(meter).toBeInViewport();await expect(page.getByText(/^Saved on this device/)).toHaveCount(0);await expect(meter).toContainText('8.7');await expect(meter).toContainText('90 min');
- await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();await page.getByLabel('Estimated cook (hours)',{exact:true}).fill('9');await page.getByLabel('Estimated cook (hours)',{exact:true}).press('Tab');await expect(meter).toContainText('6.0');const rows=page.getByRole('region',{name:'Smoked brisket steps',exact:true}).getByRole('article');await (page.viewportSize()!.width>900?rows.nth(4):rows.last()).scrollIntoViewIfNeeded();await expect(meter).toBeInViewport();
+ const meter=page.getByRole('region',{name:'Cook duration in beers',exact:true});await expect(meter).toBeVisible();await expect(meter).toBeInViewport();await expect(page.getByText(/^Saved on this device/)).toHaveCount(0);await expect(meter).toContainText('16.7');await expect(meter).not.toContainText('90 min');
+ await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();await page.getByLabel('Estimated cook (hours)',{exact:true}).fill('9');await page.getByLabel('Estimated cook (hours)',{exact:true}).press('Tab');await expect(meter).toContainText('14.1');const rows=page.getByRole('region',{name:'Smoked brisket steps',exact:true}).getByRole('article');await (page.viewportSize()!.width>900?rows.nth(4):rows.last()).scrollIntoViewIfNeeded();await expect(meter).toBeInViewport();
  if(page.viewportSize()!.width>900){const banner=await meter.boundingBox(),schedule=await page.getByRole('complementary',{name:'Live schedule'}).boundingBox();expect(schedule!.y).toBeGreaterThanOrEqual(banner!.y+banner!.height);}
  await page.screenshot({path:info.outputPath('beerometer-planning.png'),fullPage:false,style:'nextjs-portal{display:none}'});await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(meter).toBeVisible();await expect(meter).toBeInViewport();await expect(page.getByText(/^Saved on this device/)).toHaveCount(0);
  const step=page.getByRole('region',{name:'Current step',exact:true});await step.getByRole('checkbox').click();await expect(meter).toBeInViewport();await expect(page.getByRole('navigation',{name:'Cooking guide',exact:true})).toBeInViewport();
@@ -15,4 +15,17 @@ test('Beerometer is prominent and stays visible while planning and cooking',asyn
 });
 test('empty or untimed plans never display a made-up beer count',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});await expect(meter).toBeVisible();await expect(meter).toContainText('Add a dish');await expect(meter.locator('strong')).toHaveText('—');await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('');await expect(meter.locator('strong')).toHaveText('—');
+});
+test('whole-cook brining, live progress and frozen history readings',async({page},info)=>{
+ const b=createDish('brisket'),t={...createDish('turkey'),turkeyPrep:{state:'frozen' as const,thawDays:5,brineHours:22,dryHours:8}};
+ const meal={...newMeal(),serveAt:'2026-11-25T18:00Z',dishes:[b,t]};
+ await page.goto('/');await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
+ const meter=page.getByRole('region',{name:'Cook duration in beers'});await expect(meter).toContainText('23.7');await expect(meter).toContainText('Planned cook');await expect(meter).not.toContainText('90 min');
+ await page.screenshot({path:info.outputPath('whole-cook-planning.png')});
+ await page.clock.install({time:new Date('2026-11-25T10:00Z')});await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(meter).toContainText('Projected cook');await expect(meter).toContainText('0h 00m elapsed');
+ await page.clock.fastForward(60000);await expect(meter).toContainText('0h 01m elapsed');await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox').click();await expect(meter).toContainText('0h 01m elapsed');
+ await page.screenshot({path:info.outputPath('whole-cook-active.png')});
+ await page.getByRole('button',{name:'Finish cook',exact:true}).first().click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();await page.getByRole('button',{name:/Past cooks and backups/}).click();await page.getByRole('button',{name:'View cook',exact:true}).click();
+ const saved=page.getByRole('region',{name:'Saved cook details'}).getByRole('region',{name:'Cook duration in beers'});await expect(saved).toContainText('Actual cook');await expect(saved).toContainText('0h 01m');await page.clock.fastForward(60000);await expect(saved).toContainText('0h 01m');
+ await page.screenshot({path:info.outputPath('whole-cook-history.png')});
 });

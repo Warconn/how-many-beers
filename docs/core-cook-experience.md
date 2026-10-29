@@ -305,3 +305,14 @@ Workspace refinement: routine saved-on-device labels are removed from all views.
 The shared header has a compact Sign in / Account control on Home, planning, cooking and history, on explicitly trusted dev/feature origins. It opens a native dialog without unmounting the cook or open editors. Email code sign-in completes in place; closing or Escape restores focus and preserves recipe drafts and exact saved progress. App-update reloads remain blocked while the account dialog is open. Disabled account builds retain the existing UI.
 
 Email links and configured social providers return through a same-origin PKCE callback. Back to cook restores a valid one-use, tab-scoped previous view for the same cook; invalid, expired or unavailable hints fall back to Home. Navigation away still uses existing unsaved-draft guards. A shared provider verifies identity, handles sign-out across tabs, and offers retry after verification failure without changing the cook. The account panel explains that sign-in does not yet sync cooks across devices; no account-save success is invented. Existing cook/history data is neither uploaded nor removed. Google/Apple remain hidden until enabled in build configuration. Identity linking, account deletion and account-backed persistence remain unfinished work. See [account setup and security gates](account-foundation.md).
+
+## Whole-cook Beerometer (#57)
+The Beerometer measures elapsed time across all dishes, from the earliest scheduled
+preparation to the latest serving/task end, counting overlaps once. Refrigerated
+brine, air drying and advance trimming/seasoning count; turkey thaw reminders and
+explicitly skipped brining do not. Removed/unscheduled tasks do not define planned
+bounds. Active cooks show projected total plus actual elapsed from the earliest
+recorded session/step start; intermediate completions do not subtract from total.
+History uses the archived timeline and archive time to freeze actual duration when
+a start was recorded, otherwise labels the planned estimate. Existing events and
+storage schemas are unchanged. The 90-minute conversion stays internal.
