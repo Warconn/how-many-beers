@@ -9,7 +9,9 @@ test('uploaded recipe duration edits update timeline and Beerometer through relo
  await expect(steps.getByRole('article',{name:'Cool completely',exact:true})).toContainText('Duration unknown');
  await edit('Roast seeds','15');await edit('Cool completely','10');const meter=page.getByRole('region',{name:'Cook duration in beers'});await expect(meter.locator('strong')).toHaveText('0.3');await expect(clean.locator('time')).toHaveAttribute('datetime',/23:35/);
  await edit('Clean seeds','10');await expect(meter.locator('strong')).toHaveText('0.4');await expect(clean.locator('time')).toHaveAttribute('datetime',/23:30/);await page.screenshot({path:info.outputPath('imported-timing.png'),fullPage:true});
- await edit('Clean seeds','5');await expect(meter.locator('strong')).toHaveText('0.3');await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await expect(meter.locator('strong')).toHaveText('0.3');
+ await edit('Clean seeds','5');await expect(meter.locator('strong')).toHaveText('0.3');
+ await page.getByText('Dish settings',{exact:true}).click();await expect(page.getByLabel('Minutes for Clean seeds',{exact:true})).toHaveValue('5');await page.getByLabel('Minutes for Clean seeds',{exact:true}).fill('8');await expect(clean).toContainText('Estimated 8 min');await page.getByLabel('Minutes for Clean seeds',{exact:true}).fill('5');await expect(meter.locator('strong')).toHaveText('0.3');
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await expect(meter.locator('strong')).toHaveText('0.3');
  await page.getByLabel('Serve date and time').fill('');await expect(meter.locator('strong')).toHaveText('—');await expect(meter).toContainText('Set serving time or a fixed start');
 
 });

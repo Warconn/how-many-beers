@@ -626,7 +626,14 @@ function CookExperience() {
                   </div> : <div className="recipe-steps">
                     {(d.steps||[]).map(s=><div className="recipe-row" key={s.id}>
                       <span>{s.title}</span>
-                      <label><span className="sr-only">Minutes for {s.title}</span><input type="number" min="1" max="1440" placeholder="min?" value={s.minutes??""} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id!==d.id?item:{...item,steps:item.steps?.map(step=>step.id===s.id?{...step,minutes:e.target.value===""?null:Math.max(1,Number(e.target.value)||1)}:step)})}))}/></label>
+                      <label><span className="sr-only">Minutes for {s.title}</span><input type="number" min="1" max="43200" placeholder="Unknown" value={timeline.find(t=>t.id===d.id+":"+s.id)?.durationMinutes??""} onChange={e=>{
+                        const minutes=e.target.value===""?null:Math.max(1,Number(e.target.value)||1);
+                        patch(m=>{
+                          const taskId=d.id+":"+s.id,overrides={...(m as ExtendedMeal).taskOverrides};
+                          if(overrides[taskId]){overrides[taskId]={...overrides[taskId]};delete overrides[taskId].durationMinutes;}
+                          return {...m,taskOverrides:overrides,dishes:m.dishes.map(item=>item.id!==d.id?item:{...item,steps:item.steps?.map(step=>step.id===s.id?{...step,minutes}:step)})};
+                        });
+                      }}/></label>
                     </div>)}
                     <p className="muted small">Blank time means the step stays unscheduled. Confirm all timings before relying on this plan.</p>
                   </div>}
