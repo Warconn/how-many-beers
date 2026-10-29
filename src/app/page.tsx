@@ -413,20 +413,6 @@ function CookExperience() {
   };
 
   const canUpdate=!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
-  const earlierTools=workspace.earlierAvailable ? <details className="account-earlier-cooks">
-    <summary>Earlier cooks</summary>
-    <p>{workspace.candidate?.snapshot.history.cooks.length??0} completed cooks and an earlier plan are available. Importing is optional.</p>
-    {workspace.accountHasCook&&<p>Importing replaces your unfinished account cook. Completed history is combined without duplicates.</p>}
-    <button type="button" className="button secondary" disabled={workspace.locked} onClick={()=>{
-      if(workspace.accountHasCook&&!window.confirm('Replace the unfinished account cook with this earlier plan? Download a backup first if you want to keep both.'))return;
-      void workspace.importCooks().catch(error=>setStorageError(error instanceof Error?error.message:'Could not import cooks.'));
-    }}>Import these cooks</button>
-    <button type="button" className="button secondary" onClick={()=>{
-      const snapshot=workspace.candidate?.snapshot;if(!snapshot)return;
-      const url=URL.createObjectURL(new Blob([exportBackup(snapshot.active,snapshot.history,new Date().toISOString())],{type:'application/json'}));
-      const a=document.createElement('a');a.href=url;a.download='earlier-cooks-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
-    }}>Download earlier cooks</button>
-  </details> : null;
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
@@ -452,7 +438,7 @@ function CookExperience() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} cookTools={earlierTools} savePhase={workspace.kind==='account'?workspace.cloudPhase:undefined}/>}
+        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} savePhase={workspace.kind==='account'?workspace.cloudPhase:undefined}/>}
       </header>
 
 
