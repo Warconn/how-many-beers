@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
 import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
@@ -19,8 +19,11 @@ import { parseRecipeText } from "@/domain/recipe";
 import { archiveCook, exportBackup, MAX_BACKUP_BYTES, removeArchivedCook, repeatArchivedCook, validateBackup } from "@/domain/cookHistory";
 import type { ArchivedCook } from "@/domain/cookHistory";
 import CookHistoryPanel from "@/components/CookHistoryPanel";
-import {useLocalCook} from '@/components/useLocalCook';
-import OfflineSupport from '@/components/OfflineSupport';
+import AccountControl from '@/components/AccountControl';
+import {takeCookReturn} from '@/auth/returnToCook';
+import {useCookWorkspace} from '@/account/useCookWorkspace';
+import {useAccount} from '@/auth/AccountProvider';
+import AccountPanel from '@/components/AccountPanel';
 
 type BuiltIn = Exclude<PresetId, "custom">;
 
@@ -116,9 +119,28 @@ function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[]
   </section>;
 }
 
-export default function Home() {
-  const {meal,history,status:storageStatus,error:storageError,setError:setStorageError,patch,save,retry,reset,restore,recoveryExport}=useLocalCook();
+export default function Home(){
+  const {ownerId}=useAccount();
+  const owner=process.env.NEXT_PUBLIC_ENABLE_CLOUD_COOKS==='true'?ownerId:null;
+  const [identity,setIdentity]=useState({owner,key:0});
+  if(identity.owner!==owner)setIdentity({owner,key:identity.owner?identity.key+1:identity.key});
+  return <CookExperience key={identity.key}/>;
+}
+function CookExperience() {
+  const workspace=useCookWorkspace();
+  const {meal,history,status:storageStatus,error:storageError,setError:setStorageError,patch,save,retry,reset,restore,recoveryExport}=workspace;
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
+  useEffect(()=>{setView('home');setEditingStep(null);setNewStepDishId(null);setShowDishSetup(false);setRecipeText('');setRecipeName('');},[workspace.selection]);
+  const accountReturnHandled=useRef(false);
+  useEffect(()=>{
+    if(!meal||accountReturnHandled.current)return;
+    accountReturnHandled.current=true;
+    const url=new URL(window.location.href);
+    if(url.searchParams.get("account-return")!=="1")return;
+    url.searchParams.delete("account-return");
+    window.history.replaceState(null,"",url.pathname+url.search+url.hash);
+    try{const returning=takeCookReturn(window.sessionStorage,meal.id);if(returning)setView(returning==="cooking"&&meal.mode!=="cooking"?"planning":returning);}catch{/* Fall back to Home if tab storage is unavailable. */}
+  },[meal]);
   const [showDishSetup, setShowDishSetup] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
   const [showChecklistPreview, setShowChecklistPreview] = useState(false);
@@ -192,7 +214,7 @@ export default function Home() {
     setMessage("Recipe loaded. Review the text and select Preview recipe.");
   };
 
-  if (!meal) return <main className="shell"><div className="panel">Loading your cook...</div></main>;
+  if (!meal) return <main className="shell"><div className="panel"><p role="status">Loading your cook...</p>{workspace.authUnavailable&&<AccountPanel/>}</div></main>;
 
 
   const cooking = view === "cooking";
@@ -201,31 +223,32 @@ export default function Home() {
     : !Number.isFinite(new Date(meal.serveAt).getTime()) ? "Set a valid serving date and time to start." : "";
   const hasActiveWork = timeline.length > 0 || meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
   const planStepDraftOpen=editingStep?.context==="dish" || editingStep?.context==="checklist" || newStepDishId!==null;
-  const savePlanForLater = () => {
+  const savePlanForLater = async () => {
+    if(workspace.kind==='trial'){window.dispatchEvent(new Event('hmb-open-account'));return;}
     if(cookInProgress || timeline.length===0 || planStepDraftOpen)return;
     try{
-      save({active:meal});
+      await save({active:meal});
       setStorageError(previous=>previous.startsWith("Browser storage is unavailable") || previous.startsWith("Could not save the cook start.") ? "" : previous);
       setPlanSaveResult("saved");setView("home");setEditingStep(null);
       window.scrollTo({top:0,behavior:"instant"});
     }catch{setPlanSaveResult("error");requestAnimationFrame(()=>document.getElementById("save-plan-error")?.focus());}
   };
-  const startCooking = () => {
+  const startCooking = async () => {
     if(!cookInProgress && startBlockReason)return;
     const next:Meal=!cookInProgress ? {...meal,mode:"cooking",startedAt:meal.startedAt??new Date().toISOString()}
       : meal.mode!=="cooking" ? {...meal,mode:"cooking"} : meal;
     try{
-      save({active:next});
+      await save({active:next});
       setStorageError(previous=>previous.startsWith("Could not save the cook start.") ? "" : previous);
       setPlanSaveResult(null);setView("cooking");
       window.scrollTo({top:0,behavior:"instant"});
-    }catch{setStorageError("Could not save the cook start. Your plan is unchanged; free browser storage or export a backup before retrying.");requestAnimationFrame(()=>document.getElementById("storage-warning")?.focus());}
+    }catch{setStorageError("Could not save the cook start. Your plan is unchanged. Retry saving or download a backup.");requestAnimationFrame(()=>document.getElementById("storage-warning")?.focus());}
   };
-  const beginNewCook = () => {
-    if (hasActiveWork && !window.confirm("Start a new cook? This replaces the unfinished cook saved on this device. Export a backup first if you want to keep it.")) return;
+  const beginNewCook = async () => {
+    if (hasActiveWork && !window.confirm("Start a new cook? This replaces your unfinished cook. Export a backup first if you want to keep it.")) return;
     try {
       const fresh = newMeal();
-      save({active:fresh});setPlanSaveResult(null);
+      await save({active:fresh});setPlanSaveResult(null);
       setView("planning");
       setShowDishSetup(true);
       setEditingDishId(null);
@@ -245,34 +268,35 @@ export default function Home() {
     setView("home");
     window.scrollTo({top:0,behavior:"instant"});
   };
-  const persistNewMeal = (next:Meal) => {save({active:next});returnHome();};
-  const finishCook = () => {
+  const persistNewMeal = async(next:Meal) => {await save({active:next});returnHome();};
+  const finishCook = async () => {
+    if(workspace.kind==='trial'){window.dispatchEvent(new Event('hmb-open-account'));return;}
     if(!meal) return;
     try{
       const nextArchive=archiveCook(meal,history,outcome,new Date().toISOString());
-      save({active:newMeal(),history:nextArchive});
+      await save({active:newMeal(),history:nextArchive});
       returnHome();
       setMessage("Cook saved to history. Ready for the next one!");
     }catch(error){
-      setStorageError("Could not save this cook. It is still available in your active checklist. Free browser storage or download a backup before retrying.");
+      setStorageError("Could not save this cook. It is still available in your active checklist. Keep this page open. Retry saving or download a backup.");
     }
   };
-  const repeatCook = (entry:ArchivedCook) => {
+  const repeatCook = async(entry:ArchivedCook) => {
     if(!window.confirm("Start a new cook using this saved plan? Any unsaved current plan will be replaced."))return;
-    try{persistNewMeal(repeatArchivedCook(entry));setMessage("Copied your previous cook. Set a new serving time before starting.");setStorageError("");}
+    try{await persistNewMeal(repeatArchivedCook(entry));setMessage("Copied your previous cook. Set a new serving time before starting.");setStorageError("");}
     catch{setStorageError("Could not create a repeat cook. Your current plan was not replaced.");}
   };
-  const deleteCook = (entry:ArchivedCook) => {
-    if(!window.confirm("Delete this saved cook permanently from this device? Consider downloading a backup first."))return;
+  const deleteCook = async(entry:ArchivedCook) => {
+    if(!window.confirm("Delete this saved cook permanently? Consider downloading a backup first."))return;
     try{
       const next=removeArchivedCook(history,entry.id);
-      save({history:next});
-    }catch{setStorageError("Could not delete the saved cook. Browser storage may be unavailable.");}
+      await save({history:next});
+    }catch{setStorageError("Could not delete the saved cook. Retry saving or download a backup.");}
   };
   const downloadBackup = () => {
     if(!meal)return;
     try{
-      const blob=new Blob([exportBackup(meal,history,new Date().toISOString())],{type:"application/json"});
+      const blob=new Blob([exportBackup(workspace.backup?.active??meal,workspace.backup?.history??history,new Date().toISOString())],{type:"application/json"});
       const url=URL.createObjectURL(blob);
       const anchor=document.createElement("a");
       anchor.href=url;
@@ -285,8 +309,8 @@ export default function Home() {
     if(file.size>MAX_BACKUP_BYTES){setStorageError("Backup is too large (32 MB maximum).");return;}
     try{
       const data=validateBackup(await file.text());
-      if(!window.confirm("Restore this backup? It replaces the active cook and saved history on this device."))return;
-      restore(data);
+      if(!window.confirm("Restore this backup? It replaces your active cook and saved history."))return;
+      await restore(data);
       setMessage("Your cook history has been restored.");
     }catch{setStorageError("Could not restore backup. Check that it is a valid cook backup and that browser storage is available. Your original data is retained for recovery.");}
   };
@@ -388,7 +412,21 @@ export default function Home() {
     }
   };
 
-  const offlineSupport=<OfflineSupport canReload={storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))))}/>;
+  const canUpdate=!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
+  const earlierTools=workspace.earlierAvailable ? <details className="account-earlier-cooks">
+    <summary>Earlier cooks</summary>
+    <p>{workspace.candidate?.snapshot.history.cooks.length??0} completed cooks and an earlier plan are available. Importing is optional.</p>
+    {workspace.accountHasCook&&<p>Importing replaces your unfinished account cook. Completed history is combined without duplicates.</p>}
+    <button type="button" className="button secondary" disabled={workspace.locked} onClick={()=>{
+      if(workspace.accountHasCook&&!window.confirm('Replace the unfinished account cook with this earlier plan? Download a backup first if you want to keep both.'))return;
+      void workspace.importCooks().catch(error=>setStorageError(error instanceof Error?error.message:'Could not import cooks.'));
+    }}>Import these cooks</button>
+    <button type="button" className="button secondary" onClick={()=>{
+      const snapshot=workspace.candidate?.snapshot;if(!snapshot)return;
+      const url=URL.createObjectURL(new Blob([exportBackup(snapshot.active,snapshot.history,new Date().toISOString())],{type:'application/json'}));
+      const a=document.createElement('a');a.href=url;a.download='earlier-cooks-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
+    }}>Download earlier cooks</button>
+  </details> : null;
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
@@ -400,9 +438,9 @@ export default function Home() {
               const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='how-many-beers-recovery.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
             }}>Download recovery data</button>
             <button type="button" onClick={()=>window.location.reload()}>Try reading saved data again</button>
-            <button type="button" onClick={()=>{if(window.confirm('Reset saved cooks on this device? Download recovery data first. A local recovery copy must be saved before any existing data is replaced.')){try{reset();setView('home');}catch{setStorageError('Could not reset saved data safely. Export recovery data and free storage before retrying.');}}}}>Reset saved cooks</button>
+            <button type="button" onClick={()=>{if(window.confirm('Reset saved cooks? Download recovery data first. A recovery copy must be saved before any existing data is replaced.')){try{reset();setView('home');}catch{setStorageError('Could not reset saved data safely. Export recovery data and free storage before retrying.');}}}}>Reset saved cooks</button>
           </> : <>
-            <button type="button" onClick={()=>{try{retry();}catch{/* Recoverable warning remains visible. */}}}>Retry saving</button>
+            <button type="button" onClick={()=>{void retry().catch(()=>{});}}>Retry saving</button>
             <button type="button" onClick={()=>{if(window.confirm('Reload the latest saved cooks? Download a backup first to keep any unsaved changes in this tab.'))window.location.reload();}}>Reload saved cooks</button>
           </>}
         </div>
@@ -414,15 +452,20 @@ export default function Home() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-        
+        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} cookTools={earlierTools} savePhase={workspace.kind==='account'?workspace.cloudPhase:undefined}/>}
       </header>
-      {view!=="home"&&offlineSupport}
 
 
-      {storageStatus==='recovery' ? <section className="panel" aria-label="Saved cook recovery">
+
+      {workspace.kind==='trial'&&<p className="guest-limit">Guest cooks aren’t kept after you leave. Sign in to keep this cook.</p>}
+
+      {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}
+      {workspace.kind==='account'&&['conflict','blocked'].includes(workspace.cloudPhase)&&<section className="panel" aria-label="Account cook recovery"><h2>Keep your cook safe</h2><p>{workspace.cloudPhase==='conflict'?'Another device has a newer version. Download a backup before loading it.':'The last action has not been confirmed. Retry it before continuing.'}</p><button type="button" className="button primary" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" className="button secondary" onClick={downloadBackup}>Download backup</button><button type="button" className="button secondary" onClick={()=>{if(window.confirm('Load the latest account cooks and discard this tab’s pending changes? Download a backup first.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your backup and retry.'));}}>Load account version</button></section>}
+      <div className="cook-content" inert={workspace.locked}>
+      {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
-        <p>Your existing browser data is protected. Download recovery data above before resetting anything. It preserves the original data for recovery; it is not a normal cook backup.</p>
-        <p>If you have a known-good JSON backup, restore it here. Your original recovery data will also be kept on this device before replacement.</p>
+        <p>Your existing saved data is protected. Download recovery data above before resetting anything. It preserves the original data for recovery; it is not a normal cook backup.</p>
+        <p>If you have a known-good JSON backup, restore it here. Your original recovery data will be kept before replacement.</p>
         <label>Restore a backup<input type="file" accept=".json,application/json" onChange={async event=>{const file=event.target.files?.[0];if(file)await importBackup(file);event.target.value='';}}/></label>
       </section> : view === "home" ? (
         <section className={`home-layout ${hasActiveWork ? "home-returning" : "home-first-visit"}`} aria-label="Home">
@@ -432,7 +475,7 @@ export default function Home() {
             <p className="home-product-line">Plan every dish. Time your dinner. Enjoy the cook.</p>
             <p className="muted">Set your serving time, bring your dishes into one plan, and follow a guided checklist when it’s time to cook.</p>
           </>}</div>
-          {planSaveResult==="saved" && <p className="notice" role="status">Plan saved on this device. Come back here to start when you’re ready.</p>}
+          {planSaveResult==="saved" && <p className="notice" role="status">Plan saved. Come back here to start when you’re ready.</p>}
           {hasActiveWork && <section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{cookInProgress ? "In progress" : "Planning"}</span></div>
             <h3>{meal.name || "Your cook"}</h3>
@@ -499,10 +542,10 @@ export default function Home() {
                 </> : <div className="cook-finished"><h3>{timeline.length?"All steps checked":"Your checklist is empty"}</h3><p>{timeline.length?"Review your cook, then finish and save it when you’re ready.":"Edit the plan to add a dish or prep step."}</p>{!!timeline.length && <button type="button" className="button primary" onClick={openFinishCook}>Finish cook</button>}</div>}
               </section>}
               {showFinish && <section className="finish-cook" aria-label="Finish cook">
-                <h3>Finish this cook?</h3><p className="muted small">Archive its plan, notes and actual readings on this device.</p>
+                <h3>Finish this cook?</h3><p className="muted small">Keep its plan, notes and actual readings in your history.</p>
                 <p className="muted small">{remaining.length} unchecked steps. You can save even if some weren't needed.</p>
                 <label htmlFor="cook-outcome">How did it turn out? (optional)</label><textarea id="cook-outcome" rows={3} maxLength={2000} value={outcome} onChange={e=>setOutcome(e.target.value)} placeholder="Tenderness, timing, what to change next time..."/>
-                <button type="button" className="button primary" disabled={cookingDraftOpen} onClick={finishCook}>Save finished cook</button><button type="button" className="button secondary" onClick={()=>setShowFinish(false)}>Keep cooking</button>
+                <button type="button" className="button primary" disabled={cookingDraftOpen} onClick={finishCook}>{workspace.kind==='trial'?'Sign in to save this cook':'Save finished cook'}</button>{workspace.kind==='trial'&&<button type="button" className="button secondary" onClick={()=>{if(window.confirm('Finish without saving? This cook will not be kept in your history.'))void save({active:newMeal()}).then(returnHome);}}>Finish without saving</button>}<button type="button" className="button secondary" onClick={()=>setShowFinish(false)}>Keep cooking</button>
               </section>}
             </section>
             <aside className="cook-sidebar">
@@ -680,7 +723,7 @@ export default function Home() {
                 disabled={!cookInProgress && !!startBlockReason}
                 aria-describedby={!cookInProgress && startBlockReason ? "cook-start-help" : undefined}
                 onClick={startCooking}>{cookInProgress ? "Continue cooking" : "Start cooking"}</button>
-              {!cookInProgress && <button type="button" className="button secondary save-plan-button" disabled={timeline.length===0 || planStepDraftOpen} aria-describedby={planStepDraftOpen?"save-plan-help":undefined} onClick={savePlanForLater}>Save plan for later</button>}
+              {!cookInProgress && <button type="button" className="button secondary save-plan-button" disabled={timeline.length===0 || planStepDraftOpen} aria-describedby={planStepDraftOpen?"save-plan-help":undefined} onClick={savePlanForLater}>{workspace.kind==='trial'?'Sign in to save plan':'Save plan for later'}</button>}
               {timeline.length > 0 && <button type="button" className="link review-checklist-button"
                 aria-expanded={showChecklistPreview} aria-controls="checklist-preview"
                 onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview ? "Hide checklist" : "Review checklist"}</button>}
@@ -719,7 +762,8 @@ export default function Home() {
           </div>
         </>
       )}
-      <footer>{view==="home"&&offlineSupport}How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      <footer>How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
+      </div>
     </main>
   );
 }

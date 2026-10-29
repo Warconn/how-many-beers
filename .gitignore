@@ -11,3 +11,7 @@ playwright-report/
 test-results/
 test-results-offline/
 playwright-offline-report/
+
+test-results-auth/
+
+test-results-accounts/

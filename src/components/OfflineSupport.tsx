@@ -36,11 +36,11 @@ export default function OfflineSupport({canReload}:{canReload:boolean}){
     window.addEventListener('online',connection);window.addEventListener('offline',check);window.addEventListener('focus',connection);
     return ()=>{alive=false;window.removeEventListener('online',connection);window.removeEventListener('offline',check);window.removeEventListener('focus',connection);navigator.serviceWorker?.removeEventListener('controllerchange',controller);};
   },[]);
-  if(process.env.NODE_ENV!=='production'||!waiting)return null;
+  if(process.env.NODE_ENV!=='production')return null;
+  if(!waiting)return <section className="offline-access" aria-label="App update"><p>No update is waiting.</p></section>;
   return <section className="offline-access" aria-label="App update">
-    <div className="notice"><p>An app update is ready. Your cook will resume after reloading.</p>
+    <p>A newer version is available.</p>
       <button type="button" disabled={!canReload} onClick={()=>{requested.current=true;waiting.postMessage({type:'SKIP_WAITING'});}}>Update app</button>
       {!canReload&&<p>Save or cancel open forms and save your changes before updating.</p>}
-    </div>
   </section>;
 }

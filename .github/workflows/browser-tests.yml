@@ -10,36 +10,84 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: browser-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  playwright:
+  checks:
+    name: Types and unit tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        run: npm ci --no-audit --no-fund
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
         run: npm run test
-      - name: Browser tests
-        run: npm run test:e2e
-      - name: Built-app offline and update tests (Android Chromium / iPhone WebKit)
-        run: npm run test:offline
+
+  browsers:
+    name: ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: regression
+            browsers: chromium
+            command: npm run test:e2e
+          - suite: auth
+            browsers: chromium webkit
+            command: npx playwright test --config playwright.auth.config.ts
+          - suite: accounts
+            browsers: chromium webkit
+            command: npx playwright test --config playwright.accounts.config.ts
+          - suite: offline
+            browsers: chromium webkit
+            command: npm run test:offline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright browsers and OS dependencies
+        run: npx playwright install --with-deps ${{ matrix.browsers }}
+      - name: Run ${{ matrix.suite }} tests
+        run: ${{ matrix.command }}
       - name: Upload browser report, screenshots and traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-browser-report
+          name: playwright-${{ matrix.suite }}-report
           path: |
             test-results/
             test-results-offline/
+            test-results-auth/
+            test-results-accounts/
             playwright-report/
             playwright-offline-report/
           if-no-files-found: ignore
           retention-days: 14
+
+  # Preserve the existing required check name; skipped/canceled suites must fail it.
+  playwright:
+    if: always()
+    needs: [checks, browsers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every test suite
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          BROWSERS_RESULT: ${{ needs.browsers.result }}
+        run: test "$CHECKS_RESULT" = success && test "$BROWSERS_RESULT" = success

@@ -1,5 +1,8 @@
 # Work queue: October 28, 2026
 
+October 28 account status: PR #58 contains the opt-in #19 sign-in foundation and initial #20 account saving/history implementation. Email-code delivery needs the supplied Supabase template; cloud cooks require migration 002 and the preview build flag. Hosted two-account/retrieval QA, account linking/deletion/privacy and advanced synchronization remain open. See [setup and limits](account-cooks.md). Continue this delivery before starting Next work.
+
+
 Owner priority: **#50 first tonight, then #19 and the initial #20 slice**. This follows the execution-queue clarification in PR #51. This is a prepared work order for the next kickoff, not a claim that background jobs have been scheduled.
 
 ## Tonight

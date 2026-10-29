@@ -5,7 +5,7 @@ test('Home flows directly from brand to hero with a visible primary action',asyn
  await page.goto('/');
  await expect(page.getByText('A LITTLE LESS JUGGLING. A BETTER COOK.',{exact:true})).toHaveCount(0);
  await expect(page.getByText(/^Saved on this device/)).toHaveCount(0);
- expect(await page.locator('.site-header').evaluate(e=>e.nextElementSibling?.getAttribute('aria-label'))).toBe('Home');
+ expect(await page.locator('.site-header').evaluate(e=>{const next=e.nextElementSibling;return (next?.matches('.cook-content')?next.firstElementChild:next)?.getAttribute('aria-label');})).toBe('Home');
  await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
  const heading=await page.getByRole('heading',{name:'From First Beer to First Bite.',exact:true}).boundingBox(),header=await page.locator('.site-header').boundingBox();expect(heading!.y-header!.y-header!.height).toBeLessThan(80);
  await page.screenshot({path:info.outputPath('clean-home.png'),fullPage:true,style:'nextjs-portal{display:none}'});

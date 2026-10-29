@@ -1,0 +1,19 @@
+name: Account database security
+on:
+  pull_request:
+    branches: [dev, main]
+    paths: ['supabase/**', 'scripts/test-account-security.sh', '.github/workflows/account-security.yml']
+  push:
+    branches: [dev, main]
+    paths: ['supabase/**', 'scripts/test-account-security.sh', '.github/workflows/account-security.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ownership:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test real PostgreSQL grants, RLS and ownership constraints
+        run: scripts/test-account-security.sh
