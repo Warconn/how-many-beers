@@ -75,16 +75,7 @@ Use accessible labels, keyboard-friendly buttons and mobile tap targets. Expose 
 1. Read the issue, current UX spec, source and existing Playwright flows. Summarize the desired journey and concrete acceptance criteria before editing.
 2. Add/adjust Playwright tests for the **user-visible behavior**. Run them against the old behavior and confirm the intended failure when practical.
 3. Implement incrementally; run the application locally and use Playwright to interact with the actual UI, inspect screenshots and fix issues.
-4. Run these verification commands before declaring implementation complete:
-
-```bash
-npm install --no-audit --no-fund
-npx playwright install --with-deps chromium
-npm run typecheck
-npm run test
-npm run test:e2e
-npm run build
-```
+4. During iteration run `npm run test:fast -- <affected Playwright file/filter/config arguments>` for typecheck, unit tests and focused actual-browser validation. Both desktop and mobile projects run by default. For account changes select `--config=playwright.auth.config.ts` or `--config=playwright.accounts.config.ts`. For offline changes use `npm run test:offline -- <affected spec>` to exercise the production build. Before declaring integration/release ready, install dependencies with `npm ci --no-audit --no-fund`, install Chromium/WebKit with `npx playwright install --with-deps chromium webkit`, and run `npm run test:full`. It includes every browser suite and the production offline build. See [CI and timing evidence](docs/ci-testing.md).
 
 5. Validate desktop and narrow-phone layouts, navigation, visual hierarchy, adding brisket and brats, editing one without changing the other, starting/resuming a cook, reload/localStorage persistence and history.
 6. Save useful failure screenshots/traces. Prevent stale selectors from producing false failures, but do not weaken a valid assertion just to make CI green. Only establish/update screenshot goldens after reviewing the intended design.
