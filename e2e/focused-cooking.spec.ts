@@ -58,9 +58,10 @@ test('finish is separate from navigation and archives only after explicit confir
 });
 
 test('Cancel adding is a compact quiet action with a phone-sized hit area',async({page},info)=>{
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();const cancel=page.getByRole('button',{name:'Cancel adding',exact:true});
+ await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();const cancel=page.getByRole('button',{name:'Cancel adding',exact:true});
  const box=await cancel.boundingBox();expect(box!.width).toBeLessThanOrEqual(100);expect(box!.height).toBeGreaterThanOrEqual(44);expect(await cancel.evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
- const before=await saved(page);await cancel.evaluate(el=>el.scrollIntoView({block:'center'}));await page.screenshot({path:info.outputPath('compact-cancel.png'),fullPage:false});await cancel.click();expect(await saved(page)).toEqual(before);await expect(page.getByRole('button',{name:'+ Add a dish',exact:true})).toBeVisible();
+ const before=await saved(page);await cancel.evaluate(el=>el.scrollIntoView({block:'center'}));await page.screenshot({path:info.outputPath('compact-cancel.png'),fullPage:false});await cancel.click();expect(await saved(page)).toEqual(before);await expect(page.getByRole('button',{name:'Start with a template',exact:true})).toBeVisible();
 });
 
 

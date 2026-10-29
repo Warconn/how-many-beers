@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 test.use({timezoneId:'America/New_York'});
 test('personal methods appear in one cook and turkey prep responds to thawing status',async({page},info)=>{
  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
  await page.getByRole('button',{name:'Add turkey (oven)',exact:true}).click();
  const prep=page.getByRole('region',{name:'Turkey preparation',exact:true});
  await expect(prep.getByLabel('Turkey thawing status')).toHaveValue('frozen');

@@ -32,6 +32,7 @@ test('brand metadata and share assets identify the public domain',async({page,re
 test('returning cooks get a compact brand header and unchanged resume data',async({page},info)=>{
   await page.goto('/');
   await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
   await page.getByRole('button',{name:'Start cooking',exact:true}).click();
   const saved=migrateMeal(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!)));

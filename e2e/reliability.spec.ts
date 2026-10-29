@@ -89,7 +89,8 @@ test('failed finish/archive keeps the original active cook and history together'
 });
 
 test('a stale tab cannot silently replace a newer cook',async({page,context})=>{
-  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
   const other=await context.newPage();await other.goto(page.url());await other.getByRole('button',{name:/Resume planning/}).click();
   await page.getByLabel('Meal name',{exact:true}).fill('Newer plan');
   await expect(other.getByRole('alert').filter({hasText:'Another tab'})).toContainText('Another tab');

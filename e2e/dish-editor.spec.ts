@@ -6,6 +6,7 @@ test('dish editor separates adding from selecting and preserves cooks', async ({
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page.getByRole('button', { name: 'Add smoked brisket' }).click();
   await expect(page.getByRole('heading', { name: 'Choose a template' })).toHaveCount(0);
   await page.getByRole('button', { name: '+ Add a dish', exact: true }).click();

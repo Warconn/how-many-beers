@@ -51,7 +51,8 @@ test('manifest and icons describe a standalone app with the correct scope',async
 });
 
 test('failed worker update leaves the saved cook and previous offline shell usable',async({page,request,context})=>{
- await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
  const before=await page.evaluate(k=>localStorage.getItem(k),ACTIVE_KEY);
  await request.post('/__test__/worker-mode?mode=fail');
  await page.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg!.update();});
@@ -62,7 +63,8 @@ test('failed worker update leaves the saved cook and previous offline shell usab
 });
 
 test('ready updates never reload a cook automatically and protect open forms',async({page,request})=>{
- await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
  // Close the Add Dish surface and open a real step draft.
  const cancel=page.getByRole('button',{name:'Cancel adding',exact:true});if(await cancel.count())await cancel.click();
  await page.getByRole('complementary',{name:'Live schedule',exact:true}).getByRole('button').first().click();
@@ -85,7 +87,8 @@ test('ready updates never reload a cook automatically and protect open forms',as
 });
 
 test('an unsaved custom-step draft also blocks app updates until cancelled',async({page,request})=>{
- await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
  await page.getByRole('button',{name:/Add a checklist step/}).click();await page.getByLabel('Step title',{exact:true}).fill('Do not discard my sauce step');
  await request.post('/__test__/worker-mode?mode=custom-draft');await page.evaluate(async()=>{await (await navigator.serviceWorker.getRegistration())!.update();});
  await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeHidden();
@@ -110,7 +113,8 @@ test('Home has no install or offline help while preparation stays functional',as
  await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
  await page.screenshot({path:info.outputPath('clean-home-production.png'),fullPage:true});
- await page.getByRole('button',{name:/Plan a new cook/}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();

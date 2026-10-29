@@ -15,7 +15,8 @@ test("home is a clean starting point with history access", async ({ page }) => {
 
 test("plan brisket and brats, see their combined timeline, then resume", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await expect(page.getByRole("heading", { name: /0 dishes in this cook/ })).toBeVisible();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await expect(page.getByRole("heading", { name: "What do you want to cook?",exact:true })).toBeVisible();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
 
@@ -34,6 +35,7 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
 
 test("resuming an in-progress cook preserves cooking status", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await page.getByRole("button", { name: "Start cooking", exact: true }).click();
   await expect(page.getByText("Today's checklist")).toBeVisible();
@@ -49,6 +51,7 @@ test("resuming an in-progress cook preserves cooking status", async ({ page }) =
 
 test("template picker adds dishes and keeps their settings separate", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await expect(page.getByRole("heading", { name: "Choose a template" })).toBeVisible();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
@@ -104,6 +107,7 @@ test("home fits common viewport widths without horizontal overflow", async ({ pa
 test("guided planner keeps menu beside schedule and allows full schedule expansion", async ({ page }) => {
   await page.setViewportSize({width:1440,height:900});
   await page.getByRole("button", {name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page.getByRole("button", {name:"Add smoked brisket"}).click();
   const planner=await page.locator(".guided-main").boundingBox();
   const schedule=await page.getByRole("complementary",{name:"Live schedule"}).boundingBox();
@@ -119,6 +123,8 @@ test("guided planner keeps menu beside schedule and allows full schedule expansi
 test("mobile planner keeps planning controls first and schedule accessible",async ({page})=>{
   await page.setViewportSize({width:390,height:844});
   await page.getByRole("button",{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
   const p=await page.locator(".guided-main").boundingBox();
   const sched=await page.getByRole("complementary",{name:"Live schedule"}).boundingBox();
   expect(p&&sched).toBeTruthy();
@@ -129,9 +135,10 @@ test("mobile planner keeps planning controls first and schedule accessible",asyn
 
 test("a recipe can be imported from the same Add Dish interface as templates", async ({ page }) => {
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await expect(page.getByRole("heading", { name: "Add a dish" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start from template" })).toBeVisible();
-  await page.getByRole("button", { name: "Import a recipe" }).click();
+  await expect(page.getByRole("button", { name: "Start with a template" })).toBeVisible();
+  await page.getByRole("button", { name: "Upload a recipe" }).click();
   await expect(page.getByLabel("Recipe title")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Choose a template" })).toHaveCount(0);
   await page.getByLabel("Recipe title").fill("Mac and cheese");
@@ -148,6 +155,7 @@ test("a recipe can be imported from the same Add Dish interface as templates", a
 
 test("planner expands one dish to manage its steps without edit mode",async({page})=>{
  await page.getByRole("button",{name:/Plan a new cook/}).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
  await page.getByRole("button",{name:"Add smoked brisket"}).click();
  await page.getByRole("button",{name:"+ Add a dish",exact:true}).click();
  await page.getByRole("button",{name:"Add grilled beer-bath brats"}).click();

@@ -210,10 +210,10 @@ function CookExperience() {
   const beginNewCook = async () => {
     if (hasActiveWork && !window.confirm("Start a new cook? This replaces your unfinished cook. Export a backup first if you want to keep it.")) return;
     try {
-      const fresh = newMeal();
+      const fresh = hasActiveWork ? newMeal() : meal;
       await save({active:fresh});setPlanSaveResult(null);
       setView("planning");
-      setShowDishSetup(true);
+      setShowDishSetup(false);
       setEditingDishId(null);
       setEditingStep(null);
       setAddMethod("template");
@@ -531,8 +531,8 @@ function CookExperience() {
         <>
           <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
-          <BeerEstimator meal={meal} timeline={timeline}/>
-          <div className="guided-planner"><div className="guided-main">
+          {timeline.length>0 && <BeerEstimator meal={meal} timeline={timeline}/>}
+          <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
           <section className="hero panel">
             <div>
               <p className="eyebrow">PLAN YOUR COOK</p>
@@ -548,16 +548,22 @@ function CookExperience() {
           </section>
           <section className="workspace-overview" aria-label="Cook overview">
             <div className="workspace-heading">
-              <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"} in this cook</h2></div>
-              <button id="add-dish-button" type="button" className={showDishSetup?"cancel-add-dish":"button secondary"} aria-label={showDishSetup?"Cancel adding":"+ Add a dish"} aria-expanded={showDishSetup} aria-controls="menu-add-dish" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? <><span aria-hidden="true">×</span> Cancel</> : "+ Add a dish"}</button>
+              <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length ? `${meal.dishes.length} ${meal.dishes.length===1?"dish":"dishes"} in this cook` : "What do you want to cook?"}</h2></div>
+              {(meal.dishes.length>0 || showDishSetup) && <button id="add-dish-button" type="button" className={showDishSetup?"cancel-add-dish":"button secondary"} aria-label={showDishSetup?"Cancel adding":"+ Add a dish"} aria-expanded={showDishSetup} aria-controls="menu-add-dish" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? <><span aria-hidden="true">×</span> Cancel</> : "+ Add a dish"}</button>}
             </div>
-            <p className="muted small menu-guidance">{showDishSetup ? "Choose a starter or import your recipe. Everything stays in this cook." : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>
+            {meal.dishes.length===0 && <div className="empty-planner-choices">
+              <button id={!showDishSetup?"add-dish-button":undefined} type="button" className="button primary" onClick={()=>{setAddMethod('template');setShowDishSetup(true)}}>Start with a template</button>
+              <button type="button" className="button secondary" onClick={()=>{setAddMethod('recipe');setShowDishSetup(true)}}>Upload a recipe</button>
+              <p className="muted small">Choose a starter or use your own recipe. You can add more dishes afterward.</p>
+            </div>}
+            {meal.dishes.length>0 && <p className="muted small menu-guidance">{showDishSetup ? "Choose a starter or import your recipe. Everything stays in this cook." : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
             {showDishSetup && <section id="menu-add-dish" className="menu-add-dish" role="region" aria-label="Add dish">
               <h3>Add a dish</h3>
-              <div className="add-method-tabs" role="group" aria-label="Add dish method">
+              {meal.dishes.length>0 && <div className="add-method-tabs" role="group" aria-label="Add dish method">
                 <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>Start from template</button>
                 <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>Import a recipe</button>
               </div>
+              }
               {addMethod==="template" ? <>
               <h3>Choose a template</h3>
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
@@ -678,9 +684,9 @@ function CookExperience() {
                 </section>
                 </div>}
               </article>)}
-            </div> : <div className="workspace-empty">Nothing on the menu yet. Add your first dish using a cooking template.</div>}
+            </div> : null}
           </section>
-          <section className="cook-actions" aria-label="Cooking actions">
+          {timeline.length>0 && <section className="cook-actions" aria-label="Cooking actions">
             <div className="cook-action-controls">
               <button type="button" className="button primary cook-action-button"
                 disabled={!cookInProgress && !!startBlockReason}
@@ -695,11 +701,13 @@ function CookExperience() {
             {planSaveResult==="error" && <p id="save-plan-error" tabIndex={-1} className="warning" role="alert">Could not save the plan. Keep this page open, free browser storage or export a backup, then retry.</p>}
             {!cookInProgress && startBlockReason && <p className="muted small" id="cook-start-help">{startBlockReason}</p>}
           </section>
-          <section className="plan-notes" aria-label="Plan notes">
+          }
+          {timeline.length>0 && <section className="plan-notes" aria-label="Plan notes">
             {warnings.map((warning,i) => <p className="warning" key={i}>{warning}</p>)}
             {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. Set a planned date and time in the step editor, or leave them unscheduled and review them before relying on the schedule.</p>}
             <p className="muted small timing-guidance">Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
           </section>
+          }
           {showChecklistPreview && timeline.length > 0 && (
             <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
               <div className="preview-intro"><h3>Cooking checklist</h3></div>
@@ -709,9 +717,10 @@ function CookExperience() {
               {message && <p className="form-error" role="alert">{message}</p>}
             </section>
           )}
-          {timeline.length === 0 && <AddStepForm onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>}
+
+          {timeline.length===0 && <details className="empty-prep"><summary>Other preparation</summary><AddStepForm onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>}
           </div>
-          <aside className="guided-schedule" aria-label="Live schedule">
+          {timeline.length>0 && <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
             <p className="muted small">Serving {when(meal.serveAt || null)}</p>
             {timeline.length ? <>
@@ -721,7 +730,7 @@ function CookExperience() {
               {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
             </> : <p className="muted small">Add a dish to see your schedule.</p>}
             {warnings.length>0 && <p className="muted small">Review schedule and equipment warnings in the plan notes.</p>}
-          </aside>
+          </aside>}
           </div>
         </>
       )}

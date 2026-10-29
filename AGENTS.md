@@ -16,9 +16,15 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 ### NOW: explicit execution sequence
 
-1. **Fast-track [#50 Homepage clutter cleanup](https://github.com/Warconn/how-many-beers/issues/50)** as one small, isolated UI PR. Remove the prominent local/offline status block and "A little less juggling" eyebrow; keep backup/offline behavior and existing user records intact. Coordinate with in-progress [#45 branding](https://github.com/Warconn/how-many-beers/issues/45), but do not block account work on cosmetic polish.
-2. **[#19 Free account foundation](https://github.com/Warconn/how-many-beers/issues/19)**: sign-in, secure ownership/authorization, free account lifecycle and schema. This is the highest-priority substantial feature.
-3. **[#20 Account-backed cooks/history, NOW slice](https://github.com/Warconn/how-many-beers/issues/20)**: depends on #19. Exactly **one** active/planning cook per signed-in account; a chronological/searchable **list of completed cooks**, open details and Cook Again; recover data on a second device. Preserve meaningful progress and actual event timestamps. Do not attempt all future concurrent-edit/outbox requirements in this release.
+Owner-approved October 28 evening queue: #19 account foundation, #20 initial cloud cooks/history and #54 CI optimization are complete and closed. Production sign-in, cloud saving and cross-device history are owner-verified.
+
+1. **[#57 Whole-cook Beerometer](https://github.com/Warconn/how-many-beers/issues/57)**: all dishes, planned versus actual, immutable recorded events.
+2. **[#56 Empty planner](https://github.com/Warconn/how-many-beers/issues/56)**: “What do you want to cook?”, shared template/import entry.
+3. **[#55 Brisket recommendation](https://github.com/Warconn/how-many-beers/issues/55)**: compact start-time presentation; retain estimator semantics.
+4. **[#59 History actions](https://github.com/Warconn/how-many-beers/issues/59)**: hierarchy and spacing, unchanged persistence/deletion behavior.
+5. **[#60 Remove Earlier Cooks UI](https://github.com/Warconn/how-many-beers/issues/60)**: no migration controls or automatic import; retain stored records and recovery.
+
+Each has an independent feature branch and PR to dev for review. Coordinate shared planner tests/components and validate their combined behavior before merging. No automatic production promotion.
 
 **NOW, parallel/release-readiness work:** [#10 PWA/offline data reliability](https://github.com/Warconn/how-many-beers/issues/10), [#4 real-phone and full-cook alpha QA](https://github.com/Warconn/how-many-beers/issues/4), [#5 validation of delivered brisket estimates](https://github.com/Warconn/how-many-beers/issues/5), and [#45 homepage branding](https://github.com/Warconn/how-many-beers/issues/45). These are important open Now items but should not be inserted ahead of #19/#20 just because they are also labeled Now. Work can be parallelized when branches and risk permit.
 

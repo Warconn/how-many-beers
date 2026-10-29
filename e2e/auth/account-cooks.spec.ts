@@ -105,6 +105,7 @@ test("a signed-in cook is acknowledged and recovered in a fresh browser context"
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -146,6 +147,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -222,6 +224,7 @@ test("failed account writes remain unsaved, block logout and recover through ret
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -348,6 +351,7 @@ test("a stale device exports pending work and loads the newer account version ex
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -381,6 +385,7 @@ test("a pending account edit survives reload in IndexedDB and saves after reconn
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -420,6 +425,7 @@ test("an unconfirmed finish retries once without duplicating completed history",
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -468,6 +474,7 @@ test("guest trial is candid, does not persist cooks, and offers account saving",
     page.getByText(/Guest cooks aren’t kept after you leave/),
   ).toBeVisible();
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -493,6 +500,7 @@ test("confirmed logout hides pending work from another account and restores it f
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -606,4 +614,20 @@ test("account cooks open directly and earlier guest cooks stay optional in the m
   await page.getByLabel("Meal name").fill("Official account cook");
   await expect(page.getByRole("status",{name:"Cook saved",exact:true})).toBeVisible();
   expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Official account cook");
+});
+
+
+test('signed-in empty planner preserves serving time through cancel and reload',async({page,context},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();
+ await page.getByLabel('Serve date and time').fill('2026-12-25T18:00');
+ await page.getByRole('button',{name:'Upload a recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();
+ await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
+ await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
+ await page.screenshot({path:info.outputPath('account-empty-planner.png'),fullPage:true});
+ await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'1 dish in this cook'})).toBeVisible();await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
 });
