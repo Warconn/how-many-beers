@@ -14,6 +14,8 @@ type Props = {
   count: number;
   isNext?: boolean;
   compact?: boolean;
+  showTimingDetails?: boolean;
+  hasServeTarget?: boolean;
   mode: "planning" | "cooking";
   completedAt?: string;
   events: CookEvent[];
@@ -35,7 +37,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
+  task,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
 }:Props) {
   const [logging,setLogging]=useState(false);
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
@@ -70,8 +72,9 @@ export default function TaskRow({
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
         {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
-        <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt ?? undefined}>{task.scheduledAt ? formatted(task.scheduledAt) : "Timing TBD"}</time></div>
-        {(task.durationMinutes != null || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? formatDuration(task.durationMinutes) : "Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt ?? undefined}>{task.scheduledAt ? formatted(task.scheduledAt) : "Start time not set"}</time></div>
+        {(showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        {!task.scheduledAt && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
         {(task.equipment !== task.baseEquipment || task.targetTempF != null) && <p className="planned-step-details">{[task.equipment !== task.baseEquipment ? task.equipment || "Equipment unspecified" : "", task.targetTempF != null ? "Target "+task.targetTempF+"°F (planned)" : ""].filter(Boolean).join(" · ")}</p>}
         {!!task.scheduleAdjustmentMinutes && <p className="planned-step-details">Follows adjusted dish timing</p>}
         {!compact && <p className="task-dish">{task.dishName}</p>}

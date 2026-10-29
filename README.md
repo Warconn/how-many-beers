@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The approved evening queue is **#57 whole-cook Beerometer → #56 empty planner → #55 brisket recommendation → #59 history actions → #60 remove Earlier Cooks UI**. Account foundation, initial cloud saving/history and CI optimization (#19/#20/#54) are complete. Each change goes through a feature PR to dev for review.
+The reviewed #57/#56/#55/#59/#60 batch is merged into **dev**. The current owner-directed follow-up is **#78 imported duration and schedule consistency**. Account foundation, initial cloud saving/history and CI optimization (#19/#20/#54) are complete. Recipe extraction improvements (#77) remain separate Next work.
 
 ## Account foundation work
 

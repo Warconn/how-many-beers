@@ -58,15 +58,25 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
   const recorded=new Set((m.events??[]).filter(e=>e.kind!=='removed').map(e=>e.taskId));
   const project=(t:PlannedTask):PlannedTask=>{
     const base={...t,durationMinutes:t.durationMinutes??null,equipment:t.equipment??m.dishes.find(d=>d.id===t.dishId)?.equipment??'',targetTempF:t.targetTempF??null};
-    const override=m.taskOverrides?.[t.id]??{};
+    const override={...m.taskOverrides?.[t.id]};
+    // Old editors copied the importer placeholder into an override even when the
+    // user only edited duration. Replace that exact generated sentence, not
+    // authored instructions or safety notes.
+    if(m.dishes.some(d=>d.id===t.dishId&&d.preset==='custom')&&override.instructions==='Timing needed: edit the recipe before relying on this timeline.')override.instructions=t.instructions;
     const timingMode=override.scheduledAt===undefined?'plan':override.scheduledAt===null?'unscheduled':'fixed';
-    return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:base.scheduledAt,baseDurationMinutes:base.durationMinutes,baseEquipment:base.equipment,timingMode};
+    return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
   };
   const tasks=m.dishes.flatMap(d=>{
-    const sequence=buildDishTimeline(d,m.serveAt).filter(t=>!hidden.has(t.id)).map(project);
+    const sequence=buildDishTimeline(d,m.serveAt,{overrides:m.taskOverrides,recorded,hidden}).filter(t=>!hidden.has(t.id)).map(project);
     const adjusted=adjustDishSequence(sequence,recorded);warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
   });
-  tasks.push(...(m.customTasks??[]).filter(t=>!hidden.has(t.id)).map(project));
+  tasks.push(...(m.customTasks??[]).filter(t=>!hidden.has(t.id)).map(t=>{
+    const override=m.taskOverrides?.[t.id];
+    const duration=override?.durationMinutes!==undefined?override.durationMinutes:t.durationMinutes;
+    const target=Date.parse(m.serveAt);
+    const derive=t.scheduledAt===null&&override?.scheduledAt===undefined&&!recorded.has(t.id)&&duration!=null&&Number.isFinite(duration)&&Number.isFinite(target);
+    return project(derive?{...t,scheduledAt:new Date(target-duration*60000).toISOString()}:t);
+  }));
   return {tasks,warnings};
 }
 export function stepTimingWarnings(meal:Meal):string[]{return derivedSchedule(meal).warnings;}

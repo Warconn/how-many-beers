@@ -14,7 +14,7 @@ Existing condition-driven safety checks remain visible.
 ## Timing rules
 
 - Default timing follows the existing dish/template or recipe plan. A general prep
-  step's default is the original time entered when it was added, or unscheduled.
+  step's default is the original time entered when it was added. If none was entered, a confirmed duration can derive its start independently from the serving target.
 - Editing the date/time creates a fixed UTC planned instant. It does not move when
   serving time or the dish's total cook/rest settings change.
 - Clear the date/time to leave the step explicitly unscheduled. This remains untimed
@@ -43,6 +43,28 @@ Existing condition-driven safety checks remain visible.
   are supported; other dishes keep their schedules. Resource planning remains #3.
 - Live Schedule always sorts by planned time, with untimed steps last. Checklist/dish
   move controls change manual ordering, not planned timestamps.
+
+## Confirmed imported durations (#78)
+
+A manually entered duration for an imported step is part of the schedule, even
+when the original recipe import left its duration unknown. Known durations work
+backward from serving time or a fixed/recorded start, and forward from a known
+previous finish. Unknown intervals break backward inference: “Cool completely”
+stays duration-unknown until the user confirms a value. Explicitly unscheduled
+steps stay unscheduled. Existing originally timed recipe cadence and #41 forward
+adjustments remain intact; fixed and recorded starts are never silently moved.
+
+Duration and calendar time are separate. A step shows “Start time not set” and
+explains whether serving time/an explicit start or missing durations are needed.
+A confirmed duration reads “Estimated 5 min”; original importer-only Timing needed
+text is not copied forward as a stale warning. Authored instructions, notes,
+equipment, event history, IDs and safety notes remain intact. Unknown imported
+stages are not automatically treated as condition-driven food-safety checks.
+
+The Beerometer accepts imported-only and independent-prep timelines without fake
+start/finish IDs. An incompletely timed window is labeled partial; a lone serving
+point with untimed work does not become a false zero-minute cook. Archived actual
+duration and recorded timeline snapshots remain unchanged.
 
 ## Dates and timezones
 
