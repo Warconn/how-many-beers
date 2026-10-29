@@ -1,5 +1,6 @@
 "use client";
 
+import Beerometer from './Beerometer';
 import {useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
 import type {CookEvent} from "@/domain/cookState";
@@ -71,6 +72,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
         </>}
     {detailed && <section className="history-detail" aria-label="Saved cook details">
       <h3>{detailed.meal.name}</h3>
+      <Beerometer meal={detailed.meal} timeline={detailed.plannedTimeline} finishedAt={detailed.archivedAt}/>
       <p className="muted small">Planned serving: {fmt(detailed.meal.serveAt)} · Saved: {fmt(detailed.archivedAt)}</p>
       <p className="muted small">{detailed.feedback || "No outcome notes recorded."}</p>
       <h4>Original checklist</h4>

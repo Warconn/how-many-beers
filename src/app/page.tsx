@@ -7,6 +7,7 @@ import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, stepTimingWarnings, editStep, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
+import BeerEstimator from '@/components/Beerometer';
 import TurkeyPreparation from "@/components/TurkeyPreparation";
 import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
@@ -79,44 +80,6 @@ function DurationInput({
     onBlur={commit}
     onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
   />;
-}
-
-function BeerEstimator({ meal, timeline }: { meal: Meal; timeline: PlannedTask[] }) {
-  const dish = meal.dishes.find(item => item.preset === "brisket") ?? meal.dishes[0];
-  const startTask = dish ? timeline.find(task => task.id === dish.id + ":start") : undefined;
-  const finishTask = dish ? timeline.find(task => task.id === dish.id + ":finish")
-    ?? timeline.find(task => task.id === dish.id + ":check")
-    ?? timeline.find(task => task.id === dish.id + ":serve") : undefined;
-  const events = (meal as ExtendedMeal).events ?? [];
-  const startedAt = startTask && events.find(e => e.taskId === startTask.id && e.kind === "started")?.occurredAt;
-  const completedAt = finishTask ? meal.completed[finishTask.id] : undefined;
-  const from = startedAt ?? startTask?.scheduledAt;
-  const to = completedAt ?? finishTask?.scheduledAt;
-  const durationMinutes = from && to ? Math.max(0, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 60000)) : NaN;
-  const valid = Number.isFinite(durationMinutes);
-  const totalBeers = valid ? durationMinutes / 90 : 0;
-  const hours = Math.floor(durationMinutes / 60);
-  const minutes = durationMinutes % 60;
-  return <section className="beerometer" aria-label="Cook duration in beers">
-    <div className="beerometer-main">
-      <div className="beerometer-emblem" aria-hidden="true"><img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/brand/badge-mark.svg`} width="256" height="256" alt="" /></div>
-      <div className="beerometer-copy">
-        <p className="eyebrow">THE BEEROMETER</p>
-        <h2>How many beers?</h2>
-        <p>{dish ? (completedAt ? "Actual " : "Planned ") + dish.name.toLowerCase() + " start-to-finish duration." : "Add a dish to fire up the Beerometer."}</p>
-      </div>
-    </div>
-    <div className="beerometer-reading">
-      <div className="beerometer-figure">
-        <strong>{dish && valid ? totalBeers.toFixed(1) : "—"}</strong>
-        <span>beers</span>
-      </div>
-      <p className="beerometer-clock">{dish && valid
-        ? `${hours}h ${String(minutes).padStart(2, "0")}m ${completedAt ? "actual" : "planned"} cook`
-        : "Set a cook start and finish time."}</p>
-      <p className="beerometer-scale">Time scale: 1 beer = 90 min</p>
-    </div>
-  </section>;
 }
 
 export default function Home(){
@@ -531,7 +494,7 @@ function CookExperience() {
             <section className="panel active-cook-panel">
               <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
               <div className="progress-track"><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div>
-              {storageStatus!=='saved'&&<p className="cook-autosave-note muted small">Your latest changes are not saved. Keep this tab open and download a backup.</p>}
+              {storageStatus!=='saved'&&!!storageError&&<p className="cook-autosave-note muted small">Your latest changes are not saved. Keep this tab open and download a backup.</p>}
               {cookingDraftOpen && <p className="notice" id="cooking-draft-help">Save or cancel the open edit or reading before switching steps.</p>}
               {message && <p className="form-error" role="alert">{message}</p>}
               {navigationNote && <p className="step-navigation-note" role="status">{navigationNote}</p>}
