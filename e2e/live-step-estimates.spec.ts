@@ -1,0 +1,32 @@
+import {test,expect,type Page} from '@playwright/test';
+import {newMeal} from '../src/domain/meal';
+import {parseRecipeText} from '../src/domain/recipe';
+import {recordEvent,editStep,type ExtendedMeal} from '../src/domain/cookState';
+test.use({timezoneId:'UTC'});
+const now='2026-10-29T21:04:00Z';
+const roastTitle='Roast on pellet smoker at 425 F (10 to 15 minutes). Stir halfway through. Pull when lightly golden; check early to avoid burning.';
+const coolTitle='Cool uncovered (10 minutes). Remove from smoker and let cool completely on the pan.';
+const fixture=():ExtendedMeal=>({...newMeal(),name:'Pumpkin Seeds',mode:'cooking',startedAt:'2026-10-29T21:00Z',serveAt:'2026-10-29T22:00Z',dishes:[parseRecipeText('Pumpkin seeds',['Preheat (10 minutes)','Clean (5 minutes)','Dry (10 minutes)','Mix (5 minutes)','Coat (10 minutes)',roastTitle,coolTitle].join('\n'))]});
+async function load(page:Page,m=fixture()){
+ await page.clock.install({time:new Date(Date.parse(now)-1000)});await page.clock.pauseAt(new Date(now));await page.goto('/');await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),m);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();return m;
+}
+test('quick completed prep gives live current and upcoming estimates, with stable actual starts and reload',async({page},info)=>{
+ const meal=await load(page),guide=page.getByRole('region',{name:'Current step',exact:true}),bar=page.getByRole('navigation',{name:'Cooking guide'}),meter=page.getByRole('region',{name:'Cook duration in beers'});
+ for(const step of meal.dishes[0].steps!.slice(0,5))await guide.getByRole('checkbox',{name:'Complete '+step.title,exact:true}).click();
+ await expect(guide.getByRole('article')).toHaveAccessibleName(roastTitle);await expect(meter).toContainText('0h 25m');await meter.screenshot({path:info.outputPath('beerometer.png'),scale:'css'});
+ await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:19:00.000Z');await expect(bar.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:19:00.000Z');
+ await guide.getByLabel('Estimated finish',{exact:true}).evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));await page.screenshot({path:info.outputPath('live-estimates.png'),scale:'css'});
+ await bar.getByRole('button',{name:'Full checklist',exact:true}).click();const list=page.getByRole('region',{name:'Full cook checklist'});const cool=list.getByRole('button',{name:'Open step: '+coolTitle+' for Pumpkin seeds',exact:true});await expect(cool.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:19:00.000Z');await expect(cool.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:29:00.000Z');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await bar.getByRole('button',{name:'Back to step',exact:true}).click();
+ await page.clock.fastForward(120000);await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:21:00.000Z');
+ await guide.getByRole('button',{name:'+ Log temperature',exact:true}).click();await guide.getByLabel('Food temperature',{exact:true}).fill('50');await guide.getByRole('button',{name:'Save timestamped reading'}).click();await page.clock.fastForward(300000);await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:21:00.000Z');
+ const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(stored.dishes).toEqual(meal.dishes);expect(stored.serveAt).toBe(meal.serveAt);const events=stored.events;
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:21:00.000Z');expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!).events)).toEqual(events);
+ await page.clock.fastForward(60000);await guide.getByRole('checkbox').click();await expect(guide.getByRole('article')).toHaveAccessibleName(coolTitle);await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:22:00.000Z');
+});
+test('an actual overrun requires review until completion, then cooling reforecasts from now',async({page})=>{
+ let m=fixture();for(const s of m.dishes[0].steps!.slice(0,5))m=recordEvent(m,m.dishes[0].id+':'+s.id,'completed','2026-10-29T20:40Z');m=recordEvent(m,m.dishes[0].id+':step-6','started','2026-10-29T20:45Z');await load(page,m);const guide=page.getByRole('region',{name:'Current step',exact:true}),bar=page.getByRole('navigation',{name:'Cooking guide'});await expect(guide).toContainText('Estimate elapsed');await expect(bar).toContainText('Waiting for');await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveCount(0);await guide.getByRole('checkbox').click();await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:14:00.000Z');
+});
+
+test('fixed future cooling remains fixed and a late forecast exposes its constraint',async({page})=>{
+ let m=fixture();for(const s of m.dishes[0].steps!.slice(0,5))m=recordEvent(m,m.dishes[0].id+':'+s.id,'completed','2026-10-29T21:03Z');const cool=m.dishes[0].id+':step-7';m=editStep(m,cool,coolTitle,coolTitle,{timingMode:'fixed',scheduledAt:'2026-10-29T21:50Z',durationMinutes:10,equipment:'Kitchen',targetTempF:null});await load(page,m);const bar=page.getByRole('navigation',{name:'Cooking guide'});await expect(bar.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:50:00.000Z');await page.clock.fastForward(35*60000);await expect(bar.getByLabel('Fixed start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:50:00.000Z');await expect(bar).toContainText('Review timing');
+});

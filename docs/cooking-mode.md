@@ -50,8 +50,9 @@ Cancel adding is now a quiet **× Cancel** text control beside the menu heading,
 ## Timing and data guarantees
 
 The clock refreshes every 30 seconds and on tab/window re-entry; refresh pauses while
-editing/reading or focusing an input. Labels describe planned timing. No clock action
-starts/completes food, shifts dependencies or interprets doneness. Untimed means untimed.
+editing/reading or focusing an input. Timed unfinished work uses derived live estimates; original planned timing remains
+separate. No clock action starts/completes food, rewrites the plan or interprets
+doneness. Unknown/blocked estimates stay explicit.
 The footer is navigation, not a countdown or notification service (#11).
 
 No storage schema, task/event ID or actual timestamp changes. Existing notes, readings,
@@ -83,3 +84,33 @@ name, tooltip and confirmation). There is no single-action options disclosure. S
 removal is disabled during editing/reading drafts and retains recorded activity.
 
 The Beerometer is now a compact, always-expanded sticky banner above the cooking workspace, also shown in planning. It retains the approved circle mark and labels the dish, duration and 90-minute time scale. Step scrolling leaves room for the banner; storage-failure warnings take precedence.
+
+
+## Live step estimates (#81)
+The current card leads with Estimated finish for eligible timed work. Original
+planned start remains secondary, and the serving target stays unchanged. The
+checklist and sticky next-step footer use the same derived start/finish forecasts.
+Forecasts recalculate after progress, reopening, edits, additions/removals and clock
+refresh. Opening an editor or entering a reading still preserves drafts.
+
+Imported dishes follow source recipe order, independent of checklist rearranging.
+An unstarted, immediately actionable 15-minute roast forecasts 15 minutes from now;
+a following 10-minute cooling step forecasts another 10 minutes. Actual started
+evidence anchors the finish at start plus duration instead of restarting a timer.
+Early/late actual completion updates successors; reopening ignores the prior
+attempt's start without deleting it. Merely viewing a forecast records no activity.
+
+Explicit fixed starts and real planned waiting gaps stay constraints. An elapsed
+actual estimate requires a progress check; it neither marks completion nor restarts
+an entire duration. Unknown durations, unscheduled work, safety checkpoints and
+unresolved prerequisites do not supply a precise downstream ETA. A later checked
+step cannot bypass earlier unfinished work. Timed steps on separate dishes remain
+parallel. Templates/general prep gain no inferred duration/dependency graph from
+checkpoint gaps; planned-only times are labelled as planned.
+
+Beerometer component, styling, fields and interaction are unchanged. Its remaining
+calculation shares eligible live windows; projected/elapsed/history calculations
+remain separate. Before/after desktop/mobile meter captures for the 5/8 fixture
+were pixel-identical. No forecast fields are saved, and original task/event IDs,
+plans, actual timestamps, notes and archived histories are not rewritten. This is
+not the full resource/dependency solver in #3.

@@ -384,3 +384,14 @@ steps. Unknown/vague times and multiple ambiguous duration phrases require revie
 no safety endpoint or overnight duration is invented. Existing saved dishes are not
 reparsed. Full #77 equipment, temperature and structured ingredient extraction
 remains follow-up work.
+
+
+## Active step forecasts (#81)
+Current and upcoming timed imported work now has read-only live ETAs, shared by
+the current card, flat checklist and sticky next-step footer. The live finish leads
+under the step title; original planned start stays secondary. Completing prep early
+can move eligible work forward, real starts anchor elapsed estimates, and actual
+completion/reopening updates successors. Fixed/waiting/safety/unknown prerequisites
+remain constraints, parallel dishes remain independent, and no forecast is stored
+as an actual event or destructive plan edit. The Beerometer UI stays unchanged;
+only eligible remaining-time windows share the forecast. See [Cooking Mode](cooking-mode.md).
