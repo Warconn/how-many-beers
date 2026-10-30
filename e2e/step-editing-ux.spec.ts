@@ -15,7 +15,8 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   const form=page.getByRole('form',{name:'Edit step',exact:true});
   await form.scrollIntoViewIfNeeded();
   await page.screenshot({path:`docs/screenshots/issue-85-62-${process.env.HMB_CAPTURE??'after'}-${kind}-${info.project.name}.png`,fullPage:true});
-  await form.screenshot({path:`docs/screenshots/issue-85-62-editor-${kind}-${info.project.name}.png`});
+  const editorCapture=await form.screenshot({path:`docs/screenshots/issue-85-62-editor-${kind}-${info.project.name}.png`});
+  await info.attach('compact-step-editor',{body:editorCapture,contentType:'image/png'});
   await expect(form.getByText(/^More options/)).toBeVisible();
   await expect(form.getByLabel('Planned date and time',{exact:true})).toBeHidden();
   await expect(form.locator('p')).toHaveCount(0);
