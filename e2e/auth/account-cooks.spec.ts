@@ -105,6 +105,7 @@ test("a signed-in cook is acknowledged and recovered in a fresh browser context"
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -146,6 +147,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -159,6 +161,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   await page
     .getByRole("checkbox", { name: "Complete Trim the brisket", exact: true })
     .click();
+  await expect(page.getByText('Your latest changes are not saved. Keep this tab open and download a backup.',{exact:true})).toHaveCount(0);
   await expect(
     page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
@@ -221,6 +224,7 @@ test("failed account writes remain unsaved, block logout and recover through ret
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -257,7 +261,7 @@ test("failed account writes remain unsaved, block logout and recover through ret
   );
 });
 
-test("earlier guest cooks import only by choice and stay hidden after account switching", async ({
+test("earlier records stay untouched without migration prompts across account switching", async ({
   page,
   context,
 }) => {
@@ -295,22 +299,12 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
   await expect(page.getByRole("button", {name:/Plan a new cook/})).toBeEnabled();
   expect(remote.state.active).toBeNull();
   await page.getByRole("button", {name:"Account",exact:true}).click();
-  await page.getByText("Earlier cooks", {exact:true}).click();
-  await page
-    .getByRole("button", { name: "Import these cooks", exact: true })
-    .click();
-  await expect(
-    page.getByRole("status", { name: "Cook saved", exact: true }),
-  ).toBeVisible();
-  expect(
-    (remote.state.active as { meal: { id: string } } | null)?.meal.id,
-  ).toBe(guest.id);
-  expect(remote.state.history).toHaveLength(1);
-  expect(
-    await page.evaluate(
-      () => JSON.parse(localStorage.getItem("how-many-beers:meal:v1")!).name,
-    ),
-  ).toBe("Earlier family brisket");
+  await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
+  await expect(page.getByText('Earlier cooks',{exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Import these cooks',exact:true})).toHaveCount(0);
+  expect(remote.state.active).toBeNull();expect(remote.state.history).toHaveLength(0);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(guest);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:history:v1')!))).toEqual(history);
   await page
     .getByRole("dialog", { name: "Your account" })
     .getByRole("button", { name: "Sign out on this device", exact: true })
@@ -318,9 +312,7 @@ test("earlier guest cooks import only by choice and stay hidden after account sw
   await expect(
     page.getByRole("button", { name: "Sign in", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Earlier family brisket", { exact: true }),
-  ).toHaveCount(0);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("how-many-beers:meal:v1")!).name)).toBe("Earlier family brisket");
   const other = {
     ...user,
     id: "00000000-0000-4000-8000-000000000002",
@@ -347,6 +339,7 @@ test("a stale device exports pending work and loads the newer account version ex
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -380,6 +373,7 @@ test("a pending account edit survives reload in IndexedDB and saves after reconn
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -419,6 +413,7 @@ test("an unconfirmed finish retries once without duplicating completed history",
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -467,6 +462,7 @@ test("guest trial is candid, does not persist cooks, and offers account saving",
     page.getByText(/Guest cooks aren’t kept after you leave/),
   ).toBeVisible();
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -492,6 +488,7 @@ test("confirmed logout hides pending work from another account and restores it f
   await remote.attach(context);
   await signIn(page);
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -546,7 +543,7 @@ test("confirmed logout hides pending work from another account and restores it f
   ).toBeVisible();
 });
 
-test("account cooks open directly and earlier guest cooks stay optional in the menu", async ({
+test("account menu stays clean while earlier records remain untouched", async ({
   page,
   context,
 }, testInfo) => {
@@ -584,25 +581,83 @@ test("account cooks open directly and earlier guest cooks stay optional in the m
   await expect(page.getByText("Earlier cooks", {exact:true})).toBeHidden();
   await page.screenshot({path:testInfo.outputPath("account-home-clean.png"),fullPage:true});
   await page.getByRole("button", {name:"Account",exact:true}).click();
-  await page.getByText("Earlier cooks", {exact:true}).click();
-  await page.screenshot({path:testInfo.outputPath("account-earlier-cooks-menu.png"),fullPage:true});
-  const download = page.waitForEvent("download");
-  await page
-    .getByRole("button", { name: "Download earlier cooks", exact: true })
-    .click();
-  const file = await download;
-  const { readFile } = await import("node:fs/promises");
-  const backup = JSON.parse(await readFile((await file.path())!, "utf8"));
-  expect(backup.active.name).toBe("Earlier cook for safekeeping");
-  expect((remote.state.active as { meal: { name: string } }).meal.name).toBe(
-    "Existing account cook",
-  );
-  page.once("dialog",dialog=>dialog.dismiss());
-  await page.getByRole("button",{name:"Import these cooks",exact:true}).click();
-  expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Existing account cook");
+  await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
+  await expect(page.getByText('Earlier cooks',{exact:true})).toHaveCount(0);
+  await expect(page.getByText('No update is waiting.',{exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Download earlier cooks',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Import these cooks',exact:true})).toHaveCount(0);
+  await page.screenshot({path:testInfo.outputPath('account-clean-menu.png'),fullPage:true});
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(earlier);
+  expect((remote.state.active as {meal:{name:string}}).meal.name).toBe('Existing account cook');
   await page.getByRole("button",{name:"Close account",exact:true}).click();
   await page.getByRole("button",{name:/Resume planning/}).click();
   await page.getByLabel("Meal name").fill("Official account cook");
   await expect(page.getByRole("status",{name:"Cook saved",exact:true})).toBeVisible();
   expect((remote.state.active as {meal:{name:string}}).meal.name).toBe("Official account cook");
+});
+
+
+test('signed-in empty planner preserves serving time through cancel and reload',async({page,context},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();
+ await page.getByLabel('Serve date and time').fill('2026-12-25T18:00');
+ await page.getByRole('button',{name:'Upload a recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();
+ await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
+ await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
+ await page.screenshot({path:info.outputPath('account-empty-planner.png'),fullPage:true});
+ await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'1 dish in this cook'})).toBeVisible();await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+});
+
+
+test('imported duration edits save and reload without changing another dish or history',async({page,context},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();
+ await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ const original=JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0]),history=JSON.stringify(remote.state.history);
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Import a recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Pumpkin seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds\nCool completely');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to this cook'}).click();
+ const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});
+ for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','15'],['Cool completely','10']]){
+  await steps.getByRole('article',{name,exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true}).fill(minutes);
+ }
+ await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).locator('time')).toHaveAttribute('datetime',/23:35/);
+ expect(JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0])).toBe(original);expect(JSON.stringify(remote.state.history)).toBe(history);
+ await page.screenshot({path:info.outputPath('account-imported-timing.png'),fullPage:true});await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true})).toHaveValue('5');await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).locator('time')).toHaveAttribute('datetime',/23:35/);
+});
+
+
+test('guest imported durations produce a plan without persisting a trial cook',async({page})=>{
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Upload a recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Trial seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to this cook'}).click();
+ for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','10']]){
+  await page.getByRole('region',{name:'Trial seeds steps',exact:true}).getByRole('article',{name,exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true}).fill(minutes);
+ }
+ await expect(page.getByRole('region',{name:'Cook duration in beers'}).locator('strong')).toHaveText('0.2');
+ expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeVisible();await expect(page.getByRole('button',{name:'Edit Trial seeds',exact:true})).toHaveCount(0);
+});
+
+test('extracted recipe times save to an account without duration re-entry',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ const other=JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0]),history=JSON.stringify(remote.state.history);
+ const source='# Seeds\n## Ingredients\n1 cup seeds\n## Instructions\nClean seeds (5 minutes).\nRoast seeds for 10–15 minutes.\nCool seeds (10 minutes).';
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Import a recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Extracted seeds');await page.getByLabel('Recipe instructions').fill(source);await page.getByRole('button',{name:'Preview recipe steps'}).click();await expect(page.getByRole('region',{name:'Recipe preview'})).toContainText('30 min');await page.getByRole('button',{name:'Add to this cook',exact:true}).click();await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ expect(JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0])).toBe(other);expect(JSON.stringify(remote.state.history)).toBe(history);
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Extracted seeds',exact:true}).click();const steps=page.getByRole('region',{name:'Extracted seeds steps',exact:true});await expect(steps.getByRole('article').first().getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true})).toHaveValue('5');await expect(steps.getByRole('article').first().locator('time')).toHaveAttribute('datetime',/23:35/);await expect(steps.getByRole('article').last()).toHaveAccessibleName('Serve');await page.getByText('Dish settings',{exact:true}).click();await page.getByText('Original recipe',{exact:true}).click();await expect(page.locator('.recipe-original pre')).toHaveText(source);
+});
+
+test('guest can accept extracted timings without persisting the recipe',async({page})=>{
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Upload a recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Guest extracted seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds (5 minutes).\nRoast seeds (10 minutes).');await page.getByRole('button',{name:'Preview recipe steps'}).click();await expect(page.getByRole('region',{name:'Recipe preview'})).toContainText('15 min');await page.getByRole('button',{name:'Add to this cook',exact:true}).click();await expect(page.getByRole('region',{name:'Cook duration in beers'}).locator('strong')).toHaveText('0.2');expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:'Edit Guest extracted seeds',exact:true})).toHaveCount(0);
+});
+
+test('live estimates survive account reload without rewriting saved plans, activity or history',async({page,context})=>{
+ const {parseRecipeText}=await import('../../src/domain/recipe');const {recordEvent}=await import('../../src/domain/cookState');
+ const remote=server(),dish=parseRecipeText('Live seeds','Prep (5 minutes)\nRoast (15 minutes)\nCool (10 minutes)');
+ let meal=migrateMeal({...newMeal(),serveAt:'2026-10-29T22:00Z',mode:'cooking',startedAt:'2026-10-29T21:00Z',dishes:[dish]});meal=recordEvent(meal,dish.id+':step-1','completed','2026-10-29T21:03Z');meal=recordEvent(meal,dish.id+':step-2','started','2026-10-29T21:04Z');meal.notes[dish.id+':step-2']='Keep notes';
+ remote.state.active={meal,serveInstant:'2026-10-29T22:00:00.000Z'};remote.state.revision=1;
+ const archived=archiveCook({...newMeal(),name:'Preserved history',serveAt:'2026-10-28T22:00Z',dishes:[createDish('brats')]},emptyHistory(),'Keep feedback','2026-10-28T23:00Z');remote.state.history=archived.cooks.map(c=>({...c,serveInstant:'2026-10-28T22:00:00.000Z'}));
+ await remote.attach(context);await signIn(page);await page.clock.install({time:new Date('2026-10-29T21:08:59Z')});await page.clock.pauseAt(new Date('2026-10-29T21:09Z'));await page.getByRole('button',{name:/Continue cooking/}).click();
+ const guide=page.getByRole('region',{name:'Current step',exact:true});await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:19:00.000Z');const content=()=>JSON.stringify({active:remote.state.active,history:remote.state.history}),before=content(),revision=remote.state.revision;await page.clock.fastForward(60000);await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:19:00.000Z');expect(content()).toBe(before);expect(remote.state.revision).toBe(revision);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(guide.getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:19:00.000Z');expect(content()).toBe(before);
 });

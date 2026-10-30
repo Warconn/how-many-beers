@@ -158,6 +158,7 @@ test("planner sign-in stays in the workspace and preserves an open recipe draft"
   await backend(page);
   await page.goto("/");
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -205,6 +206,7 @@ test("account access works in cooking and history without changing cook progress
   await backend(page);
   await page.goto("/");
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();
@@ -247,6 +249,7 @@ test("redirected sign-in can return to the same cooking view with exact saved pr
   await backend(page);
   await page.goto("/");
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();

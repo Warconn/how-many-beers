@@ -36,6 +36,15 @@ The Guided Cook Planner now treats planning as editable by default. Each menu di
 
 The compact Start Cooking and complete cooking-mode redesign are separate follow-up work. Only promote `dev` to `main` after green CI and visual review.
 
+## Empty planner entry (#56)
+Empty planning shows “What do you want to cook?” with Start with a template and
+Upload a recipe, both entering the existing chooser. Zero-dish metrics, empty
+schedule and inactive cooking actions are hidden. Serving time remains editable,
+Cancel preserves it, and an empty saved account plan can reopen without resetting
+its time. General preparation remains available under Other preparation. First
+and later dishes share the same template/import implementation. Guest sessions
+stay ephemeral; account saving and existing history are unchanged.
+
 ## Add Dish consolidation (October 26, 2026)
 
 The Add Dish editor now has two choices inside one surface: **Start from template** (existing starter methods) or **Import a recipe** (paste instructions or upload a .txt/.md file). Selecting an existing dish remains an Edit action on the menu card. The separate full-page Import a Recipe section has been removed to keep the Guided Planner focused. URL import is not yet implemented and must not be presented as a working feature.
@@ -167,7 +176,7 @@ accordion within the menu instead, with a single dish heading and no return navi
    keyboard focus moves to its header.
 3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
    header collapses it. Only one dish is expanded at a time.
-4. Use Dish settings for name, equipment, durations and optional reference settings.
+4. Use Dish settings for name, equipment, template durations and optional reference settings. Imported step durations are edited directly on their step rows.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
    Remove dish is a compact trash icon beside the heading, not hidden in settings;
    it retains a descriptive accessible label/tooltip and a 44px touch target;
@@ -234,6 +243,22 @@ needed, preserving other dishes and fixed/recorded anchors. Live Schedule is
 chronological; manual checklist order remains distinct. Actual events and completed
 history are preserved. See [Step timing](step-timing.md) for the complete rules,
 calendar/DST behavior, tests, manual checks and remaining scheduling limitations.
+
+
+## Brisket recommendation hierarchy (#55)
+Brisket timing leads with recommended on-smoker start, estimated cook duration and
+one deliberate Use recommended timing action. Measured weight remains editable;
+profile/cut/wrap, start windows, prep, rest/hold, manual timing explanation and
+source/uncertainty evidence live in collapsed Timing details. A passed recommended
+start remains a visible warning. Calculations and application/reversal semantics
+are unchanged; selecting manual mode retains current times for further editing.
+
+## Imported duration consistency (#78)
+Manually confirmed imported durations now participate in deriving the timeline
+from serving/fixed starts. Step cards distinguish a missing start from an unknown
+duration, and show partial Beerometer windows honestly. Unknown cooling does not
+become zero; actual events and fixed times stay anchored. See [Step timing](step-timing.md).
+Automatic recipe field extraction remains #77 and is not part of this correction.
 
 ## Issue #5: explicit brisket timing comparisons
 
@@ -305,3 +330,108 @@ Workspace refinement: routine saved-on-device labels are removed from all views.
 The shared header has a compact Sign in / Account control on Home, planning, cooking and history, on explicitly trusted dev/feature origins. It opens a native dialog without unmounting the cook or open editors. Email code sign-in completes in place; closing or Escape restores focus and preserves recipe drafts and exact saved progress. App-update reloads remain blocked while the account dialog is open. Disabled account builds retain the existing UI.
 
 Email links and configured social providers return through a same-origin PKCE callback. Back to cook restores a valid one-use, tab-scoped previous view for the same cook; invalid, expired or unavailable hints fall back to Home. Navigation away still uses existing unsaved-draft guards. A shared provider verifies identity, handles sign-out across tabs, and offers retry after verification failure without changing the cook. The account panel explains that sign-in does not yet sync cooks across devices; no account-save success is invented. Existing cook/history data is neither uploaded nor removed. Google/Apple remain hidden until enabled in build configuration. Identity linking, account deletion and account-backed persistence remain unfinished work. See [account setup and security gates](account-foundation.md).
+
+## Whole-cook Beerometer (#57)
+The Beerometer measures elapsed time across all dishes, from the earliest scheduled
+preparation to the latest serving/task end, counting overlaps once. Refrigerated
+brine, air drying and advance trimming/seasoning count; turkey thaw reminders and
+explicitly skipped brining do not. Removed/unscheduled tasks do not define planned
+bounds. During cooking the primary reading is estimated beers remaining across unfinished
+work. Completing the earliest/latest unfinished steps advances the remaining
+window without double-counting overlaps; all eligible steps checked gives zero,
+even before Finish cook or the serving target. Unknown timing or overdue unfinished
+steps require review rather than falsely claiming completion. Projected total and
+actual elapsed remain separate supporting readings, so completion does not rewrite
+total duration. History shows zero remaining and uses the archived timeline and
+archive time to freeze actual duration when a start was recorded, otherwise labels
+the planned estimate. Existing events and
+storage schemas are unchanged. The 90-minute conversion stays internal.
+
+
+## Uploaded-recipe timing UX (October 30, 2026)
+After adding a text/file recipe, each recipe step shows a labelled Estimated duration
+field with minutes and an Unknown placeholder. Valid changes apply immediately to
+the existing duration override, schedule and Beerometer. Edit remains available for
+fixed starts, instructions and other details. Dish settings no longer duplicates the
+imported duration list. One dish-level explanation replaces repeated generated
+instructions; authored instructions are retained.
+
+While any imported step lacks a valid start date, its source sequence is retained
+in the checklist, Live Schedule and guided cook, with the serving milestone after
+recipe work. Unknown dates remain explicit; this does not assign new dates or move
+actual/fixed timestamps. Fully timed schedules stay chronological; explicit manual
+checklist moves still work. The live schedule explains the recipe-order fallback.
+The Beerometer asks for missing step durations when a serving/fixed anchor already
+exists, instead of asking the user to set the anchor again. Basic explicit duration/range extraction is now included in the follow-up below;
+full equipment/temperature and ingredient-structure extraction remains #77.
+
+
+### Import with minimal re-entry
+Preview recipe steps now replaces the text-entry controls with a focused Recipe
+preview. Explicit written minutes/hours/seconds and compound durations fill the
+editable minute fields. Ranges remain visible and use their longer endpoint as a
+clearly disclosed planning default, confirmed by Add to this cook. The summary and
+Add action are available before the long list, and Add reviewed recipe is also
+available after review. Back to recipe text preserves the source for corrections.
+Changing raw text and previewing rebuilds the draft; only Add mutates the cook.
+
+Headed instruction sections supply the steps; ingredient/reference sections do not
+become cooking actions. The complete original recipe is saved as reference and
+available in Dish settings, including details that this basic parser does not
+structure. Standalone halfway/every/after reminders attach to the previous step's
+instructions, avoiding an extra cooking interval. Separately timed actions remain
+steps. Unknown/vague times and multiple ambiguous duration phrases require review;
+no safety endpoint or overnight duration is invented. Existing saved dishes are not
+reparsed. Full #77 equipment, temperature and structured ingredient extraction
+remains follow-up work.
+
+
+## Active step forecasts (#81)
+Current and upcoming timed imported work now has read-only live ETAs, shared by
+the current card, flat checklist and sticky next-step footer. The live finish leads
+with a concise instruction; original planned start stays in Step details. Completing prep early
+can move eligible work forward, real starts anchor elapsed estimates, and actual
+completion/reopening updates successors. Fixed/waiting/safety/unknown prerequisites
+remain constraints, parallel dishes remain independent, and no forecast is stored
+as an actual event or destructive plan edit. The Beerometer UI stays unchanged;
+only eligible remaining-time windows share the forecast. See [Cooking Mode](cooking-mode.md).
+
+Template timing review: wrapping/temperature decisions show Check when ready,
+with checkpoint dates and explanations in Step details, not Duration unknown. Cook and rest/hold phases reuse the
+existing dish estimates and actual activity anchors. Phase timing remains an
+estimate rather than a doneness guarantee; no physical step durations or actual
+history are inferred from checkpoint spacing.
+
+## Cooking execution refinement (#81, owner review of PR #82)
+
+Cooking Mode shows a concise current action/instruction, one duration/finish summary
+for timed activity, and a simple next action. Condition checks say “Check when
+ready”; their approximate planning checkpoints never imply readiness or completion.
+Step details preserves the full authored text, original planned dates, checkpoint
+assumptions, equipment/temperature metadata, editing, notes and activity. Cook tools
+and broader warnings are secondary disclosures. Planning retains its detailed controls.
+
+Entering Cooking Mode starts the session, not every physical phase. Explicit
+“On smoker now”/“Begin rest now” actions record actual phase starts. Recognized timed
+imported roasting/baking/smoking/grilling/simmering/cooling/resting actions have the
+same optional start capture; preparation/checkpoint steps do not gain generic Start
+buttons. Notes, readings, edits and rapid check-offs do not establish physical
+phase starts. Earlier automatic start/completion pairs remain in history but do not
+anchor physical forecasts. New explicit phase starts are marked with optional event
+metadata; old records remain readable and unchanged. Reopening resets only the
+current attempt. A checked loading action does not consume a 13-hour cook allowance.
+The shared remaining-time model retains ongoing cook/rest windows until explicit
+progress ends them, without changing Beerometer layout, fields or styling.
+
+Validation includes a Sunday brisket rapidly checked to wrapping, persistent actual
+smoker/rest starts, unresolved condition checks after elapsed time, and an imported
+15-minute roast plus 10-minute cooling sequence. Inspect actual desktop and narrow
+phone captures for information density, including expanded details and safety text.
+
+Owner-approved template completion before merging #82 to dev: every built-in method
+has relevant prep/preheat, cook, finishing and rest estimates. Brats are 120 minutes
+covered plus the existing 15-minute searing allowance; wings use explicit finishing
+stage allowances. Conditional checks remain Check when ready. Default stage estimates
+are derived separately from the stored plan, with explicit overrides supported.
+Actual phase starts anchor later stages; checking loading does not imply elapsed
+cooking. The owner authorizes merging the completed, green PR to dev, not production.

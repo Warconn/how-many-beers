@@ -41,7 +41,7 @@ jobs:
       matrix:
         include:
           - suite: regression
-            browsers: chromium
+            browsers: chromium webkit
             command: npm run test:e2e
           - suite: auth
             browsers: chromium webkit

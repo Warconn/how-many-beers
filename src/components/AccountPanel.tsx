@@ -9,8 +9,7 @@ export default function AccountPanel({cookTools, onDraftChange}: {cookTools?: Re
     [code, setCode] = useState(""),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
-    [forceSignOut, setForceSignOut] = useState(false),
-    [earlierAvailable, setEarlierAvailable] = useState(false);
+    [forceSignOut, setForceSignOut] = useState(false);
   useEffect(() => {
     onDraftChange?.(!!email || !!sentTo || !!code || busy);
   }, [email, sentTo, code, busy, onDraftChange]);
@@ -28,55 +27,6 @@ export default function AccountPanel({cookTools, onDraftChange}: {cookTools?: Re
     setMessage("");
     setForceSignOut(false);
   }, [user?.id, signOutVersion]);
-  useEffect(() => {
-    let available = false;
-    if (user && process.env.NEXT_PUBLIC_ENABLE_CLOUD_COOKS === "true") {
-      try {
-        const raw = window.localStorage.getItem(
-            "how-many-beers:legacy-owner:v1",
-          ),
-          claim = raw ? JSON.parse(raw) : null;
-        available =
-          (!claim || (claim.owner === user.id && !claim.imported)) &&
-          (window.localStorage.getItem("how-many-beers:meal:v1") !== null ||
-            window.localStorage.getItem("how-many-beers:history:v1") !== null);
-      } catch {
-        /* Never expose earlier records when their ownership cannot be checked. */
-      }
-    }
-    setEarlierAvailable(available);
-  }, [user?.id]);
-  const downloadEarlier = async () => {
-    if (!user) return;
-    const raw = window.localStorage.getItem("how-many-beers:legacy-owner:v1"),
-      claim = raw ? JSON.parse(raw) : null;
-    if (claim && (claim.owner !== user.id || claim.imported))
-      throw Error("Earlier cooks are protected.");
-    const [{ LocalCookStore }, { exportBackup }] = await Promise.all([
-      import("@/domain/localPersistence"),
-      import("@/domain/cookHistory"),
-    ]);
-    const store = new LocalCookStore(window.localStorage);
-    let contents: string;
-    try {
-      const snapshot = store.load(false);
-      contents = exportBackup(
-        snapshot.active,
-        snapshot.history,
-        new Date().toISOString(),
-      );
-    } catch {
-      contents = store.recoveryExport();
-    }
-    const url = URL.createObjectURL(
-        new Blob([contents], { type: "application/json" }),
-      ),
-      a = document.createElement("a");
-    a.href = url;
-    a.download = "earlier-cooks-backup.json";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 500);
-  };
   const perform = async (action: () => Promise<void>) => {
     if (busy) return;
     setBusy(true);
@@ -143,16 +93,7 @@ export default function AccountPanel({cookTools, onDraftChange}: {cookTools?: Re
           >
             Sign out on this device
           </button>
-          {cookTools !== undefined ? cookTools : earlierAvailable && (
-            <button
-              type="button"
-              className="button secondary"
-              disabled={busy}
-              onClick={() => void perform(downloadEarlier)}
-            >
-              Download earlier cooks
-            </button>
-          )}
+          {cookTools}
         </>
       ) : (
         <>

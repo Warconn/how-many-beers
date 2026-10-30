@@ -182,6 +182,18 @@
 .history-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px}
 .history-actions button{background:#fdf6ee;border:1px solid #e3d7c9;color:#814c32;border-radius:9px;font-size:12px;font-weight:800;padding:9px 12px}
 .history-actions .danger{color:#ad4133;background:#fff7f5}
+
+.history-actions { gap:12px; margin-top:16px; align-items:center; }
+.history-actions button { min-height:44px; padding:10px 16px; font-size:14px; border-radius:10px; }
+.history-actions .primary { background:var(--accent,#a64e2a); color:white; border-color:transparent; }
+.history-actions .secondary { background:#f6ede5; color:#814c32; }
+.history-actions .history-delete { background:transparent; border-color:transparent; color:#a13e32; margin-left:auto; }
+.history-backups { border-top:1px solid #e3d7c9; margin-top:24px; padding-top:16px; }
+.history-backups h3 { font-size:14px; color:#6b655e; }
+.history-toolbar .button { min-height:44px; font-size:14px; padding:10px 16px; }
+.history-item strong { overflow-wrap:anywhere; }
+@media(max-width:600px){.history-actions .primary,.history-actions .secondary { flex:1; } .history-actions .history-delete { margin-left:0; } .history-toolbar .button { flex:1; }}
+
 .history-detail{border-radius:15px;border:1px solid #e1d4c5;background:#f8f4ed;margin-top:18px;padding:17px;overflow-wrap:anywhere}
 .history-detail h3{font-size:20px;margin:0 0 8px}
 .history-detail h4{font-size:14px;margin:17px 0 7px}
@@ -545,3 +557,46 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .account-earlier-cooks{margin:18px 0;border-top:1px solid var(--line);padding-top:12px}.account-earlier-cooks summary{cursor:pointer;min-height:44px;display:list-item;padding:12px 0;font-weight:700;color:var(--accent-dark)}.account-earlier-cooks p{font-size:13px}.account-dialog .offline-access{border-top:1px solid var(--line);padding-top:12px;margin-top:18px;margin-bottom:0}
 
 .account-control{display:flex;align-items:center;gap:12px}.account-save-indicator{display:inline-flex;align-items:center;justify-content:center;width:28px;height:32px;color:#8b5d25;flex:none}.account-save-indicator svg{width:24px;height:24px}.account-save-indicator[data-state=saved]{color:#65745d}.account-save-indicator[data-state=loading],.account-save-indicator[data-state=syncing],.account-save-indicator[data-state=saving]{color:var(--muted)}.save-in-progress{animation:save-progress 1.8s linear infinite}@keyframes save-progress{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.save-in-progress{animation:none}}@media(max-width:600px){.account-control{gap:7px}.account-save-indicator{width:24px}.account-save-indicator svg{width:22px;height:22px}}
+
+/* Empty plans invite the first dish before showing execution tools. */
+.empty-planner { max-width: 780px; margin: 0 auto; }
+.empty-planner-choices { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
+.empty-planner-choices p { flex-basis:100%; margin:0; }
+@media(max-width:600px){.empty-planner-choices .button { width:100%; min-height:48px; }}
+
+.empty-planner .hero-fields label { color:#625c54; }
+.empty-planner .hero > div:first-child { display:none; }
+.empty-planner .hero { display:block; padding:24px; }
+.empty-prep { margin:16px 0; color:#625c54; }
+
+/* Imported timing belongs beside the step, at a usable phone touch size. */
+.inline-step-duration{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:12px 0}
+.inline-step-duration label{margin:0;font-size:12px;font-weight:650;color:var(--accent-dark)}
+.inline-step-duration>div{display:flex;align-items:center;gap:7px}
+.cook-task .task-top .inline-step-duration input{width:112px;height:auto;min-height:44px;margin:0;padding:10px;font-size:16px}
+.inline-step-duration span{font-size:12px;color:var(--muted)}
+.inline-step-duration .form-error{flex-basis:100%}
+.import-timing-help{padding:4px 0 12px;margin:10px 0 0;line-height:1.6}
+
+.recipe-preview{padding-top:16px}.recipe-preview h3{scroll-margin-top:155px;font-size:22px;margin:8px 0}
+.recipe-preview-summary{font-weight:700;color:var(--accent-dark)}
+.recipe-preview-steps{padding-left:26px;margin:18px 0}.recipe-preview-steps>li{padding:15px 0;border-top:1px solid var(--line)}
+.recipe-preview-copy strong{font-size:14px;line-height:1.5}.recipe-time-source{font-size:12px;color:var(--accent-dark);line-height:1.5;margin:7px 0}
+.recipe-preview-duration{display:block;margin-top:10px;font-size:12px;font-weight:650}.recipe-preview-duration>div{display:flex;align-items:center;gap:8px;margin-top:5px}
+.recipe-preview-duration input{width:112px;min-height:44px;font-size:16px}.recipe-preview-duration span{font-weight:400;color:var(--muted)}
+.recipe-original{margin-top:14px}.recipe-original summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
+.recipe-original pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:12px;line-height:1.6;max-height:320px;overflow:auto}
+.recipe-preview-actions{display:flex;flex-wrap:wrap;gap:10px}.recipe-preview-actions .button{min-height:48px}
+@media(max-width:600px){.recipe-preview-actions{flex-direction:column}.recipe-preview-actions .button{width:100%;margin-top:0}}
+.recipe-preview-add{margin:4px 0 16px;min-height:48px}
+@media(max-width:600px){.recipe-preview-add{width:100%}}
+
+/* Cooking exposes the action first; plan context and editing stay in details. */
+.guided-step .task-main>.cooking-step-timing{grid-column:1 / -1;display:grid;gap:4px;margin-top:14px;font-size:13px;color:var(--accent-dark)}
+.cooking-step-timing time{font:inherit!important;color:inherit!important}
+.cooking-step-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.cooking-step-actions .button{margin:0;min-height:44px;font-size:13px}
+.cooking-step-details{border-top:1px solid var(--line);margin-top:16px}
+.cooking-step-details>summary{cursor:pointer;min-height:44px;padding:14px 0 4px;color:var(--muted);font-size:13px}
+.cooking-step-details>p{line-height:1.6}
+.cook-extra-tools>summary{cursor:pointer;min-height:44px;color:var(--muted)}

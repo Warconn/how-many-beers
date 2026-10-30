@@ -1,6 +1,8 @@
 import type { Meal, PlannedTask } from "./meal";
 import { buildDishTimeline } from "./schedule";
 import {adjustDishSequence,servingConflict} from "./stepDependencies";
+import {physicalPhase} from "./physicalPhase";
+import {chronologicalTasks} from "./stepTiming";
 
 export type CookEventKind = "started" | "completed" | "reopened" | "temperature" | "equipment" | "removed";
 
@@ -8,6 +10,7 @@ export type CookEvent = {
   id: string;
   taskId: string;
   kind: CookEventKind;
+  startSource?: "activity" | "physical";
   occurredAt: string;
   value?: number;
   unit?: "°F" | "°C";
@@ -58,35 +61,39 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
   const recorded=new Set((m.events??[]).filter(e=>e.kind!=='removed').map(e=>e.taskId));
   const project=(t:PlannedTask):PlannedTask=>{
     const base={...t,durationMinutes:t.durationMinutes??null,equipment:t.equipment??m.dishes.find(d=>d.id===t.dishId)?.equipment??'',targetTempF:t.targetTempF??null};
-    const override=m.taskOverrides?.[t.id]??{};
+    const override={...m.taskOverrides?.[t.id]};
+    // Old editors copied the importer placeholder into an override even when the
+    // user only edited duration. Replace that exact generated sentence, not
+    // authored instructions or safety notes.
+    if(m.dishes.some(d=>d.id===t.dishId&&d.preset==='custom')&&override.instructions==='Timing needed: edit the recipe before relying on this timeline.')override.instructions=t.instructions;
     const timingMode=override.scheduledAt===undefined?'plan':override.scheduledAt===null?'unscheduled':'fixed';
-    return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:base.scheduledAt,baseDurationMinutes:base.durationMinutes,baseEquipment:base.equipment,timingMode};
+    return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
   };
   const tasks=m.dishes.flatMap(d=>{
-    const sequence=buildDishTimeline(d,m.serveAt).filter(t=>!hidden.has(t.id)).map(project);
+    const sequence=buildDishTimeline(d,m.serveAt,{overrides:m.taskOverrides,recorded,hidden}).filter(t=>!hidden.has(t.id)).map(project);
     const adjusted=adjustDishSequence(sequence,recorded);warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
   });
-  tasks.push(...(m.customTasks??[]).filter(t=>!hidden.has(t.id)).map(project));
+  tasks.push(...(m.customTasks??[]).filter(t=>!hidden.has(t.id)).map(t=>{
+    const override=m.taskOverrides?.[t.id];
+    const duration=override?.durationMinutes!==undefined?override.durationMinutes:t.durationMinutes;
+    const target=Date.parse(m.serveAt);
+    const derive=t.scheduledAt===null&&override?.scheduledAt===undefined&&!recorded.has(t.id)&&duration!=null&&Number.isFinite(duration)&&Number.isFinite(target);
+    return project(derive?{...t,scheduledAt:new Date(target-duration*60000).toISOString()}:t);
+  }));
   return {tasks,warnings};
 }
 export function stepTimingWarnings(meal:Meal):string[]{return derivedSchedule(meal).warnings;}
 export function cookTimeline(meal: Meal): PlannedTask[] {
-  const m=migrateMeal(meal),combined=derivedSchedule(m).tasks;
+  const m=migrateMeal(meal),combined=chronologicalTasks(derivedSchedule(m).tasks);
   if (!(m.taskOrder?.length)) {
-    // First load shows the plan in scheduled order. Unscheduled steps come last.
-    return combined.sort((a,b) => {
-      const aTime = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity;
-      const bTime = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity;
-      return aTime - bTime;
-    });
+    return combined;
   }
   const positions = new Map(m.taskOrder.map((id, index) => [id,index]));
+  const defaults = new Map(combined.map((task,index)=>[task.id,index]));
   return combined.sort((a,b) => {
     const ai = positions.get(a.id) ?? Infinity, bi = positions.get(b.id) ?? Infinity;
     if (ai !== bi) return ai-bi;
-    const at = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity;
-    const bt = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity;
-    return at-bt;
+    return defaults.get(a.id)!-defaults.get(b.id)!;
   });
 }
 
@@ -131,6 +138,17 @@ export function editStep(meal: Meal, taskId: string, title: string, instructions
     else override.targetTempF=details.targetTempF;
   }
   return {...m, taskOverrides: {...m.taskOverrides, [taskId]:override}};
+}
+
+/** Inline duration edits change only duration, retaining all other overrides. */
+export function setStepDuration(meal:Meal,taskId:string,durationMinutes:number|null):ExtendedMeal{
+  if(durationMinutes!==null&&(!Number.isFinite(durationMinutes)||durationMinutes<0||durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
+  const task=cookTimeline(meal).find(t=>t.id===taskId);
+  if(!task)throw new Error("Task not found.");
+  const m=migrateMeal(meal),override={...m.taskOverrides?.[taskId]};
+  if(durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
+  else override.durationMinutes=durationMinutes;
+  return {...m,taskOverrides:{...m.taskOverrides,[taskId]:override}};
 }
 
 export function removeStep(meal: Meal, taskId: string, occurredAt: string): ExtendedMeal {
@@ -183,10 +201,10 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const reopenIndex = afterReopen.map(e=>e.kind).lastIndexOf("reopened");
   const attemptEvents = afterReopen.slice(reopenIndex+1);
   const alreadyStarted = attemptEvents.some(e=>e.kind==="started" || e.kind==="completed");
-  const start = !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
-    ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,occurredAt:timestamp}]
+  const start = !physicalPhase(planned) && !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
+    ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,startSource:"activity" as const,occurredAt:timestamp}]
     : [];
-  const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp};
+  const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp,...(kind==="started"&&physicalPhase(planned)?{startSource:"physical" as const}:{})};
   if (value !== undefined) event.value=value;
   if (unit) event.unit=unit;
   if (note?.trim()) event.note=note.trim().slice(0,500);
@@ -208,7 +226,7 @@ export function updateTaskNote(meal: Meal, taskId:string, value:string, occurred
   const m=migrateMeal(meal);
   if(!cookTimeline(m).some(t=>t.id===taskId)) throw Error("Task not found.");
   const notes={...m.notes,[taskId]:value.slice(0,500)};
-  if(m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
+  if(physicalPhase(cookTimeline(m).find(t=>t.id===taskId)!) || m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
   const taskEvents=(m.events??[]).filter(e=>e.taskId===taskId);
   const lastReopen=taskEvents.map(e=>e.kind).lastIndexOf("reopened");
   const attempt=taskEvents.slice(lastReopen+1);

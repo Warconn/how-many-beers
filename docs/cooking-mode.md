@@ -1,7 +1,8 @@
 # Guided Cooking Mode (#26)
 
-Cooking Mode opens one step with its instructions, planned timing, notes and actual
-readings. The guide chooses the earliest unfinished step in chronological order,
+Cooking Mode opens one action with a concise instruction and a single duration/finish
+summary. Step details preserves planned timing, full recipe instructions, notes and
+actual readings. Condition checks say Check when ready. The guide chooses the earliest unfinished step in chronological order,
 independent of manual planner checklist order. If an imported recipe has only a serving
 milestone and untimed work, the guide starts with its untimed work rather than suggesting
 that dinner is the first cooking action. Condition-driven steps require actual checks.
@@ -10,7 +11,7 @@ that dinner is the first cooking action. Condition-driven steps require actual c
 
 - Check off the current step to record completion and advance to the next unchecked step.
   Reopening retains prior activity and records the existing reopen event.
-- The fixed **Up next** footer shows the following step, dish and planned time on desktop
+- The fixed **Up next** footer shows the following action, dish and live estimated time when available on desktop
   and phone. Tap to preview it; previewing does not check off the current step. Other
   unchecked work stays discoverable in the full checklist.
 - **Full checklist** shows every dish’s steps as one flat chronological list, including
@@ -22,11 +23,14 @@ that dinner is the first cooking action. Condition-driven steps require actual c
 - The active step remains selected when its planned date/time is edited, even if that
   changes chronological position. Completion resumes guidance from unfinished work.
 
-The shared step editor still supports dates, duration, equipment and planning targets;
-actual events remain separate. The current-step card uses a neutral surface, a clear title
-and subdued planned time/dish metadata. Instructions, action controls and notes share
-one content edge. Edit and Log temperature use matching compact controls. A quiet trash icon sits
-beside them. All retain 44px tap targets and consistent visual/keyboard order.
+The shared step editor still supports dates, duration, equipment and planning targets
+inside **Step details**; actual events remain separate. Edit, removal, notes and
+activity stay in that disclosure. Log temperature remains directly accessible. All
+controls retain 44px tap targets. Meaningful physical phases offer a specific action
+such as **On smoker now**, **Begin rest now**, **Begin roasting** or **Begin cooling**,
+not a generic Start button on every step. Entering Cooking Mode starts the session;
+physical phase clocks need actual starts. Notes, edits, readings and check-offs do
+not create those starts. The source plan and historical activity are preserved.
 An open editor or reading form blocks switching steps, Home, Edit plan and finishing,
 with a visible explanation, until saved/cancelled. The completion checkbox also waits
 for those drafts. Clock refreshes do not discard or complete a step. Step removal uses the shared trash button; manual reordering remains in planning
@@ -50,8 +54,9 @@ Cancel adding is now a quiet **× Cancel** text control beside the menu heading,
 ## Timing and data guarantees
 
 The clock refreshes every 30 seconds and on tab/window re-entry; refresh pauses while
-editing/reading or focusing an input. Labels describe planned timing. No clock action
-starts/completes food, shifts dependencies or interprets doneness. Untimed means untimed.
+editing/reading or focusing an input. Timed unfinished work uses derived live estimates; original planned timing remains
+separate. No clock action starts/completes food, rewrites the plan or interprets
+doneness. Unknown/blocked estimates stay explicit.
 The footer is navigation, not a countdown or notification service (#11).
 
 No storage schema, task/event ID or actual timestamp changes. Existing notes, readings,
@@ -66,8 +71,8 @@ Desktop/phone Playwright covers the single current card, fixed next-step footer,
 whole-cook list, preview without mutation, dates and selected-step continuity, protected
 editor/reading drafts, temperature/notes/completion, actual history, Home/plan/reload,
 all-checked finishing, archive confirmation/cancel, compact Cancel and narrow layouts.
-Card acceptance first failed on the staggered instruction/note edges; it now checks
-alignment, consistent action heights and a single action row down to 375px.
+Card acceptance checks concise visible content, disclosure of secondary controls,
+44px utility targets and no overflow down to 375px.
 Unit checks cover selection, chronological/offset order, untimed recipes, removed steps,
 completed activity, wraparound preview and immutable plans/events.
 
@@ -76,10 +81,88 @@ checklist and return to an earlier unchecked step. Log a reading, add a note, co
 step and verify advancement. Change a planned date and confirm the editor stays on that
 step. Review completed actuals, leave Home, reload and resume. Finish only when ready.
 Actual iPhone Safari/outdoor/nighttime sessions remain #4 alpha QA; automated phone
-coverage uses an emulated Chromium viewport.
+coverage includes desktop/mobile Chromium plus iPhone/WebKit timing journeys.
 
 Dish and step removal now share one small trash-icon component (44px target, accessible
-name, tooltip and confirmation). There is no single-action options disclosure. Step
+name, tooltip and confirmation). Removal lives with other utility controls in Step details. Step
 removal is disabled during editing/reading drafts and retains recorded activity.
 
 The Beerometer is now a compact, always-expanded sticky banner above the cooking workspace, also shown in planning. It retains the approved circle mark and labels the dish, duration and 90-minute time scale. Step scrolling leaves room for the banner; storage-failure warnings take precedence.
+
+
+## Live step estimates (#81)
+The current card leads with Estimated finish for eligible timed work. Original
+planned start remains in Step details, and the serving target stays unchanged. The
+checklist and sticky next-step footer use the same derived start/finish forecasts.
+Forecasts recalculate after progress, reopening, edits, additions/removals and clock
+refresh. Opening an editor or entering a reading still preserves drafts.
+
+Imported dishes follow source recipe order, independent of checklist rearranging.
+An unstarted, immediately actionable 15-minute roast forecasts 15 minutes from now;
+a following 10-minute cooling step forecasts another 10 minutes. Actual started
+evidence anchors the finish at start plus duration instead of restarting a timer.
+Early/late actual completion updates successors; reopening ignores the prior
+attempt's start without deleting it. Merely viewing a forecast records no activity.
+
+Explicit fixed starts and real planned waiting gaps stay constraints. An elapsed
+actual estimate requires a progress check; it neither marks completion nor restarts
+an entire duration. Unknown durations, unscheduled work, safety checkpoints and
+unresolved prerequisites do not supply a precise downstream ETA. A later checked
+step cannot bypass earlier unfinished work. Timed steps on separate dishes remain
+parallel. Templates gain no inferred physical activity durations from checkpoint gaps. Their
+existing cook/rest/hold phase estimates and checkpoint positions are reused as
+conditional timing guidance. General prep stays independent; planned-only times
+are labelled as planned.
+
+Beerometer component, styling, fields and interaction are unchanged. Its remaining
+calculation shares eligible live windows; projected/elapsed/history calculations
+remain separate. Before/after desktop/mobile meter captures for the 5/8 fixture
+were pixel-identical. No forecast fields are saved, and original task/event IDs,
+plans, actual timestamps, notes and archived histories are not rewritten. This is
+not the full resource/dependency solver in #3.
+
+
+### Template checkpoint and phase follow-up
+Template actions such as Decide whether to wrap are condition checkpoints, not
+unknown-duration activities. The card, checklist and footer say Check when ready;
+approximate checkpoint dates and explanations stay in Step details. Relevant bark,
+temperature and food-safety guidance remains concise and visible. Late real progress and
+fixed checkpoint times constrain later estimates; early check-offs do not imply a
+percentage of meat doneness or fabricate an earlier on-smoker start.
+
+The on-smoker step shows its existing duration estimate and one Estimated finish.
+Rest/hold uses the dish's existing rest allowance plus the applied hold buffer once.
+Real on-smoker/rest activity anchors the forecast; an unrecorded rest start remains
+a forecast from now after verified doneness. No phase duration is assigned to the
+placement/wrapping checkbox as a physical activity duration. Explicit activity
+duration edits keep their existing semantics. Preparation and serving milestones
+are labelled accordingly rather than as missing-duration errors. Projected and
+elapsed fields and the Beerometer appearance remain unchanged; eligible remaining
+windows use the same checkpoint/phase dates, including actual rest countdowns.
+
+A checked loading action does not consume the physical cook allowance. Shared
+remaining windows retain the cook until doneness is explicitly verified, and the
+rest/hold until serving. Legacy automatically paired start/completion records stay
+in history without being mistaken for physical anchors. New explicit physical
+starts have optional backward-compatible event metadata. The forecast itself is
+never persisted. A Sunday brisket checked rapidly to wrapping must still show a
+condition check rather than implying the meat has cooked for 80% of its allowance.
+
+### Estimates across every built-in template
+
+All seven built-in templates have authored allowances for preparation/preheating,
+physical cooking and any defined rest. Brats split the existing 135-minute cook
+into 120 minutes covered and 15 minutes draining/searing. Wings allocate 180 minutes
+smoking, 10 minutes preparing oil, 3 minutes frying and 2 minutes draining/seasoning
+within the existing 195-minute cook, followed by the existing rest allowance.
+Turkey brining/drying uses the selected refrigeration hours. Preparation estimates
+are editable app allowances, not measured historical durations. They are stored as
+derived task metadata, so adding the estimates does not move existing planned dates,
+change stored dishes or rewrite actual events/history. The shared editor explains
+the default allowance and accepts an explicit duration override.
+
+Finishing stages use their explicit duration sequence and real physical starts.
+Starting searing/frying can anchor later forecasts independently of the earlier
+loading clock. Completed loading checkboxes alone do not establish that progress.
+Doneness, thaw-readiness, wrapping and open-ended holding remain condition checks;
+no timer declares the food safe or gives an indefinite hold a made-up duration.

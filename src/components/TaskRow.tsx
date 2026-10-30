@@ -4,16 +4,23 @@ import {useEffect,useState} from "react";
 import type {PlannedTask} from "@/domain/meal";
 import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
+import {physicalPhase,physicalStartedEvent} from "@/domain/physicalPhase";
+import CookingStepSummary,{cookingTitle} from "./CookingStepSummary";
 import StepEditor from "./StepEditor";
+import StepForecastTime from "./StepForecastTime";
+import type {StepForecast} from "@/domain/cookForecast";
 import RemoveButton from "./RemoveButton";
 import {estimatedFinish,formatDuration} from "@/domain/stepTiming";
 
 type Props = {
   task: PlannedTask;
+  forecast?: StepForecast;
   index: number;
   count: number;
   isNext?: boolean;
   compact?: boolean;
+  showTimingDetails?: boolean;
+  hasServeTarget?: boolean;
   mode: "planning" | "cooking";
   completedAt?: string;
   events: CookEvent[];
@@ -24,6 +31,8 @@ type Props = {
   onEditingChange: (open:boolean)=>void;
   editorId: string;
   onEdit: (title:string, instructions:string, details?:StepPlanEdit)=>void;
+  onDurationChange?: (minutes:number|null)=>void;
+  durationDisabled?: boolean;
   onMove: (direction:"up"|"down")=>void;
   onRemove: ()=>void;
   onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string)=>void;
@@ -35,21 +44,26 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,isNext=false,compact=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
+  task,forecast,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
 }:Props) {
+  const [detailsOpen,setDetailsOpen]=useState(false);
   const [logging,setLogging]=useState(false);
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
   const [reading,setReading]=useState("");
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
   const [readingNote,setReadingNote]=useState("");
   const [error,setError]=useState("");
+  const [durationError,setDurationError]=useState("");
 
   useEffect(()=>{onReadingChange?.(logging);return ()=>onReadingChange?.(false);},[logging,onReadingChange]);
 
   const done=!!completedAt;
-  const started=latestStartedEvent(events,task.id);
+  const phase=physicalPhase(task);
+  const started=phase?physicalStartedEvent(events,task.id):latestStartedEvent(events,task.id);
+  const DetailContainer=mode==="cooking"?"details":"div";
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
+  const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
 
   const handleReading=()=>{
     const hasTemperature=reading.trim().length>0;
@@ -69,21 +83,35 @@ export default function TaskRow({
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
-        {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
-        <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt ?? undefined}>{task.scheduledAt ? formatted(task.scheduledAt) : "Timing TBD"}</time></div>
-        {(task.durationMinutes != null || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? formatDuration(task.durationMinutes) : "Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        {isCooking?<CookingStepSummary task={task} forecast={forecast}/>:<>
+        <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?formatted(task.scheduledAt):"Start time not set"}</time></div>
+        {onDurationChange && <div className="inline-step-duration">
+          <label htmlFor={editorId+'-duration'}>Estimated duration</label>
+          <div><input id={editorId+'-duration'} aria-label="Estimated duration (minutes)" type="number" inputMode="decimal" min="0" max="43200" step="any" placeholder="Unknown" value={task.durationMinutes??''} disabled={editing||durationDisabled} aria-invalid={!!durationError} aria-describedby={durationError?editorId+'-duration-error':undefined} onChange={e=>{
+            const value=e.target.value,minutes=value===''?null:Number(value);
+            if(e.target.validity.badInput||(minutes!==null&&(!Number.isFinite(minutes)||minutes<0||minutes>43200))){setDurationError('Enter 0–43200 minutes, or clear for unknown.');return;}
+            setDurationError('');onDurationChange(minutes);
+          }}/><span>min</span></div>
+          {durationError && <p id={editorId+'-duration-error'} className="form-error" role="alert">{durationError}</p>}
+        </div>}
+        {onDurationChange ? (task.timingMode==='fixed'||estimatedFinish(task)) && <p className="planned-step-details">{task.timingMode==='fixed'?'Fixed start · ':''}{estimatedFinish(task)?'Estimated finish '+formatted(estimatedFinish(task)!):'Duration unknown'}</p> : (showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        {!task.scheduledAt && (!onDurationChange||task.timingMode==='unscheduled') && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
         {(task.equipment !== task.baseEquipment || task.targetTempF != null) && <p className="planned-step-details">{[task.equipment !== task.baseEquipment ? task.equipment || "Equipment unspecified" : "", task.targetTempF != null ? "Target "+task.targetTempF+"°F (planned)" : ""].filter(Boolean).join(" · ")}</p>}
         {!!task.scheduleAdjustmentMinutes && <p className="planned-step-details">Follows adjusted dish timing</p>}
         {!compact && <p className="task-dish">{task.dishName}</p>}
-        {task.instructions && <p className="muted small">{task.instructions}</p>}
+        {visibleInstructions && !(onDurationChange&&visibleInstructions==='Imported recipe step. Confirm instructions and timing.') && <p className="muted small">{visibleInstructions}</p>}
         {task.isCondition && <span className="condition">Verify actual conditions</span>}
         {started && <p className="step-event">Started {formatted(started.occurredAt)}</p>}
         {completedAt && <p className="completed-time">✓ Completed {formatted(completedAt)}</p>}
+        </>}
       </div>
     </div>
+    {isCooking&&<div className="cooking-step-actions">{phase&&!started&&!done&&<button type="button" className="button primary" disabled={editing||logging} onClick={()=>onEvent("started")}>{phase.label}</button>}<button type="button" className="button secondary" disabled={editing} onClick={()=>{setLogging(v=>!v);setDetailsOpen(true);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button></div>}
+    <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing||logging,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
+    {isCooking&&<><summary>Step details</summary>{cookingTitle(task.title)!==task.title&&task.instructions!==task.title&&<p className="small">{task.title}</p>}<p className="small muted">{task.instructions}</p><p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}{estimatedFinish(task)?" · Planned finish "+formatted(estimatedFinish(task)!):""}</p>{forecast?.reason&&<p className="small muted">{forecast.reason}</p>}{forecast?.template?.at&&forecast.template.kind==='checkpoint'&&<p className="small muted"><StepForecastTime forecast={forecast} part="start"/></p>}<p className="small muted">{task.equipment}{task.targetTempF!=null?" · Target "+task.targetTempF+"°F (planned)":""}</p>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
     <div className="task-actions" aria-label={"Manage "+task.title}>
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={isCooking&&logging} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
-      {isCooking && <button type="button" disabled={editing} onClick={()=>{setLogging(v=>!v);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>}
+
       {!isCooking && <>
         <button type="button" onClick={()=>onMove("up")} disabled={index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
         <button type="button" onClick={()=>onMove("down")} disabled={index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
@@ -122,6 +150,7 @@ export default function TaskRow({
         </li>)}</ul>
       </details>}
     </>}
+    </DetailContainer>
     {error && <p className="form-error" role="alert">{error}</p>}
   </article>;
 }

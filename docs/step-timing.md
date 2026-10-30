@@ -14,7 +14,7 @@ Existing condition-driven safety checks remain visible.
 ## Timing rules
 
 - Default timing follows the existing dish/template or recipe plan. A general prep
-  step's default is the original time entered when it was added, or unscheduled.
+  step's default is the original time entered when it was added. If none was entered, a confirmed duration can derive its start independently from the serving target.
 - Editing the date/time creates a fixed UTC planned instant. It does not move when
   serving time or the dish's total cook/rest settings change.
 - Clear the date/time to leave the step explicitly unscheduled. This remains untimed
@@ -43,6 +43,28 @@ Existing condition-driven safety checks remain visible.
   are supported; other dishes keep their schedules. Resource planning remains #3.
 - Live Schedule always sorts by planned time, with untimed steps last. Checklist/dish
   move controls change manual ordering, not planned timestamps.
+
+## Confirmed imported durations (#78)
+
+A manually entered duration for an imported step is part of the schedule, even
+when the original recipe import left its duration unknown. Known durations work
+backward from serving time or a fixed/recorded start, and forward from a known
+previous finish. Unknown intervals break backward inference: “Cool completely”
+stays duration-unknown until the user confirms a value. Explicitly unscheduled
+steps stay unscheduled. Existing originally timed recipe cadence and #41 forward
+adjustments remain intact; fixed and recorded starts are never silently moved.
+
+Duration and calendar time are separate. A step shows “Start time not set” and
+explains whether serving time/an explicit start or missing durations are needed.
+A confirmed duration reads “Estimated 5 min”; original importer-only Timing needed
+text is not copied forward as a stale warning. Authored instructions, notes,
+equipment, event history, IDs and safety notes remain intact. Unknown imported
+stages are not automatically treated as condition-driven food-safety checks.
+
+The Beerometer accepts imported-only and independent-prep timelines without fake
+start/finish IDs. An incompletely timed window is labeled partial; a lone serving
+point with untimed work does not become a false zero-minute cook. Archived actual
+duration and recorded timeline snapshots remain unchanged.
 
 ## Dates and timezones
 
@@ -117,3 +139,34 @@ entry points, edits, cancellations, persistence and desktop/mobile DST controls.
 Automated checks cover template/imported chains, gaps, hidden steps, manual order,
 unknown boundaries, date-only edits, multiple dishes, invalid durations, unit conversion,
 fixed/recorded anchors, overnight/DST elapsed time, archive/backup/repeat and screenshots.
+
+
+### Imported duration controls
+In planning, edit Estimated duration directly on an imported step (minutes).
+Changes apply immediately, including clearing to unknown or setting a zero-minute
+milestone, and save through the existing guest/account rules. The full Edit form
+shows the same effective duration; it remains the place for fixed starts and reset.
+Dish settings no longer contains a second duration editor. Changing only duration
+preserves title/instructions (including long imported text), equipment/targets,
+fixed/recorded planned positions, notes, events and independent dishes.
+
+When imported dates are incomplete, derived recipe-order metadata keeps the recipe
+sequence in its own checklist/schedule slots, including Serve last. Other dishes
+retain their relative order. Dates are neither invented nor changed to achieve
+that display order; fully timed plans still use chronological ordering. Manual
+checklist moves remain separate from the derived schedule.
+
+
+### Recipe-preview time extraction
+New text/file imports extract explicit time quantities (including fractional,
+compound hour/minute and range expressions) before adding. Preview shows the
+recipe's range and uses its longer value as an editable, disclosed planning default.
+Adding confirms the reviewed values as source recipe durations, using existing
+schedule anchors. Later edits retain the existing #41 duration-adjustment policy.
+
+Every/after/at checks are not extra physical durations. A standalone reminder is
+kept with the preceding action; ambiguous separate time phrases stay unknown.
+Untimed cooling and overnight prose remain unknown. Original text and complete
+instructions are retained in optional backwards-compatible fields; no existing
+cook is automatically reparsed or rescheduled. Accounts, guests, history and backup
+behavior remain unchanged.

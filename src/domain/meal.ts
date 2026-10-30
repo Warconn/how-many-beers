@@ -4,6 +4,7 @@ export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "win
 export type RecipeStep = {
   id: string;
   title: string;
+  instructions?: string;
   minutes: number | null; // null: unscheduled until user confirms timing
 };
 
@@ -17,6 +18,7 @@ export type Dish = {
   pitTempF?: number;
   weightLb?: number;
   steps?: RecipeStep[];
+  recipeSource?: string; // Original uploaded/pasted text, retained as reference.
   brisketPlan?: BrisketPlan;
   turkeyPrep?: {state:"frozen"|"thawing"|"thawed";thawDays:number;brineHours:number;dryHours:number};
 };
@@ -33,7 +35,9 @@ export type Meal = {
   startedAt?: string;
 };
 
+export type TemplateStage={kind:'preparation'|'cook'|'rest'|'activity';minutes:number;after?:string;startLabel?:string};
 export type PlannedTask = {
+  templateStage?: TemplateStage; // Derived estimate; never copied into a dish or an actual event.
   id: string;
   dishId: string;
   dishName: string;
@@ -50,6 +54,7 @@ export type PlannedTask = {
   baseEquipment?: string;
   recordedPlanAt?: string | null;
   scheduleAdjustmentMinutes?: number; // Derived, never a fixed-time override.
+  recipeOrder?: number; // Derived source order for imported work with incomplete dates.
 };
 
 export const presets: Record<Exclude<PresetId, "custom">, { label: string; equipment: string; cookMinutes: number; restMinutes: number; notice: string; pitTempF?: number; cookRangeMinutes?: [number,number]; referenceWeightLb?: number; sources?: {title:string;url:string}[] }> = {

@@ -29,12 +29,12 @@ These desktop and mobile screenshots show the current dev workspace, including t
 ## What works today
 
 - **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
-- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. Timings remain editable; see [method notes](docs/personal-templates.md).
-- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Text import is basic and may need review.
+- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
+- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Estimated durations remain editable directly on imported steps.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
-- **Guided Cooking Mode.** Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
+- **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
-- **The Beerometer.** A prominent banner stays visible through planning and cooking, showing the selected dish’s cook duration in beers and hours. The playful time scale is explicit: one beer equals 90 minutes.
+- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, zero once all steps are checked, and separate total/elapsed/actual readings.
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 
@@ -43,6 +43,8 @@ These desktop and mobile screenshots show the current dev workspace, including t
 The account feature preview supports one saved active/planning cook, completed history and retrieval on another device. It is opt-in and requires the dev setup below; production/default builds retain existing browser-backed saving until rollout. In account-enabled builds, new guests can try planning and cooking without persistent saves. Optional earlier-cook import/backup tools live in Account → Earlier cooks. Sign-in opens account cooks directly.
 
 Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
+
+Empty plans ask **What do you want to cook?** with template and recipe-upload choices. Serving time stays editable; the schedule and cooking controls appear once there are steps.
 
 ## Run it locally
 
@@ -79,13 +81,17 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The immediate coding sequence is **#50 Home cleanup → #19 free account foundation → #20 initial account-backed cooks/history**. The Home implementation is merged into dev for final QA. QA/reliability, timing validation and branding verification run alongside account work. Timers, URL import, deeper scheduling and advanced sync remain **Next**, with their order chosen separately. See [the detailed work queue](docs/work-queue.md) and [agent guidance](AGENTS.md).
+The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. Broader #77 equipment/temperature and ingredient-structure work remains separate.
 
 ## Account foundation work
 
 The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has confirmed live dev email-link sign-in; code-only delivery needs the Supabase template update, and hosted cloud-save/two-account QA remains pending.
 
 See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature is merged into dev and has not been released to production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs, including automatic access for future `feat/*` previews.
+
+
+Brisket planning now puts the recommended start first; open **Timing details** for
+profile settings, buffers, evidence and limitations. Applying remains explicit.
 
 ## Documentation
 
@@ -99,3 +105,5 @@ See [account setup and security gates](docs/account-foundation.md) and [account 
 - [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
 
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
+
+Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Record meaningful physical starts with **On smoker now**, **Begin rest now**, or the imported cooking phase action; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.

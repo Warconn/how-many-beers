@@ -58,6 +58,7 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
         setLocalTime(e.target.value);setTimingMode(e.target.value ? 'fixed' : 'unscheduled');setOffsetChoice('');setError('');
       }}/></label>
       <div className="duration-controls">
+        {task.templateStage&&task.durationMinutes==null&&<p className="muted small">Template estimate: {formatDuration(task.templateStage.minutes)}. Enter a duration to override this allowance.</p>}
         <label>Estimated duration ({durationUnit})<input type="number" min="0" max={durationUnit==='hours'?720:43200} step="any" value={duration} placeholder="Unknown" onChange={e => setDuration(e.target.value)}/></label>
         <label>Duration unit<select aria-label="Duration unit" value={durationUnit} onChange={e=>{
           const next=e.target.value as 'minutes'|'hours';
@@ -73,7 +74,7 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
       <option value="">Choose which occurrence</option>{candidates.map((iso, i) => <option value={iso} key={iso}>{offsetLabel(iso, zone)} ({i === 0 ? 'first' : 'second'} occurrence)</option>)}
     </select></label>}
     {end && <p className="step-finish">Estimated finish: {new Date(end).toLocaleString()} ({formatDuration(durationMinutes!)})</p>}
-    <p className="muted small">Longer durations move following timed steps in this dish when needed. Fixed or recorded steps stay anchored; check schedule warnings. Untimed and general prep steps have no automatic links. Condition checks still require actual verification.</p>
+    <p className="muted small">Longer durations move following timed steps in this dish when needed. Fixed or recorded steps stay anchored; check schedule warnings. For imported recipes, confirmed durations derive from serving time or a fixed start; missing intervals break automatic links. General prep stays independent. Condition checks still require actual verification.</p>
     <div className="step-field-grid">
       <label>Equipment for this step<input value={equipment} maxLength={80} placeholder={task.baseEquipment || 'Optional'} onChange={e => setEquipment(e.target.value)}/></label>
       <label>Target food temperature (°F)<input type="number" min="1" max="600" step="any" placeholder="Optional" value={target} onChange={e => setTarget(e.target.value)}/></label>
