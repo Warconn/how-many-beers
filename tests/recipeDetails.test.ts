@@ -50,3 +50,7 @@ it('applies reviewed temperatures to editable step copy while preserving origina
  const dish=parseRecipeText('Chicken',source),step=reviewRecipeTemperature(dish.steps![0],0,{value:180,unit:'C',kind:'equipment'});
  expect(step.instructions).toBe('Roast at 180°C until internal temperature reaches 74°C.');expect(step.title).toContain('180°C');expect(step.recipeTemperatures?.[1].value).toBe(74);expect(dish.recipeSource).toBe(source);
 });
+it('preserves decimal ingredient quantities while removing actual numbered list markers',()=>{
+ const d=parseRecipeText('Seeds','Ingredients:\n1.5 cups seeds\n0.25 tsp salt\n1/2 tsp paprika\n1. 2 tsp oil\nInstructions:\nMix seeds.');
+ expect(d.recipeIngredients).toEqual(['1.5 cups seeds','0.25 tsp salt','1/2 tsp paprika','2 tsp oil']);
+});

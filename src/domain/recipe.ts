@@ -93,7 +93,7 @@ export function parseRecipeText(name:string,text:string):Dish{
   if(line===sourceTitle||line.toLowerCase()===name.trim().toLowerCase())continue;
   if(instructionHeading.test(line)){inInstructions=true;section='';continue;}
   if(referenceHeading.test(line)){inInstructions=false;section=line;continue;}
-  if(!inInstructions){if(/^ingredients?/i.test(section))recipeIngredients.push(line.replace(/^(?:[-*•]|\d+[.)])\s*/,''));else references.push(line);continue;}
+  if(!inInstructions){if(/^ingredients?/i.test(section))recipeIngredients.push(line.replace(/^(?:[-*•]\s*|\d+[.)]\s+)/,''));else references.push(line);continue;}
   if(!inInstructions||/^(?:prep(?:aration)?|cook(?:ing)?|total|rest(?:ing)?)\s*time\s*:/i.test(line))continue;
   const instruction=line.replace(/^(?:\d+[.)]|[-*•])\s*/, '');
   if(instruction.length<3)continue;
