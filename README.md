@@ -30,7 +30,7 @@ These desktop and mobile screenshots show the current dev workspace, including t
 
 - **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
 - **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. Timings remain editable; see [method notes](docs/personal-templates.md).
-- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Text import is basic and may need review. Set estimated durations directly on the imported steps; the timeline and Beerometer update as you enter them.
+- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Estimated durations remain editable directly on imported steps.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed #57/#56/#55/#59/#60 batch is merged into **dev**. The current owner-directed follow-up is **uploaded-recipe timing UX**, following #78/#79: edit estimated durations directly on steps and keep untimed recipes in recipe order with Serve last. Account foundation, initial cloud saving/history and CI optimization (#19/#20/#54) are complete. Recipe extraction improvements (#77) remain separate Next work.
+The reviewed #57/#56/#55/#59/#60 batch is merged into **dev**. The current owner-directed follow-up is **uploaded-recipe timing UX**, following #78/#79: edit estimated durations directly on steps and keep untimed recipes in recipe order with Serve last. Account foundation, initial cloud saving/history and CI optimization (#19/#20/#54) are complete. Basic explicit-time extraction and an editable import preview are now included in the owner-directed follow-up. Broader #77 equipment/temperature and ingredient-structure work remains separate.
 
 ## Account foundation work
 

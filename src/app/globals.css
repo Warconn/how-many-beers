@@ -577,3 +577,16 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .inline-step-duration span{font-size:12px;color:var(--muted)}
 .inline-step-duration .form-error{flex-basis:100%}
 .import-timing-help{padding:4px 0 12px;margin:10px 0 0;line-height:1.6}
+
+.recipe-preview{padding-top:16px}.recipe-preview h3{scroll-margin-top:155px;font-size:22px;margin:8px 0}
+.recipe-preview-summary{font-weight:700;color:var(--accent-dark)}
+.recipe-preview-steps{padding-left:26px;margin:18px 0}.recipe-preview-steps>li{padding:15px 0;border-top:1px solid var(--line)}
+.recipe-preview-copy strong{font-size:14px;line-height:1.5}.recipe-time-source{font-size:12px;color:var(--accent-dark);line-height:1.5;margin:7px 0}
+.recipe-preview-duration{display:block;margin-top:10px;font-size:12px;font-weight:650}.recipe-preview-duration>div{display:flex;align-items:center;gap:8px;margin-top:5px}
+.recipe-preview-duration input{width:112px;min-height:44px;font-size:16px}.recipe-preview-duration span{font-weight:400;color:var(--muted)}
+.recipe-original{margin-top:14px}.recipe-original summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;font-weight:650}
+.recipe-original pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:12px;line-height:1.6;max-height:320px;overflow:auto}
+.recipe-preview-actions{display:flex;flex-wrap:wrap;gap:10px}.recipe-preview-actions .button{min-height:48px}
+@media(max-width:600px){.recipe-preview-actions{flex-direction:column}.recipe-preview-actions .button{width:100%;margin-top:0}}
+.recipe-preview-add{margin:4px 0 16px;min-height:48px}
+@media(max-width:600px){.recipe-preview-add{width:100%}}

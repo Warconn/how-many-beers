@@ -4,6 +4,7 @@ export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "win
 export type RecipeStep = {
   id: string;
   title: string;
+  instructions?: string;
   minutes: number | null; // null: unscheduled until user confirms timing
 };
 
@@ -17,6 +18,7 @@ export type Dish = {
   pitTempF?: number;
   weightLb?: number;
   steps?: RecipeStep[];
+  recipeSource?: string; // Original uploaded/pasted text, retained as reference.
   brisketPlan?: BrisketPlan;
   turkeyPrep?: {state:"frozen"|"thawing"|"thawed";thawDays:number;brineHours:number;dryHours:number};
 };

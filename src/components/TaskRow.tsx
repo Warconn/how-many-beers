@@ -55,6 +55,7 @@ export default function TaskRow({
   const started=latestStartedEvent(events,task.id);
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
+  const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
 
   const handleReading=()=>{
     const hasTemperature=reading.trim().length>0;
@@ -90,7 +91,7 @@ export default function TaskRow({
         {(task.equipment !== task.baseEquipment || task.targetTempF != null) && <p className="planned-step-details">{[task.equipment !== task.baseEquipment ? task.equipment || "Equipment unspecified" : "", task.targetTempF != null ? "Target "+task.targetTempF+"°F (planned)" : ""].filter(Boolean).join(" · ")}</p>}
         {!!task.scheduleAdjustmentMinutes && <p className="planned-step-details">Follows adjusted dish timing</p>}
         {!compact && <p className="task-dish">{task.dishName}</p>}
-        {task.instructions && !(onDurationChange&&task.instructions==='Imported recipe step. Confirm instructions and timing.') && <p className="muted small">{task.instructions}</p>}
+        {visibleInstructions && !(onDurationChange&&visibleInstructions==='Imported recipe step. Confirm instructions and timing.') && <p className="muted small">{visibleInstructions}</p>}
         {task.isCondition && <span className="condition">Verify actual conditions</span>}
         {started && <p className="step-event">Started {formatted(started.occurredAt)}</p>}
         {completedAt && <p className="completed-time">✓ Completed {formatted(completedAt)}</p>}

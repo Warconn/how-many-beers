@@ -155,3 +155,18 @@ sequence in its own checklist/schedule slots, including Serve last. Other dishes
 retain their relative order. Dates are neither invented nor changed to achieve
 that display order; fully timed plans still use chronological ordering. Manual
 checklist moves remain separate from the derived schedule.
+
+
+### Recipe-preview time extraction
+New text/file imports extract explicit time quantities (including fractional,
+compound hour/minute and range expressions) before adding. Preview shows the
+recipe's range and uses its longer value as an editable, disclosed planning default.
+Adding confirms the reviewed values as source recipe durations, using existing
+schedule anchors. Later edits retain the existing #41 duration-adjustment policy.
+
+Every/after/at checks are not extra physical durations. A standalone reminder is
+kept with the preceding action; ambiguous separate time phrases stay unknown.
+Untimed cooling and overnight prose remain unknown. Original text and complete
+instructions are retained in optional backwards-compatible fields; no existing
+cook is automatically reparsed or rescheduled. Accounts, guests, history and backup
+behavior remain unchanged.

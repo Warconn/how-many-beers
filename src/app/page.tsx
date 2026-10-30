@@ -14,6 +14,7 @@ import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
 import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
 import TaskRow from "@/components/TaskRow";
+import RecipePreview from "@/components/RecipePreview";
 import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
@@ -565,11 +566,12 @@ function CookExperience() {
                 ))}
               </div>
               </> : <div className="recipe-import-inline">
-                <p className="muted small">Paste instructions or upload a text file. Recipe URLs aren't supported yet.</p>
+                {!draft ? <>
+                <p className="muted small">Paste instructions or upload a text file. We'll find written times for you to review. Recipe URLs aren't supported yet.</p>
                 <label htmlFor="recipe-name">Recipe title</label>
                 <input id="recipe-name" value={recipeName} onChange={e=>setRecipeName(e.target.value)} placeholder="Grandma's mac & cheese"/>
                 <label htmlFor="recipe-text">Recipe instructions</label>
-                <textarea id="recipe-text" rows={5} value={recipeText} onChange={e=>setRecipeText(e.target.value)} placeholder={"1. Preheat oven\\n2. Prepare ingredients\\n3. Cook until done"}/>
+                <textarea id="recipe-text" rows={5} value={recipeText} onChange={e=>setRecipeText(e.target.value)} placeholder={"1. Preheat oven (10 minutes)\n2. Prepare ingredients (5 minutes)\n3. Roast for 20–25 minutes"}/>
                 <label htmlFor="recipe-file">Upload .txt or .md</label>
                 <input id="recipe-file" type="file" accept=".txt,.md,text/plain,text/markdown" onChange={e=>void onTextFile(e.target.files?.[0])}/>
                 <button className="button secondary" type="button" disabled={!recipeText.trim()} onClick={()=>{
@@ -577,15 +579,10 @@ function CookExperience() {
                   if(!parsed.steps?.length){setMessage("No recipe steps found. Try one instruction per line.");return;}
                   setDraft(parsed);setMessage("");
                 }}>Preview recipe steps</button>
-                {draft && <div className="draft">
-                  <strong>Review {draft.steps?.length} imported steps</strong>
-                  <p className="muted small">Each non-empty line becomes a step. Confirm timings after adding.</p>
-                  <ol>{draft.steps?.map(step=><li key={step.id}>{step.title}</li>)}</ol>
-                  <button className="button primary" type="button" onClick={()=>{
-                    patch(m=>({...m,dishes:[...m.dishes,draft]}));
-                    setShowDishSetup(false);setEditingDishId(draft.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+draft.id)?.focus());setDraft(null);setRecipeName("");setRecipeText("");setMessage("");
-                  }}>Add to this cook</button>
-                </div>}
+                </> : <RecipePreview dish={draft} onChange={setDraft} onBack={()=>{setRecipeName(draft.name);setDraft(null);setMessage('');}} onAdd={()=>{
+                  patch(m=>({...m,dishes:[...m.dishes,draft]}));
+                  setShowDishSetup(false);setEditingDishId(draft.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+draft.id)?.focus());setDraft(null);setRecipeName("");setRecipeText("");setMessage("");
+                }}/>}
                 {message && <p className="notice" role="status">{message}</p>}
               </div>}
             </section>}
@@ -656,6 +653,7 @@ function CookExperience() {
                     </div>
                   )}
 
+                  {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
                   </details>
                   {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Use Edit for a fixed start or other step details.</p>}
                   <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>

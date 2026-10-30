@@ -112,7 +112,7 @@ function importedTasks(d:Dish,serveAt:string,context:ImportedTimingContext={}):P
     const minutes=edit?.durationMinutes===null?null:step.minutes===null && edit?.durationMinutes!==undefined?edit.durationMinutes:step.minutes;
     return {id:d.id+':'+step.id,dishId:d.id,dishName:d.name,title:step.title,
       durationMinutes:minutes,baseDurationMinutes:step.minutes,recipeOrder:index,
-      instructions:'Imported recipe step. Confirm instructions and timing.',scheduledAt:null,isCondition:false};
+      instructions:step.instructions??'Imported recipe step. Confirm instructions and timing.',scheduledAt:null,isCondition:false};
   });
   if(!context.hidden?.has(d.id+':serve'))tasks.push({id:d.id+':serve',dishId:d.id,dishName:d.name,title:'Serve',recipeOrder:source.length,durationMinutes:null,instructions:'Confirm safe doneness and plate.',scheduledAt:at(serveAt,0),isCondition:false});
   const finite=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
