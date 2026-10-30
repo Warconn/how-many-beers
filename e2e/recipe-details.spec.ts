@@ -21,6 +21,7 @@ for(const input of ['paste','md','txt'])test(input+' retains editable recipe det
  await page.screenshot({path:info.outputPath('recipe-details-review.png'),fullPage:true,scale:'css'});
  await preview.getByRole('button',{name:'Add to this cook',exact:true}).click();
  await expect(page.getByRole('region',{name:'Smoky BBQ Pumpkin Seeds steps'}).getByRole('article')).toHaveCount(7);
+ await expect(page.getByRole('region',{name:'Smoky BBQ Pumpkin Seeds steps'})).toContainText('Preheat pellet smoker to 450°F');
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
  await page.getByRole('button',{name:'Edit Smoky BBQ Pumpkin Seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
  await expect(page.getByLabel('Equipment',{exact:true})).toHaveValue('Backyard pellet smoker');

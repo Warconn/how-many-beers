@@ -57,6 +57,19 @@ export function extractRecipeTemperatures(text:string):RecipeTemperature[]{
  }
  return result;
 }
+/** Keep the reviewed instruction consistent when its authored value is unique.
+ * Ambiguous/repeated narrative is retained for manual instruction review. */
+export function reviewRecipeTemperature(step:RecipeStep,index:number,next:RecipeTemperature|null):RecipeStep{
+ const previous=step.recipeTemperatures?.[index];
+ const replace=(text:string)=>{
+  if(!previous||!next)return text;
+  const matches=[...text.matchAll(/(?<![\d.−-])(\d+(?:\.\d+)?)\s*°?\s*([FC])\b/gi)].filter(m=>Number(m[1])===previous.value&&m[2].toUpperCase()===previous.unit);
+  if(matches.length!==1)return text;
+  const match=matches[0];return text.slice(0,match.index)+next.value+'°'+next.unit+text.slice(match.index!+match[0].length);
+ };
+ return {...step,title:replace(step.title),instructions:step.instructions===undefined?undefined:replace(step.instructions),
+  recipeTemperatures:next?step.recipeTemperatures?.map((t,i)=>i===index?next:t):step.recipeTemperatures?.filter((_,i)=>i!==index)};
+}
 export const temperatureF=(t:RecipeTemperature)=>Math.round((t.unit==='C'?t.value*9/5+32:t.value)*10)/10;
 function recipeEquipment(text:string){
  const match=text.match(/\b(pellet\s+smoker|pellet\s+grill|smoker|oven|grill|air\s+fryer|slow\s+cooker|stovetop)\b/i);

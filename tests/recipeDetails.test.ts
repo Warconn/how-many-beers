@@ -44,3 +44,9 @@ it('does not label an oven reaching its setting or meat roasting at a setting as
  const oven=parseRecipeText('','Heat oven until it reaches 425°F.');expect(oven.steps![0].recipeTemperatures?.[0].kind).not.toBe('food');
  const meat=parseRecipeText('','Roast meat at 200°C for 1 hour.');expect(meat.steps![0].recipeTemperatures?.[0].kind).toBe('equipment');
 });
+it('applies reviewed temperatures to editable step copy while preserving original source',async()=>{
+ const {reviewRecipeTemperature}=await import('../src/domain/recipe');
+ const source='Roast at 200°C until internal temperature reaches 74°C.';
+ const dish=parseRecipeText('Chicken',source),step=reviewRecipeTemperature(dish.steps![0],0,{value:180,unit:'C',kind:'equipment'});
+ expect(step.instructions).toBe('Roast at 180°C until internal temperature reaches 74°C.');expect(step.title).toContain('180°C');expect(step.recipeTemperatures?.[1].value).toBe(74);expect(dish.recipeSource).toBe(source);
+});

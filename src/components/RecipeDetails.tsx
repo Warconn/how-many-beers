@@ -2,13 +2,13 @@
 import {useId} from 'react';
 import styles from './RecipeDetails.module.css';
 import type {Dish,RecipeTemperature} from '@/domain/meal';
-import {temperatureF} from '@/domain/recipe';
+import {temperatureF,reviewRecipeTemperature} from '@/domain/recipe';
 
 /** Shared review/reference editor. Edits never reparse or replace original text. */
 export default function RecipeDetails({dish,onChange,includeEquipment=false}:{dish:Dish;onChange:(dish:Dish)=>void;includeEquipment?:boolean}){
  const id=useId();
  const changeTemperature=(stepId:string,index:number,temperature:RecipeTemperature|null)=>{
-  const steps=dish.steps?.map(s=>s.id===stepId?{...s,recipeTemperatures:temperature?s.recipeTemperatures?.map((t,i)=>i===index?temperature:t):s.recipeTemperatures?.filter((_,i)=>i!==index)}:s);
+  const steps=dish.steps?.map(s=>s.id===stepId?reviewRecipeTemperature(s,index,temperature):s);
   const setting=steps?.flatMap(s=>s.recipeTemperatures??[]).find(t=>t.kind==='equipment');
   const hadSetting=dish.steps?.some(s=>s.recipeTemperatures?.some(t=>t.kind==='equipment'));
   onChange({...dish,steps,pitTempF:setting?temperatureF(setting):hadSetting?undefined:dish.pitTempF});
