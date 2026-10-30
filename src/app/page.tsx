@@ -17,6 +17,7 @@ import {cookingTitle} from "@/components/CookingStepSummary";
 import TaskRow from "@/components/TaskRow";
 import {physicalPhase} from "@/domain/physicalPhase";
 import StepForecastTime from "@/components/StepForecastTime";
+import {cookProjection} from "@/domain/cookProjection";
 import {liveStepForecasts} from "@/domain/cookForecast";
 import RecipePreview from "@/components/RecipePreview";
 import RemoveButton from "@/components/RemoveButton";
@@ -158,6 +159,7 @@ function CookExperience() {
   },[editingStep,newStepDishId,cookReadingOpen,addStepDraftOpen,showFinish,outcome,showDishSetup,addMethod,recipeText]);
 
   const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
+  const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
   const forecasts=useMemo(()=>meal?liveStepForecasts(meal,timeline,clockNow):{},[meal,timeline,clockNow]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
   const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal)] : [], [meal]);
@@ -483,7 +485,7 @@ function CookExperience() {
             <button className="back-link finish-cook-trigger" type="button" disabled={cookingDraftOpen || (!timeline.length && !meal.dishes.length)} onClick={openFinishCook}>Finish cook</button>
           </nav>
           <section className="cook-header">
-            <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
+            <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">{projection?.finish?<><strong>Estimated finish </strong><time aria-label="Cook estimated finish" dateTime={projection.finish}>{when(projection.finish)}</time>{projection.provisional?" · Provisional":""}</>:"Estimated finish unavailable"}</p><p className="cook-target">Original target {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
             <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
           </section>
           <BeerEstimator meal={meal} timeline={timeline}/>
@@ -566,7 +568,7 @@ function CookExperience() {
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
               <div className="template-picker">
                 {(Object.entries(presets) as [BuiltIn, (typeof presets)[BuiltIn]][]).map(([id, template])=>(
-                  <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>{const dish=createDish(id);patch(m=>({...m,dishes:[...m.dishes,dish]}));setShowDishSetup(false);setEditingDishId(dish.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+dish.id)?.focus())}}>
+                  <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>{const dish=createDish(id);patch(m=>({...m,dishes:[...m.dishes,m.mode==="cooking"?{...dish,executionAddedAt:new Date().toISOString()}:dish]}));setShowDishSetup(false);setEditingDishId(dish.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+dish.id)?.focus())}}>
                     <strong>{template.label}</strong><span>{template.equipment}</span><b aria-hidden="true">+</b>
                   </button>
                 ))}
@@ -586,7 +588,7 @@ function CookExperience() {
                   setDraft(parsed);setMessage("");
                 }}>Preview recipe steps</button>
                 </> : <RecipePreview dish={draft} onChange={setDraft} onBack={()=>{setRecipeName(draft.name);setDraft(null);setMessage('');}} onAdd={()=>{
-                  patch(m=>({...m,dishes:[...m.dishes,draft]}));
+                  patch(m=>({...m,dishes:[...m.dishes,m.mode==="cooking"?{...draft,executionAddedAt:new Date().toISOString()}:draft]}));
                   setShowDishSetup(false);setEditingDishId(draft.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+draft.id)?.focus());setDraft(null);setRecipeName("");setRecipeText("");setMessage("");
                 }}/>}
                 {message && <p className="notice" role="status">{message}</p>}

@@ -9,6 +9,7 @@ export type RecipeStep = {
 };
 
 export type Dish = {
+  executionAddedAt?: string; // Creation during an active session; never a physical start.
   id: string;
   name: string;
   preset: PresetId;
@@ -37,6 +38,7 @@ export type Meal = {
 
 export type TemplateStage={kind:'preparation'|'cook'|'rest'|'activity';minutes:number;after?:string;startLabel?:string};
 export type PlannedTask = {
+  executionAddedAt?: string;
   templateStage?: TemplateStage; // Derived estimate; never copied into a dish or an actual event.
   id: string;
   dishId: string;

@@ -166,3 +166,36 @@ Starting searing/frying can anchor later forecasts independently of the earlier
 loading clock. Completed loading checkboxes alone do not establish that progress.
 Doneness, thaw-readiness, wrapping and open-ended holding remain condition checks;
 no timer declares the food safe or gives an indefinite hold a made-up duration.
+
+## Session-based execution forecast (#86)
+
+Planning remains target-based. Starting a cook records the session start and derives
+an execution forecast from eligible remaining work. The original target and original
+planned times remain comparison data; an ordinary Sunday target is not a mandatory
+wait when the cook starts Thursday. A labelled overall Estimated finish appears
+beside the original target, with Provisional when conditional/template evidence
+requires it, or unavailable when timing cannot be predicted responsibly.
+
+Current/upcoming forecasts and Beerometer remaining/projected/elapsed readings share
+one execution projection. Projected duration equals elapsed plus credible remaining
+work across parallel dishes. Unstarted forecast positions stay anchored to the session
+or their ready/reopened/creation time, not a new fake start on each clock tick. A real
+physical start supersedes its forecast. No calculation creates a Started event or
+marks food ready. Overruns require a progress check; unknown timings and conflicting
+fixed prerequisites cannot claim a precise finish. Completing prep early or a phase
+late recomputes eligible successors; conditions still require actual checks.
+
+Explicit fixed dates and real thaw/brine/drying/rest intervals remain constraints.
+Existing overlaps between timed preparation activities are retained. Idle calendar
+space created by the backward plan, a fixed predecessor or recorded planned position
+is not an extra cooking interval. Removing work removes its allowance, including
+finishing stages before an implicit rest. Independent new work added during cooking
+receives an optional `executionAddedAt` JSON timestamp so its hypothetical origin
+survives reload without being confused with a physical start. Cook Again removes
+that prior-session creation anchor. No SQL migration is needed.
+
+The Beerometer component, CSS, layout and visible fields are unchanged. Desktop and
+iPhone/WebKit tests compare its actual screenshot buffers for identical work with
+near versus distant original targets. Before/after desktop/mobile reproduction
+captures show the 62h17m/41.5-beer calendar-gap bug replaced by the actual 16h55m
+brisket allowances. Frozen completed-cook actuals remain unchanged.
