@@ -89,6 +89,7 @@ test('ready updates never reload a cook automatically and protect open forms',as
 test('an unsaved custom-step draft also blocks app updates until cancelled',async({page,request})=>{
  await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
   await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await page.getByText('Cook details & tools',{exact:true}).click();
  await page.getByRole('button',{name:/Add a checklist step/}).click();await page.getByLabel('Step title',{exact:true}).fill('Do not discard my sauce step');
  await request.post('/__test__/worker-mode?mode=custom-draft');await page.evaluate(async()=>{await (await navigator.serviceWorker.getRegistration())!.update();});
  await expect(page.getByRole('button',{name:'Update app',exact:true})).toBeHidden();
