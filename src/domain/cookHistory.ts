@@ -100,8 +100,8 @@ export function repeatArchivedCook(entry:ArchivedCook): ExtendedMeal {
   return {
     ...base,
     name:entry.meal.name,
-    dishes:previous.dishes.map(d=>({...d,id:dishIds.get(d.id)!})),
-    customTasks:(previous.customTasks??[]).map(t=>({...t,scheduledAt:shiftTime(t.scheduledAt)??null,id:translate(t.id),dishId:dishIds.get(t.dishId)??t.dishId})),
+    dishes:previous.dishes.map(d=>({...d,id:dishIds.get(d.id)!,executionAddedAt:undefined})),
+    customTasks:(previous.customTasks??[]).map(t=>({...t,executionAddedAt:undefined,scheduledAt:shiftTime(t.scheduledAt)??null,id:translate(t.id),dishId:dishIds.get(t.dishId)??t.dishId})),
     taskOverrides:overrides,
     hiddenTaskIds:(previous.hiddenTaskIds??[]).map(translate),
     taskOrder:(previous.taskOrder??[]).map(translate),

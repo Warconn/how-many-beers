@@ -5,10 +5,10 @@ import {cookTimeline,recordEvent,editStep,setStepDuration,type ExtendedMeal} fro
 import {liveStepForecasts} from '../src/domain/cookForecast';
 import {remainingCook} from '../src/domain/cookDuration';
 const now=Date.parse('2026-10-29T21:04Z');
-function fixture():ExtendedMeal{
+function fixture(start='2026-10-29T21:00Z',completed='2026-10-29T21:04Z'):ExtendedMeal{
  const d=parseRecipeText('Pumpkin seeds','Preheat (10 minutes)\nClean (5 minutes)\nDry (10 minutes)\nMix (5 minutes)\nCoat (10 minutes)\nRoast (15 minutes)\nCool (10 minutes)');
- let m:ExtendedMeal={...newMeal(),dishes:[d],serveAt:'2026-10-29T22:00Z',mode:'cooking',startedAt:'2026-10-29T21:00Z'};
- for(const s of d.steps!.slice(0,5))m=recordEvent(m,d.id+':'+s.id,'completed','2026-10-29T21:03Z');return m;
+ let m:ExtendedMeal={...newMeal(),dishes:[d],serveAt:'2026-10-29T22:00Z',mode:'cooking',startedAt:start};
+ for(const s of d.steps!.slice(0,5))m=recordEvent(m,d.id+':'+s.id,'completed',completed);return m;
 }
 const stage=(m:ExtendedMeal,index:number)=>cookTimeline(m).find(t=>t.id===m.dishes[0].id+':'+m.dishes[0].steps![index].id)!;
 const forecast=(m:ExtendedMeal,time=now)=>liveStepForecasts(m,cookTimeline(m),time);
@@ -18,8 +18,8 @@ describe('live step forecasts',()=>{
   const f=forecast(m);expect(f[roast.id]).toMatchObject({start:'2026-10-29T21:04:00.000Z',finish:'2026-10-29T21:19:00.000Z',status:'estimated'});expect(f[cool.id]).toMatchObject({start:'2026-10-29T21:19:00.000Z',finish:'2026-10-29T21:29:00.000Z'});
   expect(remainingCook(m,cookTimeline(m),now).minutes).toBe(25);expect(JSON.stringify(m)).toBe(before);expect(stage(m,5).scheduledAt).toBe('2026-10-29T21:35:00.000Z');
  });
- it('moves an unstarted forecast with now, while actual starts anchor countdown through reload',()=>{
-  let m=fixture();const roast=stage(m,5);expect(forecast(m,now+120000)[roast.id].finish).toBe('2026-10-29T21:21:00.000Z');
+ it('anchors an unstarted forecast to its ready time without inventing an actual start',()=>{
+  let m=fixture();const roast=stage(m,5);expect(forecast(m,now+120000)[roast.id].finish).toBe('2026-10-29T21:19:00.000Z');
   m=recordEvent(m,roast.id,'started','2026-10-29T21:04Z');expect(forecast(m,now+300000)[roast.id].finish).toBe('2026-10-29T21:19:00.000Z');expect(remainingCook(m,cookTimeline(m),now+300000).minutes).toBe(20);
   expect(forecast(JSON.parse(JSON.stringify(m)),now+300000)).toEqual(forecast(m,now+300000));
  });
@@ -49,14 +49,14 @@ describe('live step forecasts',()=>{
   }
  });
  it('preserves parallel dishes, recipe order independent of checklist moves, and midnight boundaries',()=>{
-  const m=fixture();const other=parseRecipeText('Sauce','Simmer for 30 minutes');m.dishes.push(other);m.taskOrder=cookTimeline(m).map(t=>t.id).reverse();
+  const m=fixture();const other=parseRecipeText('Sauce','Simmer for 30 minutes');other.executionAddedAt=new Date(now).toISOString();m.dishes.push(other);m.taskOrder=cookTimeline(m).map(t=>t.id).reverse();
   const f=forecast(m);expect(f[stage(m,5).id].finish).toBe('2026-10-29T21:19:00.000Z');expect(f[other.id+':'+other.steps![0].id].finish).toBe('2026-10-29T21:34:00.000Z');expect(remainingCook(m,cookTimeline(m),now).minutes).toBe(30);
-  expect(forecast(m,Date.parse('2026-10-29T23:55Z'))[stage(m,6).id].finish).toBe('2026-10-30T00:20:00.000Z');
+  const late=fixture('2026-10-29T23:55Z','2026-10-29T23:55Z');expect(forecast(late,Date.parse('2026-10-29T23:55Z'))[stage(late,6).id].finish).toBe('2026-10-30T00:20:00.000Z');
  });
- it('only derives for active cooks and retains the serving target when only Serve remains',()=>{
+ it('only derives for active cooks and preserves the target as comparison data without forcing an idle wait at Serve',()=>{
   const m=fixture();expect(liveStepForecasts({...m,mode:'planning',startedAt:undefined},cookTimeline(m),now)).toEqual({});
   for(const t of cookTimeline(m).filter(t=>!t.id.endsWith(':serve')))m.completed[t.id]='2026-10-29T21:04Z';
-  expect(remainingCook(m,cookTimeline(m),now).minutes).toBe(56);expect(m.serveAt).toBe('2026-10-29T22:00Z');
+  expect(remainingCook(m,cookTimeline(m),now).minutes).toBe(0);expect(m.serveAt).toBe('2026-10-29T22:00Z');
  });
 });
 

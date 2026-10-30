@@ -106,11 +106,13 @@ export function addStep(meal: Meal, title: string, instructions = "", scheduledA
   const id = crypto.randomUUID();
   const task: PlannedTask = {
     id, dishId: "custom", dishName: "General prep", title: trimmed,
+    ...(meal.mode==="cooking"?{executionAddedAt:new Date().toISOString()}:{}),
     instructions: instructions.trim().slice(0, 500), scheduledAt, isCondition: false
   };
   return {
     ...m,
     customTasks: [...(m.customTasks ?? []), task],
+    ...(meal.mode==='cooking'&&scheduledAt?{taskOverrides:{...m.taskOverrides,[id]:{scheduledAt}}}:{}),
     taskOrder: [...existing.map(t=>t.id), id]
   };
 }

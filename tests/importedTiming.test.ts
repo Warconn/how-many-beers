@@ -38,7 +38,7 @@ describe('manually confirmed imported durations',()=>{
   const m=change(change(make(),0,5),1,15,{timingMode:'fixed',scheduledAt:'2026-11-25T23:40Z'});
   expect(remainingCook({...m,mode:'cooking'},cookTimeline(m),Date.parse('2026-11-25T23:45Z')).minutes).toBeNull();
   const timed=complete();const completed=Object.fromEntries(stages(timed).map(t=>[t.id,'2026-11-26T00:00Z']));
-  expect(remainingCook({...timed,completed,mode:'cooking'},cookTimeline(timed),Date.parse('2026-11-26T00:00Z')).minutes).toBe(5);
+  expect(remainingCook({...timed,completed,mode:'cooking'},cookTimeline(timed),Date.parse('2026-11-26T00:00Z')).minutes).toBe(0);
  });
  it('reset to unknown removes fabricated timing; hidden steps and display reordering do not corrupt recipe order',()=>{
   const m=complete(),first=stages(m)[0];expect(stages(change(m,0,null))[0].scheduledAt).toBeNull();

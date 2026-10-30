@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. Broader #77 equipment/temperature and ingredient-structure work remains separate.
+The reviewed cooking/planner/import improvements through #82 are merged and released via #88. The owner-approved overnight queue is [#87](https://github.com/Warconn/how-many-beers/issues/87): #86 live execution correctness first, one combined #85/#62 step-editing UX workstream, and remaining #77 import details. Each is a separate review PR to dev. #84 stays queued until #86 has a stable reviewed integration base; these PRs do not carry merge or production approval.
 
 ## Account foundation work
 
