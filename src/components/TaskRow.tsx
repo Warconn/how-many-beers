@@ -27,6 +27,7 @@ type Props = {
   editorId: string;
   onEdit: (title:string, instructions:string, details?:StepPlanEdit)=>void;
   onDurationChange?: (minutes:number|null)=>void;
+  durationDisabled?: boolean;
   onMove: (direction:"up"|"down")=>void;
   onRemove: ()=>void;
   onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string)=>void;
@@ -38,7 +39,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
+  task,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
 }:Props) {
   const [logging,setLogging]=useState(false);
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
@@ -77,7 +78,7 @@ export default function TaskRow({
         <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt ?? undefined}>{task.scheduledAt ? formatted(task.scheduledAt) : "Start time not set"}</time></div>
         {onDurationChange && <div className="inline-step-duration">
           <label htmlFor={editorId+'-duration'}>Estimated duration</label>
-          <div><input id={editorId+'-duration'} aria-label="Estimated duration (minutes)" type="number" inputMode="decimal" min="0" max="43200" step="any" placeholder="Unknown" value={task.durationMinutes??''} disabled={editing} aria-invalid={!!durationError} aria-describedby={durationError?editorId+'-duration-error':undefined} onChange={e=>{
+          <div><input id={editorId+'-duration'} aria-label="Estimated duration (minutes)" type="number" inputMode="decimal" min="0" max="43200" step="any" placeholder="Unknown" value={task.durationMinutes??''} disabled={editing||durationDisabled} aria-invalid={!!durationError} aria-describedby={durationError?editorId+'-duration-error':undefined} onChange={e=>{
             const value=e.target.value,minutes=value===''?null:Number(value);
             if(e.target.validity.badInput||(minutes!==null&&(!Number.isFinite(minutes)||minutes<0||minutes>43200))){setDurationError('Enter 0–43200 minutes, or clear for unknown.');return;}
             setDurationError('');onDurationChange(minutes);
