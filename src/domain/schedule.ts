@@ -1,4 +1,5 @@
 import type { Dish, Meal, PlannedTask } from "./meal";
+import {templateStage} from "./templateStages";
 import {turkeyPreparation} from "./turkeyPrep";
 import { templateSteps } from "../data/cookTemplates";
 
@@ -65,6 +66,7 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
     const subst=(s:string)=>s.replaceAll("{pitTempF}",temp===null?"your chosen pit temperature":String(temp));
     return {
       id:d.id+":"+step.id,
+      templateStage:templateStage(d,step.id),
       dishId:d.id,
       dishName:d.name,
       title:subst(title),
@@ -95,7 +97,7 @@ function builtinTasks(d: Dish, serveAt: string): PlannedTask[] {
     { key: "rest", title: rest ? "Begin monitored rest/hold" : "Prepare to plate", instructions: rest ? "Follow food-safe resting/holding guidance and monitor food temperature." : "Confirm doneness before serving.", before: rest, conditional: true },
     { key: "serve", title: "Serve", instructions: "Plate and enjoy.", before: 0 }
   );
-  return entries.map(e=>({ id: d.id + ":" + e.key, dishId:d.id, dishName:d.name, title:e.title, instructions:e.instructions, scheduledAt:at(serveAt,e.before), isCondition:!!e.conditional }));
+  return entries.map(e=>({ templateStage:templateStage(d,e.key),id: d.id + ":" + e.key, dishId:d.id, dishName:d.name, title:e.title, instructions:e.instructions, scheduledAt:at(serveAt,e.before), isCondition:!!e.conditional }));
 }
 
 export type ImportedTimingContext = {

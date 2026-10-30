@@ -58,6 +58,7 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
         setLocalTime(e.target.value);setTimingMode(e.target.value ? 'fixed' : 'unscheduled');setOffsetChoice('');setError('');
       }}/></label>
       <div className="duration-controls">
+        {task.templateStage&&task.durationMinutes==null&&<p className="muted small">Template estimate: {formatDuration(task.templateStage.minutes)}. Enter a duration to override this allowance.</p>}
         <label>Estimated duration ({durationUnit})<input type="number" min="0" max={durationUnit==='hours'?720:43200} step="any" value={duration} placeholder="Unknown" onChange={e => setDuration(e.target.value)}/></label>
         <label>Duration unit<select aria-label="Duration unit" value={durationUnit} onChange={e=>{
           const next=e.target.value as 'minutes'|'hours';

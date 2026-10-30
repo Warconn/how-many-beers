@@ -1,4 +1,5 @@
 import type {Meal, PlannedTask} from './meal';
+import {physicalStartedEvent} from './physicalPhase';
 import type {ExtendedMeal} from './cookState';
 import {liveStepForecasts,forecastClock} from './cookForecast';
 const stamp=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
@@ -21,16 +22,17 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
   // until the user verifies doneness; rest likewise persists until serving.
   for(const dish of meal.dishes){
     if(dish.preset==='custom')continue;
-    const key=!meal.completed[dish.id+':finish']?'start':!meal.completed[dish.id+':serve']?'rest':null;
+    const advanced=tasks.some(t=>t.dishId===dish.id&&t.templateStage?.after&&physicalStartedEvent((meal as ExtendedMeal).events??[],t.id));
+    const key=!meal.completed[dish.id+':finish']&&!advanced?'start':!meal.completed[dish.id+':serve']?'rest':null;
     const phase=key?tasks.find(t=>t.id===dish.id+':'+key):undefined;
     if(phase&&forecasts[phase.id]?.template&&!remaining.some(t=>t.id===phase.id))remaining.push(phase);
   }
   const adaptive=(t:PlannedTask)=>!!forecasts[t.id]?.template||t.durationMinutes!=null||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom');
   if(remaining.some(t=>adaptive(t)&&forecasts[t.id]?.status==='overdue'))return {minutes:null,label:'Review overdue steps'};
-  if(remaining.some(t=>adaptive(t)&&forecasts[t.id]&&(forecasts[t.id].template?!forecasts[t.id].template!.at:forecasts[t.id].status!=='planned'&&!forecasts[t.id].finish)))return {minutes:null,label:'Remaining timing needed'};
+  if(remaining.some(t=>adaptive(t)&&forecasts[t.id]&&(forecasts[t.id].template?(!forecasts[t.id].template!.at||forecasts[t.id].status==='blocked'):forecasts[t.id].status!=='planned'&&!forecasts[t.id].finish)))return {minutes:null,label:'Remaining timing needed'};
   remaining=remaining.map(t=>{
     const f=forecasts[t.id];
-    if(f?.template?.at)return {...t,scheduledAt:f.template.at,durationMinutes:f.template.kind==='cook'||f.template.kind==='rest'?f.template.minutes??0:0};
+    if(f?.template?.at)return {...t,scheduledAt:f.template.at,durationMinutes:f.template.minutes??0};
     return adaptive(t)&&f&&f.status!=='planned'&&f.start&&f.finish?{...t,scheduledAt:f.start,durationMinutes:(Date.parse(f.finish)-Date.parse(f.start))/60000}:t;
   });
   if(Object.keys(forecasts).length)now=forecastClock(meal,now);

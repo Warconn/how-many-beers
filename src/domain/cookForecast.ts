@@ -5,7 +5,7 @@ import {physicalPhase,physicalStartedEvent} from './physicalPhase';
 import {templateStepForecasts} from './templateForecast';
 
 export type TemplateTiming={
- kind:'checkpoint'|'cook'|'rest'|'preparation'|'serve';
+ kind:'checkpoint'|'cook'|'rest'|'preparation'|'activity'|'serve';
  at:string|null;
  basis:'planned'|'estimated'|'fixed'|'actual';
  minutes?:number;

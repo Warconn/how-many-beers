@@ -147,3 +147,22 @@ in history without being mistaken for physical anchors. New explicit physical
 starts have optional backward-compatible event metadata. The forecast itself is
 never persisted. A Sunday brisket checked rapidly to wrapping must still show a
 condition check rather than implying the meat has cooked for 80% of its allowance.
+
+### Estimates across every built-in template
+
+All seven built-in templates have authored allowances for preparation/preheating,
+physical cooking and any defined rest. Brats split the existing 135-minute cook
+into 120 minutes covered and 15 minutes draining/searing. Wings allocate 180 minutes
+smoking, 10 minutes preparing oil, 3 minutes frying and 2 minutes draining/seasoning
+within the existing 195-minute cook, followed by the existing rest allowance.
+Turkey brining/drying uses the selected refrigeration hours. Preparation estimates
+are editable app allowances, not measured historical durations. They are stored as
+derived task metadata, so adding the estimates does not move existing planned dates,
+change stored dishes or rewrite actual events/history. The shared editor explains
+the default allowance and accepts an explicit duration override.
+
+Finishing stages use their explicit duration sequence and real physical starts.
+Starting searing/frying can anchor later forecasts independently of the earlier
+loading clock. Completed loading checkboxes alone do not establish that progress.
+Doneness, thaw-readiness, wrapping and open-ended holding remain condition checks;
+no timer declares the food safe or gives an indefinite hold a made-up duration.

@@ -427,3 +427,11 @@ Validation includes a Sunday brisket rapidly checked to wrapping, persistent act
 smoker/rest starts, unresolved condition checks after elapsed time, and an imported
 15-minute roast plus 10-minute cooling sequence. Inspect actual desktop and narrow
 phone captures for information density, including expanded details and safety text.
+
+Owner-approved template completion before merging #82 to dev: every built-in method
+has relevant prep/preheat, cook, finishing and rest estimates. Brats are 120 minutes
+covered plus the existing 15-minute searing allowance; wings use explicit finishing
+stage allowances. Conditional checks remain Check when ready. Default stage estimates
+are derived separately from the stored plan, with explicit overrides supported.
+Actual phase starts anchor later stages; checking loading does not imply elapsed
+cooking. The owner authorizes merging the completed, green PR to dev, not production.

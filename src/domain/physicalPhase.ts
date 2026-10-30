@@ -2,6 +2,7 @@ import type {PlannedTask} from './meal';
 import type {CookEvent} from './cookState';
 /** Only meaningful timed phases need an explicit physical-start action. */
 export function physicalPhase(task:PlannedTask):{label:string}|null{
+ if(task.templateStage?.startLabel)return {label:task.templateStage.startLabel};
  if(task.recipeOrder===undefined){
   if(task.id.endsWith(':start'))return {label:/smoker|smok/i.test(task.title)?'On smoker now':'Begin cooking now'};
   if(task.id.endsWith(':rest')&&/rest|hold/i.test(task.title))return {label:'Begin rest now'};

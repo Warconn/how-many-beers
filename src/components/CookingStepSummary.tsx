@@ -23,7 +23,7 @@ function brief(task:PlannedTask,rest:boolean):string{
 }
 export default function CookingStepSummary({task,forecast}:{task:PlannedTask;forecast?:StepForecast}){
  const phase=forecast?.template?.kind,rest=phase==='rest',condition=task.isCondition&&!physicalPhase(task);
- const minutes=phase==='cook'||rest?forecast?.template?.minutes:task.durationMinutes;
+ const minutes=forecast?.template?.minutes??task.durationMinutes;
  const instruction=brief(task,rest);
  return <>
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
