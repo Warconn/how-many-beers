@@ -435,3 +435,19 @@ stage allowances. Conditional checks remain Check when ready. Default stage esti
 are derived separately from the stored plan, with explicit overrides supported.
 Actual phase starts anchor later stages; checking loading does not imply elapsed
 cooking. The owner authorizes merging the completed, green PR to dev, not production.
+
+## Structured text recipe review (#77, remaining scope)
+Pasted and .txt/.md recipes now retain headed ingredient quantities, source/notes,
+explicit equipment and unit-bearing temperatures. Review offers Equipment and a
+starting smoker/oven setting, plus collapsed ingredients/reference and per-step
+temperature corrections. A temperature's purpose is explicitly smoker/oven setting,
+internal food target, or unclear; Celsius remains visible as written. Only a single
+unambiguous internal target becomes the step's food target. Equipment temperatures
+never become food endpoints. Ambiguous ranges remain in the authored text and need
+review; no cooling time or safety endpoint is invented.
+
+After adding, Dish settings exposes the same reference editor. Original recipe text
+remains unchanged through corrections, reload, account saving and completed history.
+These optional JSON fields require no database migration. Existing recipes are not
+reparsed, and manual/template flows keep their existing behavior. URL, photo and PDF
+ingestion remain outside this text importer.

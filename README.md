@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. Broader #77 equipment/temperature and ingredient-structure work remains separate.
+The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. The #77 text importer now retains editable equipment, separate smoker/oven and internal-food temperatures, ingredients and source notes through review and saved dish reference. Original source and unknown timing remain intact. URL/photo/PDF ingestion remains separate.
 
 ## Account foundation work
 

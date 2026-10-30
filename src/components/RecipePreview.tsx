@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {Dish} from '@/domain/meal';
 import {extractRecipeTiming} from '@/domain/recipe';
+import RecipeDetails from './RecipeDetails';
 import {formatDuration} from '@/domain/stepTiming';
 
 export default function RecipePreview({dish,onChange,onAdd,onBack}:{dish:Dish;onChange:(dish:Dish)=>void;onAdd:()=>void;onBack:()=>void}){
@@ -17,10 +18,11 @@ export default function RecipePreview({dish,onChange,onAdd,onBack}:{dish:Dish;on
   {unknown>0&&<p className="notice">{unknown} {unknown===1?'step needs':'steps need'} an estimate. You can leave unknown times blank.</p>}
   <button type="button" className="button primary recipe-preview-add" disabled={!dish.name.trim()||!!error} onClick={onAdd}>Add to this cook</button>
   <label htmlFor="preview-recipe-name">Recipe title</label><input id="preview-recipe-name" value={dish.name} onChange={e=>onChange({...dish,name:e.target.value})}/>
+  <RecipeDetails dish={dish} onChange={onChange} includeEquipment/>
   <ol className="recipe-preview-steps">{steps.map((step,index)=>{
    const timing=extractRecipeTiming(step.instructions??step.title);
    return <li key={step.id}>
-    <div className="recipe-preview-copy"><strong>{step.title}</strong>{timing.range&&<p className="recipe-time-source">Recipe: {timing.range[1]<60?timing.range[0]+'–'+timing.range[1]+' min':formatDuration(timing.range[0])+'–'+formatDuration(timing.range[1])} · planning with {step.minutes===null?'an unknown duration':formatDuration(step.minutes)}</p>}
+    <div className="recipe-preview-copy"><strong>{step.title}</strong>{step.recipeTemperatures?.map((t,i)=><p className="recipe-time-source" key={i}>{t.value}°{t.unit} · {t.kind==='equipment'?'Smoker / oven setting':t.kind==='food'?'Internal food target':'Temperature purpose unclear — review'}</p>)}{timing.range&&<p className="recipe-time-source">Recipe: {timing.range[1]<60?timing.range[0]+'–'+timing.range[1]+' min':formatDuration(timing.range[0])+'–'+formatDuration(timing.range[1])} · planning with {step.minutes===null?'an unknown duration':formatDuration(step.minutes)}</p>}
      {!timing.range&&timing.minutes!==null&&<p className="recipe-time-source">From recipe: {formatDuration(timing.minutes)}</p>}
      {step.instructions&&step.instructions!==step.title&&<p className="muted small">{step.instructions.startsWith(step.title)?step.instructions.slice(step.title.length).trim():step.instructions}</p>}
     </div>
