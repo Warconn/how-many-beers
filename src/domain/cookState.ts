@@ -1,6 +1,7 @@
 import type { Meal, PlannedTask } from "./meal";
 import { buildDishTimeline } from "./schedule";
 import {adjustDishSequence,servingConflict} from "./stepDependencies";
+import {chronologicalTasks} from "./stepTiming";
 
 export type CookEventKind = "started" | "completed" | "reopened" | "temperature" | "equipment" | "removed";
 
@@ -81,22 +82,16 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
 }
 export function stepTimingWarnings(meal:Meal):string[]{return derivedSchedule(meal).warnings;}
 export function cookTimeline(meal: Meal): PlannedTask[] {
-  const m=migrateMeal(meal),combined=derivedSchedule(m).tasks;
+  const m=migrateMeal(meal),combined=chronologicalTasks(derivedSchedule(m).tasks);
   if (!(m.taskOrder?.length)) {
-    // First load shows the plan in scheduled order. Unscheduled steps come last.
-    return combined.sort((a,b) => {
-      const aTime = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity;
-      const bTime = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity;
-      return aTime - bTime;
-    });
+    return combined;
   }
   const positions = new Map(m.taskOrder.map((id, index) => [id,index]));
+  const defaults = new Map(combined.map((task,index)=>[task.id,index]));
   return combined.sort((a,b) => {
     const ai = positions.get(a.id) ?? Infinity, bi = positions.get(b.id) ?? Infinity;
     if (ai !== bi) return ai-bi;
-    const at = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity;
-    const bt = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity;
-    return at-bt;
+    return defaults.get(a.id)!-defaults.get(b.id)!;
   });
 }
 
@@ -141,6 +136,17 @@ export function editStep(meal: Meal, taskId: string, title: string, instructions
     else override.targetTempF=details.targetTempF;
   }
   return {...m, taskOverrides: {...m.taskOverrides, [taskId]:override}};
+}
+
+/** Inline duration edits change only duration, retaining all other overrides. */
+export function setStepDuration(meal:Meal,taskId:string,durationMinutes:number|null):ExtendedMeal{
+  if(durationMinutes!==null&&(!Number.isFinite(durationMinutes)||durationMinutes<0||durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
+  const task=cookTimeline(meal).find(t=>t.id===taskId);
+  if(!task)throw new Error("Task not found.");
+  const m=migrateMeal(meal),override={...m.taskOverrides?.[taskId]};
+  if(durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
+  else override.durationMinutes=durationMinutes;
+  return {...m,taskOverrides:{...m.taskOverrides,[taskId]:override}};
 }
 
 export function removeStep(meal: Meal, taskId: string, occurredAt: string): ExtendedMeal {

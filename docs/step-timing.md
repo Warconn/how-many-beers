@@ -139,3 +139,19 @@ entry points, edits, cancellations, persistence and desktop/mobile DST controls.
 Automated checks cover template/imported chains, gaps, hidden steps, manual order,
 unknown boundaries, date-only edits, multiple dishes, invalid durations, unit conversion,
 fixed/recorded anchors, overnight/DST elapsed time, archive/backup/repeat and screenshots.
+
+
+### Imported duration controls
+In planning, edit Estimated duration directly on an imported step (minutes).
+Changes apply immediately, including clearing to unknown or setting a zero-minute
+milestone, and save through the existing guest/account rules. The full Edit form
+shows the same effective duration; it remains the place for fixed starts and reset.
+Dish settings no longer contains a second duration editor. Changing only duration
+preserves title/instructions (including long imported text), equipment/targets,
+fixed/recorded planned positions, notes, events and independent dishes.
+
+When imported dates are incomplete, derived recipe-order metadata keeps the recipe
+sequence in its own checklist/schedule slots, including Serve last. Other dishes
+retain their relative order. Dates are neither invented nor changed to achieve
+that display order; fully timed plans still use chronological ordering. Manual
+checklist moves remain separate from the derived schedule.

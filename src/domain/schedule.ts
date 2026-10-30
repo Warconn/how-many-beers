@@ -105,16 +105,16 @@ export type ImportedTimingContext = {
 };
 function importedTasks(d:Dish,serveAt:string,context:ImportedTimingContext={}):PlannedTask[]{
   const source=(d.steps??[]).filter(s=>!context.hidden?.has(d.id+':'+s.id));
-  const tasks:PlannedTask[]=source.map(step=>{
+  const tasks:PlannedTask[]=source.map((step,index)=>{
     const edit=context.overrides?.[d.id+':'+step.id];
     // Originally timed recipes retain their original cadence (#41). A previously
     // unknown duration becomes usable as soon as it is manually confirmed.
     const minutes=edit?.durationMinutes===null?null:step.minutes===null && edit?.durationMinutes!==undefined?edit.durationMinutes:step.minutes;
     return {id:d.id+':'+step.id,dishId:d.id,dishName:d.name,title:step.title,
-      durationMinutes:minutes,baseDurationMinutes:step.minutes,
+      durationMinutes:minutes,baseDurationMinutes:step.minutes,recipeOrder:index,
       instructions:'Imported recipe step. Confirm instructions and timing.',scheduledAt:null,isCondition:false};
   });
-  if(!context.hidden?.has(d.id+':serve'))tasks.push({id:d.id+':serve',dishId:d.id,dishName:d.name,title:'Serve',durationMinutes:null,instructions:'Confirm safe doneness and plate.',scheduledAt:at(serveAt,0),isCondition:false});
+  if(!context.hidden?.has(d.id+':serve'))tasks.push({id:d.id+':serve',dishId:d.id,dishName:d.name,title:'Serve',recipeOrder:source.length,durationMinutes:null,instructions:'Confirm safe doneness and plate.',scheduledAt:at(serveAt,0),isCondition:false});
   const finite=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
   const durations=tasks.map(t=>t.id===d.id+':serve'?0:t.durationMinutes==null?null:t.durationMinutes*minute);
   const derive=(useFixed:boolean)=>{

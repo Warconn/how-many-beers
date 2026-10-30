@@ -621,18 +621,18 @@ test('imported duration edits save and reload without changing another dish or h
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Import a recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Pumpkin seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds\nCool completely');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to this cook'}).click();
  const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});
  for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','15'],['Cool completely','10']]){
-  await steps.getByRole('article',{name,exact:true}).getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);await form.getByRole('button',{name:'Save & Close',exact:true}).click();
+  await steps.getByRole('article',{name,exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true}).fill(minutes);
  }
  await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).locator('time')).toHaveAttribute('datetime',/23:35/);
  expect(JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0])).toBe(original);expect(JSON.stringify(remote.state.history)).toBe(history);
- await page.screenshot({path:info.outputPath('account-imported-timing.png'),fullPage:true});await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await expect(steps.getByRole('article',{name:'Clean seeds',exact:true})).toContainText('Estimated 5 min');await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).locator('time')).toHaveAttribute('datetime',/23:35/);
+ await page.screenshot({path:info.outputPath('account-imported-timing.png'),fullPage:true});await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true})).toHaveValue('5');await expect(steps.getByRole('article',{name:'Clean seeds',exact:true}).locator('time')).toHaveAttribute('datetime',/23:35/);
 });
 
 
 test('guest imported durations produce a plan without persisting a trial cook',async({page})=>{
  await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Upload a recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Trial seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to this cook'}).click();
  for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','10']]){
-  await page.getByRole('region',{name:'Trial seeds steps',exact:true}).getByRole('article',{name,exact:true}).getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);await form.getByRole('button',{name:'Save & Close',exact:true}).click();
+  await page.getByRole('region',{name:'Trial seeds steps',exact:true}).getByRole('article',{name,exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true}).fill(minutes);
  }
  await expect(page.getByRole('region',{name:'Cook duration in beers'}).locator('strong')).toHaveText('0.2');
  expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeVisible();await expect(page.getByRole('button',{name:'Edit Trial seeds',exact:true})).toHaveCount(0);

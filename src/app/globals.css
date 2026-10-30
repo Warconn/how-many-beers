@@ -568,3 +568,12 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .empty-planner .hero > div:first-child { display:none; }
 .empty-planner .hero { display:block; padding:24px; }
 .empty-prep { margin:16px 0; color:#625c54; }
+
+/* Imported timing belongs beside the step, at a usable phone touch size. */
+.inline-step-duration{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:12px 0}
+.inline-step-duration label{margin:0;font-size:12px;font-weight:650;color:var(--accent-dark)}
+.inline-step-duration>div{display:flex;align-items:center;gap:7px}
+.cook-task .task-top .inline-step-duration input{width:112px;height:auto;min-height:44px;margin:0;padding:10px;font-size:16px}
+.inline-step-duration span{font-size:12px;color:var(--muted)}
+.inline-step-duration .form-error{flex-basis:100%}
+.import-timing-help{padding:4px 0 12px;margin:10px 0 0;line-height:1.6}

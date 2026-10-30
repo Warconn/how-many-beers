@@ -47,8 +47,19 @@ export function estimatedFinish(task: { scheduledAt: string | null; durationMinu
   const end = Date.parse(task.scheduledAt) + task.durationMinutes * 60_000;
   return Number.isFinite(end) ? new Date(end).toISOString() : null;
 }
-export function chronologicalTasks<T extends { scheduledAt: string | null }>(tasks: T[]): T[] {
-  return [...tasks].sort((a, b) => (a.scheduledAt ? Date.parse(a.scheduledAt) : Infinity) - (b.scheduledAt ? Date.parse(b.scheduledAt) : Infinity));
+export function chronologicalTasks<T extends { scheduledAt: string | null; dishId?: string; recipeOrder?: number }>(tasks: T[]): T[] {
+  const instant=(task:T)=>task.scheduledAt && Number.isFinite(Date.parse(task.scheduledAt))?Date.parse(task.scheduledAt):Infinity;
+  const ordered=[...tasks].sort((a,b)=>instant(a)-instant(b));
+  // Unknown dates cannot establish chronology within an imported recipe. Keep
+  // its source sequence in its own slots rather than putting Serve before prep.
+  // Other dishes keep their relative order and no planned/actual times change.
+  const partial=new Set(tasks.filter(t=>t.recipeOrder!==undefined&&instant(t)===Infinity).map(t=>t.dishId));
+  for(const dishId of partial){
+    const recipe=tasks.filter(t=>t.dishId===dishId&&t.recipeOrder!==undefined).sort((a,b)=>a.recipeOrder!-b.recipeOrder!);
+    let index=0;
+    for(let i=0;i<ordered.length;i++)if(ordered[i].dishId===dishId&&ordered[i].recipeOrder!==undefined)ordered[i]=recipe[index++];
+  }
+  return ordered;
 }
 
 /** Readable elapsed duration; saved values always remain minutes. */

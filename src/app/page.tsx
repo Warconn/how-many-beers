@@ -5,7 +5,7 @@ import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
 import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
-import { addStep, cookTimeline, stepTimingWarnings, editStep, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
+import { addStep, cookTimeline, stepTimingWarnings, setStepDuration, editStep, moveStep, recordEvent, removeStep, updateTaskNote } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import BeerEstimator from '@/components/Beerometer';
 import TurkeyPreparation from "@/components/TurkeyPreparation";
@@ -359,6 +359,7 @@ function CookExperience() {
         if(taskEvents.slice(reopen+1).some(e=>e.kind==="started"||e.kind==="completed")) return updated;
         return recordEvent(updated,task.id,"started",new Date().toISOString());
       })}
+      onDurationChange={mode==="planning"&&meal.dishes.some(d=>d.id===task.dishId&&d.preset==='custom')&&!task.id.endsWith(':serve')?minutes=>safelyPatch(m=>setStepDuration(m,task.id,minutes)):undefined}
       onMove={direction=>safelyPatch(m=>moveStep(m,task.id,direction,compact?task.dishId:undefined))}
       onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
       onEvent={(kind:CookEventKind,value,unit,note)=>{
@@ -623,20 +624,7 @@ function CookExperience() {
                         onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,restMinutes:value,brisketPlan:item.brisketPlan?{...item.brisketPlan,mode:"manual"}:undefined}:item)}))}
                       />
                     </div>
-                  </div> : <div className="recipe-steps">
-                    {(d.steps||[]).map(s=><div className="recipe-row" key={s.id}>
-                      <span>{s.title}</span>
-                      <label><span className="sr-only">Minutes for {s.title}</span><input type="number" min="1" max="43200" placeholder="Unknown" value={timeline.find(t=>t.id===d.id+":"+s.id)?.durationMinutes??""} onChange={e=>{
-                        const minutes=e.target.value===""?null:Math.max(1,Number(e.target.value)||1);
-                        patch(m=>{
-                          const taskId=d.id+":"+s.id,overrides={...(m as ExtendedMeal).taskOverrides};
-                          if(overrides[taskId]){overrides[taskId]={...overrides[taskId]};delete overrides[taskId].durationMinutes;}
-                          return {...m,taskOverrides:overrides,dishes:m.dishes.map(item=>item.id!==d.id?item:{...item,steps:item.steps?.map(step=>step.id===s.id?{...step,minutes}:step)})};
-                        });
-                      }}/></label>
-                    </div>)}
-                    <p className="muted small">Blank time means the step stays unscheduled. Confirm all timings before relying on this plan.</p>
-                  </div>}
+                  </div> : <p className="muted small">Set estimated durations directly on the steps below.</p>}
                   {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].referenceWeightLb!==undefined && (
                     <div className="template-settings">
                       <label htmlFor={"weight-"+d.id}>Weight (lb), for reference</label>
@@ -668,6 +656,7 @@ function CookExperience() {
                   )}
 
                   </details>
+                  {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Use Edit for a fixed start or other step details.</p>}
                   <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>
                   {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
                   {newStepDishId===d.id ? <div className="inline-step-add">
@@ -699,7 +688,7 @@ function CookExperience() {
           }
           {timeline.length>0 && <section className="plan-notes" aria-label="Plan notes">
             {warnings.map((warning,i) => <p className="warning" key={i}>{warning}</p>)}
-            {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. Set a planned date and time in the step editor, or leave them unscheduled and review them before relying on the schedule.</p>}
+            {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. For uploaded recipes, add estimated durations on each step to work back from serving time. Use Edit for a fixed start, or leave timing unknown and review before cooking.</p>}
             <p className="muted small timing-guidance">Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
           </section>
           }
@@ -717,7 +706,7 @@ function CookExperience() {
           </div>
           {timeline.length>0 && <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
-            <p className="muted small">Serving {when(meal.serveAt || null)}</p>
+            <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Untimed recipes stay in recipe order until start times are known.</p>}
             {timeline.length ? <>
               <ol className="schedule-list">
                 {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?when(task.scheduledAt):"Start time not set"}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}

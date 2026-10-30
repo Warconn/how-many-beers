@@ -26,6 +26,7 @@ type Props = {
   onEditingChange: (open:boolean)=>void;
   editorId: string;
   onEdit: (title:string, instructions:string, details?:StepPlanEdit)=>void;
+  onDurationChange?: (minutes:number|null)=>void;
   onMove: (direction:"up"|"down")=>void;
   onRemove: ()=>void;
   onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string)=>void;
@@ -37,7 +38,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
+  task,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
 }:Props) {
   const [logging,setLogging]=useState(false);
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
@@ -45,6 +46,7 @@ export default function TaskRow({
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
   const [readingNote,setReadingNote]=useState("");
   const [error,setError]=useState("");
+  const [durationError,setDurationError]=useState("");
 
   useEffect(()=>{onReadingChange?.(logging);return ()=>onReadingChange?.(false);},[logging,onReadingChange]);
 
@@ -73,12 +75,21 @@ export default function TaskRow({
       <div className="task-main">
         {isNext && isCooking && <p className="eyebrow next-label">DO THIS NEXT</p>}
         <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt ?? undefined}>{task.scheduledAt ? formatted(task.scheduledAt) : "Start time not set"}</time></div>
-        {(showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
-        {!task.scheduledAt && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
+        {onDurationChange && <div className="inline-step-duration">
+          <label htmlFor={editorId+'-duration'}>Estimated duration</label>
+          <div><input id={editorId+'-duration'} aria-label="Estimated duration (minutes)" type="number" inputMode="decimal" min="0" max="43200" step="any" placeholder="Unknown" value={task.durationMinutes??''} disabled={editing} aria-invalid={!!durationError} aria-describedby={durationError?editorId+'-duration-error':undefined} onChange={e=>{
+            const value=e.target.value,minutes=value===''?null:Number(value);
+            if(e.target.validity.badInput||(minutes!==null&&(!Number.isFinite(minutes)||minutes<0||minutes>43200))){setDurationError('Enter 0–43200 minutes, or clear for unknown.');return;}
+            setDurationError('');onDurationChange(minutes);
+          }}/><span>min</span></div>
+          {durationError && <p id={editorId+'-duration-error'} className="form-error" role="alert">{durationError}</p>}
+        </div>}
+        {onDurationChange ? (task.timingMode==='fixed'||estimatedFinish(task)) && <p className="planned-step-details">{task.timingMode==='fixed'?'Fixed start · ':''}{estimatedFinish(task)?'Estimated finish '+formatted(estimatedFinish(task)!):'Duration unknown'}</p> : (showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        {!task.scheduledAt && (!onDurationChange||task.timingMode==='unscheduled') && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
         {(task.equipment !== task.baseEquipment || task.targetTempF != null) && <p className="planned-step-details">{[task.equipment !== task.baseEquipment ? task.equipment || "Equipment unspecified" : "", task.targetTempF != null ? "Target "+task.targetTempF+"°F (planned)" : ""].filter(Boolean).join(" · ")}</p>}
         {!!task.scheduleAdjustmentMinutes && <p className="planned-step-details">Follows adjusted dish timing</p>}
         {!compact && <p className="task-dish">{task.dishName}</p>}
-        {task.instructions && <p className="muted small">{task.instructions}</p>}
+        {task.instructions && !(onDurationChange&&task.instructions==='Imported recipe step. Confirm instructions and timing.') && <p className="muted small">{task.instructions}</p>}
         {task.isCondition && <span className="condition">Verify actual conditions</span>}
         {started && <p className="step-event">Started {formatted(started.occurredAt)}</p>}
         {completedAt && <p className="completed-time">✓ Completed {formatted(completedAt)}</p>}
