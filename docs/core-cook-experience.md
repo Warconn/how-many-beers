@@ -395,3 +395,9 @@ completion/reopening updates successors. Fixed/waiting/safety/unknown prerequisi
 remain constraints, parallel dishes remain independent, and no forecast is stored
 as an actual event or destructive plan edit. The Beerometer UI stays unchanged;
 only eligible remaining-time windows share the forecast. See [Cooking Mode](cooking-mode.md).
+
+Template timing review: wrapping/temperature decisions show checkpoint times and
+condition guidance, not Duration unknown. Cook and rest/hold phases reuse the
+existing dish estimates and actual activity anchors. Phase timing remains an
+estimate rather than a doneness guarantee; no physical step durations or actual
+history are inferred from checkpoint spacing.

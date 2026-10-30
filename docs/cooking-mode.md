@@ -105,8 +105,10 @@ actual estimate requires a progress check; it neither marks completion nor resta
 an entire duration. Unknown durations, unscheduled work, safety checkpoints and
 unresolved prerequisites do not supply a precise downstream ETA. A later checked
 step cannot bypass earlier unfinished work. Timed steps on separate dishes remain
-parallel. Templates/general prep gain no inferred duration/dependency graph from
-checkpoint gaps; planned-only times are labelled as planned.
+parallel. Templates gain no inferred physical activity durations from checkpoint gaps. Their
+existing cook/rest/hold phase estimates and checkpoint positions are reused as
+conditional timing guidance. General prep stays independent; planned-only times
+are labelled as planned.
 
 Beerometer component, styling, fields and interaction are unchanged. Its remaining
 calculation shares eligible live windows; projected/elapsed/history calculations
@@ -114,3 +116,21 @@ remain separate. Before/after desktop/mobile meter captures for the 5/8 fixture
 were pixel-identical. No forecast fields are saved, and original task/event IDs,
 plans, actual timestamps, notes and archived histories are not rewritten. This is
 not the full resource/dependency solver in #3.
+
+
+### Template checkpoint and phase follow-up
+Template actions such as Decide whether to wrap are condition checkpoints, not
+unknown-duration activities. The card, checklist and footer show Planned/Estimated
+checkpoint times, retaining bark/temperature verification. Late real progress and
+fixed checkpoint times constrain later estimates; early check-offs do not imply a
+percentage of meat doneness or fabricate an earlier on-smoker start.
+
+The on-smoker step shows the existing Cook estimate and estimated cook finish.
+Rest/hold uses the dish's existing rest allowance plus the applied hold buffer once.
+Real on-smoker/rest activity anchors the forecast; an unrecorded rest start remains
+a forecast from now after verified doneness. No phase duration is assigned to the
+placement/wrapping checkbox as a physical activity duration. Explicit activity
+duration edits keep their existing semantics. Preparation and serving milestones
+are labelled accordingly rather than as missing-duration errors. Projected and
+elapsed fields and the Beerometer appearance remain unchanged; eligible remaining
+windows use the same checkpoint/phase dates, including actual rest countdowns.

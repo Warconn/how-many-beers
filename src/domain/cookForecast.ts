@@ -1,11 +1,20 @@
 import type {Meal,PlannedTask} from './meal';
 import {latestStartedEvent,type ExtendedMeal} from './cookState';
 import {buildDishTimeline} from './schedule';
+import {templateStepForecasts} from './templateForecast';
+
+export type TemplateTiming={
+ kind:'checkpoint'|'cook'|'rest'|'preparation'|'serve';
+ at:string|null;
+ basis:'planned'|'estimated'|'fixed'|'actual';
+ minutes?:number;
+};
 
 export type StepForecast={
  start:string|null;finish:string|null;
  status:'estimated'|'fixed'|'planned'|'unknown'|'blocked'|'condition'|'overdue';
  reason?:string;
+ template?:TemplateTiming;
 };
 const stamp=(s:string|null|undefined)=>s&&Number.isFinite(Date.parse(s))?Date.parse(s):null;
 const iso=(n:number)=>Number.isFinite(n)&&Math.abs(n)<=8640000000000000?new Date(n).toISOString():null;
@@ -75,5 +84,6 @@ export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number)
   if(duration(t)===null&&!t.isCondition){result[t.id]={start:t.scheduledAt,finish:null,status:'planned'};continue;}
   result[t.id]=estimate(t,Math.max(now,stamp(t.scheduledAt)??now));
  }
+ Object.assign(result,templateStepForecasts(meal,timeline,now));
  return result;
 }

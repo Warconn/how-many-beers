@@ -17,11 +17,12 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
   let remaining=tasks.filter(t=>!meal.completed[t.id]);
   if(tasks.length && !remaining.length)return {minutes:0,label:'All steps checked'};
   const forecasts=liveStepForecasts(meal,timeline,now);
-  const adaptive=(t:PlannedTask)=>t.durationMinutes!=null||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom');
+  const adaptive=(t:PlannedTask)=>!!forecasts[t.id]?.template||t.durationMinutes!=null||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom');
   if(remaining.some(t=>adaptive(t)&&forecasts[t.id]?.status==='overdue'))return {minutes:null,label:'Review overdue steps'};
-  if(remaining.some(t=>adaptive(t)&&forecasts[t.id]&&forecasts[t.id].status!=='planned'&&!forecasts[t.id].finish))return {minutes:null,label:'Remaining timing needed'};
+  if(remaining.some(t=>adaptive(t)&&forecasts[t.id]&&(forecasts[t.id].template?!forecasts[t.id].template!.at:forecasts[t.id].status!=='planned'&&!forecasts[t.id].finish)))return {minutes:null,label:'Remaining timing needed'};
   remaining=remaining.map(t=>{
     const f=forecasts[t.id];
+    if(f?.template?.at)return {...t,scheduledAt:f.template.at,durationMinutes:f.template.kind==='cook'||f.template.kind==='rest'?f.template.minutes??0:0};
     return adaptive(t)&&f&&f.status!=='planned'&&f.start&&f.finish?{...t,scheduledAt:f.start,durationMinutes:(Date.parse(f.finish)-Date.parse(f.start))/60000}:t;
   });
   if(Object.keys(forecasts).length)now=forecastClock(meal,now);
