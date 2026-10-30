@@ -17,6 +17,14 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
   let remaining=tasks.filter(t=>!meal.completed[t.id]);
   if(tasks.length && !remaining.length)return {minutes:0,label:'All steps checked'};
   const forecasts=liveStepForecasts(meal,timeline,now);
+  // A checked loading action is not elapsed cooking. Retain the phase window
+  // until the user verifies doneness; rest likewise persists until serving.
+  for(const dish of meal.dishes){
+    if(dish.preset==='custom')continue;
+    const key=!meal.completed[dish.id+':finish']?'start':!meal.completed[dish.id+':serve']?'rest':null;
+    const phase=key?tasks.find(t=>t.id===dish.id+':'+key):undefined;
+    if(phase&&forecasts[phase.id]?.template&&!remaining.some(t=>t.id===phase.id))remaining.push(phase);
+  }
   const adaptive=(t:PlannedTask)=>!!forecasts[t.id]?.template||t.durationMinutes!=null||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom');
   if(remaining.some(t=>adaptive(t)&&forecasts[t.id]?.status==='overdue'))return {minutes:null,label:'Review overdue steps'};
   if(remaining.some(t=>adaptive(t)&&forecasts[t.id]&&(forecasts[t.id].template?!forecasts[t.id].template!.at:forecasts[t.id].status!=='planned'&&!forecasts[t.id].finish)))return {minutes:null,label:'Remaining timing needed'};

@@ -13,7 +13,9 @@ import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
 import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
+import {cookingTitle} from "@/components/CookingStepSummary";
 import TaskRow from "@/components/TaskRow";
+import {physicalPhase} from "@/domain/physicalPhase";
 import StepForecastTime from "@/components/StepForecastTime";
 import {liveStepForecasts} from "@/domain/cookForecast";
 import RecipePreview from "@/components/RecipePreview";
@@ -357,7 +359,7 @@ function CookExperience() {
       onEdit={(title,instructions,details)=>safelyPatch(m=>{
         const changed=title!==task.title || instructions!==task.instructions;
         const updated=editStep(m,task.id,title,instructions,details);
-        if(!changed || m.mode!=="cooking") return updated;
+        if(!changed || m.mode!=="cooking" || physicalPhase(task)) return updated;
         const history=(m as ExtendedMeal).events??[];
         const taskEvents=history.filter(e=>e.taskId===task.id);
         const reopen=taskEvents.map(e=>e.kind).lastIndexOf("reopened");
@@ -495,7 +497,7 @@ function CookExperience() {
               {navigationNote && <p className="step-navigation-note" role="status">{navigationNote}</p>}
               {cookPanel==="checklist" ? <CookingChecklist forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep}/> : <section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
                 {guidance.current ? <>
-                  <div className="guide-step-heading"><h3>Step {guidance.index+1} of {timeline.length}</h3><span>{meal.completed[guidance.current.id]?"Completed step":forecasts[guidance.current.id]?.template?.kind==='checkpoint'?"Checkpoint":forecasts[guidance.current.id]?.status==='estimated'?"Live estimate":forecasts[guidance.current.id]?.status==='fixed'?"Fixed start":forecasts[guidance.current.id]?.reason?"Review timing":!guidance.current.scheduledAt?"Untimed":Date.parse(guidance.current.scheduledAt)>clockNow?"Coming up":"Planned earlier"}</span></div>
+                  <div className="guide-step-heading"><h3>Step {guidance.index+1} of {timeline.length}</h3>{meal.completed[guidance.current.id]&&<span>Completed step</span>}</div>
                   {taskCard(guidance.current,"cooking")}
                 </> : <div className="cook-finished"><h3>{timeline.length?"All steps checked":"Your checklist is empty"}</h3><p>{timeline.length?"Review your cook, then finish and save it when you’re ready.":"Edit the plan to add a dish or prep step."}</p>{!!timeline.length && <button type="button" className="button primary" onClick={openFinishCook}>Finish cook</button>}</div>}
               </section>}
@@ -506,18 +508,18 @@ function CookExperience() {
                 <button type="button" className="button primary" disabled={cookingDraftOpen} onClick={finishCook}>{workspace.kind==='trial'?'Sign in to save this cook':'Save finished cook'}</button>{workspace.kind==='trial'&&<button type="button" className="button secondary" onClick={()=>{if(window.confirm('Finish without saving? This cook will not be kept in your history.'))void save({active:newMeal()}).then(returnHome);}}>Finish without saving</button>}<button type="button" className="button secondary" onClick={()=>setShowFinish(false)}>Keep cooking</button>
               </section>}
             </section>
-            <aside className="cook-sidebar">
+            <aside className="cook-sidebar"><details className="cook-extra-tools"><summary>Cook details &amp; tools</summary>
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
-              <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>
+              <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>
             </aside>
           </div>
           <nav className="cook-guide-bar" aria-label="Cooking guide">
             <button type="button" className="guide-checklist-button" aria-label={cookPanel==="step"?"Full checklist":"Back to step"} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}<span>{remaining.length} remaining</span></button>
             {guidance.next ? <button type="button" className="guide-next-button" aria-label={"Preview next step: "+guidance.next.title} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={()=>{
               openGuidedStep(guidance.next!.id);if(guidance.current && !meal.completed[guidance.current.id])setNavigationNote("Previous step remains unchecked. It is still in Full checklist.");
-            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{guidance.next.title}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime forecast={forecasts[guidance.next.id]} part="start"/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span></button>
+            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime forecast={forecasts[guidance.next.id]} part="start" simple/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span></button>
             : remaining.length ? <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>
             : <button type="button" className="guide-next-button" aria-label="Finish cook" disabled={(!timeline.length && !meal.dishes.length) || cookingDraftOpen} onClick={openFinishCook}><span className="guide-next-label">{timeline.length?"All steps checked":"No steps yet"}</span><strong>Finish cook</strong></button>}
           </nav>

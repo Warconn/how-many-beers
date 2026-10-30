@@ -18,7 +18,7 @@ export default defineConfig({
   projects: [
     { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
-    { name: "live-timing-iphone", testMatch: "**/live-step-estimates.spec.ts", use: { ...devices["iPhone 13"] } },
+    { name: "live-timing-iphone", testMatch: ["**/live-step-estimates.spec.ts","**/cooking-simplicity.spec.ts"], use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
     command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,

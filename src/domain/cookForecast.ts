@@ -1,6 +1,7 @@
 import type {Meal,PlannedTask} from './meal';
 import {latestStartedEvent,type ExtendedMeal} from './cookState';
 import {buildDishTimeline} from './schedule';
+import {physicalPhase,physicalStartedEvent} from './physicalPhase';
 import {templateStepForecasts} from './templateForecast';
 
 export type TemplateTiming={
@@ -33,8 +34,8 @@ export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number)
  const byId=new Map(timeline.map(t=>[t.id,t]));
  const projected=new Set<string>();
  const estimate=(t:PlannedTask,earliest:number,blocked?:string,milestone=false):StepForecast=>{
-  const planned=stamp(t.scheduledAt),actual=stamp(latestStartedEvent(events,t.id)?.occurredAt),length=milestone?0:duration(t);
-  if(t.isCondition)return {start:t.scheduledAt,finish:null,status:'condition',reason:'Verify actual conditions before continuing.'};
+  const planned=stamp(t.scheduledAt),actual=stamp((physicalPhase(t)?physicalStartedEvent(events,t.id):latestStartedEvent(events,t.id))?.occurredAt),length=milestone?0:duration(t);
+  if(t.isCondition&&!physicalPhase(t))return {start:t.scheduledAt,finish:null,status:'condition',reason:'Verify actual conditions before continuing.'};
   if(actual!==null){
    const finish=length===null?null:actual+length;
    if(finish!==null&&finish<=now&&length!==0)return {start:iso(actual),finish:null,status:'overdue',reason:'Estimate elapsed; check progress before continuing.'};

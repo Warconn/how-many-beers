@@ -105,3 +105,5 @@ profile settings, buffers, evidence and limitations. Applying remains explicit.
 - [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
 
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
+
+Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Record meaningful physical starts with **On smoker now**, **Begin rest now**, or the imported cooking phase action; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.

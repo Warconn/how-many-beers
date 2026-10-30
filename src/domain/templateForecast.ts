@@ -1,4 +1,5 @@
 import type {Meal,PlannedTask} from './meal';
+import {physicalStartedEvent} from './physicalPhase';
 import {latestStartedEvent,type ExtendedMeal} from './cookState';
 import {buildDishTimeline} from './schedule';
 import type {StepForecast,TemplateTiming} from './cookForecast';
@@ -10,7 +11,7 @@ const iso=(n:number|null)=>n!==null&&Number.isFinite(n)&&Math.abs(n)<=8640000000
  * A checkpoint offset is not a physical step duration or proof of readiness. */
 export function templateStepForecasts(meal:Meal,timeline:PlannedTask[],now:number):Record<string,StepForecast>{
  const result:Record<string,StepForecast>={},events=(meal as ExtendedMeal).events??[],visible=new Map(timeline.map(t=>[t.id,t]));
- const actual=(id:string)=>stamp(latestStartedEvent(events,id)?.occurredAt)??stamp(meal.completed[id]);
+ const actual=(id:string)=>id.endsWith(':start')||id.endsWith(':rest')?stamp(physicalStartedEvent(events,id)?.occurredAt):stamp(latestStartedEvent(events,id)?.occurredAt)??stamp(meal.completed[id]);
  for(const dish of meal.dishes){
   if(dish.preset==='custom')continue;
   // A reference date supplies only offsets if a legacy active cook has no target.
@@ -45,7 +46,7 @@ export function templateStepForecasts(meal:Meal,timeline:PlannedTask[],now:numbe
   const restTask=visible.get(restId);
   const restAt=restActual??(restTask?.timingMode==='unscheduled'?null:restTask?.timingMode==='fixed'?stamp(restTask.scheduledAt):finishActual!==null?Math.max(now,finishActual):cookEnd);
   for(const planned of source){
-   const t=visible.get(planned.id);if(!t||meal.completed[t.id])continue;
+   const t=visible.get(planned.id);if(!t||(meal.completed[t.id]&&!t.id.endsWith(':start')&&!t.id.endsWith(':rest')))continue;
    const key=t.id.slice(dish.id.length+1),position=offsets.get(t.id),preparation=position!==null&&position!==undefined&&position<sourceStart;
    const kind:TemplateTiming['kind']=key==='start'?'cook':key==='rest'?'rest':key==='serve'?'serve':preparation?'preparation':'checkpoint';
    // An explicitly entered activity duration retains the ordinary step editor's

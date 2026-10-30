@@ -1,6 +1,7 @@
 import type { Meal, PlannedTask } from "./meal";
 import { buildDishTimeline } from "./schedule";
 import {adjustDishSequence,servingConflict} from "./stepDependencies";
+import {physicalPhase} from "./physicalPhase";
 import {chronologicalTasks} from "./stepTiming";
 
 export type CookEventKind = "started" | "completed" | "reopened" | "temperature" | "equipment" | "removed";
@@ -9,6 +10,7 @@ export type CookEvent = {
   id: string;
   taskId: string;
   kind: CookEventKind;
+  startSource?: "activity" | "physical";
   occurredAt: string;
   value?: number;
   unit?: "°F" | "°C";
@@ -199,10 +201,10 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const reopenIndex = afterReopen.map(e=>e.kind).lastIndexOf("reopened");
   const attemptEvents = afterReopen.slice(reopenIndex+1);
   const alreadyStarted = attemptEvents.some(e=>e.kind==="started" || e.kind==="completed");
-  const start = !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
-    ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,occurredAt:timestamp}]
+  const start = !physicalPhase(planned) && !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
+    ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,startSource:"activity" as const,occurredAt:timestamp}]
     : [];
-  const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp};
+  const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp,...(kind==="started"&&physicalPhase(planned)?{startSource:"physical" as const}:{})};
   if (value !== undefined) event.value=value;
   if (unit) event.unit=unit;
   if (note?.trim()) event.note=note.trim().slice(0,500);
@@ -224,7 +226,7 @@ export function updateTaskNote(meal: Meal, taskId:string, value:string, occurred
   const m=migrateMeal(meal);
   if(!cookTimeline(m).some(t=>t.id===taskId)) throw Error("Task not found.");
   const notes={...m.notes,[taskId]:value.slice(0,500)};
-  if(m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
+  if(physicalPhase(cookTimeline(m).find(t=>t.id===taskId)!) || m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
   const taskEvents=(m.events??[]).filter(e=>e.taskId===taskId);
   const lastReopen=taskEvents.map(e=>e.kind).lastIndexOf("reopened");
   const attempt=taskEvents.slice(lastReopen+1);
