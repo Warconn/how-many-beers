@@ -35,7 +35,9 @@ export type Meal = {
   startedAt?: string;
 };
 
+export type TemplateStage={kind:'preparation'|'cook'|'rest'|'activity';minutes:number;after?:string;startLabel?:string};
 export type PlannedTask = {
+  templateStage?: TemplateStage; // Derived estimate; never copied into a dish or an actual event.
   id: string;
   dishId: string;
   dishName: string;

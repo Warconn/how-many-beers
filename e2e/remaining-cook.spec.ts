@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {cookTimeline} from '../src/domain/cookState';
 import {newMeal,createDish} from '../src/domain/meal';
 test('Beerometer decreases with remaining work and reaches zero before Finish cook',async({page},info)=>{
  await page.clock.install({time:new Date('2026-11-25T10:00Z')});
@@ -7,6 +8,10 @@ test('Beerometer decreases with remaining work and reaches zero before Finish co
  const meter=page.getByRole('region',{name:'Cook duration in beers'});const before=Number(await meter.locator('strong').innerText());
  await page.getByRole('button',{name:'Full checklist',exact:true}).click();
  const checks=page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox');await checks.first().check();
+ // Completing one dish's prep does not consume another dish's parallel work.
+ await expect(meter.locator('strong')).toHaveText(String(before));
+ for(const task of cookTimeline(meal).filter(t=>t.templateStage?.kind==='preparation'))await page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{name:'Complete '+task.title+' for '+task.dishName,exact:true}).check();
+ await expect(meter).toContainText('15h 40m');
  await expect.poll(async()=>Number(await meter.locator('strong').innerText())).toBeLessThan(before);
  for(let i=1;i<await checks.count();i++)await checks.nth(i).check();
  await expect(meter.locator('strong')).toHaveText('0.0');await expect(meter).toContainText('All steps checked');await expect(meter).not.toContainText('Projected cook');

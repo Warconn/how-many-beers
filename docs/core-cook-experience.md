@@ -384,3 +384,54 @@ steps. Unknown/vague times and multiple ambiguous duration phrases require revie
 no safety endpoint or overnight duration is invented. Existing saved dishes are not
 reparsed. Full #77 equipment, temperature and structured ingredient extraction
 remains follow-up work.
+
+
+## Active step forecasts (#81)
+Current and upcoming timed imported work now has read-only live ETAs, shared by
+the current card, flat checklist and sticky next-step footer. The live finish leads
+with a concise instruction; original planned start stays in Step details. Completing prep early
+can move eligible work forward, real starts anchor elapsed estimates, and actual
+completion/reopening updates successors. Fixed/waiting/safety/unknown prerequisites
+remain constraints, parallel dishes remain independent, and no forecast is stored
+as an actual event or destructive plan edit. The Beerometer UI stays unchanged;
+only eligible remaining-time windows share the forecast. See [Cooking Mode](cooking-mode.md).
+
+Template timing review: wrapping/temperature decisions show Check when ready,
+with checkpoint dates and explanations in Step details, not Duration unknown. Cook and rest/hold phases reuse the
+existing dish estimates and actual activity anchors. Phase timing remains an
+estimate rather than a doneness guarantee; no physical step durations or actual
+history are inferred from checkpoint spacing.
+
+## Cooking execution refinement (#81, owner review of PR #82)
+
+Cooking Mode shows a concise current action/instruction, one duration/finish summary
+for timed activity, and a simple next action. Condition checks say “Check when
+ready”; their approximate planning checkpoints never imply readiness or completion.
+Step details preserves the full authored text, original planned dates, checkpoint
+assumptions, equipment/temperature metadata, editing, notes and activity. Cook tools
+and broader warnings are secondary disclosures. Planning retains its detailed controls.
+
+Entering Cooking Mode starts the session, not every physical phase. Explicit
+“On smoker now”/“Begin rest now” actions record actual phase starts. Recognized timed
+imported roasting/baking/smoking/grilling/simmering/cooling/resting actions have the
+same optional start capture; preparation/checkpoint steps do not gain generic Start
+buttons. Notes, readings, edits and rapid check-offs do not establish physical
+phase starts. Earlier automatic start/completion pairs remain in history but do not
+anchor physical forecasts. New explicit phase starts are marked with optional event
+metadata; old records remain readable and unchanged. Reopening resets only the
+current attempt. A checked loading action does not consume a 13-hour cook allowance.
+The shared remaining-time model retains ongoing cook/rest windows until explicit
+progress ends them, without changing Beerometer layout, fields or styling.
+
+Validation includes a Sunday brisket rapidly checked to wrapping, persistent actual
+smoker/rest starts, unresolved condition checks after elapsed time, and an imported
+15-minute roast plus 10-minute cooling sequence. Inspect actual desktop and narrow
+phone captures for information density, including expanded details and safety text.
+
+Owner-approved template completion before merging #82 to dev: every built-in method
+has relevant prep/preheat, cook, finishing and rest estimates. Brats are 120 minutes
+covered plus the existing 15-minute searing allowance; wings use explicit finishing
+stage allowances. Conditional checks remain Check when ready. Default stage estimates
+are derived separately from the stored plan, with explicit overrides supported.
+Actual phase starts anchor later stages; checking loading does not imply elapsed
+cooking. The owner authorizes merging the completed, green PR to dev, not production.

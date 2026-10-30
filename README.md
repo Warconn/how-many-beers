@@ -29,10 +29,10 @@ These desktop and mobile screenshots show the current dev workspace, including t
 ## What works today
 
 - **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
-- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. Timings remain editable; see [method notes](docs/personal-templates.md).
+- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
 - **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Estimated durations remain editable directly on imported steps.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
-- **Guided Cooking Mode.** Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
+- **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
 - **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, zero once all steps are checked, and separate total/elapsed/actual readings.
 
@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed #57/#56/#55/#59/#60 batch is merged into **dev**. The current owner-directed follow-up is **uploaded-recipe timing UX**, following #78/#79: edit estimated durations directly on steps and keep untimed recipes in recipe order with Serve last. Account foundation, initial cloud saving/history and CI optimization (#19/#20/#54) are complete. Basic explicit-time extraction and an editable import preview are now included in the owner-directed follow-up. Broader #77 equipment/temperature and ingredient-structure work remains separate.
+The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. Broader #77 equipment/temperature and ingredient-structure work remains separate.
 
 ## Account foundation work
 
@@ -105,3 +105,5 @@ profile settings, buffers, evidence and limitations. Applying remains explicit.
 - [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
 
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
+
+Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Record meaningful physical starts with **On smoker now**, **Begin rest now**, or the imported cooking phase action; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.
