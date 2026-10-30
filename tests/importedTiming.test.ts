@@ -1,7 +1,9 @@
 import {describe,it,expect} from 'vitest';
 import {parseRecipeText} from '../src/domain/recipe';
 import {newMeal} from '../src/domain/meal';
-import {cookTimeline,editStep,addStep,removeStep,recordEvent,moveStep,type ExtendedMeal,type StepPlanEdit} from '../src/domain/cookState';
+import {cookTimeline,setStepDuration,editStep,addStep,removeStep,recordEvent,moveStep,type ExtendedMeal,type StepPlanEdit} from '../src/domain/cookState';
+import {chronologicalTasks} from '../src/domain/stepTiming';
+import {guidedCookingSteps} from '../src/domain/cookingFocus';
 import {cookDuration,remainingCook} from '../src/domain/cookDuration';
 const make=():ExtendedMeal=>({...newMeal(),serveAt:'2026-11-26T00:05Z',dishes:[parseRecipeText('Pumpkin seeds','Clean seeds\nRoast seeds\nCool completely')]});
 const change=(m:ExtendedMeal,i:number,durationMinutes:number|null,extra:Partial<StepPlanEdit>={})=>{
@@ -66,4 +68,43 @@ describe('import anchors and independent prep',()=>{
   expect(cookTimeline(m)[0].scheduledAt).toBe('2026-11-26T00:00:00.000Z');expect(cookDuration(m,cookTimeline(m),Date.now()).minutes).toBe(5);
   m=recordEvent(m,t.id,'completed','2026-11-26T00:01Z');expect(cookTimeline({...m,serveAt:'2026-11-27T00:05Z'})[0].scheduledAt).toBe('2026-11-26T00:00:00.000Z');
  });
+});
+
+
+describe('uploaded recipe order before timing is complete',()=>{
+ it('keeps source steps before Serve in checklist, live schedule and guided cooking',()=>{
+  for(const m of [make(),change(make(),2,10),change(change(make(),0,5),1,15,{timingMode:'fixed',scheduledAt:'2026-11-25T23:40Z'})]){
+   const ids=[...m.dishes[0].steps!.map(s=>m.dishes[0].id+':'+s.id),m.dishes[0].id+':serve'];
+   const timeline=cookTimeline(m);
+   expect(timeline.map(t=>t.id)).toEqual(ids);
+   expect(chronologicalTasks(timeline).map(t=>t.id)).toEqual(ids);
+   const guide=guidedCookingSteps(timeline,{});expect(guide.current?.id).toBe(ids[0]);expect(guide.next?.id).toBe(ids[1]);
+   expect(guidedCookingSteps(timeline,{[ids[0]]:'actual'}).current?.id).toBe(ids[1]);
+  }
+ });
+ it('orders a newly imported dish correctly when another step already established checklist order',()=>{
+  const m=addStep(newMeal(),'Set table');m.dishes=[parseRecipeText('Pumpkin seeds','Clean seeds\nRoast seeds\nCool completely')];
+  expect(cookTimeline(m).filter(t=>t.dishId===m.dishes[0].id).map(t=>t.title)).toEqual(['Clean seeds','Roast seeds','Cool completely','Serve']);
+ });
+ it('preserves explicit checklist moves, other dishes and recorded events',()=>{
+  let m=make();m.dishes.push(parseRecipeText('Salad','Wash lettuce\nDress salad'));
+  const first=m.dishes[0].id+':'+m.dishes[0].steps![0].id,otherBefore=cookTimeline(m).filter(t=>t.dishId===m.dishes[1].id);
+  m=recordEvent(m,first,'temperature','2026-11-25T20:00Z',50,'°F','test note');
+  const moved=moveStep(m,first,'down',m.dishes[0].id);
+  expect(cookTimeline(moved).filter(t=>t.dishId===m.dishes[0].id)[1].id).toBe(first);
+  expect(cookTimeline(moved).filter(t=>t.dishId===m.dishes[1].id)).toEqual(otherBefore);
+  expect(moved.events).toEqual(m.events);
+ });
+});
+
+
+it('inline duration edits retain long imported text, fixed starts, notes, readings and other dishes',()=>{
+ let m=complete();const first=stages(m)[0];m=change(m,0,5,{timingMode:'fixed',scheduledAt:'2026-11-25T23:35Z'});
+ m.dishes[0].steps![0].title='A'.repeat(180);
+ m.notes={[first.id]:'Keep these notes'};m=recordEvent(m,first.id,'temperature','2026-11-25T23:35Z',50,'°F','Reading');
+ const before=cookTimeline(m).find(t=>t.id===first.id)!,events=JSON.stringify(m.events);
+ const changed=setStepDuration(m,first.id,10),after=cookTimeline(changed).find(t=>t.id===first.id)!;
+ expect(after).toMatchObject({...before,durationMinutes:10});expect(JSON.stringify(changed.events)).toBe(events);expect(changed.notes).toEqual(m.notes);expect(changed.dishes).toEqual(m.dishes);
+ for(const invalid of [-1,43201,NaN,Infinity])expect(()=>setStepDuration(m,first.id,invalid)).toThrow(/Duration/);
+ expect(stages(setStepDuration(m,first.id,null))[0].durationMinutes).toBeNull();expect(stages(setStepDuration(m,first.id,0))[0].durationMinutes).toBe(0);
 });

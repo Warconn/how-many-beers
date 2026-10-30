@@ -45,7 +45,8 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&number(d.cookMinutes)&&(d.cookMinutes as number)>=0&&(d.cookMinutes as number)<=43200
     &&number(d.restMinutes)&&(d.restMinutes as number)>=0&&(d.restMinutes as number)<=43200
     &&optional(d.pitTempF,number)&&optional(d.weightLb,number)
-    &&optional(d.steps,s=>Array.isArray(s)&&s.every(t=>object(t)&&text(t.id)&&text(t.title)&&duration(t.minutes)))
+    &&optional(d.steps,s=>Array.isArray(s)&&s.every(t=>object(t)&&text(t.id)&&text(t.title)&&duration(t.minutes)&&optional(t.instructions,text)))
+    &&optional(d.recipeSource,text)
     &&optional(d.turkeyPrep,t=>object(t)&&['frozen','thawing','thawed'].includes(String(t.state))
       &&number(t.thawDays)&&(t.thawDays as number)>=0&&(t.thawDays as number)<=14
       &&['brineHours','dryHours'].every(k=>number(t[k])&&(t[k] as number)>=0&&(t[k] as number)<=48))

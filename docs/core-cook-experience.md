@@ -176,7 +176,7 @@ accordion within the menu instead, with a single dish heading and no return navi
    keyboard focus moves to its header.
 3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
    header collapses it. Only one dish is expanded at a time.
-4. Use Dish settings for name, equipment, durations and optional reference settings.
+4. Use Dish settings for name, equipment, template durations and optional reference settings. Imported step durations are edited directly on their step rows.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
    Remove dish is a compact trash icon beside the heading, not hidden in settings;
    it retains a descriptive accessible label/tooltip and a 44px touch target;
@@ -346,3 +346,41 @@ total duration. History shows zero remaining and uses the archived timeline and
 archive time to freeze actual duration when a start was recorded, otherwise labels
 the planned estimate. Existing events and
 storage schemas are unchanged. The 90-minute conversion stays internal.
+
+
+## Uploaded-recipe timing UX (October 30, 2026)
+After adding a text/file recipe, each recipe step shows a labelled Estimated duration
+field with minutes and an Unknown placeholder. Valid changes apply immediately to
+the existing duration override, schedule and Beerometer. Edit remains available for
+fixed starts, instructions and other details. Dish settings no longer duplicates the
+imported duration list. One dish-level explanation replaces repeated generated
+instructions; authored instructions are retained.
+
+While any imported step lacks a valid start date, its source sequence is retained
+in the checklist, Live Schedule and guided cook, with the serving milestone after
+recipe work. Unknown dates remain explicit; this does not assign new dates or move
+actual/fixed timestamps. Fully timed schedules stay chronological; explicit manual
+checklist moves still work. The live schedule explains the recipe-order fallback.
+The Beerometer asks for missing step durations when a serving/fixed anchor already
+exists, instead of asking the user to set the anchor again. Basic explicit duration/range extraction is now included in the follow-up below;
+full equipment/temperature and ingredient-structure extraction remains #77.
+
+
+### Import with minimal re-entry
+Preview recipe steps now replaces the text-entry controls with a focused Recipe
+preview. Explicit written minutes/hours/seconds and compound durations fill the
+editable minute fields. Ranges remain visible and use their longer endpoint as a
+clearly disclosed planning default, confirmed by Add to this cook. The summary and
+Add action are available before the long list, and Add reviewed recipe is also
+available after review. Back to recipe text preserves the source for corrections.
+Changing raw text and previewing rebuilds the draft; only Add mutates the cook.
+
+Headed instruction sections supply the steps; ingredient/reference sections do not
+become cooking actions. The complete original recipe is saved as reference and
+available in Dish settings, including details that this basic parser does not
+structure. Standalone halfway/every/after reminders attach to the previous step's
+instructions, avoiding an extra cooking interval. Separately timed actions remain
+steps. Unknown/vague times and multiple ambiguous duration phrases require review;
+no safety endpoint or overnight duration is invented. Existing saved dishes are not
+reparsed. Full #77 equipment, temperature and structured ingredient extraction
+remains follow-up work.
