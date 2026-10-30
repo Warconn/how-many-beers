@@ -18,6 +18,7 @@ import TaskRow from "@/components/TaskRow";
 import {physicalPhase} from "@/domain/physicalPhase";
 import StepForecastTime from "@/components/StepForecastTime";
 import {liveStepForecasts} from "@/domain/cookForecast";
+import RecipeDetails from "@/components/RecipeDetails";
 import RecipePreview from "@/components/RecipePreview";
 import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
@@ -659,6 +660,7 @@ function CookExperience() {
                     </div>
                   )}
 
+                  {d.recipeSource&&<RecipeDetails dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
                   </details>
                   {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Use Edit for a fixed start or other step details.</p>}

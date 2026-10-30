@@ -1,4 +1,4 @@
-import type { Dish, RecipeStep } from "./meal";
+import type { Dish, RecipeStep, RecipeTemperature } from "./meal";
 
 export type RecipeTiming={minutes:number|null;range?:[number,number]};
 const words:Record<string,number>={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12};
@@ -39,7 +39,29 @@ export function extractRecipeTiming(source:string):RecipeTiming{
 }
 const clean=(line:string)=>line.trim().replace(/^#{1,6}\s*/,'').replace(/\*\*/g,'').trim();
 const instructionHeading=/^(?:instructions?|directions?|method|steps?|preparation)(?:\s*\([^)]*\))?:?$/i;
-const referenceHeading=/^(?:ingredients?|equipment|notes?|tips?|storage|serving suggestions?)(?:\s*\([^)]*\))?:?$/i;
+const referenceHeading=/^(?:ingredients?|equipment|source|references?|notes?|tips?|storage|serving suggestions?)(?:\s*\([^)]*\))?:?$/i;
+
+/** Unit-bearing temperatures only; local clauses distinguish food from equipment. */
+export function extractRecipeTemperatures(text:string):RecipeTemperature[]{
+ const result:RecipeTemperature[]=[];
+ for(const match of text.matchAll(/(?<![\d.−-])(\d+(?:\.\d+)?)\s*°?\s*([FC])\b/gi)){
+  const value=Number(match[1]),unit=match[2].toUpperCase() as 'F'|'C';
+  if(/[-−]\s*$/.test(text.slice(0,match.index)))continue;
+  if(value<=0||value>(unit==='F'?1000:538))continue;
+  const prefix=text.slice(0,match.index).split(/[.;\n]|\buntil\b|\bthen\b/i).pop()??'';
+  const suffix=text.slice(match.index!+match[0].length).split(/[.;,\n]|\band\b/i)[0];
+  const food=/\b(?:internal|center|centre|probe|thickest)\b|\b(?:food|meat)\s+(?:temperature|reaches?|is at)\b/i.test(prefix)||/^\s*(?:internal|in the (?:center|centre))\b/i.test(suffix);
+  const equipment=/\b(?:smoker|oven|grill|pit|preheat|(?:roast|bake|smoke|grill)\b[^.;\n]*\bat)\b/i.test(prefix);
+  const range=/(?:\d+\s*[-–—]\s*|\d+\s+to\s+)$/.test(prefix);
+  result.push({value,unit,kind:range?'unknown':food?'food':equipment?'equipment':'unknown'});
+ }
+ return result;
+}
+export const temperatureF=(t:RecipeTemperature)=>Math.round((t.unit==='C'?t.value*9/5+32:t.value)*10)/10;
+function recipeEquipment(text:string){
+ const match=text.match(/\b(pellet\s+smoker|pellet\s+grill|smoker|oven|grill|air\s+fryer|slow\s+cooker|stovetop)\b/i);
+ return match?match[0].toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):'Kitchen';
+}
 
 /** Parse explicit timing into a reviewable draft. Original source remains reference. */
 export function parseRecipeText(name:string,text:string):Dish{
@@ -47,13 +69,18 @@ export function parseRecipeText(name:string,text:string):Dish{
  const structured=lines.some(line=>instructionHeading.test(line));
  const hasTitle=structured||/^\s*#{1,6}\s+/.test(text);
  const first=lines[0]??'';
- const sourceTitle=hasTitle&&!instructionHeading.test(first)&&!referenceHeading.test(first)&&!/^\d|^[-*•]|^(?:prep|cook|total)\s*time\s*:/i.test(first)?first:undefined;
+ const sourceTitle=hasTitle&&!instructionHeading.test(first)&&!referenceHeading.test(first)&&!/^\d|^[-*•]|^(?:equipment|source|reference|notes?|ingredients?)\s*:|^(?:prep|cook|total)\s*time\s*:/i.test(first)?first:undefined;
  let inInstructions=!structured;
+ let section='';
+ const recipeIngredients:string[]=[],references:string[]=[];
  const steps:RecipeStep[]=[];
  for(const line of lines){
+  const metadata=line.match(/^(equipment|source|reference|notes?)\s*:\s*(.+)$/i);
+  if(metadata){references.push(metadata[2]);continue;}
   if(line===sourceTitle||line.toLowerCase()===name.trim().toLowerCase())continue;
-  if(instructionHeading.test(line)){inInstructions=true;continue;}
-  if(referenceHeading.test(line)){inInstructions=false;continue;}
+  if(instructionHeading.test(line)){inInstructions=true;section='';continue;}
+  if(referenceHeading.test(line)){inInstructions=false;section=line;continue;}
+  if(!inInstructions){if(/^ingredients?/i.test(section))recipeIngredients.push(line.replace(/^(?:[-*•]|\d+[.)])\s*/,''));else references.push(line);continue;}
   if(!inInstructions||/^(?:prep(?:aration)?|cook(?:ing)?|total|rest(?:ing)?)\s*time\s*:/i.test(line))continue;
   const instruction=line.replace(/^(?:\d+[.)]|[-*•])\s*/, '');
   if(instruction.length<3)continue;
@@ -64,7 +91,13 @@ export function parseRecipeText(name:string,text:string):Dish{
   }
   if(steps.length>=100)break;
   const timing=extractRecipeTiming(instruction);
-  steps.push({id:'step-'+(steps.length+1),title:instruction.slice(0,180),instructions:instruction,minutes:timing.minutes});
+  steps.push({id:'step-'+(steps.length+1),title:instruction.slice(0,180),instructions:instruction,minutes:timing.minutes,recipeTemperatures:extractRecipeTemperatures(instruction)});
  }
- return {id:crypto.randomUUID(),name:name.trim()||sourceTitle?.slice(0,180)||'Imported recipe',preset:'custom',equipment:'Kitchen',cookMinutes:0,restMinutes:0,steps,recipeSource:text};
+ const equipmentSource=[...references,...steps.map(s=>s.instructions??s.title)].join('\n');
+ const setting=extractRecipeTemperatures(equipmentSource).find(t=>t.kind==='equipment');
+ return {
+  id:crypto.randomUUID(),name:name.trim()||sourceTitle?.slice(0,180)||'Imported recipe',preset:'custom',
+  equipment:recipeEquipment(equipmentSource),pitTempF:setting?temperatureF(setting):undefined,
+  cookMinutes:0,restMinutes:0,steps,recipeSource:text,recipeIngredients,recipeReference:references.join('\n'),
+ };
 }

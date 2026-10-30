@@ -1,7 +1,10 @@
 import type { BrisketPlan } from "./brisketEstimate";
 export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "wings" | "brats" | "custom";
 
+export type RecipeTemperature = {value:number; unit:"F"|"C"; kind:"equipment"|"food"|"unknown"};
+
 export type RecipeStep = {
+  recipeTemperatures?: RecipeTemperature[];
   id: string;
   title: string;
   instructions?: string;
@@ -18,6 +21,8 @@ export type Dish = {
   pitTempF?: number;
   weightLb?: number;
   steps?: RecipeStep[];
+  recipeIngredients?: string[];
+  recipeReference?: string;
   recipeSource?: string; // Original uploaded/pasted text, retained as reference.
   brisketPlan?: BrisketPlan;
   turkeyPrep?: {state:"frozen"|"thawing"|"thawed";thawDays:number;brineHours:number;dryHours:number};
