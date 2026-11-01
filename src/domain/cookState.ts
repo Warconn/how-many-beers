@@ -1,3 +1,4 @@
+import {movableTemplatePrep,stepKey,orderedDishTasks} from "./planningOrder";
 import type { Meal, PlannedTask } from "./meal";
 import { buildDishTimeline } from "./schedule";
 import {adjustDishSequence,servingConflict} from "./stepDependencies";
@@ -175,7 +176,25 @@ export function moveStep(meal: Meal, taskId: string, direction: "up"|"down", dis
   // Swap only these slots so other dishes retain their positions and relative order.
   const from=order.indexOf(scoped[i]), to=order.indexOf(scoped[j]);
   [order[from],order[to]]=[order[to],order[from]];
-  return {...m, taskOrder: order};
+  let dishes=m.dishes;
+  if(m.mode!=="cooking"&&!m.startedAt){
+    const a=timeline.find(t=>t.id===scoped[i])!,b=timeline.find(t=>t.id===scoped[j])!;
+    const dish=m.dishes.find(d=>d.id===a.dishId);
+    if(dish&&a.dishId===b.dishId){
+      if(dish.preset!=="custom"&&(!movableTemplatePrep(a)||!movableTemplatePrep(b)))throw new Error("Only preparation steps within the same template phase can be reordered. Cooking and safety checkpoints keep their sequence.");
+      const native=new Set(buildDishTimeline(dish,m.serveAt).map(t=>t.id));
+      if(!native.has(a.id)||!native.has(b.id)||a.id===dish.id+':serve'||b.id===dish.id+':serve')throw new Error("Keep serving after recipe work. Added independent steps keep their own timing.");
+      const keys=order.filter(id=>native.has(id)).map(id=>stepKey(dish,id));
+      const visible=new Set(order);
+      const source=buildDishTimeline({...dish,planningStepOrder:undefined},m.serveAt).filter(t=>visible.has(t.id));
+      const canonical=source.map(t=>stepKey(dish,t.id));
+      const valid=orderedDishTasks({...dish,planningStepOrder:keys},source).map(t=>stepKey(dish,t.id));
+      if(keys.some((key,index)=>key!==valid[index]))throw new Error("Keep preparation before cooking, safety checkpoints in their phase, and serving last. This checklist order cannot become a timed plan.");
+      const planningStepOrder=keys.length===canonical.length&&keys.every((key,index)=>key===canonical[index])?undefined:keys;
+      dishes=m.dishes.map(d=>d.id===dish.id?{...d,planningStepOrder}:d);
+    }
+  }
+  return {...m,dishes,taskOrder:order};
 }
 
 export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occurredAt: string, value?: number, unit?: "°F"|"°C", note?: string): ExtendedMeal {

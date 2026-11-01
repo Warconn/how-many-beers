@@ -119,8 +119,8 @@ describe("automatic step start",()=>{
   });
 });
 
-it('moves a dish step past its own neighbor without reordering other dishes', () => {
-  const meal=seed();
+it('moves an active cook checklist step without reordering other dishes or rescheduling', () => {
+  const meal={...seed(),mode:'cooking' as const};
   meal.dishes.push(createDish('brats'));
   const tasks=cookTimeline(meal);
   const dishId=meal.dishes[0].id;

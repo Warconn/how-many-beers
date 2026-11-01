@@ -37,12 +37,14 @@ Existing condition-driven safety checks remain visible.
   preceding duration runs past them. Fixed steps keep their own time. Date-only edits
   to unknown-duration steps remain independent. The serving target stays unchanged;
   a derived serving step may move later, producing a warning in Plan notes/Cooking Mode.
-- Recipe order (template chronology or imported line order) determines links, not
-  manual checklist order. Hidden steps are excluded. An untimed stage breaks automatic
+- Default recipe order (template chronology or imported line order) determines links.
+  Explicit planning moves now opt that dish into the chosen planning sequence (#92);
+  legacy checklist orders and active-cook display moves do not reschedule. Hidden steps are excluded. An untimed stage breaks automatic
   links. Added custom/general-prep tasks are independent until explicit dependencies
   are supported; other dishes keep their schedules. Resource planning remains #3.
 - Live Schedule always sorts by planned time, with untimed steps last. Checklist/dish
-  move controls change manual ordering, not planned timestamps.
+  planning move controls update eligible dish timing. Existing saved manual orders
+  and moves made during an active cook remain presentation-only.
 
 ## Confirmed imported durations (#78)
 
@@ -170,3 +172,24 @@ Untimed cooling and overnight prose remain unknown. Original text and complete
 instructions are retained in optional backwards-compatible fields; no existing
 cook is automatically reparsed or rescheduled. Accounts, guests, history and backup
 behavior remain unchanged.
+
+
+## Planning sequence changes (#92)
+Moving native recipe steps in planning stores optional recipe-local planningStepOrder
+keys, separate from the legacy taskOrder display list. Imported work is scheduled in
+the chosen sequence from known durations and serving/fixed/recorded anchors. Source
+text, per-step fields and other dishes are unchanged. Serve stays last. Unknown and
+explicitly unscheduled durations remain unknown, and fixed/recorded conflicts remain
+visible rather than rewriting evidence.
+
+Template moves are supported within ordinary preparation groups, using existing
+editable allowances and scheduling the chosen prep sequence back from cooking. Moves
+across cooking phases, refrigerated waits or safety checkpoints explain why they
+cannot be applied. Restoring the source order restores its original spacing with no
+accumulated drift. This is not arbitrary dependency/resource scheduling (#3). Added
+independent steps retain their separate timing.
+
+The sequence survives account reload, backup, archive and Cook Again (local step
+keys survive new dish IDs). Starting a reordered plan uses that sequence for current
+and upcoming forecasts. Loading old taskOrder alone never changes old planned dates.
+Actual starts/completions, notes and archived timeline snapshots are never rewritten.

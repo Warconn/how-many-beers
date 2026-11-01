@@ -70,8 +70,8 @@ describe('planned step overrides', () => {
     }
     expect(JSON.stringify(meal)).toBe(before);
   });
-  it('sorts the live schedule chronologically regardless of checklist order, with untimed steps last', () => {
-    const meal=seed(), tasks=cookTimeline(meal);
+  it('sorts the active cook schedule chronologically regardless of display order, with untimed steps last', () => {
+    const meal={...seed(),mode:'cooking' as const}, tasks=cookTimeline(meal);
     const moved=moveStep(meal,tasks[1].id,'up');
     expect(cookTimeline(moved)[0].id).toBe(tasks[1].id);
     expect(chronologicalTasks(cookTimeline(moved)).map(t=>t.id)).toEqual(tasks.map(t=>t.id));
