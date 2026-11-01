@@ -51,9 +51,9 @@ test('existing cooking events and IDs survive contextual step changes', async ({
   const region = page.getByRole('region', { name: 'Smoked brisket steps' });
   const row = region.getByRole('article', { name: first.title, exact: true });
   await row.getByRole('button', { name: 'Edit', exact: true }).click();
-  await row.getByLabel('Task name').fill('Season carefully');
+  await row.getByLabel('Step name').fill('Season carefully');
   await row.getByLabel('Instructions').fill('Keep the original recorded temperatures.');
-  await row.getByRole('button', { name: 'Save & Close' }).click();
+  await row.getByRole('button', { name: 'Save' }).click();
   await region.getByRole('button', { name: 'Move Season carefully down' }).click();
   page.once('dialog', dialog => dialog.accept());
   await region.getByRole('article', { name: 'Season carefully', exact: true }).getByRole('button', { name: 'Remove step: Season carefully', exact: true }).click();

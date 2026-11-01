@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. The #77 text importer now retains editable equipment, separate smoker/oven and internal-food temperatures, ingredients and source notes through review and saved dish reference. Original source and unknown timing remain intact. URL/photo/PDF ingestion remains separate.
+The reviewed cooking/planner/import improvements through #82 were released via #88. The owner approved integrating Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) into dev on November 1 for manual testing: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and remaining #77 recipe details (#90). The importer retains editable equipment, separate smoker/oven and internal-food temperatures, ingredients and source notes; original source and unknown timing remain intact. #84 stays queued pending review of the integrated cooking behavior. Production promotion requires separate approval; URL/photo/PDF import remains separate.
 
 ## Account foundation work
 
@@ -107,3 +107,7 @@ profile settings, buffers, evidence and limitations. Applying remains explicit.
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
 
 Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Record meaningful physical starts with **On smoker now**, **Begin rest now**, or the imported cooking phase action; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.
+
+Step editing opens a short form for name, instructions and duration. **More options**
+keeps exact start times, equipment and target food temperatures available. Dish rows
+use aligned Edit, Move and Remove controls; Add a step stays below the list.
