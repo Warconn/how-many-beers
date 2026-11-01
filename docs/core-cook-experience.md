@@ -436,6 +436,22 @@ are derived separately from the stored plan, with explicit overrides supported.
 Actual phase starts anchor later stages; checking loading does not imply elapsed
 cooking. The owner authorizes merging the completed, green PR to dev, not production.
 
+## Short step editing and dish actions (#85, #62)
+The shared planning/Cooking Mode step editor opens with Step name, Instructions,
+estimated duration and its compact minutes/hours selector, Save and Cancel.
+More options starts collapsed and retains planned/fixed/unscheduled timing, Use
+plan timing, equipment and target food temperature. A small dot identifies custom
+advanced values. DST offset selection appears only for repeated local times.
+Saving without opening the disclosure preserves its values; blank and zero duration
+retain their existing meanings. Template stage allowances remain derived metadata,
+not new explicit duration overrides on a name-only save.
+
+Dish rows align Edit, a labelled Move group and Remove at 44px touch targets.
+Boundary moves are disabled, editing disables moves, and an accessible announcement
+reports the new position. Add a step remains below each dish list; its inline form
+focuses the title, accepts Enter, and returns focus on Cancel or Escape. Existing
+IDs, events, calculations, account saves and other dishes are preserved.
+
 ## Overnight #87: execution correctness (#86)
 
 A cook is target-based while planning and session-based after Start Cooking. A pure
