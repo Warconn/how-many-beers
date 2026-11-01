@@ -44,5 +44,5 @@ test('returning cooks get a compact brand header and unchanged resume data',asyn
   await page.screenshot({path:info.outputPath('brand-returning-cook.png'),fullPage:true,style:'nextjs-portal{display:none}'});
   await resume.click();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(saved);
-  await expect(page.getByText("Today's checklist",{exact:true})).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
 });

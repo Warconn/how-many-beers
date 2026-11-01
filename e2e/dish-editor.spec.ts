@@ -66,5 +66,5 @@ test('existing cooking events and IDs survive contextual step changes', async ({
   expect(after.dishes[1]).toEqual(saved.dishes[1]);
   await page.reload();
   await page.getByRole('button', { name: /Continue cooking/ }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
 });
