@@ -1,3 +1,4 @@
+import {temperatureF} from "./recipe";
 import type { Dish, Meal, PlannedTask } from "./meal";
 import {templateStage} from "./templateStages";
 import {turkeyPreparation} from "./turkeyPrep";
@@ -114,6 +115,7 @@ function importedTasks(d:Dish,serveAt:string,context:ImportedTimingContext={}):P
     const minutes=edit?.durationMinutes===null?null:step.minutes===null && edit?.durationMinutes!==undefined?edit.durationMinutes:step.minutes;
     return {id:d.id+':'+step.id,dishId:d.id,dishName:d.name,title:step.title,
       durationMinutes:minutes,baseDurationMinutes:step.minutes,recipeOrder:index,
+      targetTempF:(()=>{const targets=step.recipeTemperatures?.filter(t=>t.kind==='food')??[];return targets.length===1?temperatureF(targets[0]):null;})(),
       instructions:step.instructions??'Imported recipe step. Confirm instructions and timing.',scheduledAt:null,isCondition:false};
   });
   if(!context.hidden?.has(d.id+':serve'))tasks.push({id:d.id+':serve',dishId:d.id,dishName:d.name,title:'Serve',recipeOrder:source.length,durationMinutes:null,instructions:'Confirm safe doneness and plate.',scheduledAt:at(serveAt,0),isCondition:false});

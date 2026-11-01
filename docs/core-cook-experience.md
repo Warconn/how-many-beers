@@ -436,6 +436,22 @@ are derived separately from the stored plan, with explicit overrides supported.
 Actual phase starts anchor later stages; checking loading does not imply elapsed
 cooking. The owner authorizes merging the completed, green PR to dev, not production.
 
+## Structured text recipe review (#77, remaining scope)
+Pasted and .txt/.md recipes now retain headed ingredient quantities, source/notes,
+explicit equipment and unit-bearing temperatures. Review offers Equipment and a
+starting smoker/oven setting, plus collapsed ingredients/reference and per-step
+temperature corrections. A temperature's purpose is explicitly smoker/oven setting,
+internal food target, or unclear; Celsius remains visible as written. Only a single
+unambiguous internal target becomes the step's food target. Equipment temperatures
+never become food endpoints. Ambiguous ranges remain in the authored text and need
+review; no cooling time or safety endpoint is invented.
+
+After adding, Dish settings exposes the same reference editor. Original recipe text
+remains unchanged through corrections, reload, account saving and completed history.
+These optional JSON fields require no database migration. Existing recipes are not
+reparsed, and manual/template flows keep their existing behavior. URL, photo and PDF
+ingestion remain outside this text importer.
+
 ## Short step editing and dish actions (#85, #62)
 The shared planning/Cooking Mode step editor opens with Step name, Instructions,
 estimated duration and its compact minutes/hours selector, Save and Cancel.
@@ -464,6 +480,7 @@ Unknown timing, overruns and infeasible fixed prerequisites show unavailable/rev
 states. Work added during a session carries optional creation metadata for a stable
 forecast, never a fabricated physical event. See [Cooking Mode](cooking-mode.md).
 
-Wave 1 review PRs stay unmerged. #85/#62 is one combined editing workstream, #77 covers
-remaining importer detail only, and #84 remains queued for a reviewed #86 integration
-base. No automatic approval to merge or promote these overnight changes is implied.
+The owner approved integrating Wave 1 into dev on November 1 for manual testing.
+#85/#62 is one combined editing workstream and #77 covers remaining importer detail
+only. #84 remains queued pending review of the integrated cooking behavior. Production
+promotion requires separate approval.

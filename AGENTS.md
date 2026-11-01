@@ -18,7 +18,7 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 [Issue #87](https://github.com/Warconn/how-many-beers/issues/87) is the October 29 overnight execution authority, superseding the earlier October 27/28 NOW order. PR #82 for #81 is merged to dev at cc6942e; the owner-approved release #88 is merged to main at 3973bb4 and production deployment is verified. #19/#20/#54, #55/#56/#57/#59/#60/#78/#81 and the basic #77 timing/review work in #80 are historical completed deliveries; do not duplicate them.
 
-Wave 1 uses isolated feature branches from the same latest dev, with separate PRs targeting dev and **no merge or production promotion**:
+Wave 1 was implemented on isolated feature branches from the same dev base. On November 1 the owner explicitly approved merging #91, #89 and #90 into dev for manual testing. Resolve overlaps with the union of acceptance tests and verify the combined suite. **Production promotion remains unapproved.** The delivered workstreams are:
 1. **#86 first, correctness:** actual-start-based live execution schedule, overall estimated finish, projected duration and Beerometer agreement; original target/fixed constraints/actuals/history remain intact. Keep Beerometer UI unchanged.
 2. **#85 + #62 together:** essential step form with collapsed advanced controls plus aligned, accessible add/edit/move/remove actions. One coordinated UX PR, no scheduling-engine changes.
 3. **#77 remaining import scope only:** equipment, pit versus internal temperatures and structured ingredient/reference review for text/.txt/.md; preserve already delivered timing parsing and unknowns. No URL/photo ingestion or SQL migration expansion.
