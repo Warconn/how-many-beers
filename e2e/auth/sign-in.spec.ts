@@ -223,7 +223,7 @@ test("account access works in cooking and history without changing cook progress
     .getByRole("button", { name: "Close account", exact: true })
     .click();
   await expect(
-    page.getByText("Today's checklist", { exact: true }),
+    page.getByRole("progressbar", { name: "Cook progress", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("how-many-beers:meal:v1")),
@@ -269,7 +269,7 @@ test("redirected sign-in can return to the same cooking view with exact saved pr
   ).toBeVisible();
   await page.getByRole("link", { name: "← Back to cook", exact: true }).click();
   await expect(
-    page.getByText("Today's checklist", { exact: true }),
+    page.getByRole("progressbar", { name: "Cook progress", exact: true }),
   ).toBeVisible();
   expect(page.url()).toBe("http://127.0.0.1:3108/");
   expect(

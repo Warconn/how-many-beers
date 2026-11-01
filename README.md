@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed cooking/planner/import improvements through #82 were released via #88. Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) is merged and green in dev: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and #77 recipe details (#90). The owner-approved November 1 follow-up is #92 planning-aware reorder, then #84 Cooking Mode cleanup, with dev testing before any separate production approval. The owner completed #4 and requested closing #5; no additional estimator calibration is claimed. URL/photo/PDF import remains separate.
+The reviewed cooking/planner/import improvements through #82 were released via #88. Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) is merged and green in dev: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and #77 recipe details (#90). The owner-approved November 1 follow-up delivers #92 planning-aware reorder (merged into dev via #93) and #84 Cooking Mode cleanup, with dev testing before any separate production approval. The owner completed #4 and requested closing #5; no additional estimator calibration is claimed. URL/photo/PDF import remains separate.
 
 ## Account foundation work
 
@@ -111,3 +111,8 @@ Cooking Mode keeps the current action, a short instruction and its live duration
 Step editing opens a short form for name, instructions and duration. **More options**
 keeps exact start times, equipment and target food temperatures available. Dish rows
 use aligned Edit, Move and Remove controls; Add a step stays below the list.
+
+
+Cooking Mode now uses one progress treatment and a single content column. Completed
+cooks have one primary Finish action and checklist review, while Finish cook early
+is available under Cook details & tools. The Beerometer remains unchanged.

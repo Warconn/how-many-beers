@@ -32,7 +32,7 @@ test('save for later returns Home without starting, survives reopening and start
  const url=page.url();const reopened=await context.newPage();await page.close();await reopened.goto(url);
  await expect(reopened.getByRole('region',{name:'Planned start',exact:true})).toBeVisible();expect(await saved(reopened)).toEqual(meal);
  reopened.once('dialog',d=>d.dismiss());await reopened.getByRole('button',{name:/Plan a new cook/}).click();expect(await saved(reopened)).toEqual(meal);
- await reopened.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(reopened.getByText("Today's checklist")).toBeVisible();
+ await reopened.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(reopened.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
  const active=await saved(reopened);expect(active.mode).toBe('cooking');expect(active.startedAt).toBeTruthy();
  expect({...active,mode:meal.mode,startedAt:undefined}).toEqual({...meal,startedAt:undefined});
  await reopened.getByRole('button',{name:'← Home',exact:true}).click();await expect(reopened.getByRole('button',{name:'Start cooking',exact:true})).toHaveCount(0);
@@ -48,7 +48,7 @@ test('storage failure stays in planning and retry saves without a false success'
  await page.evaluate(k=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key===k)throw new DOMException('Full','QuotaExceededError');return original.call(this,key,value);};},key);
  await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'Could not save the cook start'})).toBeVisible();
  await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();expect((await saved(page)).startedAt).toBeUndefined();
- await page.reload();await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(page.getByText("Today's checklist")).toBeVisible();expect((await saved(page)).startedAt).toBeTruthy();
+ await page.reload();await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();expect((await saved(page)).startedAt).toBeTruthy();
 });
 
 test('invalid and untimed drafts can be saved; active cooks keep their history',async({page})=>{

@@ -199,3 +199,24 @@ iPhone/WebKit tests compare its actual screenshot buffers for identical work wit
 near versus distant original targets. Before/after desktop/mobile reproduction
 captures show the 62h17m/41.5-beer calendar-gap bug replaced by the actual 16h55m
 brisket allowances. Frozen completed-cook actuals remain unchanged.
+
+
+## Focused layout and completion (#84)
+Cooking uses a single readable content column with supporting tools below, rather
+than reserving an empty desktop rail. One progress count/bar sits above the current
+action; redundant header/step/footer counts are removed. The next action and Full
+checklist remain in the sticky guide while work remains. The original target and
+execution estimate stay visible. Beerometer contents, styles and calculations stay
+unchanged.
+
+After all steps are checked, a compact All steps checked section offers one primary
+Finish cook and a secondary Full checklist action. It has no sticky Finish copy or
+stale next-unchecked message. Reopening a checklist item returns to its current-step
+view without losing prior actual records. Finish is never automatic.
+
+Finishing an incomplete cook remains available under Cook details & tools as Finish
+cook early, with the existing confirmation/save behavior. Canceling returns keyboard
+focus to that action. Draft edits/readings still block navigation and finishing.
+Trial guests see honest sign-in/save and finish-without-saving choices; accounts
+retain the same archive semantics. Layout changes do not write cooking events or
+alter plan dates, forecasts, notes, activity logs or archived cooks.

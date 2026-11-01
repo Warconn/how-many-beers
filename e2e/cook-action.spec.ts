@@ -56,7 +56,7 @@ test('planned cook has one compact action beneath the menu and optional checklis
   await info.attach('cook-action.png', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await actions.getByRole('button', { name: 'Start cooking', exact: true }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   const started = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
   expect(started.mode).toBe('cooking');
   expect(started.startedAt).toBeTruthy();
@@ -67,10 +67,10 @@ test('planned cook has one compact action beneath the menu and optional checklis
   expect(progress.events.some((event: { kind: string }) => event.kind === 'completed')).toBe(true);
   await page.getByRole('button', { name: 'Edit plan', exact: true }).click();
   await page.getByRole('button', { name: 'Continue cooking', exact: true }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: /Continue cooking/ }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(progress);
 });
 
@@ -86,11 +86,11 @@ test('continue returns to saved cooking without changing timestamps or progress'
   await expect(actions.getByRole('button', { name: 'Continue cooking', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Start cooking', exact: true })).toHaveCount(0);
   await actions.getByRole('button', { name: 'Continue cooking', exact: true }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(migrateMeal(saved));
   await page.reload();
   await page.getByRole('button', { name: /Continue cooking/ }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(migrateMeal(saved));
 });
 
@@ -118,6 +118,6 @@ test('legacy started cook keeps its original start when continuing', async ({ pa
   await page.reload();
   await page.getByRole('button', { name: /View cook/ }).click();
   await page.getByRole('button', { name: 'Continue cooking', exact: true }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual({ ...saved, mode: 'cooking' });
 });

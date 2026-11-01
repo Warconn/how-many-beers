@@ -33,7 +33,7 @@ test('installed shell resumes an overnight cook offline, including notes, readin
  await page.screenshot({path:info.outputPath('offline-cooking.png'),fullPage:true,style:'nextjs-portal{display:none}'});
  const url=page.url(),now=await page.evaluate(()=>Date.now());const reopened=await context.newPage();await reopened.clock.install({time:new Date(now)});await page.close();await reopened.goto(url);
  await reopened.getByRole('button',{name:/Continue cooking/}).click();expect(await reopened.evaluate(k=>JSON.parse(localStorage.getItem(k)!),ACTIVE_KEY)).toEqual(saved);
- await reopened.getByRole('navigation',{name:'Cook navigation'}).getByRole('button',{name:'Finish cook',exact:true}).click();
+ await reopened.getByText('Cook details & tools',{exact:true}).click();await reopened.getByRole('button',{name:'Finish cook early',exact:true}).click();
  await reopened.getByRole('button',{name:'Save finished cook',exact:true}).click();
  expect((await reopened.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY)).cooks[0].meal).toEqual(saved);
  await context.setOffline(false);await reopened.reload();await ready(reopened);

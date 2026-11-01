@@ -486,6 +486,14 @@ only. #84 remains queued pending review of the integrated cooking behavior. Prod
 promotion requires separate approval.
 
 
+## Cooking layout refinement (#84)
+One progress treatment and a single-column current action replace redundant counts
+and the empty desktop tools rail. All-checked shows one compact Finish action with
+checklist review; no duplicate sticky finish or stale next-step announcement. Finish
+early lives in Cook details & tools. Reopening, protected drafts and account/guest
+finish behavior remain intact. The accepted Beerometer UI and calculations are
+unchanged. See cooking-mode.md.
+
 ## Planning moves update estimates (#92)
 New planning moves within a dish change eligible recipe/preparation order and dates,
 with matching Live Schedule, planned duration and execution handoff. Template safety
