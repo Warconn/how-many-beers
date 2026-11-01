@@ -83,7 +83,7 @@ test('failed finish/archive keeps the original active cook and history together'
  await page.goto('/');await page.evaluate(({active,history,a,h})=>{localStorage.clear();localStorage.setItem(a,JSON.stringify(active));localStorage.setItem(h,JSON.stringify(history));},{active,history,a:ACTIVE_KEY,h:HISTORY_KEY});await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();
  const before=await page.evaluate(({a,h})=>[localStorage.getItem(a),localStorage.getItem(h)],{a:ACTIVE_KEY,h:HISTORY_KEY});
  await page.evaluate(k=>{const original=Storage.prototype.setItem;let failed=false;Storage.prototype.setItem=function(key,value){if(key===k&&!failed){failed=true;throw new DOMException('Full','QuotaExceededError');}return original.call(this,key,value);};},ACTIVE_KEY);
- await page.getByRole('navigation',{name:'Cook navigation'}).getByRole('button',{name:'Finish cook',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
  await expect(page.getByRole('alert').filter({hasText:'Could not save this cook'})).toBeVisible();
  expect(await page.evaluate(({a,h})=>[localStorage.getItem(a),localStorage.getItem(h)],{a:ACTIVE_KEY,h:HISTORY_KEY})).toEqual(before);
 });

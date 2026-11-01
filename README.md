@@ -111,3 +111,8 @@ Cooking Mode keeps the current action, a short instruction and its live duration
 Step editing opens a short form for name, instructions and duration. **More options**
 keeps exact start times, equipment and target food temperatures available. Dish rows
 use aligned Edit, Move and Remove controls; Add a step stays below the list.
+
+
+Cooking Mode now uses one progress treatment and a single content column. Completed
+cooks have one primary Finish action and checklist review, while Finish cook early
+is available under Cook details & tools. The Beerometer remains unchanged.

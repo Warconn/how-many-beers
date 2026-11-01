@@ -45,14 +45,14 @@ test('editing and readings stay protected; completing advances guidance and reta
 
 test('finish is separate from navigation and archives only after explicit confirmation',async({page})=>{
  const meal=fixture();meal.customTasks=meal.customTasks!.filter(t=>['done','due'].includes(t.id));meal.taskOrder=['due','done'];await load(page,meal);
- await page.getByRole('button',{name:'Finish cook',exact:true}).click();const finish=page.getByRole('region',{name:'Finish cook',exact:true});await expect(finish).toContainText('1 unchecked');await finish.getByRole('button',{name:'Keep cooking',exact:true}).click();expect(await saved(page)).toEqual(meal);
+ await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();const finish=page.getByRole('region',{name:'Finish cook',exact:true});await expect(finish).toContainText('1 unchecked');await finish.getByRole('button',{name:'Keep cooking',exact:true}).click();expect(await saved(page)).toEqual(meal);
  await page.getByRole('checkbox',{name:'Complete Check the bark',exact:true}).click();await expect(page.getByText('All steps checked',{exact:true}).first()).toBeVisible();const complete=await saved(page);
- await page.getByRole('navigation',{name:'Cooking guide',exact:true}).getByRole('button',{name:'Finish cook',exact:true}).click();await finish.getByLabel('How did it turn out? (optional)').fill('Good bark');await finish.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ await page.getByRole('region',{name:'Cook complete',exact:true}).getByRole('button',{name:'Finish cook',exact:true}).click();await finish.getByLabel('How did it turn out? (optional)').fill('Good bark');await finish.getByRole('button',{name:'Save finished cook',exact:true}).click();
  await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();const archive=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY);expect(archive.cooks).toHaveLength(1);expect(archive.cooks[0].meal).toEqual(complete);expect(archive.cooks[0].feedback).toBe('Good bark');expect((await saved(page)).id).not.toBe(complete.id);
  const legacy:ExtendedMeal={...newMeal(),mode:'cooking',dishes:[createDish('brisket')],startedAt:'2026-11-24T20:00:00Z'};
  legacy.hiddenTaskIds=cookTimeline(legacy).map(t=>t.id);legacy.events=[{id:'old-start',taskId:legacy.dishes[0].id+':prep',kind:'started',occurredAt:'2026-11-24T20:00:00Z'}];
  await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),legacy);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();
- await page.getByRole('navigation',{name:'Cook navigation',exact:true}).getByRole('button',{name:'Finish cook',exact:true}).click();await finish.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();await finish.getByRole('button',{name:'Save finished cook',exact:true}).click();
  const retained=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY);expect(retained.cooks.find((c:{id:string})=>c.id===legacy.id).meal.events).toEqual(legacy.events);
 
 });

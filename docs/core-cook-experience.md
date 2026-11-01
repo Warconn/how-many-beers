@@ -484,3 +484,12 @@ The owner approved integrating Wave 1 into dev on November 1 for manual testing.
 #85/#62 is one combined editing workstream and #77 covers remaining importer detail
 only. #84 remains queued pending review of the integrated cooking behavior. Production
 promotion requires separate approval.
+
+
+## Cooking layout refinement (#84)
+One progress treatment and a single-column current action replace redundant counts
+and the empty desktop tools rail. All-checked shows one compact Finish action with
+checklist review; no duplicate sticky finish or stale next-step announcement. Finish
+early lives in Cook details & tools. Reopening, protected drafts and account/guest
+finish behavior remain intact. The accepted Beerometer UI and calculations are
+unchanged. See cooking-mode.md.

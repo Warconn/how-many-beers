@@ -169,10 +169,8 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   await page.screenshot({path:testInfo.outputPath("account-cooking.png"),fullPage:true});
   const recorded = (remote.state.active as { meal: { events: unknown[] } }).meal
     .events;
-  await page
-    .getByRole("button", { name: "Finish cook", exact: true })
-    .first()
-    .click();
+  await page.getByText('Cook details & tools',{exact:true}).click();
+  await page.getByRole('button',{name:'Finish cook early',exact:true}).click();
   await page
     .getByLabel("How did it turn out? (optional)")
     .fill("Tender with good bark");
@@ -420,10 +418,8 @@ test("an unconfirmed finish retries once without duplicating completed history",
   await page
     .getByRole("button", { name: "Start cooking", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Finish cook", exact: true })
-    .first()
-    .click();
+  await page.getByText('Cook details & tools',{exact:true}).click();
+  await page.getByRole('button',{name:'Finish cook early',exact:true}).click();
   await page
     .getByLabel("How did it turn out? (optional)")
     .fill("Preserve this outcome");
@@ -676,4 +672,14 @@ test('compact step edits and order survive account saves with advanced options c
  await expect.poll(()=>(remote.state.active as {meal:typeof original}).meal.taskOrder?.[1]).toBe(id);
  const saved=(remote.state.active as {meal:typeof original}).meal;expect(saved.taskOverrides[id]).toMatchObject({...original.taskOverrides[id],title:'Build the tray carefully',instructions:'Keep the vegetables covered.'});expect(saved.events).toEqual(original.events);expect(saved.completed).toEqual(original.completed);
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Grilled beer-bath brats',exact:true}).click();const edited=steps.getByRole('article',{name:'Build the tray carefully',exact:true});await expect(steps.getByRole('article').nth(1)).toHaveAttribute('aria-label','Build the tray carefully');await edited.getByRole('button',{name:'Edit',exact:true}).click();await form.getByText(/^More options/).click();await expect(form.getByLabel('Equipment for this step',{exact:true})).toHaveValue('Patio grill');await expect(form.getByLabel('Planned date and time',{exact:true})).toHaveValue('2026-01-01T12:30');await expect(form.getByLabel('Target food temperature (°F)',{exact:true})).toHaveValue('165');
+});
+
+
+test('trial guest sees honest finish choices and can finish without persisting a cook',async({page})=>{
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();const finish=page.getByRole('region',{name:'Finish cook',exact:true});await expect(finish).toContainText('This trial cook is not saved.');await expect(finish.getByRole('button',{name:'Sign in to save this cook',exact:true})).toBeVisible();page.once('dialog',dialog=>dialog.accept());await finish.getByRole('button',{name:'Finish without saving',exact:true}).click();await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeVisible();expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();
+});
+
+test('completed cook has one primary finish and account history retains its actual records',async({page,context})=>{
+ const {cookTimeline,recordEvent}=await import('../../src/domain/cookState');const remote=server();let meal=migrateMeal({...newMeal(),name:'Completed brats',serveAt:'2026-11-01T18:00Z',mode:'cooking',startedAt:'2026-11-01T15:00Z',dishes:[createDish('brats')]});for(const t of cookTimeline(meal))meal=recordEvent(meal,t.id,'completed','2026-11-01T18:00Z');meal.notes[cookTimeline(meal)[0].id]='Keep this note';remote.state.active={meal,serveInstant:'2026-11-01T18:00:00.000Z'};remote.state.revision=1;
+ await remote.attach(context);await signIn(page);await page.getByRole('button',{name:/Continue cooking/}).click();await expect(page.getByRole('button',{name:'Finish cook',exact:true})).toHaveCount(1);await page.getByRole('button',{name:'Finish cook',exact:true}).click();await page.getByLabel('How did it turn out? (optional)').fill('Good meal');await page.getByRole('button',{name:'Save finished cook',exact:true}).click();await expect.poll(()=>remote.state.history.length).toBe(1);const saved=remote.state.history[0] as {meal:typeof meal;feedback:string};expect(saved.meal.completed).toEqual(meal.completed);expect(saved.meal.notes).toEqual(meal.notes);expect(saved.feedback).toBe('Good meal');expect(saved.meal.events).toEqual(meal.events);
 });
