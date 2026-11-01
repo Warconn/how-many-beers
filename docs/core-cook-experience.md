@@ -451,3 +451,19 @@ Boundary moves are disabled, editing disables moves, and an accessible announcem
 reports the new position. Add a step remains below each dish list; its inline form
 focuses the title, accepts Enter, and returns focus on Cancel or Escape. Existing
 IDs, events, calculations, account saves and other dishes are preserved.
+
+## Overnight #87: execution correctness (#86)
+
+A cook is target-based while planning and session-based after Start Cooking. A pure
+execution projection supplies current/upcoming estimates, an overall Estimated finish
+and the existing Beerometer numerical fields. Original target, planned times, fixed
+constraints and immutable actuals/history are preserved. Time remaining comes from
+unfinished timed work and genuine waits with overlap, rather than idle days until
+serving. Real phase starts override provisional positions; no clock marks food done.
+Unknown timing, overruns and infeasible fixed prerequisites show unavailable/review
+states. Work added during a session carries optional creation metadata for a stable
+forecast, never a fabricated physical event. See [Cooking Mode](cooking-mode.md).
+
+Wave 1 review PRs stay unmerged. #85/#62 is one combined editing workstream, #77 covers
+remaining importer detail only, and #84 remains queued for a reviewed #86 integration
+base. No automatic approval to merge or promote these overnight changes is implied.

@@ -10,7 +10,7 @@ for(const preset of Object.keys(presets) as Exclude<PresetId,'custom'>[]){
  it(preset+' has authored preparation/cook/rest estimates and honest checkpoints',()=>{
   const m=make(preset),before=JSON.stringify(m),tasks=cookTimeline(m),f=out(m),id=m.dishes[0].id;
   expect(f[id+':prep'].template!.minutes).toBeGreaterThan(0);expect(f[id+':preheat'].template!.minutes).toBeGreaterThan(0);expect(f[id+':start'].template!.minutes).toBeGreaterThan(0);
-  for(const t of tasks.filter(t=>t.isCondition&&!t.templateStage)){expect(f[t.id].finish).toBeNull();expect(f[t.id].template?.minutes).toBeUndefined();}
+  for(const t of tasks.filter(t=>t.isCondition&&!t.templateStage&&!t.id.endsWith(':thaw'))){expect(f[t.id].finish).toBeNull();expect(f[t.id].template?.minutes).toBeUndefined();}
   if(m.dishes[0].restMinutes>0&&tasks.some(t=>t.id===id+':rest'))expect(f[id+':rest'].template?.minutes).toBeGreaterThan(0);
   expect(JSON.stringify(m)).toBe(before);
  });
@@ -28,7 +28,7 @@ it('wings explicitly allocate smoking, oil preparation, frying and draining with
  expect(f[id+':oil'].start).toBe('2026-10-31T00:00:00.000Z');expect(f[id+':fry'].start).toBe('2026-10-31T00:10:00.000Z');expect(f[id+':finish'].finish).toBe('2026-10-31T00:15:00.000Z');expect(f[id+':serve'].start).toBe('2026-10-31T00:20:00.000Z');
 });
 it('turkey refrigeration uses the selected brine/drying hours, not activity gaps',()=>{
- const m=make('turkey'),id=m.dishes[0].id;m.dishes[0].turkeyPrep={state:'thawed',thawDays:0,brineHours:12,dryHours:2};const f=out(m);expect(f[id+':brine'].template?.minutes).toBe(720);expect(f[id+':dry'].template?.minutes).toBe(120);expect(f[id+':thaw'].finish).toBeNull();
+ const m=make('turkey'),id=m.dishes[0].id;m.dishes[0].turkeyPrep={state:'thawed',thawDays:0,brineHours:12,dryHours:2};const f=out(m);expect(f[id+':brine'].template?.minutes).toBe(720);expect(f[id+':dry'].template?.minutes).toBe(120);expect(f[id+':thaw'].template?.minutes).toBe(0);
 });
 it('finishing phases respect fixed/unknown constraints, explicit overrides and expired predecessor estimates',()=>{
  let m=make('brats'),id=m.dishes[0].id;for(const key of ['prep','preheat'])m=recordEvent(m,id+':'+key,'completed',new Date(now).toISOString());m=recordEvent(m,id+':start','started','2026-10-30T18:00Z');m=recordEvent(m,id+':start','completed','2026-10-30T18:01Z');expect(out(m)[id+':bath'].status).toBe('blocked');

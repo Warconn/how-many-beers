@@ -2,6 +2,7 @@ import type {Meal,PlannedTask} from './meal';
 import {latestStartedEvent,type ExtendedMeal} from './cookState';
 import {buildDishTimeline} from './schedule';
 import {physicalPhase,physicalStartedEvent} from './physicalPhase';
+import {executionTimeline,sessionAnchor,reopenedAt} from './executionTimeline';
 import {templateStepForecasts} from './templateForecast';
 
 export type TemplateTiming={
@@ -30,7 +31,7 @@ export function forecastClock(meal:Meal,now:number):number{
  * inferred starts are never events. Unknown/safety barriers require real progress. */
 export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number):Record<string,StepForecast>{
  if((meal.mode!=='cooking'&&!meal.startedAt)||!Number.isFinite(clock))return {};
- const now=forecastClock(meal,clock),events=(meal as ExtendedMeal).events??[],result:Record<string,StepForecast>={};
+ const now=forecastClock(meal,clock);timeline=executionTimeline(meal,timeline,now);const anchor=sessionAnchor(meal,now),events=(meal as ExtendedMeal).events??[],result:Record<string,StepForecast>={};
  const byId=new Map(timeline.map(t=>[t.id,t]));
  const projected=new Set<string>();
  const estimate=(t:PlannedTask,earliest:number,blocked?:string,milestone=false):StepForecast=>{
@@ -46,15 +47,17 @@ export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number)
   if(t.timingMode==='fixed'){
    if(planned===null)return {start:null,finish:null,status:'unknown',reason:'Fixed start needs review.'};
    if(earliest>planned)return {start:t.scheduledAt,finish:null,status:'blocked',reason:'Fixed start conflicts with unfinished work; review timing.'};
+   if(length!==null&&length>0&&planned+length<=now)return {start:t.scheduledAt,finish:null,status:'overdue',reason:'Estimate elapsed; check progress before continuing.'};
    return {start:t.scheduledAt,finish:length===null?null:iso(planned+length),status:length===null?'unknown':'fixed',...(length===null?{reason:'Duration unknown.'}:{})};
   }
+  if(length!==null&&length>0&&earliest+length<=now)return {start:iso(earliest),finish:null,status:'overdue',reason:'Estimate elapsed; check progress before continuing.'};
   return {start:iso(earliest),finish:length===null?null:iso(earliest+length),status:length===null?'unknown':'estimated',...(length===null?{reason:'Duration unknown.'}:{})};
  };
  for(const dish of meal.dishes){
   if(dish.preset!=='custom')continue;
   const sequence=buildDishTimeline(dish,meal.serveAt).map(t=>byId.get(t.id)).filter((t):t is PlannedTask=>!!t);
   const workRemaining=sequence.some(t=>!meal.completed[t.id]&&t.id!==dish.id+':serve');
-  let cursor:number|null=null,blocked:string|undefined,previous:PlannedTask|undefined;
+  let cursor:number|null=Math.max(anchor,stamp(dish.executionAddedAt)??anchor),blocked:string|undefined,previous:PlannedTask|undefined;
   for(const t of sequence){
    projected.add(t.id);
    if(meal.completed[t.id]){
@@ -63,27 +66,25 @@ export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number)
     previous=t;continue;
    }
    const serve=t.id===dish.id+':serve';
-   if(serve&&!workRemaining){result[t.id]={start:t.scheduledAt,finish:t.scheduledAt,status:'planned'};continue;}
+   if(serve&&!workRemaining&&t.timingMode!=='fixed'){result[t.id]={start:iso(now),finish:iso(now),status:'estimated'};continue;}
    const previousStart=previous?stamp(previous.scheduledAt):null,previousLength=previous?duration(previous):null,planned=stamp(t.scheduledAt);
    // Preserve actual waiting gaps; elapsed recipe durations are not inferred
    // from checkpoint spacing. Sequential imports normally have zero gap.
-   const gap=previousStart!==null&&previousLength!==null&&planned!==null?Math.max(0,planned-previousStart-previousLength):0;
-   const earliest=Math.max(now,cursor===null?now:cursor+gap);
-   const priorBlocked=blocked,priorCursor=cursor;
+   const gap=previous?.recordedPlanAt===undefined&&previous?.timingMode!=='fixed'&&previousStart!==null&&previousLength!==null&&planned!==null?Math.max(0,planned-previousStart-previousLength):0;
+   const earliest=Math.max(anchor,reopenedAt(meal,t.id)??anchor,cursor===null?anchor:cursor+gap);
+   const priorBlocked=blocked;const priorCursor:number|null=cursor;
    const f=estimate(t,earliest,blocked,serve);result[t.id]=f;
    const finish=stamp(f.finish);
    cursor=finish===null?null:Math.max(priorCursor??finish,finish);
    blocked=priorBlocked??(cursor===null?t.title:undefined);previous=t;
   }
  }
- // General prep and template steps have no newly inferred dependency graph.
- // Only explicit durations can produce a live finish; their planned dates remain
- // lower bounds unless real start evidence exists. Never serialize other dishes.
- const owned=new Set([...(meal as ExtendedMeal).customTasks?.map(t=>t.id)??[],...meal.dishes.flatMap(d=>timeline.filter(t=>t.dishId===d.id).map(t=>t.id))]);
+ // Ad hoc work shares the execution origin but retains explicit fixed starts.
+ // Independent dishes/activities are not serialized by checklist display order.
  for(const t of timeline){
-  if(projected.has(t.id)||meal.completed[t.id]||!owned.has(t.id))continue;
+  if(projected.has(t.id)||meal.completed[t.id])continue;
   if(duration(t)===null&&!t.isCondition){result[t.id]={start:t.scheduledAt,finish:null,status:'planned'};continue;}
-  result[t.id]=estimate(t,Math.max(now,stamp(t.scheduledAt)??now));
+  result[t.id]=estimate(t,Math.max(anchor,stamp(t.scheduledAt)??anchor));
  }
  Object.assign(result,templateStepForecasts(meal,timeline,now));
  return result;
