@@ -14,18 +14,13 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: owner-approved overnight queue (#87)
+### NOW: November 1 owner-approved fixes
 
-[Issue #87](https://github.com/Warconn/how-many-beers/issues/87) is the October 29 overnight execution authority, superseding the earlier October 27/28 NOW order. PR #82 for #81 is merged to dev at cc6942e; the owner-approved release #88 is merged to main at 3973bb4 and production deployment is verified. #19/#20/#54, #55/#56/#57/#59/#60/#78/#81 and the basic #77 timing/review work in #80 are historical completed deliveries; do not duplicate them.
+Latest dev includes the tested #87 Wave 1 work: #86 (#91), combined #85/#62 UI (#89), and remaining #77 imports (#90), merged at fbcf91c. Production remains the earlier #88 release (3973bb4). Do not duplicate these deliveries.
 
-Wave 1 was implemented on isolated feature branches from the same dev base. On November 1 the owner explicitly approved merging #91, #89 and #90 into dev for manual testing. Resolve overlaps with the union of acceptance tests and verify the combined suite. **Production promotion remains unapproved.** The delivered workstreams are:
-1. **#86 first, correctness:** actual-start-based live execution schedule, overall estimated finish, projected duration and Beerometer agreement; original target/fixed constraints/actuals/history remain intact. Keep Beerometer UI unchanged.
-2. **#85 + #62 together:** essential step form with collapsed advanced controls plus aligned, accessible add/edit/move/remove actions. One coordinated UX PR, no scheduling-engine changes.
-3. **#77 remaining import scope only:** equipment, pit versus internal temperatures and structured ingredient/reference review for text/.txt/.md; preserve already delivered timing parsing and unknowns. No URL/photo ingestion or SQL migration expansion.
+The owner now requests **#92 planning-aware step reorder first**, then **#84 Cooking Mode cleanup** where the presentation work stays separate. Use isolated feat branches/PRs targeting dev, preserve all account/guest data and actual logs, run full browser/account/offline CI and inspect actual desktop/mobile screenshots. Deliver fixes on dev for owner testing; **do not promote production** until separately approved. #84's #86 integration dependency is satisfied by merged, green dev; avoid rewriting forecast logic during layout cleanup.
 
-**#84 is queued/blocked** until #86 has a stable reviewed integration base. Do not independently rewrite overlapping Cooking Mode layout or assume approval to merge #86. #61/#83 lifecycle/schema work, #69/#70 advanced sync, #2 URL import, #3 full scheduling and #67 social sign-in are outside this batch. Check live PR status first; do not duplicate active work. Small overlapping page.tsx/model/test edits must be identified in PR integration notes.
-
-Each workstream requires unit tests, actual desktop/mobile screenshot inspection, applicable account/offline regressions and full CI/iPhone WebKit coverage. Report review links, evidence, risks and dependencies. The prior release-readiness concerns (#10/#4/#5/#45) remain historical backlog context, not permission to insert work ahead of this approved queue.
+#4 real-device QA was completed by the owner and closed. #5 was closed at the owner's request, not as a claim that its remaining source/calibration research was performed. #61/#83 lifecycle/schema changes, #69/#70 sync, #2 URL import, #3 full scheduling and #67 social sign-in remain outside this batch. The owner is maintaining the remaining backlog; do not independently reprioritize or close other tickets.
 
 ### NEXT, not immediate coding queue
 

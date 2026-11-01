@@ -33,7 +33,7 @@ type Props = {
   onEdit: (title:string, instructions:string, details?:StepPlanEdit)=>void;
   onDurationChange?: (minutes:number|null)=>void;
   durationDisabled?: boolean;
-  onMove: (direction:"up"|"down")=>void;
+  onMove: (direction:"up"|"down")=>string|void;
   onRemove: ()=>void;
   onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string)=>void;
 };
@@ -54,6 +54,7 @@ export default function TaskRow({
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
   const [readingNote,setReadingNote]=useState("");
   const [error,setError]=useState("");
+  const [moveError,setMoveError]=useState("");
   const [durationError,setDurationError]=useState("");
 
   useEffect(()=>{onReadingChange?.(logging);return ()=>onReadingChange?.(false);},[logging,onReadingChange]);
@@ -114,8 +115,8 @@ export default function TaskRow({
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
 
       {!isCooking && <div className="step-move-controls" role="group" aria-label="Step order"><span aria-hidden="true">Move</span>
-        <button type="button" onClick={()=>{onMove("up");setMoveNotice(`${task.title} moved to step ${index} of ${count}.`);}} disabled={editing||durationDisabled||index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
-        <button type="button" onClick={()=>{onMove("down");setMoveNotice(`${task.title} moved to step ${index+2} of ${count}.`);}} disabled={editing||durationDisabled||index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
+        <button type="button" onClick={()=>{const error=onMove("up");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index} of ${count}.`);}} disabled={editing||durationDisabled||index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
+        <button type="button" onClick={()=>{const error=onMove("down");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index+2} of ${count}.`);}} disabled={editing||durationDisabled||index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
       </div>}
       <RemoveButton className="step-remove" label={"Remove step: "+task.title} disabled={editing||logging||durationDisabled} onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
@@ -123,6 +124,7 @@ export default function TaskRow({
 
     </div>
     {!isCooking && <span className="sr-only" role="status">{moveNotice}</span>}
+    {moveError&&<p className="small" role="alert">{moveError}</p>}
     {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {isCooking && <>
       {logging && <div className="reading-form">

@@ -484,3 +484,11 @@ The owner approved integrating Wave 1 into dev on November 1 for manual testing.
 #85/#62 is one combined editing workstream and #77 covers remaining importer detail
 only. #84 remains queued pending review of the integrated cooking behavior. Production
 promotion requires separate approval.
+
+
+## Planning moves update estimates (#92)
+New planning moves within a dish change eligible recipe/preparation order and dates,
+with matching Live Schedule, planned duration and execution handoff. Template safety
+checkpoints and physical phases retain their meaningful ordering; unsupported moves
+show a short local explanation. Legacy display-only orders remain compatible. Fixed
+starts, unknowns, actual logs and other dishes are preserved. See step-timing.md.
