@@ -12,6 +12,7 @@ export type RecipeStep = {
 };
 
 export type Dish = {
+  planningStepOrder?: string[]; // Recipe-local keys; only explicit planning moves opt in.
   executionAddedAt?: string; // Creation during an active session; never a physical start.
   id: string;
   name: string;

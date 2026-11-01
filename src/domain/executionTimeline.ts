@@ -46,7 +46,7 @@ export function executionTimeline(meal:Meal,timeline:PlannedTask[],now:number):E
    if(meal.completed[t.id]){const done=stamp(meal.completed[t.id])??anchor;if(cursor!==null)cursor=Math.max(cursor,done);previous=cursor===null?undefined:{original:stamp(planned.scheduledAt),start:done,length:0};continue;}
    const length=stepMinutes(meal,t),real=actualStart(meal,t),fixed=t.timingMode==='fixed',unknown=t.timingMode==='unscheduled'||length===null;
    if(unknown&&real===null){t.scheduledAt=null;cursor=null;previous=undefined;continue;}
-   const original=stamp(planned.scheduledAt),overlap=previous&&original!==null&&previous.original!==null?Math.max(0,previous.length-(original-previous.original)/60000):0;
+   const original=stamp(planned.scheduledAt),overlap=!dish.planningStepOrder?.length&&previous&&original!==null&&previous.original!==null?Math.max(0,previous.length-(original-previous.original)/60000):0;
    const earliest=cursor===null?null:Math.max(anchor,stamp(dish.executionAddedAt)??anchor,reopenedAt(meal,t.id)??anchor,previous?previous.start+(previous.length-overlap)*60000:cursor);
    const start=real??(fixed?stamp(t.scheduledAt):earliest);
    if(fixed&&real===null&&(earliest===null||start===null||start<earliest)){t.executionConflict='Fixed start conflicts with unfinished preparation.';cursor=null;previous=undefined;continue;}

@@ -493,3 +493,10 @@ checklist review; no duplicate sticky finish or stale next-step announcement. Fi
 early lives in Cook details & tools. Reopening, protected drafts and account/guest
 finish behavior remain intact. The accepted Beerometer UI and calculations are
 unchanged. See cooking-mode.md.
+
+## Planning moves update estimates (#92)
+New planning moves within a dish change eligible recipe/preparation order and dates,
+with matching Live Schedule, planned duration and execution handoff. Template safety
+checkpoints and physical phases retain their meaningful ordering; unsupported moves
+show a short local explanation. Legacy display-only orders remain compatible. Fixed
+starts, unknowns, actual logs and other dishes are preserved. See step-timing.md.

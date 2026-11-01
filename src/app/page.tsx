@@ -373,7 +373,11 @@ function CookExperience() {
       })}
       onDurationChange={mode==="planning"&&meal.dishes.some(d=>d.id===task.dishId&&d.preset==='custom')&&!task.id.endsWith(':serve')?minutes=>safelyPatch(m=>setStepDuration(m,task.id,minutes)):undefined}
       durationDisabled={!!editingStep||!!newStepDishId}
-      onMove={direction=>safelyPatch(m=>moveStep(m,task.id,direction,compact?task.dishId:undefined))}
+      onMove={direction=>{
+        try { moveStep(meal,task.id,direction,compact?task.dishId:undefined); }
+        catch(error) { return error instanceof Error?error.message:"Could not move this step."; }
+        safelyPatch(m=>moveStep(m,task.id,direction,compact?task.dishId:undefined));
+      }}
       onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
       onEvent={(kind:CookEventKind,value,unit,note)=>{
         if(kind==="completed"||kind==="reopened")completeCookingStep(task.id,kind==="completed");

@@ -42,7 +42,7 @@ describe('manually confirmed imported durations',()=>{
  });
  it('reset to unknown removes fabricated timing; hidden steps and display reordering do not corrupt recipe order',()=>{
   const m=complete(),first=stages(m)[0];expect(stages(change(m,0,null))[0].scheduledAt).toBeNull();
-  expect(stages(moveStep(m,first.id,'down',m.dishes[0].id)).map(t=>t.scheduledAt)).toEqual(stages(m).map(t=>t.scheduledAt));
+  expect(stages(moveStep({...m,mode:'cooking'},first.id,'down',m.dishes[0].id)).map(t=>t.scheduledAt)).toEqual(stages(m).map(t=>t.scheduledAt));
   const hidden=removeStep(m,first.id,'2026-11-25T23:00Z');expect(cookDuration(hidden,cookTimeline(hidden),Date.now()).minutes).toBe(25);
  });
 });
