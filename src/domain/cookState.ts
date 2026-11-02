@@ -1,7 +1,8 @@
-import {movableTemplatePrep,stepKey,orderedDishTasks} from "./planningOrder";
+import {planStepSequence,localStepKey} from "./stepSequence";
 import type { Meal, PlannedTask } from "./meal";
 import { buildDishTimeline } from "./schedule";
 import {adjustDishSequence,servingConflict} from "./stepDependencies";
+import {turkeyPreparation} from "./turkeyPrep";
 import {physicalPhase} from "./physicalPhase";
 import {chronologicalTasks} from "./stepTiming";
 
@@ -35,6 +36,7 @@ export type ExtendedMeal = Meal & {
   taskOverrides?: Record<string, TaskOverride>;
   hiddenTaskIds?: string[];
   taskOrder?: string[];
+  planningGeneralSequence?: string[];
   events?: CookEvent[];
 };
 
@@ -71,16 +73,33 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
     return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
   };
   const tasks=m.dishes.flatMap(d=>{
-    const sequence=buildDishTimeline(d,m.serveAt,{overrides:m.taskOverrides,recorded,hidden}).filter(t=>!hidden.has(t.id)).map(project);
+    const sequence=buildDishTimeline(d.planningSequence?{...d,planningStepOrder:undefined}:d,m.serveAt,{overrides:m.taskOverrides,recorded,hidden}).filter(t=>!hidden.has(t.id)).map(project);
+    if(d.planningSequence){
+      let source=sequence;
+      let keys=d.planningSequence;
+      if(d.preset==='turkey'){
+        const prep=turkeyPreparation(d);
+        source=source.map(t=>t.id===d.id+':thaw'?{...t,templateStage:{kind:'preparation' as const,minutes:prep.state==='thawed'?0:prep.thawDays*1440}}:t.id===d.id+':brine'&&!t.templateStage?{...t,templateStage:{kind:'preparation' as const,minutes:prep.brineHours*60}}:t.id===d.id+':dry'&&!t.templateStage?{...t,templateStage:{kind:'preparation' as const,minutes:prep.dryHours*60}}:t);
+      }
+      if(d.preset==='wings'&&d.restMinutes>0&&!hidden.has(d.id+':rest')){
+        source=[...source,project({id:d.id+':rest',dishId:d.id,dishName:d.name,title:'Rest before serving',instructions:'Use the planned rest allowance and verify doneness before serving.',scheduledAt:null,isCondition:true,templateStage:{kind:'rest',minutes:d.restMinutes,startLabel:'Begin rest now'}})];
+        if(!keys.includes('rest')){const at=keys.indexOf('serve');keys=[...keys.slice(0,at<0?keys.length:at),'rest',...keys.slice(at<0?keys.length:at)];}
+      }
+      const added=(m.customTasks??[]).filter(t=>t.dishId===d.id&&!hidden.has(t.id)).map(project);
+      const planned=planStepSequence([...source,...added],keys,m.serveAt,recorded,m.taskOverrides);warnings.push(...planned.warnings,...servingConflict(planned.tasks,m.serveAt));return planned.tasks;
+    }
     const adjusted=adjustDishSequence(sequence,recorded);warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
   });
-  tasks.push(...(m.customTasks??[]).filter(t=>!hidden.has(t.id)).map(t=>{
+  const general=(m.customTasks??[]).filter(t=>!hidden.has(t.id)&&!m.dishes.some(d=>d.id===t.dishId&&d.planningSequence));
+  const independent=general.filter(t=>!m.planningGeneralSequence||t.dishId!=='custom');
+  tasks.push(...independent.map(t=>{
     const override=m.taskOverrides?.[t.id];
     const duration=override?.durationMinutes!==undefined?override.durationMinutes:t.durationMinutes;
     const target=Date.parse(m.serveAt);
     const derive=t.scheduledAt===null&&override?.scheduledAt===undefined&&!recorded.has(t.id)&&duration!=null&&Number.isFinite(duration)&&Number.isFinite(target);
     return project(derive?{...t,scheduledAt:new Date(target-duration*60000).toISOString()}:t);
   }));
+  if(m.planningGeneralSequence){const planned=planStepSequence(general.filter(t=>t.dishId==='custom').map(project),m.planningGeneralSequence,m.serveAt,recorded,m.taskOverrides);tasks.push(...planned.tasks);warnings.push(...planned.warnings);}
   return {tasks,warnings};
 }
 export function stepTimingWarnings(meal:Meal):string[]{return derivedSchedule(meal).warnings;}
@@ -164,7 +183,7 @@ export function removeStep(meal: Meal, taskId: string, occurredAt: string): Exte
   };
 }
 
-export function moveStep(meal: Meal, taskId: string, direction: "up"|"down", dishId?: string): ExtendedMeal {
+export function moveStep(meal: Meal, taskId: string, direction: "up"|"down", dishId?: string, planning?:boolean): ExtendedMeal {
   const m = migrateMeal(meal);
   const timeline = cookTimeline(m);
   const order = timeline.map(t=>t.id);
@@ -176,25 +195,26 @@ export function moveStep(meal: Meal, taskId: string, direction: "up"|"down", dis
   // Swap only these slots so other dishes retain their positions and relative order.
   const from=order.indexOf(scoped[i]), to=order.indexOf(scoped[j]);
   [order[from],order[to]]=[order[to],order[from]];
-  let dishes=m.dishes;
-  if(m.mode!=="cooking"&&!m.startedAt){
+  if(planning??(m.mode!=="cooking"&&!m.startedAt)){
     const a=timeline.find(t=>t.id===scoped[i])!,b=timeline.find(t=>t.id===scoped[j])!;
-    const dish=m.dishes.find(d=>d.id===a.dishId);
-    if(dish&&a.dishId===b.dishId){
-      if(dish.preset!=="custom"&&(!movableTemplatePrep(a)||!movableTemplatePrep(b)))throw new Error("Only preparation steps within the same template phase can be reordered. Cooking and safety checkpoints keep their sequence.");
-      const native=new Set(buildDishTimeline(dish,m.serveAt).map(t=>t.id));
-      if(!native.has(a.id)||!native.has(b.id)||a.id===dish.id+':serve'||b.id===dish.id+':serve')throw new Error("Keep serving after recipe work. Added independent steps keep their own timing.");
-      const keys=order.filter(id=>native.has(id)).map(id=>stepKey(dish,id));
-      const visible=new Set(order);
-      const source=buildDishTimeline({...dish,planningStepOrder:undefined},m.serveAt).filter(t=>visible.has(t.id));
-      const canonical=source.map(t=>stepKey(dish,t.id));
-      const valid=orderedDishTasks({...dish,planningStepOrder:keys},source).map(t=>stepKey(dish,t.id));
-      if(keys.some((key,index)=>key!==valid[index]))throw new Error("Keep preparation before cooking, safety checkpoints in their phase, and serving last. This checklist order cannot become a timed plan.");
-      const planningStepOrder=keys.length===canonical.length&&keys.every((key,index)=>key===canonical[index])?undefined:keys;
-      dishes=m.dishes.map(d=>d.id===dish.id?{...d,planningStepOrder}:d);
+    if(a.dishId===b.dishId){
+      const keys=order.map(id=>timeline.find(t=>t.id===id)!).filter(t=>t.dishId===a.dishId).map(localStepKey);
+      const dish=m.dishes.find(d=>d.id===a.dishId);
+      if(dish){
+        const changed={...m,dishes:m.dishes.map(d=>d.id===dish.id?{...d,planningSequence:keys}:d),taskOrder:order};
+        // A chosen sequence can expose an existing implicit allowance (wings
+        // rest). Insert its new row in the same place as its planned window.
+        const own=derivedSchedule(changed).tasks.filter(t=>t.dishId===dish.id).sort((a,b)=>a.recipeOrder!-b.recipeOrder!);
+        for(let k=0;k<own.length;k++)if(!order.includes(own[k].id)){
+          const next=own.slice(k+1).find(t=>order.includes(t.id));
+          order.splice(next?order.indexOf(next.id):order.length,0,own[k].id);
+        }
+        return changed;
+      }
+      if(a.dishId==='custom')return {...m,planningGeneralSequence:keys,taskOrder:order};
     }
   }
-  return {...m,dishes,taskOrder:order};
+  return {...m,taskOrder:order};
 }
 
 export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occurredAt: string, value?: number, unit?: "°F"|"°C", note?: string): ExtendedMeal {

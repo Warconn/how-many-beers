@@ -13,19 +13,20 @@ export function cookProjection(meal:Meal,timeline:PlannedTask[],clock:number):Co
  if(!remaining.length)return {forecasts,finish:iso(now),remaining:0,projected:elapsed,elapsed,provisional:false,reason:'All steps checked'};
  const keep=new Set(remaining.map(t=>t.id));
  for(const dish of meal.dishes){
-  if(dish.preset==='custom')continue;
+  if(dish.preset==='custom'||dish.planningSequence)continue;
   const advanced=timeline.some(t=>t.dishId===dish.id&&t.templateStage?.after&&physicalStartedEvent((meal as ExtendedMeal).events??[],t.id));
   if(!meal.completed[dish.id+':finish']&&!advanced)keep.add(dish.id+':start');
   if(!meal.completed[dish.id+':serve'])keep.add(dish.id+':rest');
  }
+ for(const t of timeline)if(t.userSequence&&forecasts[t.id]?.retainDuration)keep.add(t.id);
  let end=now,reason='',provisional=false;
  for(const t of timeline){
   if(!keep.has(t.id))continue;
   const f=forecasts[t.id];if(!f){reason='Remaining timing needed';break;}
   const dish=meal.dishes.find(d=>d.id===t.dishId),serve=t.id===dish?.id+':serve';
-  if(dish?.preset==='turkey'&&(t.id.endsWith(':thaw')&&dish.turkeyPrep?.state==='thawed'||t.id.endsWith(':brine')&&dish.turkeyPrep?.brineHours===0))continue;
+  if(!t.userSequence&&dish?.preset==='turkey'&&(t.id.endsWith(':thaw')&&dish.turkeyPrep?.state==='thawed'||t.id.endsWith(':brine')&&dish.turkeyPrep?.brineHours===0))continue;
   if(stepMinutes(meal,t)===0&&t.timingMode!=='fixed'&&!t.isCondition)continue;
-  if(serve&&t.timingMode!=='fixed'){
+  if(serve&&!t.userSequence&&t.timingMode!=='fixed'){
    // Wings have a defined post-cook rest but no separate rest action.
    if(dish?.preset==='wings'&&dish?.restMinutes&&!timeline.some(p=>p.id===dish.id+':rest'))end=Math.max(end,stamp(f.start)??end);
    continue;
@@ -34,7 +35,7 @@ export function cookProjection(meal:Meal,timeline:PlannedTask[],clock:number):Co
   if(f.status==='blocked'||f.status==='unknown'){reason=f.reason??'Remaining timing needed';break;}
   if(f.template?.kind==='checkpoint'){
    provisional=true;
-   if(t.timingMode==='fixed')end=Math.max(end,stamp(f.start)??end);
+   if(t.timingMode==='fixed'||t.userSequence)end=Math.max(end,stamp(f.finish)??stamp(f.start)??end);
    continue;
   }
   if(t.isCondition&&!f.template){reason='Verify actual conditions before estimating the finish.';break;}

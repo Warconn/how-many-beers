@@ -47,7 +47,7 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&number(d.restMinutes)&&(d.restMinutes as number)>=0&&(d.restMinutes as number)<=43200
     &&optional(d.pitTempF,number)&&optional(d.weightLb,number)
     &&optional(d.steps,s=>Array.isArray(s)&&s.every(t=>object(t)&&text(t.id)&&text(t.title)&&duration(t.minutes)&&optional(t.instructions,text)&&optional(t.recipeTemperatures,temperatures)))
-    &&optional(d.planningStepOrder,strings)&&optional(d.recipeSource,text)&&optional(d.recipeIngredients,strings)&&optional(d.recipeReference,text)
+    &&optional(d.planningSequence,strings)&&optional(d.planningStepOrder,strings)&&optional(d.recipeSource,text)&&optional(d.recipeIngredients,strings)&&optional(d.recipeReference,text)
     &&optional(d.turkeyPrep,t=>object(t)&&['frozen','thawing','thawed'].includes(String(t.state))
       &&number(t.thawDays)&&(t.thawDays as number)>=0&&(t.thawDays as number)<=14
       &&['brineHours','dryHours'].every(k=>number(t[k])&&(t[k] as number)>=0&&(t[k] as number)<=48))
@@ -56,7 +56,7 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&optional(v.mode,m=>m==='planning'||m==='cooking')&&optional(v.startedAt,text)
     &&optional(v.customTasks,t=>Array.isArray(t)&&t.every(isStoredTask))
     &&optional(v.taskOverrides,o=>record(o,override))
-    &&optional(v.hiddenTaskIds,strings)&&optional(v.taskOrder,strings)
+    &&optional(v.planningGeneralSequence,strings)&&optional(v.hiddenTaskIds,strings)&&optional(v.taskOrder,strings)
     &&optional(v.events,e=>Array.isArray(e)&&e.every(t=>object(t)&&text(t.id)&&text(t.taskId)&&text(t.occurredAt)
       &&['started','completed','reopened','temperature','equipment','removed'].includes(String(t.kind))
       &&optional(t.value,number)&&optional(t.note,text)&&optional(t.unit,u=>u==='°F'||u==='°C')));

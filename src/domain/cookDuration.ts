@@ -1,13 +1,14 @@
 import type {Meal, PlannedTask} from './meal';
 import {cookProjection} from './cookProjection';
+import {sequenceCheckpoint} from './stepSequence';
 import type {ExtendedMeal} from './cookState';
 const stamp=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
 function eligibleTasks(meal:Meal,timeline:PlannedTask[]){
-  return timeline.filter(t=>!meal.dishes.some(d=>d.preset==='turkey' &&
+  return timeline.filter(t=>t.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
     (t.id===d.id+':thaw' || (t.id===d.id+':brine' && d.turkeyPrep?.brineHours===0))));
 }
 function unknownDuration(meal:Meal,t:PlannedTask){
-  return t.durationMinutes==null && (t.dishId==='custom'||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom'&&t.id!==d.id+':serve'));
+  return t.durationMinutes==null && (t.userSequence?!sequenceCheckpoint(t)&&!t.id.endsWith(':serve'):(t.dishId==='custom'||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom'&&t.id!==d.id+':serve')));
 }
 /** Estimated window of unfinished work, not a percentage of checklist items.
  * Overlapping steps count once; overdue/untimed work cannot promise zero time. */
@@ -26,7 +27,7 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
 /** One window, including real advance prep; thaw reminders and explicitly skipped
  * brining do not start it. Hidden tasks are already removed by cookTimeline. */
 export function cookDuration(meal:Meal,timeline:PlannedTask[],now:number,finishedAt?:string){
-  const eligible=(id:string)=>!meal.dishes.some(d=>d.preset==='turkey' &&
+  const eligible=(id:string)=>timeline.find(t=>t.id===id)?.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
     (id===d.id+':thaw' || (id===d.id+':brine' && d.turkeyPrep?.brineHours===0)));
   const tasks=timeline.filter(t=>eligible(t.id));
   const starts=tasks.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);

@@ -15,7 +15,7 @@ describe('planning sequence changes',()=>{
   expect(after.slice(0,3).map(t=>t.id.split(':').at(-1))).toEqual(['preheat','prep','start']);
   expect(after.slice(0,3).map(t=>t.scheduledAt)).toEqual(['2026-11-01T15:05:00.000Z','2026-11-01T15:25:00.000Z','2026-11-01T15:45:00.000Z']);
   expect(after[0].durationMinutes).toBe(20);expect(cookDuration(changed,cookTimeline(changed),0).minutes).toBe(175);
-  expect(dishTasks(swap(changed))).toEqual(before);expect(m.dishes[0]).not.toHaveProperty('planningStepOrder');
+  expect(dishTasks(swap(changed)).slice(0,3).map(t=>t.scheduledAt)).toEqual(['2026-11-01T15:05:00.000Z','2026-11-01T15:25:00.000Z','2026-11-01T15:45:00.000Z']);expect(dishTasks(swap(swap(changed))).map(t=>t.scheduledAt)).toEqual(after.map(t=>t.scheduledAt));expect(m.dishes[0]).not.toHaveProperty('planningStepOrder');
  });
  it('reorders unequal imported durations without swapping their timestamps, then starts in that sequence',()=>{
   const m=recipe(),changed=swap(m),tasks=dishTasks(changed);
@@ -23,7 +23,7 @@ describe('planning sequence changes',()=>{
   expect(tasks.map(t=>t.scheduledAt)).toEqual(['2026-11-01T17:30:00.000Z','2026-11-01T17:40:00.000Z','2026-11-01T17:45:00.000Z','2026-11-01T18:00:00.000Z']);
   const active={...changed,mode:'cooking' as const,startedAt:'2026-11-01T12:00Z'},f=liveStepForecasts(active,cookTimeline(active),Date.parse(active.startedAt));
   expect(f[tasks[0].id].finish).toBe('2026-11-01T12:10:00.000Z');expect(f[tasks[1].id].start).toBe('2026-11-01T12:10:00.000Z');
-  expect(dishTasks(swap(changed))).toEqual(dishTasks(m));
+  expect(dishTasks(swap(changed)).map(t=>[t.id,t.scheduledAt])).toEqual(dishTasks(m).map(t=>[t.id,t.scheduledAt]));
  });
  it('isolates other dishes and leaves the target, notes and actual logs untouched',()=>{
   let m=brats();m.dishes.push(createDish('turkey'));const id=dishTasks(m)[0].id;
@@ -35,7 +35,7 @@ describe('planning sequence changes',()=>{
   let m=brats();const tasks=dishTasks(m);
   for(const t of tasks.slice(0,3))m=editStep(m,t.id,t.title,t.instructions,{timingMode:'fixed',scheduledAt:t.scheduledAt,durationMinutes:null,equipment:t.equipment??'',targetTempF:null});
   const changed=swap(m);for(const t of tasks.slice(0,3))expect(dishTasks(changed).find(n=>n.id===t.id)?.scheduledAt).toBe(t.scheduledAt);
-  expect(stepTimingWarnings(changed).join(' ')).toMatch(/conflict|order/i);
+  expect(stepTimingWarnings(changed).join(' ')).toContain("after Build the brat and vegetable tray's fixed start");
  });
  it('keeps unknown and unscheduled durations truthful after reordering',()=>{
   let m=recipe();const first=dishTasks(m)[0];m=editStep(m,first.id,first.title,first.instructions,{timingMode:'unscheduled',scheduledAt:null,durationMinutes:null,equipment:'',targetTempF:null});
@@ -46,8 +46,8 @@ describe('planning sequence changes',()=>{
   expect(dishTasks(legacy).map(t=>t.scheduledAt)).toEqual([original[1].scheduledAt,original[0].scheduledAt,...original.slice(2).map(t=>t.scheduledAt)]);
   const active={...m,mode:'cooking' as const,startedAt:'2026-11-01T12:00Z'};expect(dishTasks(swap(active)).map(t=>t.scheduledAt)).toEqual(dishTasks(legacy).map(t=>t.scheduledAt));
  });
- it('prevents moving a safety checkpoint or serving before physical phases during planning',()=>{
-  const m=brats(),tasks=dishTasks(m);expect(()=>moveStep(m,tasks[2].id,'up',m.dishes[0].id)).toThrow(/preparation|phase/i);expect(()=>moveStep(m,tasks.at(-1)!.id,'up',m.dishes[0].id)).toThrow(/preparation|phase/i);
+ it('allows checks and serving to move while preserving their meaning and manual completion',()=>{
+  const m=brats(),tasks=dishTasks(m),moved=moveStep(m,tasks[2].id,'up',m.dishes[0].id);expect(dishTasks(moved)[1].id).toBe(tasks[2].id);expect(moveStep(m,tasks.at(-1)!.id,'up',m.dishes[0].id).completed).toEqual(m.completed);
  });
  it('round-trips a reordered plan and repeats with new IDs while preserving the frozen archive',()=>{
   const changed=swap(recipe()),history=archiveCook(changed,emptyHistory(),'','2026-11-01T19:00Z'),before=JSON.stringify(history),restored=validateBackup(exportBackup(changed,history,'2026-11-01T19:00Z'));

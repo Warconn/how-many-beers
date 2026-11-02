@@ -1,3 +1,4 @@
+import {sequenceForecasts} from './sequenceForecast';
 import type {Meal,PlannedTask} from './meal';
 import {latestStartedEvent,type ExtendedMeal} from './cookState';
 import {buildDishTimeline} from './schedule';
@@ -13,6 +14,7 @@ export type TemplateTiming={
 };
 
 export type StepForecast={
+ retainDuration?:boolean; // A checked loading/rest action is not proof the timed work ended.
  start:string|null;finish:string|null;
  status:'estimated'|'fixed'|'planned'|'unknown'|'blocked'|'condition'|'overdue';
  reason?:string;
@@ -33,7 +35,8 @@ export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number)
  if((meal.mode!=='cooking'&&!meal.startedAt)||!Number.isFinite(clock))return {};
  const now=forecastClock(meal,clock);timeline=executionTimeline(meal,timeline,now);const anchor=sessionAnchor(meal,now),events=(meal as ExtendedMeal).events??[],result:Record<string,StepForecast>={};
  const byId=new Map(timeline.map(t=>[t.id,t]));
- const projected=new Set<string>();
+ Object.assign(result,sequenceForecasts(meal,timeline,now));
+ const projected=new Set(timeline.filter(t=>t.userSequence).map(t=>t.id));
  const estimate=(t:PlannedTask,earliest:number,blocked?:string,milestone=false):StepForecast=>{
   const planned=stamp(t.scheduledAt),actual=stamp((physicalPhase(t)?physicalStartedEvent(events,t.id):latestStartedEvent(events,t.id))?.occurredAt),length=milestone?0:duration(t);
   if(t.isCondition&&!physicalPhase(t))return {start:t.scheduledAt,finish:null,status:'condition',reason:'Verify actual conditions before continuing.'};
@@ -54,7 +57,7 @@ export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number)
   return {start:iso(earliest),finish:length===null?null:iso(earliest+length),status:length===null?'unknown':'estimated',...(length===null?{reason:'Duration unknown.'}:{})};
  };
  for(const dish of meal.dishes){
-  if(dish.preset!=='custom')continue;
+  if(dish.preset!=='custom'||dish.planningSequence)continue;
   const sequence=buildDishTimeline(dish,meal.serveAt).map(t=>byId.get(t.id)).filter((t):t is PlannedTask=>!!t);
   const workRemaining=sequence.some(t=>!meal.completed[t.id]&&t.id!==dish.id+':serve');
   let cursor:number|null=Math.max(anchor,stamp(dish.executionAddedAt)??anchor),blocked:string|undefined,previous:PlannedTask|undefined;
