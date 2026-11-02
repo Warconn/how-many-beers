@@ -1,4 +1,5 @@
 'use client';
+import Icon from './Icon';
 import type { Dish } from '@/domain/meal';
 import { applyBrisketTiming, brisketDefaults, estimateBrisket, type BrisketInputs } from '@/domain/brisketEstimate';
 const hours=(n:number)=>Number((n/60).toFixed(2));
@@ -52,7 +53,7 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <ul className="small">{estimate.assumptions.map(a=><li key={a}>{a}</li>)}</ul>
       <label className="personal-rule"><input type="checkbox" checked={inputs.comparePersonal} onChange={e=>set({comparePersonal:e.target.checked})}/>Compare my 1.5 hr/lb rule</label>
       {inputs.comparePersonal && inputs.weightLb && <p className="small">Personal comparison: {inputs.weightLb*1.5} hours of smoke, plus rest/hold. User recollection, not validated guidance; not used in the recommendation.</p>}
-      <div className="template-sources">{estimate.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} ↗</a>)}</div>
+      <div className="template-sources">{estimate.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} <Icon name="external"/></a>)}</div>
     </details>
   </section>;
 }

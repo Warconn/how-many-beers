@@ -9,6 +9,7 @@ import CookingStepSummary,{cookingTitle} from "./CookingStepSummary";
 import StepEditor from "./StepEditor";
 import StepForecastTime from "./StepForecastTime";
 import type {StepForecast} from "@/domain/cookForecast";
+import Icon from './Icon';
 import RemoveButton from "./RemoveButton";
 import {estimatedFinish,formatDuration} from "@/domain/stepTiming";
 
@@ -104,7 +105,7 @@ export default function TaskRow({
         {visibleInstructions && !(onDurationChange&&visibleInstructions==='Imported recipe step. Confirm instructions and timing.') && <p className="muted small">{visibleInstructions}</p>}
         {task.isCondition && <span className="condition">Verify actual conditions</span>}
         {started && <p className="step-event">Started {formatted(started.occurredAt)}</p>}
-        {completedAt && <p className="completed-time">✓ Completed {formatted(completedAt)}</p>}
+        {completedAt && <p className="completed-time"><Icon name="check"/> Completed {formatted(completedAt)}</p>}
         </>}
       </div>
     </div>
@@ -115,8 +116,8 @@ export default function TaskRow({
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
 
       {!isCooking && <div className="step-move-controls" role="group" aria-label="Step order"><span aria-hidden="true">Move</span>
-        <button type="button" onClick={()=>{const error=onMove("up");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index} of ${count}.`);}} disabled={editing||durationDisabled||index===0} aria-label={"Move "+task.title+" up"} title="Move up">↑</button>
-        <button type="button" onClick={()=>{const error=onMove("down");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index+2} of ${count}.`);}} disabled={editing||durationDisabled||index===count-1} aria-label={"Move "+task.title+" down"} title="Move down">↓</button>
+        <button type="button" onClick={()=>{const error=onMove("up");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index} of ${count}.`);}} disabled={editing||durationDisabled||index===0} aria-label={"Move "+task.title+" up"} title="Move up"><Icon name="arrow-up"/></button>
+        <button type="button" onClick={()=>{const error=onMove("down");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index+2} of ${count}.`);}} disabled={editing||durationDisabled||index===count-1} aria-label={"Move "+task.title+" down"} title="Move down"><Icon name="arrow-down"/></button>
       </div>}
       <RemoveButton className="step-remove" label={"Remove step: "+task.title} disabled={editing||logging||durationDisabled} onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();

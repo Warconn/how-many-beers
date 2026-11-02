@@ -1,3 +1,25 @@
+# Current owner-approved sequence: November 2, 2026
+
+Production release #96 (`925cbac`) is the new baseline. #92, #84, #62/#85, #77
+and #86 are delivered and promoted. Dev `4577b01` has the same application content.
+
+1. **#21:** Apply the existing brand/design system across functional views, with
+   actual desktop/mobile screenshots and full relevant tests. Keep Beerometer,
+   accepted interactions, actual records and persistence intact. PR to dev only.
+2. **#61:** Prepare retained cancellation with authoritative lifecycle, terminal
+   guards and safe recovery. Review Supabase constraints/RLS/RPC before schema work.
+3. **#83:** Multiple account plans and one live cook, after #61 design is understood.
+   No active-cook replacement or guest scope expansion. Separate feature PRs.
+
+#97 is a focused recommendation alongside #21 for the remaining checklist-first
+Start/logging interaction gap. It is not a reopening of #84 or implementation
+approval. See design-system.md and cook-lifecycle-plan.md. Do not auto-merge or
+release; the owner actively tests real cooks, so create no manual QA tickets.
+
+The following older queue is historical and superseded by this section.
+
+---
+
 # Work queue: October 28, 2026
 
 October 28 account status: PR #58 contains the opt-in #19 sign-in foundation and initial #20 account saving/history implementation. Email-code delivery needs the supplied Supabase template; cloud cooks require migration 002 and the preview build flag. Hosted two-account/retrieval QA, account linking/deletion/privacy and advanced synchronization remain open. See [setup and limits](account-cooks.md). Continue this delivery before starting Next work.
