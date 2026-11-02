@@ -36,8 +36,13 @@ type Props = {
   durationDisabled?: boolean;
   onMove: (direction:"up"|"down")=>string|void;
   onRemove: ()=>void;
-  onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string)=>void;
+  onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string,occurredAt?:string)=>void;
 };
+
+function localDateTimeInput(iso:string):string {
+  const d=new Date(iso),pad=(n:number)=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 function formatted(iso:string):string {
   const date=new Date(iso);
@@ -50,6 +55,9 @@ export default function TaskRow({
   const [moveNotice,setMoveNotice]=useState("");
   const [detailsOpen,setDetailsOpen]=useState(false);
   const [logging,setLogging]=useState(false);
+  const [startFormOpen,setStartFormOpen]=useState(false);
+  const [startTime,setStartTime]=useState("");
+  const [startError,setStartError]=useState("");
   const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
   const [reading,setReading]=useState("");
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
@@ -58,7 +66,7 @@ export default function TaskRow({
   const [moveError,setMoveError]=useState("");
   const [durationError,setDurationError]=useState("");
 
-  useEffect(()=>{onReadingChange?.(logging);return ()=>onReadingChange?.(false);},[logging,onReadingChange]);
+  useEffect(()=>{onReadingChange?.(logging||startFormOpen);return ()=>onReadingChange?.(false);},[logging,startFormOpen,onReadingChange]);
 
   const done=!!completedAt;
   const phase=physicalPhase(task);
@@ -67,6 +75,15 @@ export default function TaskRow({
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
   const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
+
+  const saveActualStart=()=>{
+    const when=new Date(startTime);
+    if(!startTime||!Number.isFinite(when.getTime())||when.getTime()>Date.now()){
+      setStartError("Choose a valid actual time that is not in the future.");return;
+    }
+    onEvent("started",undefined,undefined,started?"Corrected actual phase start":"Recorded actual phase start",when.toISOString());
+    setStartFormOpen(false);setStartError("");
+  };
 
   const handleReading=()=>{
     const hasTemperature=reading.trim().length>0;
@@ -82,7 +99,7 @@ export default function TaskRow({
 
   return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
     <div className="task-top">
-      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging}
+      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging||startFormOpen}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
@@ -109,9 +126,26 @@ export default function TaskRow({
         </>}
       </div>
     </div>
-    {isCooking&&<div className="cooking-step-actions">{phase&&!started&&!done&&<button type="button" className="button primary" disabled={editing||logging} onClick={()=>onEvent("started")}>{phase.label}</button>}<button type="button" className="button secondary" disabled={editing} onClick={()=>{setLogging(v=>!v);setDetailsOpen(true);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button></div>}
-    <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing||logging,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
-    {isCooking&&<><summary>Step details</summary>{cookingTitle(task.title)!==task.title&&task.instructions!==task.title&&<p className="small">{task.title}</p>}<p className="small muted">{task.instructions}</p><p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}{estimatedFinish(task)?" · Planned finish "+formatted(estimatedFinish(task)!):""}</p>{forecast?.reason&&<p className="small muted">{forecast.reason}</p>}{forecast?.template?.at&&forecast.template.kind==='checkpoint'&&<p className="small muted"><StepForecastTime forecast={forecast} part="start"/></p>}<p className="small muted">{task.equipment}{task.targetTempF!=null?" · Target "+task.targetTempF+"°F (planned)":""}</p>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
+    <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing||logging||startFormOpen,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
+    {isCooking&&<><summary>Step details</summary>
+      <div className="step-optional-records" aria-label="Optional step records">
+        <p className="muted small">Optional timing and readings. Checking this step does not mean a cooking or resting interval has elapsed.</p>
+        <div className="cooking-step-actions">
+          {phase&&!started&&<button type="button" className="button secondary" disabled={editing||logging||startFormOpen} onClick={()=>onEvent("started")}>Record actual start now</button>}
+          {phase&&<button type="button" className="button secondary" disabled={editing||logging} onClick={()=>{
+            setStartFormOpen(v=>!v);
+            setStartTime(localDateTimeInput(started?.occurredAt??new Date().toISOString()));
+            setStartError("");
+          }} aria-expanded={startFormOpen}>{startFormOpen?"Cancel start time edit":started?"Correct actual start time":"Enter actual start time"}</button>}
+          <button type="button" className="button secondary" disabled={editing||startFormOpen} onClick={()=>{setLogging(v=>!v);setDetailsOpen(true);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>
+        </div>
+        {startFormOpen&&<div className="reading-form">
+          <label htmlFor={editorId+"-actual-start"}>Actual start date and time</label>
+          <input id={editorId+"-actual-start"} type="datetime-local" value={startTime} onChange={e=>{setStartTime(e.target.value);setStartError("");}} aria-invalid={!!startError} aria-describedby={startError?editorId+"-start-error":undefined}/>
+          {startError&&<p className="form-error" id={editorId+"-start-error"} role="alert">{startError}</p>}
+          <button type="button" className="button primary" onClick={saveActualStart}>Save actual start</button>
+        </div>}
+      </div>{cookingTitle(task.title)!==task.title&&task.instructions!==task.title&&<p className="small">{task.title}</p>}<p className="small muted">{task.instructions}</p><p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}{estimatedFinish(task)?" · Planned finish "+formatted(estimatedFinish(task)!):""}</p>{forecast?.reason&&<p className="small muted">{forecast.reason}</p>}{forecast?.template?.at&&forecast.template.kind==='checkpoint'&&<p className="small muted"><StepForecastTime forecast={forecast} part="start"/></p>}<p className="small muted">{task.equipment}{task.targetTempF!=null?" · Target "+task.targetTempF+"°F (planned)":""}</p>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
     <div className="task-actions" aria-label={"Manage "+task.title}>
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
 
