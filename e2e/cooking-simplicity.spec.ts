@@ -59,6 +59,7 @@ test('brat cook stays checkbox-first with opt-in actual start and append-only co
  const projected=cookProjection(checked,cookTimeline(checked),Date.parse(now));
  expect(projected.remaining===null||projected.remaining>0).toBe(true);
  await expect(guide.getByRole('article',{name:'Check brats and bubbling tray',exact:true})).toBeVisible();
+ await expect(guide.getByRole('button',{name:'+ Log temperature',exact:true})).not.toBeVisible();
  await page.getByRole('button',{name:'Full checklist',exact:true}).click();
  await page.getByRole('region',{name:'Full cook checklist'}).getByRole('button',{name:'Open step: Cover and cook the brat tray for Grilled beer-bath brats',exact:true}).click();
  await guide.getByText('Step details',{exact:true}).click();
