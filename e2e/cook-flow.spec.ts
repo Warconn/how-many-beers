@@ -38,14 +38,14 @@ test("resuming an in-progress cook preserves cooking status", async ({ page }) =
   await page.getByRole('button',{name:'Start with a template',exact:true}).click();
   await page.getByRole("button", { name: "Add smoked brisket" }).click();
   await page.getByRole("button", { name: "Start cooking", exact: true }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
   await expect(page.getByRole("button", { name: /Continue cooking/ })).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: /View cook/ }).click();
   await expect(page.getByText(/Cook in progress/).first()).toBeVisible();
   await page.getByRole("button", { name: "Continue cooking", exact: true }).click();
-  await expect(page.getByText("Today's checklist")).toBeVisible();
+  await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
 });
 
 

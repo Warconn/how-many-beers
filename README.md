@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed #57/#56/#55/#59/#60 batch and owner-approved recipe-import PR #80 are merged into **dev**. Current work is **#81 live estimates on current/upcoming cooking steps**, preserving planned times and the accepted Beerometer UI. Broader #77 equipment/temperature and ingredient-structure work remains separate.
+The reviewed cooking/planner/import improvements through #82 were released via #88. Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) is merged and green in dev: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and #77 recipe details (#90). The owner-approved November 1 follow-up delivers #92 planning-aware reorder (merged into dev via #93) and #84 Cooking Mode cleanup (merged via #94). The owner refinement removes template-phase move restrictions: every dish step can move, with known durations updating following starts, fixed/recorded conflicts named and actual progress preserved. Existing plans retain their timing until rearranged. Dev testing precedes any separate production approval. The owner completed #4 and requested closing #5; no additional estimator calibration is claimed. URL/photo/PDF import remains separate.
 
 ## Account foundation work
 
@@ -107,3 +107,12 @@ profile settings, buffers, evidence and limitations. Applying remains explicit.
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
 
 Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Record meaningful physical starts with **On smoker now**, **Begin rest now**, or the imported cooking phase action; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.
+
+Step editing opens a short form for name, instructions and duration. **More options**
+keeps exact start times, equipment and target food temperatures available. Dish rows
+use aligned Edit, Move and Remove controls; Add a step stays below the list.
+
+
+Cooking Mode now uses one progress treatment and a single content column. Completed
+cooks have one primary Finish action and checklist review, while Finish cook early
+is available under Cook details & tools. The Beerometer remains unchanged.

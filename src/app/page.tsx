@@ -17,7 +17,9 @@ import {cookingTitle} from "@/components/CookingStepSummary";
 import TaskRow from "@/components/TaskRow";
 import {physicalPhase} from "@/domain/physicalPhase";
 import StepForecastTime from "@/components/StepForecastTime";
+import {cookProjection} from "@/domain/cookProjection";
 import {liveStepForecasts} from "@/domain/cookForecast";
+import RecipeDetails from "@/components/RecipeDetails";
 import RecipePreview from "@/components/RecipePreview";
 import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
@@ -158,6 +160,7 @@ function CookExperience() {
   },[editingStep,newStepDishId,cookReadingOpen,addStepDraftOpen,showFinish,outcome,showDishSetup,addMethod,recipeText]);
 
   const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
+  const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
   const forecasts=useMemo(()=>meal?liveStepForecasts(meal,timeline,clockNow):{},[meal,timeline,clockNow]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
   const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal)] : [], [meal]);
@@ -304,13 +307,14 @@ function CookExperience() {
     });
     setNewStepTitle("");
     setNewStepDishId(null);
+    requestAnimationFrame(()=>document.getElementById("add-step-"+dishId)?.focus());
   };
   const addCustom = (title:string,instructions:string,scheduledAt:string|null) => {
     safelyPatch(m=>addStep(m,title,instructions,scheduledAt));
   };
   const cookingDraftOpen=editingStep?.context==="cooking" || cookReadingOpen || addStepDraftOpen;
   const focusGuidedStep=()=>requestAnimationFrame(()=>{
-    const element=document.querySelector<HTMLElement>('.guided-step .cook-task');
+    const element=document.querySelector<HTMLElement>('.guided-step .cook-task')??document.getElementById('cook-complete');
     element?.focus({preventScroll:true});element?.scrollIntoView({block:"start",behavior:"instant"});
   });
   const openGuidedStep=(id:string)=>{
@@ -320,20 +324,21 @@ function CookExperience() {
   const toggleCookPanel=()=>{
     if(cookingDraftOpen)return;
     setNavigationNote("");setCookPanel(current=>current==="step"?"checklist":"step");
-    requestAnimationFrame(()=>document.getElementById(cookPanel==="step"?"full-cook-checklist":"current-cook-step")?.focus());
+    requestAnimationFrame(()=>document.getElementById(cookPanel==="step"?"full-cook-checklist":!remaining.length&&!guidedTaskId?"cook-complete":"current-cook-step")?.focus());
   };
   const completeCookingStep=(id:string,done:boolean)=>{
     safelyPatch(m=>recordEvent(m,id,done?"completed":"reopened",new Date().toISOString()));
     setEditingStep(null);setGuidedTaskId(null);
-    setNavigationNote(done?"Step checked off. Showing the next unchecked step.":"Step reopened. Its previous activity is retained.");
-    if(cookPanel==="step")focusGuidedStep();
+    setNavigationNote(done?(timeline.some(t=>t.id!==id&&!meal.completed[t.id])?"Step checked off. Showing the next unchecked step.":""):"Step reopened. Its previous activity is retained.");
+    if(!done)setCookPanel("step");
+    if(cookPanel==="step"||!done)focusGuidedStep();
   };
   const openFinishCook=()=>{
     if(cookingDraftOpen)return;
     setShowFinish(true);requestAnimationFrame(()=>document.getElementById("cook-outcome")?.focus());
   };
   const taskCard = (task: PlannedTask, mode:"planning"|"cooking", isNext = false, compact = false) => {
-    const visibleTasks = compact ? timeline.filter(t=>t.dishId===task.dishId) : timeline;
+    const visibleTasks = compact||mode==="planning" ? timeline.filter(t=>t.dishId===task.dishId) : timeline;
     const index = visibleTasks.findIndex(t => t.id === task.id);
     const taskEvents = (meal as ExtendedMeal).events ?? [];
     const context = compact ? "dish" : mode === "cooking" ? "cooking" : "checklist";
@@ -368,7 +373,11 @@ function CookExperience() {
       })}
       onDurationChange={mode==="planning"&&meal.dishes.some(d=>d.id===task.dishId&&d.preset==='custom')&&!task.id.endsWith(':serve')?minutes=>safelyPatch(m=>setStepDuration(m,task.id,minutes)):undefined}
       durationDisabled={!!editingStep||!!newStepDishId}
-      onMove={direction=>safelyPatch(m=>moveStep(m,task.id,direction,compact?task.dishId:undefined))}
+      onMove={direction=>{
+        try { moveStep(meal,task.id,direction,task.dishId,mode==="planning"); }
+        catch(error) { return error instanceof Error?error.message:"Could not move this step."; }
+        safelyPatch(m=>moveStep(m,task.id,direction,task.dishId,mode==="planning"));
+      }}
       onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
       onEvent={(kind:CookEventKind,value,unit,note)=>{
         if(kind==="completed"||kind==="reopened")completeCookingStep(task.id,kind==="completed");
@@ -389,7 +398,7 @@ function CookExperience() {
   const canUpdate=!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
 
   return (
-    <main className={"shell " + (cooking ? "cooking-screen" : "planning-screen")}>
+    <main className={"shell " + (cooking ? "cooking-screen"+(!remaining.length?" cooking-screen-complete":"") : "planning-screen")}>
       {storageError && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
         <div className="storage-recovery-actions">
           {storageStatus!=='recovery'&&<button type="button" onClick={downloadBackup}>Download backup</button>}
@@ -480,49 +489,50 @@ function CookExperience() {
           <nav className="cooking-navigation" aria-label="Cook navigation">
             <button type="button" className="back-link" disabled={cookingDraftOpen} onClick={()=>setView("home")}>← Home</button>
             <button className="back-link" type="button" disabled={cookingDraftOpen} onClick={()=>setView("planning")}>Edit plan</button>
-            <button className="back-link finish-cook-trigger" type="button" disabled={cookingDraftOpen || (!timeline.length && !meal.dishes.length)} onClick={openFinishCook}>Finish cook</button>
           </nav>
           <section className="cook-header">
-            <div><p className="eyebrow">YOU'RE COOKING</p><h2>{meal.name || "Your cook"}</h2><p className="cook-target">Serving {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
-            <div className="cook-progress-chip"><strong>{complete}/{timeline.length}</strong><span>steps done</span></div>
+            <div><h2>{meal.name || "Your cook"}</h2><p className="cook-target">{projection?.finish?<><strong>Estimated finish </strong><time aria-label="Cook estimated finish" dateTime={projection.finish}>{when(projection.finish)}</time>{projection.provisional?" · Provisional":""}</>:"Estimated finish unavailable"}</p><p className="cook-target">Original target {when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length===1?"dish":"dishes"}</p></div>
           </section>
           <BeerEstimator meal={meal} timeline={timeline}/>
           <div className="cook-layout">
             <section className="panel active-cook-panel">
-              <div className="progress-heading"><strong>Today&apos;s checklist</strong><span>{timeline.length ? Math.round(complete / timeline.length * 100) : 0}% complete</span></div>
-              <div className="progress-track"><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div>
+              {remaining.length>0&&<><div className="progress-heading"><strong>{complete} of {timeline.length} steps done</strong></div>
+              <div className="progress-track" role="progressbar" aria-label="Cook progress" aria-valuemin={0} aria-valuemax={timeline.length} aria-valuenow={complete}><div style={{width: (timeline.length ? complete / timeline.length * 100 : 0) + "%"}} /></div></>}
               {storageStatus!=='saved'&&!!storageError&&<p className="cook-autosave-note muted small">Your latest changes are not saved. Keep this tab open and download a backup.</p>}
               {cookingDraftOpen && <p className="notice" id="cooking-draft-help">Save or cancel the open edit or reading before switching steps.</p>}
               {message && <p className="form-error" role="alert">{message}</p>}
-              {navigationNote && <p className="step-navigation-note" role="status">{navigationNote}</p>}
-              {cookPanel==="checklist" ? <CookingChecklist forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep}/> : <section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
-                {guidance.current ? <>
-                  <div className="guide-step-heading"><h3>Step {guidance.index+1} of {timeline.length}</h3>{meal.completed[guidance.current.id]&&<span>Completed step</span>}</div>
-                  {taskCard(guidance.current,"cooking")}
-                </> : <div className="cook-finished"><h3>{timeline.length?"All steps checked":"Your checklist is empty"}</h3><p>{timeline.length?"Review your cook, then finish and save it when you’re ready.":"Edit the plan to add a dish or prep step."}</p>{!!timeline.length && <button type="button" className="button primary" onClick={openFinishCook}>Finish cook</button>}</div>}
+              {navigationNote && remaining.length>0 && <p className="step-navigation-note" role="status">{navigationNote}</p>}
+              {!remaining.length&&!!timeline.length&&!showFinish&&<section className="cook-finished" aria-label="Cook complete" id="cook-complete" tabIndex={-1}>
+                <h3>All steps checked</h3>
+                <div className="cook-completion-actions"><button id="finish-cook-trigger" type="button" className="button primary" disabled={cookingDraftOpen} onClick={openFinishCook}>Finish cook</button><button type="button" className="button secondary" disabled={cookingDraftOpen} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button></div>
               </section>}
+              {cookPanel==="checklist" ? <CookingChecklist forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep}/> : (guidance.current||!timeline.length)?<section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
+                {guidance.current ? <>
+                  {meal.completed[guidance.current.id]&&<p className="small muted">Completed step</p>}
+                  {taskCard(guidance.current,"cooking")}
+                </> : !timeline.length?<div className="cook-finished"><h3>Your checklist is empty</h3><p>Edit the plan to add a dish or prep step.</p></div>:null}
+              </section>:null}
               {showFinish && <section className="finish-cook" aria-label="Finish cook">
-                <h3>Finish this cook?</h3><p className="muted small">Keep its plan, notes and actual readings in your history.</p>
+                <h3>Finish this cook?</h3><p className="muted small">{workspace.kind==='trial'?"This trial cook is not saved. Sign in to keep it in your history.":"Save its plan, notes and actual readings in your history."}</p>
                 <p className="muted small">{remaining.length} unchecked steps. You can save even if some weren't needed.</p>
                 <label htmlFor="cook-outcome">How did it turn out? (optional)</label><textarea id="cook-outcome" rows={3} maxLength={2000} value={outcome} onChange={e=>setOutcome(e.target.value)} placeholder="Tenderness, timing, what to change next time..."/>
-                <button type="button" className="button primary" disabled={cookingDraftOpen} onClick={finishCook}>{workspace.kind==='trial'?'Sign in to save this cook':'Save finished cook'}</button>{workspace.kind==='trial'&&<button type="button" className="button secondary" onClick={()=>{if(window.confirm('Finish without saving? This cook will not be kept in your history.'))void save({active:newMeal()}).then(returnHome);}}>Finish without saving</button>}<button type="button" className="button secondary" onClick={()=>setShowFinish(false)}>Keep cooking</button>
+                <button type="button" className="button primary" disabled={cookingDraftOpen} onClick={finishCook}>{workspace.kind==='trial'?'Sign in to save this cook':'Save finished cook'}</button>{workspace.kind==='trial'&&<button type="button" className="button secondary" onClick={()=>{if(window.confirm('Finish without saving? This cook will not be kept in your history.'))void save({active:newMeal()}).then(returnHome);}}>Finish without saving</button>}<button type="button" className="button secondary" onClick={()=>{setShowFinish(false);requestAnimationFrame(()=>document.getElementById("finish-cook-trigger")?.focus());}}>Keep cooking</button>
               </section>}
             </section>
-            <aside className="cook-sidebar"><details className="cook-extra-tools"><summary>Cook details &amp; tools</summary>
+            <section className="cook-sidebar" aria-label="Cooking tools"><details className="cook-extra-tools"><summary>Cook details &amp; tools</summary>
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
-              <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>
-            </aside>
+              <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>{(remaining.length>0||!timeline.length)&&!showFinish&&<button id="finish-cook-trigger" type="button" className="button secondary" disabled={cookingDraftOpen||(!timeline.length&&!meal.dishes.length)} onClick={openFinishCook}>Finish cook early</button>}</details>
+            </section>
           </div>
-          <nav className="cook-guide-bar" aria-label="Cooking guide">
-            <button type="button" className="guide-checklist-button" aria-label={cookPanel==="step"?"Full checklist":"Back to step"} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}<span>{remaining.length} remaining</span></button>
+          {remaining.length>0&&<nav className="cook-guide-bar" aria-label="Cooking guide">
+            <button type="button" className="guide-checklist-button" aria-label={cookPanel==="step"?"Full checklist":"Back to step"} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button>
             {guidance.next ? <button type="button" className="guide-next-button" aria-label={"Preview next step: "+guidance.next.title} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={()=>{
               openGuidedStep(guidance.next!.id);if(guidance.current && !meal.completed[guidance.current.id])setNavigationNote("Previous step remains unchecked. It is still in Full checklist.");
             }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime forecast={forecasts[guidance.next.id]} part="start" simple/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span></button>
-            : remaining.length ? <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>
-            : <button type="button" className="guide-next-button" aria-label="Finish cook" disabled={(!timeline.length && !meal.dishes.length) || cookingDraftOpen} onClick={openFinishCook}><span className="guide-next-label">{timeline.length?"All steps checked":"No steps yet"}</span><strong>Finish cook</strong></button>}
-          </nav>
+            : <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>}
+          </nav>}
         </>
       ) : (
         <>
@@ -566,7 +576,7 @@ function CookExperience() {
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
               <div className="template-picker">
                 {(Object.entries(presets) as [BuiltIn, (typeof presets)[BuiltIn]][]).map(([id, template])=>(
-                  <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>{const dish=createDish(id);patch(m=>({...m,dishes:[...m.dishes,dish]}));setShowDishSetup(false);setEditingDishId(dish.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+dish.id)?.focus())}}>
+                  <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>{const dish=createDish(id);patch(m=>({...m,dishes:[...m.dishes,m.mode==="cooking"?{...dish,executionAddedAt:new Date().toISOString()}:dish]}));setShowDishSetup(false);setEditingDishId(dish.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+dish.id)?.focus())}}>
                     <strong>{template.label}</strong><span>{template.equipment}</span><b aria-hidden="true">+</b>
                   </button>
                 ))}
@@ -586,7 +596,7 @@ function CookExperience() {
                   setDraft(parsed);setMessage("");
                 }}>Preview recipe steps</button>
                 </> : <RecipePreview dish={draft} onChange={setDraft} onBack={()=>{setRecipeName(draft.name);setDraft(null);setMessage('');}} onAdd={()=>{
-                  patch(m=>({...m,dishes:[...m.dishes,draft]}));
+                  patch(m=>({...m,dishes:[...m.dishes,m.mode==="cooking"?{...draft,executionAddedAt:new Date().toISOString()}:draft]}));
                   setShowDishSetup(false);setEditingDishId(draft.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+draft.id)?.focus());setDraft(null);setRecipeName("");setRecipeText("");setMessage("");
                 }}/>}
                 {message && <p className="notice" role="status">{message}</p>}
@@ -659,17 +669,18 @@ function CookExperience() {
                     </div>
                   )}
 
+                  {d.recipeSource&&<RecipeDetails dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
                   </details>
                   {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Use Edit for a fixed start or other step details.</p>}
                   <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>
                   {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
-                  {newStepDishId===d.id ? <div className="inline-step-add">
+                  {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
                     <label htmlFor={"new-step-"+d.id}>Step title</label>
-                    <input id={"new-step-"+d.id} value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
-                    <button type="button" className="button primary" disabled={!newStepTitle.trim()} onClick={()=>addDishStep(d.id)}>Save step</button>
-                    <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("")}}>Cancel</button>
-                  </div> : <button type="button" className="button secondary" onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
+                    <input id={"new-step-"+d.id} autoFocus value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
+                    <button type="submit" className="button primary" disabled={!newStepTitle.trim()}>Save step</button>
+                    <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}>Cancel</button>
+                  </form> : <button id={"add-step-"+d.id} type="button" className="button secondary dish-add-step" disabled={!!editingStep} onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
                 </section>
                 </div>}
               </article>)}

@@ -1,0 +1,6 @@
+.details { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.details details { margin: 10px 0; }
+.details summary { min-height: 44px; cursor: pointer; padding: 12px 0; }
+.details fieldset { min-width: 0; margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.details legend { max-width: 100%; font-size: 12px; }
+.details input, .details select, .details textarea { min-width: 0; max-width: 100%; min-height: 44px; }

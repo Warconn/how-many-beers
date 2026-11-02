@@ -6,6 +6,7 @@ const number=(v:unknown)=>typeof v==='number'&&Number.isFinite(v);
 const optional=(v:unknown,check:(v:unknown)=>boolean)=>v===undefined||check(v);
 const nullableText=(v:unknown)=>v===null||text(v);
 const duration=(v:unknown)=>v===null||(number(v)&&(v as number)>=0&&(v as number)<=43200);
+const temperatures=(v:unknown)=>Array.isArray(v)&&v.every(t=>object(t)&&number(t.value)&&(t.value as number)>0&&(t.value as number)<=(t.unit==='F'?1000:538)&&['F','C'].includes(String(t.unit))&&['equipment','food','unknown'].includes(String(t.kind)));
 const strings=(v:unknown)=>Array.isArray(v)&&v.every(text);
 const record=(v:unknown,check:(v:unknown)=>boolean)=>object(v)&&Object.values(v).every(check);
 
@@ -45,8 +46,8 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&number(d.cookMinutes)&&(d.cookMinutes as number)>=0&&(d.cookMinutes as number)<=43200
     &&number(d.restMinutes)&&(d.restMinutes as number)>=0&&(d.restMinutes as number)<=43200
     &&optional(d.pitTempF,number)&&optional(d.weightLb,number)
-    &&optional(d.steps,s=>Array.isArray(s)&&s.every(t=>object(t)&&text(t.id)&&text(t.title)&&duration(t.minutes)&&optional(t.instructions,text)))
-    &&optional(d.recipeSource,text)
+    &&optional(d.steps,s=>Array.isArray(s)&&s.every(t=>object(t)&&text(t.id)&&text(t.title)&&duration(t.minutes)&&optional(t.instructions,text)&&optional(t.recipeTemperatures,temperatures)))
+    &&optional(d.planningSequence,strings)&&optional(d.planningStepOrder,strings)&&optional(d.recipeSource,text)&&optional(d.recipeIngredients,strings)&&optional(d.recipeReference,text)
     &&optional(d.turkeyPrep,t=>object(t)&&['frozen','thawing','thawed'].includes(String(t.state))
       &&number(t.thawDays)&&(t.thawDays as number)>=0&&(t.thawDays as number)<=14
       &&['brineHours','dryHours'].every(k=>number(t[k])&&(t[k] as number)>=0&&(t[k] as number)<=48))
@@ -55,7 +56,7 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&optional(v.mode,m=>m==='planning'||m==='cooking')&&optional(v.startedAt,text)
     &&optional(v.customTasks,t=>Array.isArray(t)&&t.every(isStoredTask))
     &&optional(v.taskOverrides,o=>record(o,override))
-    &&optional(v.hiddenTaskIds,strings)&&optional(v.taskOrder,strings)
+    &&optional(v.planningGeneralSequence,strings)&&optional(v.hiddenTaskIds,strings)&&optional(v.taskOrder,strings)
     &&optional(v.events,e=>Array.isArray(e)&&e.every(t=>object(t)&&text(t.id)&&text(t.taskId)&&text(t.occurredAt)
       &&['started','completed','reopened','temperature','equipment','removed'].includes(String(t.kind))
       &&optional(t.value,number)&&optional(t.note,text)&&optional(t.unit,u=>u==='°F'||u==='°C')));

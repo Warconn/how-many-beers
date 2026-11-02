@@ -37,12 +37,14 @@ Existing condition-driven safety checks remain visible.
   preceding duration runs past them. Fixed steps keep their own time. Date-only edits
   to unknown-duration steps remain independent. The serving target stays unchanged;
   a derived serving step may move later, producing a warning in Plan notes/Cooking Mode.
-- Recipe order (template chronology or imported line order) determines links, not
-  manual checklist order. Hidden steps are excluded. An untimed stage breaks automatic
+- Default recipe order (template chronology or imported line order) determines links.
+  Explicit planning moves now opt that dish into the chosen planning sequence (#92);
+  legacy checklist orders and active-cook display moves do not reschedule. Hidden steps are excluded. An untimed stage breaks automatic
   links. Added custom/general-prep tasks are independent until explicit dependencies
   are supported; other dishes keep their schedules. Resource planning remains #3.
 - Live Schedule always sorts by planned time, with untimed steps last. Checklist/dish
-  move controls change manual ordering, not planned timestamps.
+  planning move controls update eligible dish timing. Existing saved manual orders
+  and moves made during an active cook remain presentation-only.
 
 ## Confirmed imported durations (#78)
 
@@ -170,3 +172,31 @@ Untimed cooling and overnight prose remain unknown. Original text and complete
 instructions are retained in optional backwards-compatible fields; no existing
 cook is automatically reparsed or rescheduled. Accounts, guests, history and backup
 behavior remain unchanged.
+
+
+## Planning sequence changes (#92, owner refinement)
+All steps within a dish can move while planning: preparation, cooking, rest,
+checks, serving and added steps. General prep has its own sequence. New moves
+store optional `planningSequence` keys (and `planningGeneralSequence` for General
+prep), separate from the legacy display order. Each free start follows the
+preceding known duration. The serving milestone anchors backwards scheduling
+unless a fixed or recorded start provides an anchor. Moving Serve is allowed;
+the serving target itself is unchanged, and a missed target is explained.
+
+Fixed and recorded times stay anchored, with conflicts naming the affected steps
+and dates. Unknown activities break precise estimates; condition checks have a
+position without an invented duration or automatic completion. Explicit checkpoint
+allowances can reserve time without claiming food is ready. Source instructions,
+safety guidance, other dishes and actual event timestamps remain unchanged.
+
+Current, upcoming and Beerometer forecasts share the chosen sequence. Physical
+cooking/rest starts anchor those windows. Checking a loading action does not
+consume its cooking allowance. An elapsed estimate requires checking progress;
+it never proves food is ready. Existing wings rest is exposed as a movable step
+when opting into a user sequence so that its allowance is retained.
+
+The sequence survives accounts, backup, archive and Cook Again, including remapped
+IDs for added steps. Existing `taskOrder` and earlier prep-only `planningStepOrder`
+plans retain their behavior until the next planning move explicitly selects the
+new sequence model. Active-plan moves preserve notes, actuals and history. This
+does not introduce cross-dish resource scheduling (#3).

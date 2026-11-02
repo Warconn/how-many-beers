@@ -435,3 +435,70 @@ stage allowances. Conditional checks remain Check when ready. Default stage esti
 are derived separately from the stored plan, with explicit overrides supported.
 Actual phase starts anchor later stages; checking loading does not imply elapsed
 cooking. The owner authorizes merging the completed, green PR to dev, not production.
+
+## Structured text recipe review (#77, remaining scope)
+Pasted and .txt/.md recipes now retain headed ingredient quantities, source/notes,
+explicit equipment and unit-bearing temperatures. Review offers Equipment and a
+starting smoker/oven setting, plus collapsed ingredients/reference and per-step
+temperature corrections. A temperature's purpose is explicitly smoker/oven setting,
+internal food target, or unclear; Celsius remains visible as written. Only a single
+unambiguous internal target becomes the step's food target. Equipment temperatures
+never become food endpoints. Ambiguous ranges remain in the authored text and need
+review; no cooling time or safety endpoint is invented.
+
+After adding, Dish settings exposes the same reference editor. Original recipe text
+remains unchanged through corrections, reload, account saving and completed history.
+These optional JSON fields require no database migration. Existing recipes are not
+reparsed, and manual/template flows keep their existing behavior. URL, photo and PDF
+ingestion remain outside this text importer.
+
+## Short step editing and dish actions (#85, #62)
+The shared planning/Cooking Mode step editor opens with Step name, Instructions,
+estimated duration and its compact minutes/hours selector, Save and Cancel.
+More options starts collapsed and retains planned/fixed/unscheduled timing, Use
+plan timing, equipment and target food temperature. A small dot identifies custom
+advanced values. DST offset selection appears only for repeated local times.
+Saving without opening the disclosure preserves its values; blank and zero duration
+retain their existing meanings. Template stage allowances remain derived metadata,
+not new explicit duration overrides on a name-only save.
+
+Dish rows align Edit, a labelled Move group and Remove at 44px touch targets.
+Boundary moves are disabled, editing disables moves, and an accessible announcement
+reports the new position. Add a step remains below each dish list; its inline form
+focuses the title, accepts Enter, and returns focus on Cancel or Escape. Existing
+IDs, events, calculations, account saves and other dishes are preserved.
+
+## Overnight #87: execution correctness (#86)
+
+A cook is target-based while planning and session-based after Start Cooking. A pure
+execution projection supplies current/upcoming estimates, an overall Estimated finish
+and the existing Beerometer numerical fields. Original target, planned times, fixed
+constraints and immutable actuals/history are preserved. Time remaining comes from
+unfinished timed work and genuine waits with overlap, rather than idle days until
+serving. Real phase starts override provisional positions; no clock marks food done.
+Unknown timing, overruns and infeasible fixed prerequisites show unavailable/review
+states. Work added during a session carries optional creation metadata for a stable
+forecast, never a fabricated physical event. See [Cooking Mode](cooking-mode.md).
+
+The owner approved integrating Wave 1 into dev on November 1 for manual testing.
+#85/#62 is one combined editing workstream and #77 covers remaining importer detail
+only. #84 remains queued pending review of the integrated cooking behavior. Production
+promotion requires separate approval.
+
+
+## Cooking layout refinement (#84)
+One progress treatment and a single-column current action replace redundant counts
+and the empty desktop tools rail. All-checked shows one compact Finish action with
+checklist review; no duplicate sticky finish or stale next-step announcement. Finish
+early lives in Cook details & tools. Reopening, protected drafts and account/guest
+finish behavior remain intact. The accepted Beerometer UI and calculations are
+unchanged. See cooking-mode.md.
+
+## Planning moves update estimates (#92, owner refinement)
+Every dish step can be moved during planning, including cooking, checks, serving
+and added steps. Known durations determine the next free start in the chosen
+sequence. Fixed and saved times remain anchored with specific conflict messages;
+unknown work and food-readiness checks remain explicit. Planning an active cook
+does not modify its recorded starts, completions or notes. Current/upcoming
+forecasts and the Beerometer share that sequence without changing the Beerometer
+UI. Existing plans do not silently migrate. See step-timing.md.

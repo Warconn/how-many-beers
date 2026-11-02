@@ -1,41 +1,23 @@
 import type {Meal, PlannedTask} from './meal';
-import {physicalStartedEvent} from './physicalPhase';
+import {cookProjection} from './cookProjection';
+import {sequenceCheckpoint} from './stepSequence';
 import type {ExtendedMeal} from './cookState';
-import {liveStepForecasts,forecastClock} from './cookForecast';
 const stamp=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
 function eligibleTasks(meal:Meal,timeline:PlannedTask[]){
-  return timeline.filter(t=>!meal.dishes.some(d=>d.preset==='turkey' &&
+  return timeline.filter(t=>t.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
     (t.id===d.id+':thaw' || (t.id===d.id+':brine' && d.turkeyPrep?.brineHours===0))));
 }
 function unknownDuration(meal:Meal,t:PlannedTask){
-  return t.durationMinutes==null && (t.dishId==='custom'||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom'&&t.id!==d.id+':serve'));
+  return t.durationMinutes==null && (t.userSequence?!sequenceCheckpoint(t)&&!t.id.endsWith(':serve'):(t.dishId==='custom'||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom'&&t.id!==d.id+':serve')));
 }
 /** Estimated window of unfinished work, not a percentage of checklist items.
  * Overlapping steps count once; overdue/untimed work cannot promise zero time. */
 export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finishedAt?:string){
   if(finishedAt)return {minutes:0,label:'Cook complete'};
+  if(meal.mode==='cooking'||meal.startedAt){const p=cookProjection(meal,timeline,now);return {minutes:p.remaining,label:p.reason};}
   const tasks=eligibleTasks(meal,timeline);
-  let remaining=tasks.filter(t=>!meal.completed[t.id]);
+  const remaining=tasks.filter(t=>!meal.completed[t.id]);
   if(tasks.length && !remaining.length)return {minutes:0,label:'All steps checked'};
-  const forecasts=liveStepForecasts(meal,timeline,now);
-  // A checked loading action is not elapsed cooking. Retain the phase window
-  // until the user verifies doneness; rest likewise persists until serving.
-  for(const dish of meal.dishes){
-    if(dish.preset==='custom')continue;
-    const advanced=tasks.some(t=>t.dishId===dish.id&&t.templateStage?.after&&physicalStartedEvent((meal as ExtendedMeal).events??[],t.id));
-    const key=!meal.completed[dish.id+':finish']&&!advanced?'start':!meal.completed[dish.id+':serve']?'rest':null;
-    const phase=key?tasks.find(t=>t.id===dish.id+':'+key):undefined;
-    if(phase&&forecasts[phase.id]?.template&&!remaining.some(t=>t.id===phase.id))remaining.push(phase);
-  }
-  const adaptive=(t:PlannedTask)=>!!forecasts[t.id]?.template||t.durationMinutes!=null||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom');
-  if(remaining.some(t=>adaptive(t)&&forecasts[t.id]?.status==='overdue'))return {minutes:null,label:'Review overdue steps'};
-  if(remaining.some(t=>adaptive(t)&&forecasts[t.id]&&(forecasts[t.id].template?(!forecasts[t.id].template!.at||forecasts[t.id].status==='blocked'):forecasts[t.id].status!=='planned'&&!forecasts[t.id].finish)))return {minutes:null,label:'Remaining timing needed'};
-  remaining=remaining.map(t=>{
-    const f=forecasts[t.id];
-    if(f?.template?.at)return {...t,scheduledAt:f.template.at,durationMinutes:f.template.minutes??0};
-    return adaptive(t)&&f&&f.status!=='planned'&&f.start&&f.finish?{...t,scheduledAt:f.start,durationMinutes:(Date.parse(f.finish)-Date.parse(f.start))/60000}:t;
-  });
-  if(Object.keys(forecasts).length)now=forecastClock(meal,now);
   if(!remaining.length || !Number.isFinite(now) || remaining.some(t=>stamp(t.scheduledAt)===null||unknownDuration(meal,t)))return {minutes:null,label:'Remaining timing needed'};
   const from=Math.max(now,Math.min(...remaining.map(t=>stamp(t.scheduledAt)!)));
   const to=Math.max(...remaining.map(t=>stamp(t.scheduledAt)!+Math.max(0,t.durationMinutes??0)*60000));
@@ -45,7 +27,7 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
 /** One window, including real advance prep; thaw reminders and explicitly skipped
  * brining do not start it. Hidden tasks are already removed by cookTimeline. */
 export function cookDuration(meal:Meal,timeline:PlannedTask[],now:number,finishedAt?:string){
-  const eligible=(id:string)=>!meal.dishes.some(d=>d.preset==='turkey' &&
+  const eligible=(id:string)=>timeline.find(t=>t.id===id)?.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
     (id===d.id+':thaw' || (id===d.id+':brine' && d.turkeyPrep?.brineHours===0)));
   const tasks=timeline.filter(t=>eligible(t.id));
   const starts=tasks.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
@@ -58,9 +40,9 @@ export function cookDuration(meal:Meal,timeline:PlannedTask[],now:number,finishe
   const start=actualStarts.length?Math.min(...actualStarts):null;
   const finish=stamp(finishedAt);
   if(finish!==null && start!==null && finish>=start)return {minutes:(finish-start)/60000,label:'Actual cook',elapsed:null};
-  if(!finishedAt && meal.mode==='cooking' && start!==null && Number.isFinite(now)){
-    const end=Math.max(now,start,...ends);
-    return {minutes:(end-start)/60000,label:partial?'Partial projected window':'Projected cook',elapsed:Math.max(0,(now-start)/60000)};
+  if(!finishedAt && (meal.mode==='cooking'||!!meal.startedAt) && Number.isFinite(now)){
+    const p=cookProjection(meal,timeline,now);
+    return {minutes:p.projected,label:p.projected===null?'Partial projected window':'Projected cook',elapsed:p.elapsed};
   }
   return {minutes:planned,label:partial?'Partial planned window':'Planned cook',elapsed:null};
 }

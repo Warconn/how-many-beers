@@ -1,3 +1,5 @@
+import {orderedDishTasks,planTemplatePreparation} from "./planningOrder";
+import {temperatureF} from "./recipe";
 import type { Dish, Meal, PlannedTask } from "./meal";
 import {templateStage} from "./templateStages";
 import {turkeyPreparation} from "./turkeyPrep";
@@ -106,14 +108,15 @@ export type ImportedTimingContext = {
   hidden?: ReadonlySet<string>;
 };
 function importedTasks(d:Dish,serveAt:string,context:ImportedTimingContext={}):PlannedTask[]{
-  const source=(d.steps??[]).filter(s=>!context.hidden?.has(d.id+':'+s.id));
+  const source=orderedDishTasks(d,(d.steps??[]).map(s=>({...s,id:d.id+':'+s.id}))).map(s=>({...s,id:s.id.slice(d.id.length+1)})).filter(s=>!context.hidden?.has(d.id+':'+s.id));
   const tasks:PlannedTask[]=source.map((step,index)=>{
     const edit=context.overrides?.[d.id+':'+step.id];
     // Originally timed recipes retain their original cadence (#41). A previously
     // unknown duration becomes usable as soon as it is manually confirmed.
-    const minutes=edit?.durationMinutes===null?null:step.minutes===null && edit?.durationMinutes!==undefined?edit.durationMinutes:step.minutes;
+    const minutes=d.planningStepOrder?.length&&edit?.durationMinutes!==undefined?edit.durationMinutes:edit?.durationMinutes===null?null:step.minutes===null && edit?.durationMinutes!==undefined?edit.durationMinutes:step.minutes;
     return {id:d.id+':'+step.id,dishId:d.id,dishName:d.name,title:step.title,
       durationMinutes:minutes,baseDurationMinutes:step.minutes,recipeOrder:index,
+      targetTempF:(()=>{const targets=step.recipeTemperatures?.filter(t=>t.kind==='food')??[];return targets.length===1?temperatureF(targets[0]):null;})(),
       instructions:step.instructions??'Imported recipe step. Confirm instructions and timing.',scheduledAt:null,isCondition:false};
   });
   if(!context.hidden?.has(d.id+':serve'))tasks.push({id:d.id+':serve',dishId:d.id,dishName:d.name,title:'Serve',recipeOrder:source.length,durationMinutes:null,instructions:'Confirm safe doneness and plate.',scheduledAt:at(serveAt,0),isCondition:false});
@@ -148,7 +151,7 @@ function importedTasks(d:Dish,serveAt:string,context:ImportedTimingContext={}):P
 
 export function buildDishTimeline(d:Dish,serveAt:string,context?:ImportedTimingContext):PlannedTask[]{
   if(d.preset==='custom')return importedTasks(d,serveAt,context);
-  return builtinTasks(d,serveAt).sort((a,b)=>Date.parse(a.scheduledAt??'')-Date.parse(b.scheduledAt??''));
+  return planTemplatePreparation(d,orderedDishTasks(d,builtinTasks(d,serveAt).sort((a,b)=>Date.parse(a.scheduledAt??'')-Date.parse(b.scheduledAt??''))),context);
 }
 export function buildTimeline(meal:Meal): PlannedTask[]{
   return meal.dishes.flatMap(d => buildDishTimeline(d,meal.serveAt))

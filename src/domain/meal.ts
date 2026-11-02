@@ -1,7 +1,10 @@
 import type { BrisketPlan } from "./brisketEstimate";
 export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "wings" | "brats" | "custom";
 
+export type RecipeTemperature = {value:number; unit:"F"|"C"; kind:"equipment"|"food"|"unknown"};
+
 export type RecipeStep = {
+  recipeTemperatures?: RecipeTemperature[];
   id: string;
   title: string;
   instructions?: string;
@@ -9,6 +12,9 @@ export type RecipeStep = {
 };
 
 export type Dish = {
+  planningSequence?: string[]; // User-configured sequence, including added steps.
+  planningStepOrder?: string[]; // Recipe-local keys; only explicit planning moves opt in.
+  executionAddedAt?: string; // Creation during an active session; never a physical start.
   id: string;
   name: string;
   preset: PresetId;
@@ -18,6 +24,8 @@ export type Dish = {
   pitTempF?: number;
   weightLb?: number;
   steps?: RecipeStep[];
+  recipeIngredients?: string[];
+  recipeReference?: string;
   recipeSource?: string; // Original uploaded/pasted text, retained as reference.
   brisketPlan?: BrisketPlan;
   turkeyPrep?: {state:"frozen"|"thawing"|"thawed";thawDays:number;brineHours:number;dryHours:number};
@@ -37,6 +45,8 @@ export type Meal = {
 
 export type TemplateStage={kind:'preparation'|'cook'|'rest'|'activity';minutes:number;after?:string;startLabel?:string};
 export type PlannedTask = {
+  userSequence?: boolean; // Derived ordered-plan task, never an actual event.
+  executionAddedAt?: string;
   templateStage?: TemplateStage; // Derived estimate; never copied into a dish or an actual event.
   id: string;
   dishId: string;
