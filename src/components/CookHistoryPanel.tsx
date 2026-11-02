@@ -1,5 +1,6 @@
 "use client";
 
+import Icon from './Icon';
 import Beerometer from './Beerometer';
 import {useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
@@ -34,12 +35,12 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
   const events=(detailed?.meal.events??[]).slice().sort((a,b)=>a.occurredAt.localeCompare(b.occurredAt));
   return <section className="panel cook-history" id="cook-history">
     <div className="section-title">
-      <span className="section-icon" aria-hidden="true">📖</span>
+      <span className="section-icon" aria-hidden="true"><Icon name="history"/></span>
       <div><p className="eyebrow">PAST SESSIONS</p><h2>Cook History</h2></div>
     </div>
-    <p className="muted small">Open a completed cook for its actual times, temperatures and notes, or cook it again.</p>
+    <p className="muted small">Your finished cooks, notes and actual times.</p>
     {history.cooks.length===0
-      ? <p className="history-empty">No saved cooks yet. After your next brisket, select <strong>Finish & Save Cook</strong>.</p>
+      ? <p className="history-empty">No saved cooks yet. Finish a cook to see it here.</p>
       : <>
           <label htmlFor="history-search">Find a past cook</label>
           <input id="history-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search dish or meal"/>

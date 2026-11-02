@@ -81,13 +81,26 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed cooking/planner/import improvements through #82 were released via #88. Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) is merged and green in dev: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and #77 recipe details (#90). The owner-approved November 1 follow-up delivers #92 planning-aware reorder (merged into dev via #93) and #84 Cooking Mode cleanup (merged via #94). The owner refinement removes template-phase move restrictions: every dish step can move, with known durations updating following starts, fixed/recorded conflicts named and actual progress preserved. Existing plans retain their timing until rearranged. Dev testing precedes any separate production approval. The owner completed #4 and requested closing #5; no additional estimator calibration is claimed. URL/photo/PDF import remains separate.
+Production release [#96](https://github.com/Warconn/how-many-beers/pull/96), main
+`925cbac`, includes #92 planning reorder, #84 Cooking Mode cleanup, #62/#85 step
+editing, #77 recipe imports and #86 live timing. Dev `4577b01` has the same content.
+These are completed work. Authentication, cloud saving and cross-device history
+are working in production; preserve existing data and ownership.
+
+The next owner-approved sequence is **#21 application visual consistency → #61
+retained cancellation → #83 multiple upcoming account plans**. #21 is a visual PR
+for dev only, preserving the accepted logo, Beerometer and cooking functions.
+[#97](https://github.com/Warconn/how-many-beers/issues/97) separately tracks the
+remaining checklist-first Start/logging interaction gap, not the shipped #84 layout.
+See [design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
+No automatic merges or production releases. The owner tests through real cooks;
+do not create manual QA or acceptance tickets.
 
 ## Account foundation work
 
-The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has confirmed live dev email-link sign-in; code-only delivery needs the Supabase template update, and hosted cloud-save/two-account QA remains pending.
+The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has verified production sign-in, cloud saving and cross-device history.
 
-See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. This feature is merged into dev and has not been released to production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs, including automatic access for future `feat/*` previews.
+See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. The account foundation is released and working in production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs, including automatic access for future `feat/*` previews.
 
 
 Brisket planning now puts the recommended start first; open **Timing details** for

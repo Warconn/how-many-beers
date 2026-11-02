@@ -21,6 +21,7 @@ import {cookProjection} from "@/domain/cookProjection";
 import {liveStepForecasts} from "@/domain/cookForecast";
 import RecipeDetails from "@/components/RecipeDetails";
 import RecipePreview from "@/components/RecipePreview";
+import Icon from "@/components/Icon";
 import RemoveButton from "@/components/RemoveButton";
 import AddStepForm from "@/components/AddStepForm";
 import { parseRecipeText } from "@/domain/recipe";
@@ -453,11 +454,11 @@ function CookExperience() {
             {!cookInProgress && <PlannedCookStart meal={meal} timeline={timeline}/>}
             <div className="home-actions">
               {cookInProgress ? <>
-                <button type="button" className="button primary" onClick={startCooking}>Continue cooking →</button>
+                <button type="button" className="button primary" onClick={startCooking}>Continue cooking <Icon name="arrow-right"/></button>
                 <button type="button" className="button secondary" onClick={()=>setView("planning")}>View cook</button>
               </> : <>
                 <button type="button" className="button primary" disabled={!!startBlockReason} aria-describedby={startBlockReason?"home-start-help":undefined} onClick={startCooking}>Start cooking</button>
-                <button type="button" className="button secondary" onClick={()=>{setPlanSaveResult(null);setView("planning");}}>Resume planning →</button>
+                <button type="button" className="button secondary" onClick={()=>{setPlanSaveResult(null);setView("planning");}}>Resume planning <Icon name="arrow-right"/></button>
               </>}
               {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
@@ -467,7 +468,7 @@ function CookExperience() {
             <p className="muted">{hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
             <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
           </section>
-          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <span aria-hidden="true">→</span></button>
+          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <Icon name="arrow-right"/></button>
           </div>
           <aside className="home-guide" aria-label="How it works">
             <p className="eyebrow">THE GAME PLAN</p>
@@ -481,13 +482,13 @@ function CookExperience() {
         </section>
       ) : view === "history" ? (
         <section className="home-history">
-          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          <button type="button" className="back-link" onClick={()=>setView("home")}><Icon name="arrow-left"/>Home</button>
           <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup}/>
         </section>
       ) : cooking ? (
         <>
           <nav className="cooking-navigation" aria-label="Cook navigation">
-            <button type="button" className="back-link" disabled={cookingDraftOpen} onClick={()=>setView("home")}>← Home</button>
+            <button type="button" className="back-link" disabled={cookingDraftOpen} onClick={()=>setView("home")}><Icon name="arrow-left"/>Home</button>
             <button className="back-link" type="button" disabled={cookingDraftOpen} onClick={()=>setView("planning")}>Edit plan</button>
           </nav>
           <section className="cook-header">
@@ -519,7 +520,7 @@ function CookExperience() {
                 <button type="button" className="button primary" disabled={cookingDraftOpen} onClick={finishCook}>{workspace.kind==='trial'?'Sign in to save this cook':'Save finished cook'}</button>{workspace.kind==='trial'&&<button type="button" className="button secondary" onClick={()=>{if(window.confirm('Finish without saving? This cook will not be kept in your history.'))void save({active:newMeal()}).then(returnHome);}}>Finish without saving</button>}<button type="button" className="button secondary" onClick={()=>{setShowFinish(false);requestAnimationFrame(()=>document.getElementById("finish-cook-trigger")?.focus());}}>Keep cooking</button>
               </section>}
             </section>
-            <section className="cook-sidebar" aria-label="Cooking tools"><details className="cook-extra-tools"><summary>Cook details &amp; tools</summary>
+            <section className="cook-sidebar" aria-label="Cooking tools"><details className="cook-extra-tools"><summary><Icon name="chevron-right" className="disclosure-icon"/>Cook details &amp; tools</summary>
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
@@ -530,13 +531,13 @@ function CookExperience() {
             <button type="button" className="guide-checklist-button" aria-label={cookPanel==="step"?"Full checklist":"Back to step"} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button>
             {guidance.next ? <button type="button" className="guide-next-button" aria-label={"Preview next step: "+guidance.next.title} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={()=>{
               openGuidedStep(guidance.next!.id);if(guidance.current && !meal.completed[guidance.current.id])setNavigationNote("Previous step remains unchecked. It is still in Full checklist.");
-            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime forecast={forecasts[guidance.next.id]} part="start" simple/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span></button>
+            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime forecast={forecasts[guidance.next.id]} part="start" simple/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span><Icon name="arrow-right" className="guide-next-icon"/></button>
             : <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>}
           </nav>}
         </>
       ) : (
         <>
-          <button type="button" className="back-link" onClick={()=>setView("home")}>← Home</button>
+          <button type="button" className="back-link" onClick={()=>setView("home")}><Icon name="arrow-left"/>Home</button>
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
           {timeline.length>0 && <BeerEstimator meal={meal} timeline={timeline}/>}
           <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
@@ -556,7 +557,7 @@ function CookExperience() {
           <section className="workspace-overview" aria-label="Cook overview">
             <div className="workspace-heading">
               <div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length ? `${meal.dishes.length} ${meal.dishes.length===1?"dish":"dishes"} in this cook` : "What do you want to cook?"}</h2></div>
-              {(meal.dishes.length>0 || showDishSetup) && <button id="add-dish-button" type="button" className={showDishSetup?"cancel-add-dish":"button secondary"} aria-label={showDishSetup?"Cancel adding":"+ Add a dish"} aria-expanded={showDishSetup} aria-controls="menu-add-dish" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? <><span aria-hidden="true">×</span> Cancel</> : "+ Add a dish"}</button>}
+              {(meal.dishes.length>0 || showDishSetup) && <button id="add-dish-button" type="button" className={showDishSetup?"cancel-add-dish":"button secondary"} aria-label={showDishSetup?"Cancel adding":"+ Add a dish"} aria-expanded={showDishSetup} aria-controls="menu-add-dish" onClick={()=>{setEditingDishId(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? <><Icon name="close"/> Cancel</> : "+ Add a dish"}</button>}
             </div>
             {meal.dishes.length===0 && <div className="empty-planner-choices">
               <button id={!showDishSetup?"add-dish-button":undefined} type="button" className="button primary" onClick={()=>{setAddMethod('template');setShowDishSetup(true)}}>Start with a template</button>
@@ -577,7 +578,7 @@ function CookExperience() {
               <div className="template-picker">
                 {(Object.entries(presets) as [BuiltIn, (typeof presets)[BuiltIn]][]).map(([id, template])=>(
                   <button type="button" className="template-choice" key={id} aria-label={"Add "+template.label.toLowerCase()} onClick={()=>{const dish=createDish(id);patch(m=>({...m,dishes:[...m.dishes,m.mode==="cooking"?{...dish,executionAddedAt:new Date().toISOString()}:dish]}));setShowDishSetup(false);setEditingDishId(dish.id);requestAnimationFrame(()=>document.getElementById("dish-toggle-"+dish.id)?.focus())}}>
-                    <strong>{template.label}</strong><span>{template.equipment}</span><b aria-hidden="true">+</b>
+                    <strong>{template.label}</strong><span>{template.equipment}</span><Icon name="plus" className="template-add-icon"/>
                   </button>
                 ))}
               </div>
@@ -607,7 +608,7 @@ function CookExperience() {
                 <div className="dish-header">
                 <button id={"dish-toggle-"+d.id} className="dish-select" type="button" aria-label={"Edit "+d.name} aria-expanded={editingDishId===d.id} aria-controls={"dish-"+d.id} onClick={()=>{setEditingDishId(current=>current===d.id?null:d.id);setShowDishSetup(false);setNewStepDishId(null);setNewStepTitle("")}}>
                   <span className="dish-summary"><strong>{d.name}</strong><span>{d.equipment} · {timeline.filter(t=>t.dishId===d.id).length} steps</span></span>
-                  <span className="dish-toggle">{editingDishId===d.id?"Hide steps ↑":"Adjust steps ↓"}</span>
+                  <span className="dish-toggle"><span>{editingDishId===d.id?"Hide steps":"Adjust steps"}</span><Icon name={editingDishId===d.id?"chevron-up":"chevron-down"}/></span>
                 </button>
                   <RemoveButton className="dish-remove" label={"Remove "+d.name} onClick={()=>removeDish(d.id)}/>
                 </div>
@@ -665,7 +666,7 @@ function CookExperience() {
                   {d.preset!=="custom" && !!presets[d.preset].sources?.length && (
                     <div className="template-sources">
                       <span>Method references</span>
-                      {presets[d.preset].sources?.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.title} ↗</a>)}
+                      {presets[d.preset].sources?.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.title} <Icon name="external"/></a>)}
                     </div>
                   )}
 
@@ -725,9 +726,9 @@ function CookExperience() {
             <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Untimed recipes stay in recipe order until start times are known.</p>}
             {timeline.length ? <>
               <ol className="schedule-list">
-                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?when(task.scheduledAt):"Start time not set"}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step →</span></button></li>)}
+                {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?when(task.scheduledAt):"Start time not set"}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step <Icon name="arrow-right"/></span></button></li>)}
               </ol>
-              {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} →</button>}
+              {timeline.length>4 && <button type="button" className="link schedule-toggle" onClick={()=>setShowFullSchedule(v=>!v)}>{showFullSchedule?"Show less":"Show full schedule"} <Icon name="arrow-right"/></button>}
             </> : <p className="muted small">Add a dish to see your schedule.</p>}
             {warnings.length>0 && <p className="muted small">Review schedule and equipment warnings in the plan notes.</p>}
           </aside>}

@@ -1,3 +1,19 @@
+## Current baseline and next work (November 2, 2026)
+
+Release #96 is production: #92, #84, #62/#85, #77 and #86 are complete. The next
+approved visual pass is #21 using the established #45 identity throughout the app,
+without altering the Beerometer or accepted behavior. See design-system.md.
+
+Cooking should read as one action, a useful duration/checkpoint and a checkbox.
+The remaining competing Start/logging controls are tracked separately in #97;
+#84's layout/progress/finishing work remains complete. #61 retained cancellation
+is next, then #83 multiple upcoming account plans with one active cook. Investigate
+those lifecycle/storage changes separately; see cook-lifecycle-plan.md. No automatic
+merges or releases, and no manual QA tickets while the owner tests real cooks.
+
+Historical implementation notes follow, with the latest explicit contract taking
+precedence where prior rollout/status notes differ.
+
 ## Account cook increment (#19/#20, October 28, 2026)
 
 The opt-in account preview adds code-first email sign-in and one account-backed active/planning cook with searchable completed history, details and Cook Again. Acknowledged server writes precede critical transitions; automatic edits retain pending recovery and offer retry/export on failure. Another device retrieves account data after verified sign-in. Stale clients cannot silently replace newer data.
