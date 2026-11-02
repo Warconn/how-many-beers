@@ -66,6 +66,8 @@ export default function TaskRow({
   const [moveError,setMoveError]=useState("");
   const [durationError,setDurationError]=useState("");
 
+  // Each new checklist action starts with its optional tools collapsed.
+  useEffect(()=>{setDetailsOpen(false);setLogging(false);setStartFormOpen(false);setStartError("");},[task.id]);
   useEffect(()=>{onReadingChange?.(logging||startFormOpen);return ()=>onReadingChange?.(false);},[logging,startFormOpen,onReadingChange]);
 
   const done=!!completedAt;
