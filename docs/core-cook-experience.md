@@ -494,9 +494,11 @@ early lives in Cook details & tools. Reopening, protected drafts and account/gue
 finish behavior remain intact. The accepted Beerometer UI and calculations are
 unchanged. See cooking-mode.md.
 
-## Planning moves update estimates (#92)
-New planning moves within a dish change eligible recipe/preparation order and dates,
-with matching Live Schedule, planned duration and execution handoff. Template safety
-checkpoints and physical phases retain their meaningful ordering; unsupported moves
-show a short local explanation. Legacy display-only orders remain compatible. Fixed
-starts, unknowns, actual logs and other dishes are preserved. See step-timing.md.
+## Planning moves update estimates (#92, owner refinement)
+Every dish step can be moved during planning, including cooking, checks, serving
+and added steps. Known durations determine the next free start in the chosen
+sequence. Fixed and saved times remain anchored with specific conflict messages;
+unknown work and food-readiness checks remain explicit. Planning an active cook
+does not modify its recorded starts, completions or notes. Current/upcoming
+forecasts and the Beerometer share that sequence without changing the Beerometer
+UI. Existing plans do not silently migrate. See step-timing.md.

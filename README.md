@@ -81,7 +81,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The reviewed cooking/planner/import improvements through #82 were released via #88. Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) is merged and green in dev: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and #77 recipe details (#90). The owner-approved November 1 follow-up delivers #92 planning-aware reorder (merged into dev via #93) and #84 Cooking Mode cleanup, with dev testing before any separate production approval. The owner completed #4 and requested closing #5; no additional estimator calibration is claimed. URL/photo/PDF import remains separate.
+The reviewed cooking/planner/import improvements through #82 were released via #88. Wave 1 of [#87](https://github.com/Warconn/how-many-beers/issues/87) is merged and green in dev: #86 execution forecasts (#91), combined #85/#62 step editing (#89), and #77 recipe details (#90). The owner-approved November 1 follow-up delivers #92 planning-aware reorder (merged into dev via #93) and #84 Cooking Mode cleanup (merged via #94). The owner refinement removes template-phase move restrictions: every dish step can move, with known durations updating following starts, fixed/recorded conflicts named and actual progress preserved. Existing plans retain their timing until rearranged. Dev testing precedes any separate production approval. The owner completed #4 and requested closing #5; no additional estimator calibration is claimed. URL/photo/PDF import remains separate.
 
 ## Account foundation work
 

@@ -12,6 +12,7 @@ export type RecipeStep = {
 };
 
 export type Dish = {
+  planningSequence?: string[]; // User-configured sequence, including added steps.
   planningStepOrder?: string[]; // Recipe-local keys; only explicit planning moves opt in.
   executionAddedAt?: string; // Creation during an active session; never a physical start.
   id: string;
@@ -44,6 +45,7 @@ export type Meal = {
 
 export type TemplateStage={kind:'preparation'|'cook'|'rest'|'activity';minutes:number;after?:string;startLabel?:string};
 export type PlannedTask = {
+  userSequence?: boolean; // Derived ordered-plan task, never an actual event.
   executionAddedAt?: string;
   templateStage?: TemplateStage; // Derived estimate; never copied into a dish or an actual event.
   id: string;

@@ -338,7 +338,7 @@ function CookExperience() {
     setShowFinish(true);requestAnimationFrame(()=>document.getElementById("cook-outcome")?.focus());
   };
   const taskCard = (task: PlannedTask, mode:"planning"|"cooking", isNext = false, compact = false) => {
-    const visibleTasks = compact ? timeline.filter(t=>t.dishId===task.dishId) : timeline;
+    const visibleTasks = compact||mode==="planning" ? timeline.filter(t=>t.dishId===task.dishId) : timeline;
     const index = visibleTasks.findIndex(t => t.id === task.id);
     const taskEvents = (meal as ExtendedMeal).events ?? [];
     const context = compact ? "dish" : mode === "cooking" ? "cooking" : "checklist";
@@ -374,9 +374,9 @@ function CookExperience() {
       onDurationChange={mode==="planning"&&meal.dishes.some(d=>d.id===task.dishId&&d.preset==='custom')&&!task.id.endsWith(':serve')?minutes=>safelyPatch(m=>setStepDuration(m,task.id,minutes)):undefined}
       durationDisabled={!!editingStep||!!newStepDishId}
       onMove={direction=>{
-        try { moveStep(meal,task.id,direction,compact?task.dishId:undefined); }
+        try { moveStep(meal,task.id,direction,task.dishId,mode==="planning"); }
         catch(error) { return error instanceof Error?error.message:"Could not move this step."; }
-        safelyPatch(m=>moveStep(m,task.id,direction,compact?task.dishId:undefined));
+        safelyPatch(m=>moveStep(m,task.id,direction,task.dishId,mode==="planning"));
       }}
       onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
       onEvent={(kind:CookEventKind,value,unit,note)=>{

@@ -14,7 +14,7 @@ export function templateStepForecasts(meal:Meal,timeline:PlannedTask[],now:numbe
  const result:Record<string,StepForecast>={},events=(meal as ExtendedMeal).events??[],visible=new Map(timeline.map(t=>[t.id,t]));
  const actual=(id:string)=>id.endsWith(':start')||id.endsWith(':rest')||(visible.get(id)&&physicalPhase(visible.get(id)!))?stamp(physicalStartedEvent(events,id)?.occurredAt):stamp(latestStartedEvent(events,id)?.occurredAt)??stamp(meal.completed[id]);
  for(const dish of meal.dishes){
-  if(dish.preset==='custom')continue;
+  if(dish.preset==='custom'||dish.planningSequence)continue;
   // A reference date supplies only offsets if a legacy active cook has no target.
   const source=buildDishTimeline(dish,Number.isFinite(Date.parse(meal.serveAt))?meal.serveAt:'2000-01-02T12:00Z');
   const startId=dish.id+':start',finishId=dish.id+':finish',restId=dish.id+':rest';

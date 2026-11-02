@@ -174,22 +174,29 @@ cook is automatically reparsed or rescheduled. Accounts, guests, history and bac
 behavior remain unchanged.
 
 
-## Planning sequence changes (#92)
-Moving native recipe steps in planning stores optional recipe-local planningStepOrder
-keys, separate from the legacy taskOrder display list. Imported work is scheduled in
-the chosen sequence from known durations and serving/fixed/recorded anchors. Source
-text, per-step fields and other dishes are unchanged. Serve stays last. Unknown and
-explicitly unscheduled durations remain unknown, and fixed/recorded conflicts remain
-visible rather than rewriting evidence.
+## Planning sequence changes (#92, owner refinement)
+All steps within a dish can move while planning: preparation, cooking, rest,
+checks, serving and added steps. General prep has its own sequence. New moves
+store optional `planningSequence` keys (and `planningGeneralSequence` for General
+prep), separate from the legacy display order. Each free start follows the
+preceding known duration. The serving milestone anchors backwards scheduling
+unless a fixed or recorded start provides an anchor. Moving Serve is allowed;
+the serving target itself is unchanged, and a missed target is explained.
 
-Template moves are supported within ordinary preparation groups, using existing
-editable allowances and scheduling the chosen prep sequence back from cooking. Moves
-across cooking phases, refrigerated waits or safety checkpoints explain why they
-cannot be applied. Restoring the source order restores its original spacing with no
-accumulated drift. This is not arbitrary dependency/resource scheduling (#3). Added
-independent steps retain their separate timing.
+Fixed and recorded times stay anchored, with conflicts naming the affected steps
+and dates. Unknown activities break precise estimates; condition checks have a
+position without an invented duration or automatic completion. Explicit checkpoint
+allowances can reserve time without claiming food is ready. Source instructions,
+safety guidance, other dishes and actual event timestamps remain unchanged.
 
-The sequence survives account reload, backup, archive and Cook Again (local step
-keys survive new dish IDs). Starting a reordered plan uses that sequence for current
-and upcoming forecasts. Loading old taskOrder alone never changes old planned dates.
-Actual starts/completions, notes and archived timeline snapshots are never rewritten.
+Current, upcoming and Beerometer forecasts share the chosen sequence. Physical
+cooking/rest starts anchor those windows. Checking a loading action does not
+consume its cooking allowance. An elapsed estimate requires checking progress;
+it never proves food is ready. Existing wings rest is exposed as a movable step
+when opting into a user sequence so that its allowance is retained.
+
+The sequence survives accounts, backup, archive and Cook Again, including remapped
+IDs for added steps. Existing `taskOrder` and earlier prep-only `planningStepOrder`
+plans retain their behavior until the next planning move explicitly selects the
+new sequence model. Active-plan moves preserve notes, actuals and history. This
+does not introduce cross-dish resource scheduling (#3).

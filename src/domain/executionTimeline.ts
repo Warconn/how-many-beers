@@ -31,7 +31,7 @@ export function reopenedAt(meal:Meal,id:string):number|null{
 export function executionTimeline(meal:Meal,timeline:PlannedTask[],now:number):ExecutionTask[]{
  const byId=new Map<string,ExecutionTask>(timeline.map(t=>[t.id,{...t}])),anchor=sessionAnchor(meal,now);
  for(const dish of meal.dishes){
-  if(dish.preset==='custom')continue;
+  if(dish.preset==='custom'||dish.planningSequence)continue;
   const source=buildDishTimeline(dish,meal.serveAt).filter(t=>byId.has(t.id));
   if(dish.preset==='turkey'){
    const prep=turkeyPreparation(dish),thaw=byId.get(dish.id+':thaw');
@@ -58,7 +58,7 @@ export function executionTimeline(meal:Meal,timeline:PlannedTask[],now:number):E
   if(cook&&cook.timingMode!=='fixed'&&cook.timingMode!=='unscheduled'&&actualStart(meal,cook)===null)cook.scheduledAt=iso(cursor===null?null:Math.max(cursor,reopenedAt(meal,cook.id)??anchor));
  }
  const canonical=new Set(meal.dishes.flatMap(d=>buildDishTimeline(d,meal.serveAt).map(t=>t.id)));
- const general=[...byId.values()].filter(t=>!canonical.has(t.id));
+ const general=[...byId.values()].filter(t=>!canonical.has(t.id)&&!t.userSequence);
  const positions=general.filter(t=>!meal.completed[t.id]&&t.timingMode!=='fixed').map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
  const first=positions.length?Math.min(...positions):anchor;
  const progress=Math.max(anchor,...general.map(t=>stamp(meal.completed[t.id])??anchor));
