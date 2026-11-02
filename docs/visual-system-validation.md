@@ -39,6 +39,7 @@ not new pixel-test goldens.
 | Planning | [Before](screenshots/issue-21-planning-desktop-before.png) / [After](screenshots/issue-21-planning-desktop-after.png) | [Before](screenshots/issue-21-planning-mobile-before.png) / [After](screenshots/issue-21-planning-mobile-after.png) |
 | Active cook | [Before](screenshots/issue-21-cooking-desktop-before.png) / [After](screenshots/issue-21-cooking-desktop-after.png) | [Before](screenshots/issue-21-cooking-mobile-before.png) / [After](screenshots/issue-21-cooking-mobile-after.png) |
 | History | [Before](screenshots/issue-21-history-desktop-before.png) / [After](screenshots/issue-21-history-desktop-after.png) | [Before](screenshots/issue-21-history-mobile-before.png) / [After](screenshots/issue-21-history-mobile-after.png) |
+| Editor validation | [Desktop](screenshots/issue-21-editor-error-desktop.png) | [Phone](screenshots/issue-21-editor-error-mobile.png) |
 | Empty planner | [Desktop](screenshots/issue-21-empty-planner-desktop.png) | [Phone](screenshots/issue-21-empty-planner-mobile.png) |
 | Empty history | [Desktop](screenshots/issue-21-empty-history-desktop.png) | [Phone](screenshots/issue-21-empty-history-mobile.png) |
 
@@ -55,6 +56,8 @@ Its component, existing CSS, artwork and domain calculations have no changes.
 - 38 final focused desktop/mobile checks pass: design-system behavior, contrast,
   keyboard focus, readable fields, error state, reduced motion, empty views,
   current cook/actual preservation, history, save/resume and duration reflow.
+- A final 14-check editor/design run passes after widening the unit selector to
+  prevent native-arrow text clipping on narrow phones.
 - Earlier 36 focused desktop/mobile checks also passed for branding, step editing,
   reorder and Cooking Mode layout, including completed and reopened states.
 - Six focused account checks pass with the existing mocked backend, desktop and
