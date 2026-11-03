@@ -22,11 +22,11 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <p className="muted small">Brisket timing varies. Starting early gives you room to rest and hold.</p>
       {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The recommended start has passed. Serving time may be at risk; review your plan.</p>}
     </div>}
-    <div className="timing-choice">
-      <p role="status"><strong>{estimated?'Using estimated timing':'Using manual timing'}</strong><span>{estimated ? dirty?'Recommendation changed; apply to update.':'Recommendation applied.' : 'Recommendation not applied.'}</span></p>
+    <div className={"timing-choice"+(current?" is-applied":"")}>
+      <p role="status"><strong>{current?'Timing applied':estimated?'Using estimated timing':'Using manual timing'}</strong>{!current&&<span>{estimated?'Recommendation changed; apply to update.':'Recommendation not applied.'}</span>}</p>
       <div className="timing-choice-actions">
-        <button type="button" className="button primary" disabled={estimate.smokeMax===null || current} onClick={()=>onChange(applyBrisketTiming({...dish,brisketPlan:{...dish.brisketPlan,mode:'manual',inputs}},serveAt))}>{current?'Timing applied':'Use recommended timing'}</button>
-        {estimated && <button type="button" className="link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Use manual timing</button>}
+        {!current&&<button type="button" className="button primary" disabled={estimate.smokeMax===null} onClick={()=>onChange(applyBrisketTiming({...dish,brisketPlan:{...dish.brisketPlan,mode:'manual',inputs}},serveAt))}>Use recommended timing</button>}
+        {estimated&&<button type="button" className="link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Use manual timing</button>}
       </div>
     </div>
     <details><summary>Timing details</summary>
