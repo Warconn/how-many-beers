@@ -14,6 +14,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001'
 select pg_temp.ok(public.load_cook_workspace(auth.uid())->'capabilities'->'savedPlans'='true'::jsonb,'installed schema advertises saved plan capability');
 select pg_temp.ok(public.read_saved_cook_plan(auth.uid(),'18000000-0000-4000-8000-000000000099') is null,'new plan ID has no saved document');
 select public.save_cook_workspace(auth.uid(),0,'51000000-0000-4000-8000-000000000001',jsonb_set(jsonb_set(pg_temp.doc('18000000-0000-4000-8000-000000000001','Pumpkin seeds'),'{active,meal,mode}','"cooking"'),'{active,meal,startedAt}','"2026-11-01T12:00:00Z"'),'America/New_York');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->>'activeTimeZone'='America/New_York','workspace exposes stored active time zone independently of browser zone');
 select public.load_cook_workspace(auth.uid()) as live \gset
 select public.save_saved_cook_plan(auth.uid(),'18000000-0000-4000-8000-000000000002',0,'51000000-0000-4000-8000-000000000002',pg_temp.plan('18000000-0000-4000-8000-000000000002'),'America/New_York') as first \gset
 select public.save_saved_cook_plan(auth.uid(),'18000000-0000-4000-8000-000000000003',0,'51000000-0000-4000-8000-000000000003',pg_temp.plan('18000000-0000-4000-8000-000000000003','Monday sides','2026-11-09T23:00:00Z'),'America/New_York');
@@ -41,6 +42,7 @@ select pg_temp.denied($q$select public.save_saved_cook_plan(auth.uid(),'18000000
 select pg_temp.denied($q$select public.promote_saved_cook_plan(auth.uid(),0,'18000000-0000-4000-8000-000000000002',2,'52000000-0000-4000-8000-000000000001')$q$,'other owner cannot promote known private ID');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 select public.cancel_cook(auth.uid(),1,'18000000-0000-4000-8000-000000000001','53000000-0000-4000-8000-000000000001');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->'activeTimeZone'='null'::jsonb,'empty workspace exposes no active time zone');
 select pg_temp.denied($q$select public.promote_saved_cook_plan(auth.uid(),1,'18000000-0000-4000-8000-000000000002',2,'52000000-0000-4000-8000-000000000001')$q$,'promotion pins acknowledged workspace revision');
 select pg_temp.denied($q$select public.promote_saved_cook_plan(auth.uid(),2,'18000000-0000-4000-8000-000000000002',1,'52000000-0000-4000-8000-000000000001')$q$,'promotion pins selected plan revision');
 select public.promote_saved_cook_plan(auth.uid(),2,'18000000-0000-4000-8000-000000000002',2,'52000000-0000-4000-8000-000000000001') as promoted \gset
@@ -54,6 +56,7 @@ select pg_temp.denied($q$select public.promote_saved_cook_plan(auth.uid(),5,'180
 -- A separate owner exercises lossless lazy transfer of legacy planning.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
 select public.save_cook_workspace(auth.uid(),0,'54000000-0000-4000-8000-000000000001',jsonb_set(pg_temp.doc('19000000-0000-4000-8000-000000000001','Legacy Sunday meal'),'{active,meal,events}','[{"id":"removed-before-migration","taskId":"old-step","kind":"removed","occurredAt":"2021-04-04T03:07:00Z"}]'),'America/New_York');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->>'activeTimeZone'='America/New_York','logical legacy plan exports its stored IANA zone without using device defaults');
 select to_jsonb(c) as legacy from public.cook_sessions c where id='19000000-0000-4000-8000-000000000001' \gset
 select jsonb_agg(to_jsonb(e) order by id) as legacy_events from public.cook_events e \gset
 select public.save_saved_cook_plan(auth.uid(),'19000000-0000-4000-8000-000000000002',0,'54000000-0000-4000-8000-000000000002',pg_temp.plan('19000000-0000-4000-8000-000000000002','Another future meal'),'America/New_York');

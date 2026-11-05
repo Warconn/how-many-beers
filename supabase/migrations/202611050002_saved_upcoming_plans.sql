@@ -77,6 +77,7 @@ end $$;
 create or replace function public.account_workspace_snapshot(account_owner uuid) returns jsonb language sql stable set search_path='' as $$
  select jsonb_build_object('revision',w.revision,'writeId',w.last_write_id,
  'capabilities',jsonb_build_object('cancelCook',true,'savedPlans',true),
+ 'activeTimeZone',(select c.time_zone from public.cook_sessions c where c.owner_user_id=account_owner and c.state in ('planning','active')),
  'active',(select c.plan from public.cook_sessions c where c.owner_user_id=account_owner and c.state in ('planning','active')),
  'history',coalesce((select jsonb_agg(c.completed_snapshot order by c.finished_at desc,c.id) from public.cook_sessions c where c.owner_user_id=account_owner and c.state='completed'),'[]'::jsonb))
  from public.cook_workspaces w where w.owner_user_id=account_owner
