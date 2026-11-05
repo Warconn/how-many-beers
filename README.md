@@ -152,3 +152,8 @@ meal-first chooser and concise method editor. `/` retains accepted behavior. See
 [scope and test path](docs/recipe-first-preview.md). Personal recipe persistence is
 a later slice of #103, not a capability claimed by this prototype. Do not merge or
 release this experiment before owner review.
+
+The recipe-first experiment shows short step instructions inline, expands longer
+text on demand, and labels the combined schedule **Review Meal Plan**. Generic
+review guidance and method-reference chrome are omitted; saved recipe/source data
+and the ordinary homepage remain intact.

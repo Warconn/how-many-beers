@@ -71,7 +71,7 @@ guidance retained:
 - [Mobile method review](screenshots/issue-103-method-mobile.png)
 - [Mobile two-dish meal](screenshots/issue-103-meal-mobile.png)
 
-Local typecheck, all 370 unit tests, ten desktop/mobile prototype browser cases,
+Local typecheck, all 370 unit tests, twelve desktop/mobile prototype browser cases,
 and three focused desktop account journeys passed. The Cloudflare static export
 build passed and includes `/recipe-first/`. Full PR CI and actual iPhone/WebKit
 captures remain the final validation gate. No hosted migrations were applied.
@@ -87,3 +87,22 @@ rows commit their new order only on drop. Keyboard Up/Down works without an edit
 retains focus, and announces position. Move controls were removed from the editor.
 The pointer test uses native CDP touch on mobile Chromium and mouse pointer input
 on desktop/WebKit; a physical iPhone touch check is still useful during owner review.
+
+## Latest visual refinement
+
+The method review shows smaller instructions directly under each step, with the
+estimate beneath the title and a quiet Edit action alongside. Only text exceeding
+five rendered lines gets Show more / Show less; expansion preserves the complete
+instruction, and the decision updates with the available width. Short instructions
+need no disclosure. Grips and existing timing reflow are unchanged.
+
+Removed the review's generic guidance footer and Method reference disclosure.
+Original recipe text, step instructions and source data are retained. The extra
+setup borders/padding and separate Cancel row are removed; name and equipment share
+a row on desktop. On this prototype, Review Meal Plan / Hide Meal Plan and the
+Meal plan heading clearly name the combined plan for every dish. The ordinary `/`
+labels and accepted layout remain unchanged.
+
+Browser checks cover short instructions visible immediately, long instruction
+expansion/collapse without data loss, template and imported dishes together in the
+Meal plan preview, and retained mouse/touch/keyboard movement.

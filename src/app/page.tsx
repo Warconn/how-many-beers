@@ -592,7 +592,7 @@ function CookExperience() {
               <input id="serve-at" type="datetime-local" value={meal.serveAt} onChange={e => patch(m => ({...m, serveAt: e.target.value}))}/>
             </div>
           </section>}
-          <section className="workspace-overview" aria-label="Cook overview">
+          <section className={"workspace-overview"+(recipeFirst&&methodReview?" reviewing-method":"")} aria-label="Cook overview">
             <div className="workspace-heading">
               {!(recipeFirst&&methodReview)&&<div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length ? `${meal.dishes.length} ${meal.dishes.length===1?"dish":"dishes"} in this cook` : "What do you want to cook?"}</h2></div>}
               {(meal.dishes.length>0 || showDishSetup) && <button id="add-dish-button" type="button" className={showDishSetup?"cancel-add-dish":"button secondary"} aria-label={showDishSetup?"Cancel adding":"+ Add a dish"} aria-expanded={showDishSetup} aria-controls="menu-add-dish" onClick={()=>{setEditingDishId(null);setMethodReview(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? <><Icon name="close"/> Cancel</> : "+ Add a dish"}</button>}
@@ -734,7 +734,7 @@ function CookExperience() {
               {!cookInProgress && <button type="button" className="button secondary save-plan-button" disabled={timeline.length===0 || planStepDraftOpen} aria-describedby={planStepDraftOpen?"save-plan-help":undefined} onClick={savePlanForLater}>{workspace.kind==='trial'?'Sign in to save plan':'Save plan for later'}</button>}
               {timeline.length > 0 && <button type="button" className="link review-checklist-button"
                 aria-expanded={showChecklistPreview} aria-controls="checklist-preview"
-                onClick={()=>setShowChecklistPreview(v=>!v)}>{showChecklistPreview ? "Hide checklist" : "Review checklist"}</button>}
+                onClick={()=>setShowChecklistPreview(v=>!v)}>{recipeFirst ? (showChecklistPreview ? "Hide Meal Plan" : "Review Meal Plan") : (showChecklistPreview ? "Hide checklist" : "Review checklist")}</button>}
             </div>
             {!cookInProgress && planStepDraftOpen && <p id="save-plan-help" className="muted small">Save or cancel the open step first, then save your plan for later.</p>}
             {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.currentCookInProgress&&<div className="plan-active-notice"><p>Your current cook is still running. You can save this plan now and start it after finishing or canceling that cook.</p><button type="button" className="button secondary" disabled={planStepDraftOpen} onClick={()=>void continueCurrentCook()}>Continue current cook</button></div>}
@@ -749,8 +749,8 @@ function CookExperience() {
           </section>
           }
           {showChecklistPreview && timeline.length > 0 && (
-            <section className="checklist-preview" id="checklist-preview" aria-label="Cooking checklist preview">
-              <div className="preview-intro"><h3>Cooking checklist</h3></div>
+            <section className="checklist-preview" id="checklist-preview" aria-label={recipeFirst?"Meal plan preview":"Cooking checklist preview"}>
+              <div className="preview-intro"><h3>{recipeFirst?"Meal plan":"Cooking checklist"}</h3></div>
               <p className="muted small">Review all dishes together. Check off steps and record actual readings in Cooking Mode.</p>
               <div className="checklist preview-task-list">{timeline.map(task => taskCard(task, "planning"))}</div>
               <AddStepForm onAdd={addCustom}/>

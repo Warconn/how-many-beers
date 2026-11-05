@@ -26,6 +26,9 @@ The ordinary homepage remains accepted behavior. This slice does not add recipe
 library persistence, hosted schema changes or #101 phase semantics. Review the flow
 with the owner before widening scope or merging. See docs/recipe-first-preview.md.
 No automatic dev/main merges or production releases are authorized.
+The review shows smaller instructions inline, expands only long text, and omits
+the generic guidance/method-reference footer. Review Meal Plan names the combined
+meal preview; collapsed grips keep moving steps separate from editing.
 
 #61/#104, #83/#107 and #71/#102 are merged into dev at `4b4b31f` with full CI and
 Cloudflare preview confirmed. Production remains #100 at `190bf61`. Hosted schema
