@@ -103,3 +103,17 @@ label { font-size:var(--text-sm); line-height:1.5; }
 /* Leave room for the native select arrow at 16 px, including narrow iPhones. */
 .step-editor .duration-controls { grid-template-columns:minmax(0,1fr) 120px; }
 .step-editor .duration-controls select { padding-inline:10px; }
+
+.cancel-cook-dialog { max-width:480px; width:calc(100% - 32px); }
+.cancel-cook-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+.cancel-cook-actions .button { min-height:44px; }
+
+.upcoming-cook-list { list-style:none; padding:0; margin:0; }
+.upcoming-cook-list>li { padding:16px 0; border-bottom:1px solid var(--line); }
+.upcoming-cook-list>li:last-child { border-bottom:0; }
+.upcoming-cook-list h4 { overflow-wrap:anywhere; font-size:18px; margin:0 0 4px; }
+.upcoming-cook-list p { margin:0 0 12px; }
+.upcoming-cook-actions { display:flex; flex-wrap:wrap; gap:12px; }
+.upcoming-backups { border-top:1px solid var(--line); margin-top:16px; padding-top:12px; }
+.upcoming-backups summary { min-height:44px; display:list-item; cursor:pointer; color:var(--accent-dark); font-weight:600; }
+.plan-active-notice { margin:16px 0; padding:16px; border-left:3px solid var(--accent); background:var(--surface); }

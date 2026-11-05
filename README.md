@@ -87,7 +87,7 @@ The build uses Next.js static export. The canonical production site is https://h
 
 The [November 5 production release (PR #100)](https://github.com/Warconn/how-many-beers/pull/100) delivered the visual design system (#21), checkbox-first Cooking Mode (#97) and the accepted compact cooking/Beerometer UI. Those are not unbuilt features.
 
-**Finish in-flight:** [#61 retained cancel](https://github.com/Warconn/how-many-beers/issues/61) ([PR #104](https://github.com/Warconn/how-many-beers/pull/104)) and independent [#71 CI optimization](https://github.com/Warconn/how-many-beers/issues/71) ([PR #102](https://github.com/Warconn/how-many-beers/pull/102)); [#83 multiple upcoming planned cooks](https://github.com/Warconn/how-many-beers/issues/83) is already in flight per owner and follows #61's lifecycle work. Recheck GitHub for current merge/delivery state.
+**Now in dev:** [#61 retained cancel](https://github.com/Warconn/how-many-beers/issues/61) ([PR #104](https://github.com/Warconn/how-many-beers/pull/104)), [#83 independent upcoming account plans](https://github.com/Warconn/how-many-beers/issues/83) ([PR #107](https://github.com/Warconn/how-many-beers/pull/107)), and [#71 complete browser CI sharding](https://github.com/Warconn/how-many-beers/pull/102). The owner approved their dev integration at `4b4b31f`; Cloudflare confirmed the preview. Check final CI and verify hosted migrations separately. Production remains #100.
 
 **Next core experience:** [#103 recipe-first selection, reuse and quick tailoring](https://github.com/Warconn/how-many-beers/issues/103), then [#101 concurrent cooking phases and rolling whole-cook Beerometer](https://github.com/Warconn/how-many-beers/issues/101). Both require product review before implementation.
 
@@ -128,3 +128,16 @@ use aligned Edit, Move and Remove controls; Add a step stays below the list.
 Cooking Mode now uses one progress treatment and a single content column. Completed
 cooks have one primary Finish action and checklist review, while Finish cook early
 is available under Cook details & tools. The Beerometer retains the accepted design and calculations while hiding duplicate initial totals and zero elapsed.
+
+Retained **Cancel cook** is merged into dev through #61 / PR #104: Home and Cooking Mode
+provide a confirmation, completed history stays untouched, and account cancellation
+waits for a server receipt. Install the additive dev migration before the capability-
+gated account control appears. Guest trials remain temporary; legacy local canceled
+records remain retained and backup-compatible. See [rollout details](docs/account-cooks.md).
+
+Multiple upcoming account plans are merged into dev through #83 / PR #107, using #61.
+Home separates future meals from the single current cook. Each future plan saves
+independently, and starting it is acknowledged atomically. Current cook/history and
+upcoming plans have explicitly separate backup files; keep both for a full account
+backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
+See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).

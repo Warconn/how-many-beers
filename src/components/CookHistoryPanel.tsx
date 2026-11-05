@@ -11,6 +11,7 @@ type Props = {
   history:HistoryLibrary;
   onRepeat:(entry:ArchivedCook)=>void;
   onDelete:(entry:ArchivedCook)=>void;
+  separatePlans?:boolean;
   onExport:()=>void;
   onImport:(file:File)=>Promise<void>;
 };
@@ -25,7 +26,7 @@ function eventDetail(e:CookEvent):string{
   return names[e.kind]+(e.value===undefined?"":" "+e.value+(e.unit??""))+(e.note?" · "+e.note:"");
 }
 
-export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onImport}:Props){
+export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onImport,separatePlans=false}:Props){
   const importInput=useRef<HTMLInputElement>(null);
   const [search,setSearch]=useState("");
   const [selected,setSelected]=useState<string|null>(null);
@@ -62,8 +63,8 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
             {!shown.length && <p className="muted small">No matching cooks.</p>}
           </div>
         </>}
-    <section className="history-backups" aria-label="Cook backups"><h3>Backups</h3><div className="history-toolbar">
-      <button type="button" className="button secondary" onClick={onExport}>Download backup</button>
+    <section className="history-backups" aria-label="Cook backups"><h3>{separatePlans?"Current cook and history backups":"Backups"}</h3>{separatePlans&&<p className="muted small">Upcoming plans have a separate backup on Home. Restoring this cook backup keeps your upcoming plans.</p>}<div className="history-toolbar">
+      <button type="button" className="button secondary" onClick={onExport}>{separatePlans?"Download cook and history":"Download backup"}</button>
       <button type="button" className="button secondary" disabled={busy} onClick={()=>importInput.current?.click()}>Restore a backup</button>
         <input ref={importInput} className="sr-only" aria-label="Restore a backup" type="file" accept=".json,application/json" disabled={busy} onChange={async e=>{
           const file=e.target.files?.[0];

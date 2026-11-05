@@ -6,11 +6,19 @@
 
 [Production PR #100](https://github.com/Warconn/how-many-beers/pull/100) released #21 visual consistency and #97 checklist-first Cooking Mode plus accepted spacing/Beerometer UI, beyond earlier #96 fixes. These are **completed**. Do not rerun them.
 
-## Finish what is in flight
+## Merged into dev, production promotion separate
 
-1. **#61 Retained cancellation:** [PR #104](https://github.com/Warconn/how-many-beers/pull/104), open when this decision was recorded. Finish and review DB lifecycle/authorization/migration, account/guest recovery, full CI and mobile screenshots. No automatic hosted migration, merge or deployment. #83 depends on its lifecycle contract.
-2. **#71 CI feedback:** [PR #102](https://github.com/Warconn/how-many-beers/pull/102) independent in-flight work. Validate full desktop/mobile/iPhone coverage, evidence, timing and costs before merge. No app feature changes.
-3. **#83 Multiple upcoming saved cooks:** User confirms Codex has work in flight. Verify the live branch/PR rather than assuming delivery. Separate plans for a signed-in account plus a single active cook; keep existing history, events, and guest contracts safe. Review after #61's lifecycle is understood.
+The owner approved dev integration on November 5. Dev commit
+`4b4b31f4f996f4c1e2d1593bc48d1930a41f9692` contains:
+
+1. **#61 Retained cancellation:** [PR #104](https://github.com/Warconn/how-many-beers/pull/104), owner-approved Cancel Cook UX, retained records and acknowledgement/ownership protections.
+2. **#71 CI feedback:** [PR #102](https://github.com/Warconn/how-many-beers/pull/102), complete browser regression sharding with measured timing/cost evidence.
+3. **#83 Multiple upcoming saved cooks:** [PR #107](https://github.com/Warconn/how-many-beers/pull/107), independent account plans, one active cook and quiet automatic saving through the existing status icon.
+
+Cloudflare confirmed the dev preview deployment. Check live integration CI before
+calling validation complete. Hosted Supabase migrations remain unverified/unapplied
+by this workspace; preserve capability gating until the dev schema supports these
+APIs. Production remains #100. Do not repeat delivered implementation.
 
 ## Next product priorities, once the above is reviewed
 

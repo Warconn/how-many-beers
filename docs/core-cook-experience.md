@@ -2,7 +2,7 @@
 
 [Release #100](https://github.com/Warconn/how-many-beers/pull/100) has shipped #21's visual system, #97's checkbox-first Cooking Mode, and reviewed spacing/Beerometer cleanup, building on #96's #92/#84/#62/#85/#77/#86 functionality. See [release validation](releases/2026-11-05.md). The current simple checklist has optional phase logging/correction under Step details; checking a generic prep action does **not** establish physical grilling/rest elapsed time. Maintain historical events, accounts, guest recovery and food-safety constraints.
 
-**Current order:** finish in-flight #61 (soft cancellation) and parallel #71 (CI optimization), complete already-in-flight #83 (multiple free upcoming account plans with only one active session), then plan **#103 recipe-first selection/customization/reuse**, followed by design and scoped implementation of **#101 active cooking phases, global next actions and a live whole-cook Beerometer**. See the [canonical product roadmap](product-roadmap.md) and [working queue](work-queue.md). This is a roadmap, **not a claim the future features are implemented**.
+**Current dev delivery:** #61 retained cancellation, #83 independent upcoming account plans and #71 CI sharding are merged at `4b4b31f`, with Cloudflare preview confirmed. Check final integration CI and hosted migration setup separately; production remains #100. **Next:** plan **#103 recipe-first selection/customization/reuse**, followed by design and scoped implementation of **#101 active cooking phases, global next actions and a live whole-cook Beerometer**. See the [canonical product roadmap](product-roadmap.md) and [working queue](work-queue.md). The #103/#101 concepts remain future design, not implemented functionality.
 
 **#103 product intent:** A new/returning cook chooses a saved *personal recipe*, a historical multi-dish *Cook again*, or creates a new recipe from an existing named template or pasted/uploaded text. The short pre-cook review helps tailor phases and duration to the method actually used, without rapidly checking off mismatched template steps later. A saved recipe is not the same as a completed cook session. Keep one meal session able to contain several dishes.
 
@@ -514,3 +514,25 @@ unknown work and food-readiness checks remain explicit. Planning an active cook
 does not modify its recorded starts, completions or notes. Current/upcoming
 forecasts and the Beerometer share that sequence without changing the Beerometer
 UI. Existing plans do not silently migrate. See step-timing.md.
+
+## Retained cancellation (#61)
+Cancel cook is separate from Finish cook. Confirmation defaults to Keep cooking;
+only an acknowledged cancellation removes the cook from active/resume. Canceled
+records remain retained outside normal completed history. Guests keep their existing
+trial/legacy persistence policy; account writes preserve ownership, original actuals
+and idempotent recovery. A new cook can start after successful cancellation.
+
+## Upcoming account cooks (#83)
+
+With the savedPlans server capability, Home shows one current cooking session plus
+independent future plans. Plan another cook and Cook Again create future documents,
+never replacement live sessions. Reuse the existing planner for each selected plan;
+explicit start is blocked while another cook is active. Navigation protects pending
+per-plan drafts and preserves current actuals. Upcoming plan backups are separate
+from the existing cook/history backup, with clearly labeled scopes and atomic merge.
+This is account-only; guest behavior and the timing/execution model remain unchanged.
+
+Upcoming plan saving uses the existing account save icon and automatic transient
+retries. Pending drafts are protected internally; there are no separate recovery,
+retry or Resume draft controls for future plans. Conflicting newer-device edits
+remain protected without automatic replacement. Cancel Cook is unchanged.

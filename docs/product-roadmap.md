@@ -18,13 +18,18 @@ Current released defaults: one primary checklist action, optional physical-start
 
 | Sequence | Issue | State and direction |
 | --- | --- | --- |
-| Finish in-flight | [#61 Cancel Cook](https://github.com/Warconn/how-many-beers/issues/61) | [PR #104](https://github.com/Warconn/how-many-beers/pull/104) proposed soft cancellation; validate database migration, ownership/recovery, full CI, and owner review before merging. Not yet a production claim. |
-| Parallel, finish in-flight | [#71 Faster CI](https://github.com/Warconn/how-many-beers/issues/71) | [PR #102](https://github.com/Warconn/how-many-beers/pull/102) is an independent two-shard CI experiment; validate full coverage, real iPhone/WebKit, speed **and** cost, then stop chasing marginal improvements. |
-| Next work already in flight | [#83 Multiple upcoming cooks](https://github.com/Warconn/how-many-beers/issues/83) | Owner says Codex has begun work. Confirm live branch/PR. Multiple free signed-in saved plans, **one** active cooking session, no destructive overwrite; reuse #61 lifecycle safeguards. Separate implementation and review. |
+| Merged into dev | [#61 Cancel Cook](https://github.com/Warconn/how-many-beers/issues/61) | [PR #104](https://github.com/Warconn/how-many-beers/pull/104) merged after owner acceptance and feature CI/security validation. Retained cancellation is in dev; hosted migration verification and production promotion remain separate. |
+| Merged into dev | [#71 Faster CI](https://github.com/Warconn/how-many-beers/issues/71) | [PR #102](https://github.com/Warconn/how-many-beers/pull/102) merged with complete coverage, iPhone/WebKit and measured speed/cost evidence. Further speculative optimization is deferred. |
+| Merged into dev | [#83 Multiple upcoming cooks](https://github.com/Warconn/how-many-beers/issues/83) | [PR #107](https://github.com/Warconn/how-many-beers/pull/107) merged after owner review. Multiple free signed-in plans, **one** active cook and automatic saving are in dev. Preserve capability gating and verify hosted migrations separately; not a production claim. |
 | After #83, product UX priority | [#103 Recipe-first creation and reuse](https://github.com/Warconn/how-many-beers/issues/103) | First define concise “What are you cooking?” entry with **Your recipes**, **Cook again** and **Create new**; quick tailoring before cooking. Free reusable recipe distinct from history, same chooser for another dish; no new methods or URL importer required. **Design and approve the smallest slice before coding.** |
 | Following core experience design | [#101 Active phases and whole-cook Beerometer](https://github.com/Warconn/how-many-beers/issues/101) | Design then independently build meaningful overlapping cooking phases with time-based checkpoints and a rolling whole-cook countdown, not a new global dependency scheduler. Validate real cooks before expanding. |
 
 **Explicitly not authorized:** auto-merge PRs, modify production data or Supabase schemas on hosted systems, push to `main`, or start #101/#103 implementation before product review. Use isolated branches from current `dev`, focused PRs to `dev`, full appropriate CI and visual/account/data tests; obtain owner approval for merging and production promotion.
+
+Dev integration was authorized on November 5 at
+`4b4b31f4f996f4c1e2d1593bc48d1930a41f9692`, with Cloudflare preview confirmed.
+Recheck its integration CI before final validation claims. No hosted migration or
+production change was performed; verify account rollout prerequisites separately.
 
 ## Approved design boundaries
 

@@ -18,13 +18,33 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 [Release PR #100](https://github.com/Warconn/how-many-beers/pull/100) delivered #21 visual system and #97 checkbox-first Cooking Mode, including accepted compact UI and Beerometer cleanup. The merged production main commit was `190bf6168fbaf9fe2c3d75770200101a26bcc539`. Earlier #92, #84, #62/#85, #77 and #86 were already delivered. **Do not restart these completed tickets.** Preserve stable IDs, observed event timestamps, accounts, legacy guest data, the single prominent action and existing data safety.
 
-### Current in-flight and next priorities (in this order)
+### Current dev delivery and next priorities (in this order)
 
-1. **#61 Cancel Cook:** [PR #104](https://github.com/Warconn/how-many-beers/pull/104) was opened to implement retained soft cancellation. Finish full CI, PostgreSQL/RLS and upgrade/race validation, required hosted schema review and owner acceptance before any merge. It does not establish that migrations or production changes are live.
-2. **#71 CI optimization:** [PR #102](https://github.com/Warconn/how-many-beers/pull/102) is an independent parallel two-shard browser CI experiment. Check the *whole* suite, iPhone/WebKit, timing and runner cost; it is not a core cooking feature.
-3. **#83 Multiple upcoming cooks:** Owner reports Codex work in flight. Check for a current feature branch/PR; do not claim a merged implementation based on a plan alone. Multiple free signed-in future plans while **one** cook is active; reuse #61 lifecycle protections, no destructive overwrites, separate PR into `dev`.
+The owner authorized merging #104, #107 and #102 into dev on November 5.
+Dev is `4b4b31f4f996f4c1e2d1593bc48d1930a41f9692`; Cloudflare confirmed its
+preview deployment. Production remains #100. Recheck final integration CI and
+hosted migration status before claiming account rollout is complete.
+
+1. **#61 Cancel Cook:** [PR #104](https://github.com/Warconn/how-many-beers/pull/104) is merged into dev, with owner-approved UX and passing feature CI/security tests. Do not reimplement it.
+2. **#71 CI optimization:** [PR #102](https://github.com/Warconn/how-many-beers/pull/102) is merged into dev. It preserves complete desktop/mobile/iPhone coverage and existing required gates with measured timing/cost evidence. Further speculative optimization is deferred.
+3. **#83 Multiple upcoming cooks:** [PR #107](https://github.com/Warconn/how-many-beers/pull/107) is merged into dev, including automatic plan saving through the existing save indicator. Preserve one active cook, independent future plans, guest behavior and all current/history data. Do not duplicate this implementation.
 4. **#103 Recipe-first UX, after #83:** This is the next core user-experience priority. Design “What are you cooking?”, clear saved personal **recipe** vs **past multi-dish cook**, creating from existing templates/text import, quick pre-cook tailoring and repeat use. Do not expand bundled cooking methods or build URL fetching as a prerequisite. **Review design/scope with owner before coding.**
 5. **#101 Live cooking phases, after recipe UX planning:** Design meaningful overlapping active dish phases with checkbox start actions, explicit end-of-heat actions, time-based check actions, one global Up Next and **rolling whole-cook time remaining** in the Beerometer. Corrections recalculate linked timing, without rewriting actuals. **Review the model before implementation.**
+
+### Delivered lifecycle safeguards to preserve
+
+#61 retains canceled records outside active/completed views, requires acknowledged
+cancellation before a replacement cook, and guards stale-device resurrection.
+Fresh guest trials stay temporary; legacy/account records retain their existing
+protection. #83 keeps separately versioned owner-scoped future plans, immutable
+promotion receipts and lossless legacy transfer. Real actual timestamps, histories
+and backups must survive retries, reloads and older clients. See
+[upcoming cooks](docs/upcoming-cooks.md) and [lifecycle design](docs/cook-lifecycle-plan.md).
+
+Hosted Supabase migrations were not applied by this integration. Verify the dev
+schema and install the additive #61 migration before #83 where required. Capability
+checks must keep older account schemas usable. Never change hosted schemas without
+verified environment access and explicit deployment scope. No new manual QA tickets.
 
 ### Explicit deferrals and boundaries
 
@@ -39,7 +59,7 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 - **All accounts are free for now. No paid tier, subscriptions or billing implementation.**
 - Guests can try the cooking workflow without sign-in, but the intended **new guest experience** has no persistent saves, tracked completed-cook history or account tracking. Clearly disclose that mode's limits.
-- Signed-in users have exactly **one** saved active/planning cook, plus a list of **unlimited completed cooks** (subject to reasonable technical limits). View details and Cook Again stay free.
+- Signed-in users retain **one active cook** and **unlimited completed cooks** (subject to reasonable technical limits). #83 account builds with the savedPlans server capability also support multiple independent upcoming plans; older schema builds keep their one planning/active workspace. View details and Cook Again stay free.
 - **No cooking analytics dashboard** required. A simple, useful Previous Cooks list is the focus.
 - Multiple free future account plans are approved as #83 (after #61). **After #83**, #103 explores a free reusable personal recipe library separate from completed cook history; this is not delivered yet. One active cooking session remains the constraint.
 - **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
@@ -121,6 +141,12 @@ resource/dependency optimization remains #3. See docs/step-timing.md.
 ## Account menu refinement (October 28, 2026)
 
 The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/download UI is removed during pre-1.0 (#60), with no automatic replacement import; leave stored records and recovery mechanisms intact. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.
+
+Upcoming-plan saving reuses that existing mechanism: automatic bounded transient
+retries, owner-scoped protected drafts, and honest status in the existing icon. Do
+not add separate plan recovery/retry prompts or Resume draft controls. Never
+automatically overwrite a conflicting newer-device plan or claim an unconfirmed
+start succeeded. The owner accepted Cancel Cook as implemented; preserve its flow.
 
 Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
 
