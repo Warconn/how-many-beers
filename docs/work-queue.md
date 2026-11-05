@@ -1,20 +1,24 @@
-# Current owner-approved sequence: November 2, 2026
+# Current owner-approved sequence: November 5, 2026
 
-Production release #96 (`925cbac`) is the new baseline. #92, #84, #62/#85, #77
-and #86 are delivered and promoted. Dev `4577b01` has the same application content.
+Finish and stabilize the November 5 release: #21 / PR #98 plus #97 / PR #99,
+including accepted November 3 spacing, Cooking Mode layout and Beerometer cleanup.
+Full feature CI → merge dev → full integration CI → release PR dev to main → full
+candidate CI/build → merge → actual Cloudflare deployment confirmation. No failing
+check bypass, force merge or production account/cook-data mutations. See
+[release notes](releases/2026-11-05.md); verify live status before claiming release.
+The #96 deliveries (#92, #84, #62/#85, #77 and #86) remain complete.
 
-1. **#21:** Apply the existing brand/design system across functional views, with
-   actual desktop/mobile screenshots and full relevant tests. Keep Beerometer,
-   accepted interactions, actual records and persistence intact. PR to dev only.
-2. **#61:** Prepare retained cancellation with authoritative lifecycle, terminal
-   guards and safe recovery. Review Supabase constraints/RLS/RPC before schema work.
-3. **#83:** Multiple account plans and one live cook, after #61 design is understood.
+After shipping, discuss the owner's in-progress cooking/timing concept separately.
+Do not infer its requirements or redesign execution during stabilization.
+
+Prepared capability sequence, not implementation scope in this session:
+1. **#61:** Retained cancellation, authoritative lifecycle, terminal guards and safe
+   recovery. Review Supabase constraints/RLS/RPC first.
+2. **#83:** Multiple account plans and one live cook, after #61 design is understood.
    No active-cook replacement or guest scope expansion. Separate feature PRs.
 
-#97 is a focused recommendation alongside #21 for the remaining checklist-first
-Start/logging interaction gap. It is not a reopening of #84 or implementation
-approval. See design-system.md and cook-lifecycle-plan.md. Do not auto-merge or
-release; the owner actively tests real cooks, so create no manual QA tickets.
+#69/#70 sync, #2 URL import, paid tiers and social login remain excluded. No manual
+QA/acceptance tickets. Reconcile #21/#97 only after their actual release.
 
 The following older queue is historical and superseded by this section.
 

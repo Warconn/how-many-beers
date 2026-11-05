@@ -380,9 +380,9 @@ function CookExperience() {
         safelyPatch(m=>moveStep(m,task.id,direction,task.dishId,mode==="planning"));
       }}
       onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
-      onEvent={(kind:CookEventKind,value,unit,note)=>{
+      onEvent={(kind:CookEventKind,value,unit,note,occurredAt)=>{
         if(kind==="completed"||kind==="reopened")completeCookingStep(task.id,kind==="completed");
-        else safelyPatch(m=>recordEvent(m,task.id,kind,new Date().toISOString(),value,unit,note));
+        else safelyPatch(m=>recordEvent(m,task.id,kind,occurredAt??new Date().toISOString(),value,unit,note));
       }}
     />;
   };

@@ -18,9 +18,10 @@ export function physicalPhase(task:PlannedTask):{label:string}|null{
 export function physicalStartedEvent(events:CookEvent[],taskId:string):CookEvent|undefined{
  const relevant=events.filter(e=>e.taskId===taskId);
  const reopen=relevant.map(e=>e.kind).lastIndexOf('reopened');
- return relevant.slice(reopen+1).find(event=>{
+ // Append-only corrections supersede earlier physical starts without erasing history.
+ return relevant.slice(reopen+1).filter(event=>{
   if(event.kind!=='started'||event.startSource==='activity')return false;
   if(event.startSource==='physical')return true;
   return !relevant.some(e=>e.occurredAt===event.occurredAt&&['completed','temperature','equipment'].includes(e.kind));
- });
+ }).at(-1);
 }

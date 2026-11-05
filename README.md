@@ -34,13 +34,17 @@ These desktop and mobile screenshots show the current dev workspace, including t
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
-- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, zero once all steps are checked, and separate total/elapsed/actual readings.
+- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, zero once all steps are checked, and distinct projected/elapsed/actual readings when useful; duplicate initial totals and zero elapsed are hidden.
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 
 ### Saving and recovery
 
-The account feature preview supports one saved active/planning cook, completed history and retrieval on another device. It is opt-in and requires the dev setup below; production/default builds retain existing browser-backed saving until rollout. In account-enabled builds, new guests can try planning and cooking without persistent saves. Optional earlier-cook import/backup tools live in Account → Earlier cooks. Sign-in opens account cooks directly.
+Production accounts support one saved active/planning cook, completed history and
+retrieval on another device. In account-enabled builds, new guests can try planning
+and cooking without persistent saves. Existing legacy browser records and recovery
+mechanisms remain intact. Sign-in opens account cooks directly; the pre-1.0 Earlier
+cooks migration UI has been removed.
 
 Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 
@@ -81,20 +85,18 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-Production release [#96](https://github.com/Warconn/how-many-beers/pull/96), main
-`925cbac`, includes #92 planning reorder, #84 Cooking Mode cleanup, #62/#85 step
-editing, #77 recipe imports and #86 live timing. Dev `4577b01` has the same content.
-These are completed work. Authentication, cloud saving and cross-device history
-are working in production; preserve existing data and ownership.
+The November 5 release combines [#98](https://github.com/Warconn/how-many-beers/pull/98)
+(#21 visual consistency) with [#99](https://github.com/Warconn/how-many-beers/pull/99)
+(#97 checklist-first cooking and the approved compact layout/Beerometer cleanup).
+It extends release #96: #92, #84, #62/#85, #77 and #86 are completed work.
+See [release notes and validation](docs/releases/2026-11-05.md); check the release PR
+and Cloudflare status for deployment confirmation. Authentication, cloud saving and
+cross-device history remain supported without schema changes.
 
-The next owner-approved sequence is **#21 application visual consistency → #61
-retained cancellation → #83 multiple upcoming account plans**. #21 is a visual PR
-for dev only, preserving the accepted logo, Beerometer and cooking functions.
-[#97](https://github.com/Warconn/how-many-beers/issues/97) separately tracks the
-remaining checklist-first Start/logging interaction gap, not the shipped #84 layout.
-See [design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
-No automatic merges or production releases. The owner tests through real cooks;
-do not create manual QA or acceptance tickets.
+Next is a separate discussion of the owner's cooking/timing concept, then the
+prepared **#61 retained cancellation → #83 multiple upcoming account plans**
+sequence. No new capabilities are included in this stabilization release. See
+[design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
 
 ## Account foundation work
 
@@ -119,7 +121,7 @@ profile settings, buffers, evidence and limitations. Applying remains explicit.
 
 This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
 
-Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Record meaningful physical starts with **On smoker now**, **Begin rest now**, or the imported cooking phase action; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.
+Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Open **Step details** to optionally record or correct meaningful physical starts; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.
 
 Step editing opens a short form for name, instructions and duration. **More options**
 keeps exact start times, equipment and target food temperatures available. Dish rows
@@ -128,4 +130,4 @@ use aligned Edit, Move and Remove controls; Add a step stays below the list.
 
 Cooking Mode now uses one progress treatment and a single content column. Completed
 cooks have one primary Finish action and checklist review, while Finish cook early
-is available under Cook details & tools. The Beerometer remains unchanged.
+is available under Cook details & tools. The Beerometer retains the accepted design and calculations while hiding duplicate initial totals and zero elapsed.

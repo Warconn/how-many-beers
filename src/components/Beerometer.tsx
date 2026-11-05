@@ -11,6 +11,11 @@ export default function Beerometer({meal,timeline,finishedAt}:{meal:Meal;timelin
   const remaining=running||finishedAt?remainingCook(meal,timeline,now,finishedAt):null;
   const minutes=remaining?remaining.minutes:result.minutes;
   const label=remaining?remaining.label:result.label;
+  // At the start of a cook, projected and remaining are identical. Only show
+  // the second duration after actual elapsed time makes it useful.
+  const showProjected=!!remaining && remaining.label!=='All steps checked' &&
+    result.minutes!==null && (minutes===null || Math.round(result.minutes)!==Math.round(minutes));
+  const showElapsed=result.elapsed!==null && Math.round(result.elapsed)>0;
   const hasImportedSteps=timeline.some(t=>t.recipeOrder!==undefined&&!t.id.endsWith(':serve'));
   const hasAnchor=Number.isFinite(Date.parse(meal.serveAt))||timeline.some(t=>t.timingMode==='fixed'&&t.scheduledAt);
   const planningHint=hasImportedSteps?(hasAnchor?'Add missing estimated durations on your recipe steps.':'Set serving time or a fixed start; add step durations.'):result.label.includes('Partial')?'Set serving time or a fixed start; confirm missing durations.':'Set a cook start and finish time.';
@@ -23,8 +28,8 @@ export default function Beerometer({meal,timeline,finishedAt}:{meal:Meal;timelin
     </div>
     <div className="beerometer-reading"><div className="beerometer-figure"><strong>{minutes===null?'—':(minutes/90).toFixed(1)}</strong><span>{remaining?'beers remaining':'beers'}</span></div>
       <p className="beerometer-clock">{minutes===null?(remaining?label:planningHint):`${duration(minutes)} · ${label}`}</p>
-      {remaining && remaining.label!=='All steps checked' && result.minutes!==null && <p className="small">{duration(result.minutes)} · {result.label}</p>}
-      {result.elapsed!==null && <p className="small">{duration(result.elapsed)} elapsed</p>}
+      {showProjected && result.minutes!==null && <p className="small">{duration(result.minutes)} · {result.label}</p>}
+      {showElapsed && result.elapsed!==null && <p className="small">{duration(result.elapsed)} elapsed</p>}
     </div>
   </section>;
 }

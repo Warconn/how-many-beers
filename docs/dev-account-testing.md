@@ -4,7 +4,7 @@ PR #58 is merged into `dev`. On October 28, 2026, the owner confirmed that the C
 
 | Use | Branch / URL | Cloudflare variables | Supabase |
 | --- | --- | --- | --- |
-| Public site | `main` / https://howmanybeers.app | Production | Leave account rollout disabled until a separate production project is configured |
+| Public site | `main` / https://howmanybeers.app | Production | Separate production project `erhdntuebxtxiqvcslwq`; account rollout is working |
 | Integrated testing | `dev` / https://dev.how-many-beers.pages.dev | Preview | Existing dev project `txwfjuolsuauzeridxkv` |
 | Feature testing | `feat/19-account-foundation` / https://feat-19-account-foundation.how-many-beers.pages.dev | Preview | Same dev project |
 
@@ -73,4 +73,4 @@ Only `https://feat-*.PROJECT.pages.dev` is recognized by the frontend, and only 
 
 If Preview branch filters are enabled, ensure they include `dev` and the intended `feat/*` branches. The restricted feature pattern authorizes only matching feature aliases; it does not enable arbitrary preview origins. Future schema changes also need to remain compatible with dev and any feature builds sharing the dev project.
 
-Dashboard changes are owner actions; this guide does not claim that Cloudflare variables, Supabase URLs or SMTP settings were changed from the coding workspace. Production account rollout remains a separate delivery using a separate Supabase project.
+Dashboard changes are owner actions; this guide does not claim that Cloudflare variables, Supabase URLs or SMTP settings were changed from the coding workspace. The owner has verified production sign-in, cloud saving and cross-device history against the separate production Supabase project. Preserve that working configuration.
