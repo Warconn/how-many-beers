@@ -19,12 +19,30 @@ for attempt in {1..30}; do
  if [ "$attempt" = 30 ]; then echo 'Test PostgreSQL did not start' >&2; exit 1; fi
  sleep 1
 done
-docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < supabase/tests/bootstrap.sql
-for sql_file in supabase/migrations/*.sql; do
- docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < "$sql_file"
- # Check the original RLS contract before upgrading it to RPC-only writes.
- if [ "$sql_file" = supabase/migrations/202610280001_account_foundation.sql ]; then
-  docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < supabase/tests/ownership.sql
+# Separate fresh-install and existing-data upgrade databases use the same local
+# server. Auth roles are cluster-wide; only bootstrap them in the first database.
+for account_database in hmb_clean hmb_upgrade; do
+ docker exec "$account_container" createdb -U postgres "$account_database"
+ account_psql(){ docker exec -i "$account_container" psql -X -U postgres -d "$account_database" -v ON_ERROR_STOP=1; }
+ if [ "$account_database" = hmb_clean ]; then
+  account_psql < supabase/tests/bootstrap.sql
+ else
+  sed '/^create role /d' supabase/tests/bootstrap.sql | account_psql
  fi
+ for sql_file in supabase/migrations/*.sql; do
+  account_psql < "$sql_file"
+  # Check the original RLS contract before upgrading it to RPC-only writes.
+  if [ "$sql_file" = supabase/migrations/202610280001_account_foundation.sql ]; then
+   account_psql < supabase/tests/ownership.sql
+  fi
+  if [ "$account_database" = hmb_upgrade ] && [ "$sql_file" = supabase/migrations/202610280002_account_cook_workspace.sql ]; then
+   account_psql < supabase/tests/cancellation-upgrade-seed.sql
+  fi
+ done
+ if [ "$account_database" = hmb_upgrade ]; then
+  account_psql < supabase/tests/cancellation-upgrade-verify.sql
+ fi
+ account_psql < supabase/tests/account-workspace.sql
+ account_psql < supabase/tests/retained-cancellation.sql
+ bash supabase/tests/cancellation-races.sh "$account_container" "$account_database"
 done
-docker exec -i "$account_container" psql -X -U postgres -v ON_ERROR_STOP=1 < supabase/tests/account-workspace.sql
