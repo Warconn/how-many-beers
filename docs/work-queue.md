@@ -1,19 +1,20 @@
 # Current owner-approved queue
 
-Production #100 (`190bf61`) is deployed. #21 and #97 are completed; dev and
-production had the same source tree at this sequence's kickoff.
+**NOW: #101 design/requirements only.** The owner wants to review the mobile
+experience and time-recalculation examples before underlying implementation.
+Read [the design proposal](design/101/README.md) and the latest GitHub #101 decision
+record. No runtime/engine/database changes, schema migration, automatic merge or
+production release are authorized by this design task.
 
-1. **#61:** Retained cancellation, authoritative account transition, local/trial
-   support and terminal-state protection. Separate reviewed PR to dev.
-2. **#83:** Multiple independent upcoming account plans plus one active cook,
-   using the tested #61 lifecycle design. Preserve all active/history data.
-3. **In parallel, #71:** Measured CI feedback improvements without losing coverage.
+#103's UI in PR #108 at 81b311e is owner-accepted, ready for integration review and
+still unmerged. Its personal recipe persistence remains unfinished. #109 owns the
+separate serving-time-first planning flow and target/forecast presentation. Keep
+those accepted controls and make cooking simpler; no extra timer tiles, buttons,
+normal-flow timestamp prompts or phase-classification setup.
 
-The owner approved implementation, not merges or deployment. Feature branches and
-focused PRs to dev, database security/upgrade/race checks, desktop/mobile/iPhone
-browser tests and actual screenshots. Capability-gate until migrations are available.
-Fresh guest trials remain temporary. #101 timing discovery stays separate; no new
-execution model, advanced sync, URL import, paid or social-login work.
+#61/#104, #83/#107 and #71/#102 are already merged into dev at 4b4b31f. Production
+#100 remains 190bf61. Hosted schema application/verification is a separate operation,
+not a claim made by this documentation. Do not reimplement delivered work.
 
 The following older queue is historical and superseded by this section.
 

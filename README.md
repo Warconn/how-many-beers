@@ -93,10 +93,12 @@ See [release notes and validation](docs/releases/2026-11-05.md); check the relea
 and Cloudflare status for deployment confirmation. Authentication, cloud saving and
 cross-device history remain supported without schema changes.
 
-Next is a separate discussion of the owner's cooking/timing concept, then the
-prepared **#61 retained cancellation → #83 multiple upcoming account plans**
-sequence. No new capabilities are included in this stabilization release. See
-[design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
+The current work is **#101 design/requirements only**: review proposed mobile
+states and worked remaining-time examples before implementing runtime changes.
+#61/#104, #83/#107 and #71/#102 are already merged into dev at 4b4b31f; hosted
+migration application remains separate. #103's UI in PR #108 is owner-accepted but
+unmerged; #109 tracks serving-time-first planning. Production remains #100 at
+190bf61. See [the design review](docs/design/101/README.md).
 
 ## Account foundation work
 
@@ -144,3 +146,11 @@ independently, and starting it is acknowledged atomically. Current cook/history 
 upcoming plans have explicitly separate backup files; keep both for a full account
 backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
 See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).
+
+## Cooking timing design review (#101)
+
+The next cooking increment is in design/requirements only. Review the proposed
+[mobile states and worked timing examples](docs/design/101/README.md) before runtime
+implementation. These static examples change no application code, stored cooks,
+phase events or database. They preserve the accepted checkbox-first experience
+and separate the #109 serving target from the changing full-meal forecast.

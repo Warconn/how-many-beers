@@ -14,17 +14,35 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: Retained cancellation, then multiple upcoming plans
+### NOW: #101 cooking design and requirements only
 
-Production #100 is deployed at `190bf6168fbaf9fe2c3d75770200101a26bcc539`;
-dev `6e6629a0323714dc0eebebf0929a153986474b7b` has the same application tree.
-#21/#98 and #97/#99 are delivered and closed, alongside the completed #96 scope
-(#92/#84/#62/#85/#77/#86). Never start duplicate implementations.
+The owner has explicitly requested mobile design review and worked time-recalculation
+examples before any runtime implementation. Read docs/design/101/README.md and the
+latest #101 issue. Do not code phases, change the timing engine, migrate data, alter
+the live UI or deploy/merge as part of this design work.
 
-The owner approved implementing **#61 first, then #83**, with **#71 CI feedback
-improvements in parallel**. Use isolated feature branches and focused PRs targeting
-dev. This approval covers implementation and testing, not automatic merges or
-production deployment. Update this queue and linked issues as delivery progresses.
+Preserve checkbox-first cooking. Combined physical actions may end heat and start
+cooling/rest together. Passive estimated time may reach zero without a Serve box,
+physical completion or cook archive. Heating overrun stays active with elapsed time
+and uncertain remaining duration; no routine five-minute extensions. Keep known
+remaining work visible. Start Cook is a session event, not a start for every dish.
+One global Up next and concise Cooking now; optional corrections/remaining estimates
+stay in Step details. Corrections reflow derived values while keeping unrelated
+actuals and the requested serving target. Imported ambiguity falls back to ordinary
+checklist behavior; no phase-classification setup screen or invented events.
+
+#109 owns serving-time-first planning and target/forecast presentation. Coordinate
+with its latest examples without bundling a new resource/dependency optimizer.
+#103 UI in PR #108 at 81b311e is owner-accepted and ready for integration review,
+but still unmerged; personal recipe persistence is not delivered. Preserve that
+accepted visual pattern. This design branch starts from latest dev, not the PR's
+implementation branch; it contains documentation/static concepts only.
+
+#61/#104, #83/#107 and #71/#102 are merged into dev at 4b4b31f. Production remains
+#100 at 190bf61. Hosted migration application is separate and is not claimed here.
+#21/#97/#92/#84/#62/#85/#77/#86 are delivered; do not start duplicate implementations.
+
+### Existing lifecycle safeguards
 
 #61 retains canceled records, excludes them from active/completed views, permits a
 new cook only after acknowledged cancellation, and protects against stale-device

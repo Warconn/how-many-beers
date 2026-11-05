@@ -1,0 +1,8 @@
+{
+  "kind": "design-examples-not-current-application-output",
+  "beerMinutes": 90,
+  "parallel": {"at":"16:20","bratsStart":"16:00","grillMinutes":45,"restMinutes":10,"potatoesStart":"16:10","potatoesMinutes":40,"expectedRemainingMinutes":35,"expectedFinish":"16:55","target":"17:00"},
+  "correction": {"at":"16:20","recordedStart":"16:12","correctedStart":"16:00","checkpointOffsetMinutes":15,"expectedCheckpointBefore":"16:27","expectedCheckpointAfter":"16:15","expectedRemainingBefore":47,"expectedRemainingAfter":35,"expectedFinishBefore":"17:07","expectedFinishAfter":"16:55","unchangedPotatoStart":"16:10","unchangedTarget":"17:00"},
+  "overrun": {"at":"16:46","start":"16:00","estimatedGrillMinutes":45,"expectedElapsedMinutes":46,"expectedHeatingActive":true,"expectedExactRemaining":null,"knownFollowingRestMinutes":10,"actualRemoveAndRest":"16:55","expectedFinishAfterActualTransition":"17:05","unchangedTarget":"17:00"},
+  "passiveCooling": {"actualStart":"16:15","estimatedMinutes":10,"at":"16:25","expectedRemaining":0,"actualEnd":null,"serveActionRequiredForClock":false,"cookAutomaticallyCompleted":false,"unchangedTarget":"16:30"}
+}
