@@ -135,6 +135,12 @@ resource/dependency optimization remains #3. See docs/step-timing.md.
 
 The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/download UI is removed during pre-1.0 (#60), with no automatic replacement import; leave stored records and recovery mechanisms intact. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.
 
+Upcoming-plan saving reuses that existing mechanism: automatic bounded transient
+retries, owner-scoped protected drafts, and honest status in the existing icon. Do
+not add separate plan recovery/retry prompts or Resume draft controls. Never
+automatically overwrite a conflicting newer-device plan or claim an unconfirmed
+start succeeded. The owner accepted Cancel Cook as implemented; preserve its flow.
+
 Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
 
 For account environment setup, follow [dev and feature testing](docs/dev-account-testing.md). The default how-many-beers.pages.dev origin follows main, not dev. Dev and trusted feature previews share the dev Supabase project/data but have separate origin sessions.

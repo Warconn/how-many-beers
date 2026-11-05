@@ -194,7 +194,7 @@ function CookExperience() {
     setMessage("Recipe loaded. Review the text and select Preview recipe.");
   };
 
-  if (!meal) return <main className="shell"><div className="panel">{workspace.isSelectedPlan&&workspace.planError?<><p role="alert">{workspace.planError}</p><button className="button primary" type="button" onClick={()=>void workspace.retry().catch(()=>{})}>Retry plan loading</button><button className="button secondary" type="button" onClick={()=>downloadCookFile(recoveryExport(),"how-many-beers-plan-draft-recovery.json")}>Download plan recovery</button><button className="button secondary" type="button" onClick={()=>void workspace.returnToCurrent().then(()=>setView('home')).catch(()=>{})}>Return to current cook</button></>:<p role="status">Loading your cook...</p>}{workspace.authUnavailable&&<AccountPanel/>}</div></main>;
+  if (!meal) return <main className="shell"><header className="site-header"><h1>How Many Beers?</h1><AccountControl view={view} cookId={workspace.selectedPlanId??''} canReload={false} savePhase={workspace.kind==='account'?workspace.savePhase:undefined}/></header><div className="panel"><p role="status">Loading your cook...</p>{workspace.isSelectedPlan&&<button type="button" className="button secondary" onClick={()=>void workspace.returnToCurrent().then(()=>setView('home')).catch(()=>{})}>Home</button>}{workspace.authUnavailable&&<AccountPanel/>}</div></main>;
 
 
   const cooking = view === "cooking";
@@ -212,11 +212,11 @@ function CookExperience() {
       setStorageError(previous=>previous.startsWith("Browser storage is unavailable") || previous.startsWith("Could not save the cook start.") ? "" : previous);
       setPlanSaveResult("saved");setView("home");setEditingStep(null);
       window.scrollTo({top:0,behavior:"instant"});
-    }catch{setPlanSaveResult("error");requestAnimationFrame(()=>document.getElementById("save-plan-error")?.focus());}
+    }catch{if(workspace.plansEnabled){setPlanSaveResult(null);try{await workspace.returnToCurrent();setView('home');}catch{/* Keep the current document until its draft is protected. */}}else{setPlanSaveResult("error");requestAnimationFrame(()=>document.getElementById("save-plan-error")?.focus());}}
   };
   const startCooking = async () => {
     if(workspace.plansEnabled&&workspace.isSelectedPlan){
-      try{await workspace.startSelectedPlan();setView('cooking');setStorageError('');window.scrollTo({top:0,behavior:'instant'});}catch(e){setStorageError(e instanceof Error?e.message:'Could not start this plan. It remains saved.');}return;
+      try{await workspace.startSelectedPlan();setView('cooking');setStorageError('');window.scrollTo({top:0,behavior:'instant'});}catch{/* The existing save indicator tracks the pending start. */}return;
     }
     if(!cookInProgress && startBlockReason)return;
     const next:Meal=!cookInProgress ? {...meal,mode:"cooking",startedAt:meal.startedAt??new Date().toISOString()}
@@ -231,7 +231,7 @@ function CookExperience() {
   const beginNewCook = async () => {
     if(workspace.plansEnabled){
       try{await workspace.createPlan();setView('planning');setShowDishSetup(false);setEditingDishId(null);setEditingStep(null);setAddMethod('template');setMessage('');setPlanSaveResult(null);}
-      catch(e){if(workspace.hasSelectedPlan())setView('planning');setStorageError(e instanceof Error?e.message:'Your new plan could not be saved. Keep this draft open and retry.');}return;
+      catch{if(workspace.hasSelectedPlan())setView('planning');}return;
     }
     if (hasActiveWork && !window.confirm("Start a new cook? This replaces your unfinished cook. Export a backup first if you want to keep it.")) return;
     try {
@@ -256,10 +256,10 @@ function CookExperience() {
     setView("home");
     window.scrollTo({top:0,behavior:"instant"});
   };
-  const goHome = async () => {try{if(workspace.plansEnabled)await workspace.returnToCurrent();returnHome();}catch(e){setStorageError(e instanceof Error?e.message:'Save this plan before leaving.');}};
-  const continueCurrentCook = async () => {try{await workspace.returnToCurrent();setView('cooking');}catch(e){setStorageError(e instanceof Error?e.message:'Save this plan before switching cooks.');}};
-  const openUpcomingPlan = async (id:string) => {try{await workspace.openPlan(id);setView('planning');setPlanSaveResult(null);setMessage('');}catch(e){if(workspace.hasSelectedPlan())setView('planning');setStorageError(e instanceof Error?e.message:'This plan needs recovery. Your current cook is unchanged.');throw e;}};
-  const startUpcomingPlan = async (id:string) => {try{await workspace.openPlan(id);await workspace.startSelectedPlan();setView('cooking');setMessage('');}catch(e){if(workspace.hasSelectedPlan())setView('planning');setStorageError(e instanceof Error?e.message:'The plan could not start. Your current cook is unchanged.');throw e;}};
+  const goHome = async () => {try{if(workspace.plansEnabled)await workspace.returnToCurrent();returnHome();}catch{/* The existing save indicator reflects changes still being saved. */}};
+  const continueCurrentCook = async () => {try{await workspace.returnToCurrent();setView('cooking');}catch{/* Keep both documents intact until saving can continue. */}};
+  const openUpcomingPlan = async (id:string) => {try{await workspace.openPlan(id);setView('planning');setPlanSaveResult(null);setMessage('');}catch{if(workspace.hasSelectedPlan())setView('planning');}};
+  const startUpcomingPlan = async (id:string) => {try{await workspace.openPlan(id);await workspace.startSelectedPlan();setView('cooking');setMessage('');}catch{if(workspace.hasSelectedPlan())setView('planning');}};
   const persistNewMeal = async(next:Meal) => {await save({active:next});returnHome();};
   const dismissCancel = () => {setShowCancel(false);requestAnimationFrame(()=>cancelTrigger.current?.focus());};
   const confirmCancel = async () => {
@@ -279,7 +279,7 @@ function CookExperience() {
     }
   };
   const repeatCook = async(entry:ArchivedCook) => {
-    if(workspace.plansEnabled){try{await workspace.createPlan(repeatArchivedCook(entry));setView('planning');setMessage('Copied your previous cook into a new upcoming plan.');}catch(e){setStorageError(e instanceof Error?e.message:'Could not create a repeat plan. Your current cook is unchanged.');}return;}
+    if(workspace.plansEnabled){try{await workspace.createPlan(repeatArchivedCook(entry));setView('planning');setMessage('Copied your previous cook into a new upcoming plan.');}catch{if(workspace.hasSelectedPlan())setView('planning');}return;}
     if(!window.confirm("Start a new cook using this saved plan? Any unsaved current plan will be replaced."))return;
     try{await persistNewMeal(repeatArchivedCook(entry));setMessage("Copied your previous cook. Set a new serving time before starting.");setStorageError("");}
     catch{setStorageError("Could not create a repeat cook. Your current plan was not replaced.");}
@@ -427,7 +427,7 @@ function CookExperience() {
   return (
     <main className={"shell " + (cooking ? "cooking-screen"+(!remaining.length?" cooking-screen-complete":"") : "planning-screen")}>
       {showCancel&&<CancelCookDialog name={meal.name} temporary={workspace.kind==='trial'} onDismiss={dismissCancel} onConfirm={confirmCancel}/>}
-      {storageError&&!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&workspace.planError) && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
+      {storageError&&!(workspace.plansEnabled&&(workspace.isSelectedPlan||workspace.pendingOperation==='promote')) && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
         <div className="storage-recovery-actions">
           {storageStatus!=='recovery'&&<button type="button" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button>}
           {storageStatus==='recovery' ? <>
@@ -449,16 +449,16 @@ function CookExperience() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} savePhase={workspace.kind==='account'?workspace.cloudPhase:undefined}/>}
+        {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} savePhase={workspace.kind==='account'?workspace.savePhase:undefined}/>}
       </header>
 
 
 
       {workspace.kind==='trial'&&<p className="guest-limit">Guest cooks aren’t kept after you leave. Sign in to keep this cook.</p>}
 
-      {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}
-      {workspace.kind==='account'&&['conflict','blocked'].includes(workspace.cloudPhase)&&<section className="panel" aria-label="Account cook recovery"><h2>Keep your cook safe</h2><p>{workspace.cloudPhase==='conflict'?'Another device has a newer version. Download a backup before loading it.':'The last action has not been confirmed. Retry it before continuing.'}</p><button type="button" className="button primary" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" className="button secondary" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button><button type="button" className="button secondary" onClick={()=>{if(window.confirm('Load the latest account cooks and discard this tab’s pending changes? Download a backup first.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your backup and retry.'));}}>Load account version</button></section>}
-      {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&workspace.planError&&<section className="panel" aria-label="Upcoming plan recovery"><h2>Keep your future plan safe</h2><p>{workspace.planError}</p><div className="upcoming-cook-actions"><button className="button secondary" type="button" onClick={()=>void retry().catch(()=>{})}>Retry plan saving</button><button className="button secondary" type="button" onClick={downloadBackup}>Download plan draft</button><button className="button secondary" type="button" onClick={()=>{if(window.confirm('Load the saved plan and discard this draft? Download your draft first to keep its changes.'))void workspace.reloadSelectedPlan().catch(e=>setStorageError(e instanceof Error?e.message:'Could not load the saved plan.'));}}>Load saved plan</button><button className="button primary" type="button" onClick={()=>void goHome()}>Return to current cook</button></div></section>}
+      {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&!workspace.isSelectedPlan&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}
+      {workspace.kind==='account'&&['conflict','blocked'].includes(workspace.cloudPhase)&&!workspace.isSelectedPlan&&workspace.pendingOperation!=='promote'&&<section className="panel" aria-label="Account cook recovery"><h2>Keep your cook safe</h2><p>{workspace.cloudPhase==='conflict'?'Another device has a newer version. Download a backup before loading it.':'The last action has not been confirmed. Retry it before continuing.'}</p><button type="button" className="button primary" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" className="button secondary" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button><button type="button" className="button secondary" onClick={()=>{if(window.confirm('Load the latest account cooks and discard this tab’s pending changes? Download a backup first.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your backup and retry.'));}}>Load account version</button></section>}
+      {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&<nav aria-label="Plan navigation"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button></nav>}
       <div className="cook-content" inert={workspace.locked}>
       {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
@@ -493,7 +493,7 @@ function CookExperience() {
               {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
           </section>}
-          {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} onExport={workspace.exportUpcomingPlans} onImport={workspace.importUpcomingPlans} listError={workspace.plansError} loading={workspace.plansLoading} onRetry={workspace.reloadPlans} onCreate={beginNewCook}/>}
+          {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} onExport={workspace.exportUpcomingPlans} onImport={workspace.importUpcomingPlans} loading={workspace.plansLoading||!!workspace.plansError} onCreate={beginNewCook}/>}
           {!workspace.plansEnabled&&<section className="panel home-new">
             <h3>{workspace.plansEnabled?"Plan another cook":hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
             <p className="muted">{workspace.plansEnabled?"Save a future meal without changing your current cook.":hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
@@ -732,7 +732,7 @@ function CookExperience() {
             </div>
             {!cookInProgress && planStepDraftOpen && <p id="save-plan-help" className="muted small">Save or cancel the open step first, then save your plan for later.</p>}
             {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.currentCookInProgress&&<div className="plan-active-notice"><p>Your current cook is still running. You can save this plan now and start it after finishing or canceling that cook.</p><button type="button" className="button secondary" disabled={planStepDraftOpen} onClick={()=>void continueCurrentCook()}>Continue current cook</button></div>}
-            {planSaveResult==="error" && <p id="save-plan-error" tabIndex={-1} className="warning" role="alert">Could not save the plan. Keep this page open, free browser storage or export a backup, then retry.</p>}
+            {planSaveResult==="error"&&!workspace.plansEnabled && <p id="save-plan-error" tabIndex={-1} className="warning" role="alert">Could not save the plan. Keep this page open, free browser storage or export a backup, then retry.</p>}
             {!cookInProgress && startBlockReason && <p className="muted small" id="cook-start-help">{startBlockReason}</p>}
           </section>
           }

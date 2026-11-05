@@ -537,3 +537,8 @@ explicit start is blocked while another cook is active. Navigation protects pend
 per-plan drafts and preserves current actuals. Upcoming plan backups are separate
 from the existing cook/history backup, with clearly labeled scopes and atomic merge.
 This is account-only; guest behavior and the timing/execution model remain unchanged.
+
+Upcoming plan saving uses the existing account save icon and automatic transient
+retries. Pending drafts are protected internally; there are no separate recovery,
+retry or Resume draft controls for future plans. Conflicting newer-device edits
+remain protected without automatic replacement. Cancel Cook is unchanged.

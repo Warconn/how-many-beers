@@ -14,6 +14,13 @@ after the current session is finished or canceled. Starting explicitly promotes
 that plan into the one cooking slot; completed cooks still go to normal history.
 Cook Again creates a separate upcoming account plan without replacing active work.
 
+Saving uses the existing account status icon. Temporary failures retry automatically
+with a bounded backoff and on reconnect; returning Home or continuing the live cook
+protects pending plan edits in the background. There are no separate plan recovery,
+retry, or Resume draft controls. Conflicting edits remain protected and show the
+existing attention status; automatic retries never overwrite a newer device version
+or pretend an unconfirmed start succeeded.
+
 The existing planner, guided cooking layout and Beerometer are reused. Guest and
 legacy-local behavior stays unchanged. New account controls require the server's
 `savedPlans` capability; older schema/fixture builds retain their previous UI.
@@ -54,9 +61,9 @@ There are two clearly labeled backup scopes:
    never changes the active cook or completed history. It does not overwrite newer
    future plans. Protected pending drafts are included in future-plan exports. A divergent existing ID still aborts restore safely; an unprotected or unreadable draft stops export rather than disappearing silently.
 
-Keep both files when backing up all account cooking data. Recovery JSON downloaded
-from a failed plan editor is explicitly a plan-draft recovery file, not a claim that
-its changes are saved to the account. Existing guest backups remain supported.
+Keep both files when backing up all account cooking data. Pending plan edits are
+preserved internally without a separate recovery workflow. Existing guest backups
+remain supported.
 
 ## Migration and rollout
 
