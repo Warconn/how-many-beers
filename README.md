@@ -85,18 +85,15 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The November 5 release combines [#98](https://github.com/Warconn/how-many-beers/pull/98)
-(#21 visual consistency) with [#99](https://github.com/Warconn/how-many-beers/pull/99)
-(#97 checklist-first cooking and the approved compact layout/Beerometer cleanup).
-It extends release #96: #92, #84, #62/#85, #77 and #86 are completed work.
-See [release notes and validation](docs/releases/2026-11-05.md); check the release PR
-and Cloudflare status for deployment confirmation. Authentication, cloud saving and
-cross-device history remain supported without schema changes.
+The [November 5 production release (PR #100)](https://github.com/Warconn/how-many-beers/pull/100) delivered the visual design system (#21), checkbox-first Cooking Mode (#97) and the accepted compact cooking/Beerometer UI. Those are not unbuilt features.
 
-Next is a separate discussion of the owner's cooking/timing concept, then the
-prepared **#61 retained cancellation → #83 multiple upcoming account plans**
-sequence. No new capabilities are included in this stabilization release. See
-[design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
+**Finish in-flight:** [#61 retained cancel](https://github.com/Warconn/how-many-beers/issues/61) ([PR #104](https://github.com/Warconn/how-many-beers/pull/104)) and independent [#71 CI optimization](https://github.com/Warconn/how-many-beers/issues/71) ([PR #102](https://github.com/Warconn/how-many-beers/pull/102)); [#83 multiple upcoming planned cooks](https://github.com/Warconn/how-many-beers/issues/83) is already in flight per owner and follows #61's lifecycle work. Recheck GitHub for current merge/delivery state.
+
+**Next core experience:** [#103 recipe-first selection, reuse and quick tailoring](https://github.com/Warconn/how-many-beers/issues/103), then [#101 concurrent cooking phases and rolling whole-cook Beerometer](https://github.com/Warconn/how-many-beers/issues/101). Both require product review before implementation.
+
+**Deferred:** [#2 URL import](https://github.com/Warconn/how-many-beers/issues/2) and [#11 timers/notifications](https://github.com/Warconn/how-many-beers/issues/11) wait until the cook experience is validated through real use. Broader speculative methods/equipment/probes/AI features have been closed or parked.
+
+See the [current roadmap](docs/product-roadmap.md), [Codex work queue](docs/work-queue.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md). Open work must use reviewable PRs into `dev`; no automatic merge or production promotion.
 
 ## Account foundation work
 
