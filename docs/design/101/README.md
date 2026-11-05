@@ -11,17 +11,20 @@ checkbox, concise information and optional Step details. No extra timer tiles,
 Start buttons, timestamp prompts, phase-classification forms or setup screens.
 These screenshots are static design examples, not captures of implemented #101.
 
-## Proposed mobile experience: second review pass
+## Proposed mobile experience: third review pass
 
 The first proposal repeated timing information and gave concurrent activities too
-much prominence. This pass follows the owner's request for a quieter main screen.
+much prominence. The second overcorrected the Beerometer hierarchy. This pass
+restores beers first while retaining the simpler action and bottom serving estimate.
 
-- **Beerometer:** whole-meal minutes left is the main reading; the beer equivalent
-  is smaller. One estimated serving time sits below it. Keep the approved mark,
+- **Beerometer:** beers remaining is the main reading, with whole-meal time
+  underneath as before. One estimated serving time sits at the bottom. Keep the approved mark,
   dark/amber identity and 90-minute beer scale. Remove projected total and session
   elapsed from the default view; retain them in Cook details & tools.
 - **Serving target:** appears once above the meter and remains unchanged. Only show
-  a lateness note when helpful. The estimated serving time can change independently.
+  a lateness note when helpful, directly beneath the estimated serving time inside
+  the meter. Nothing sits between the meter and the next action. The estimate can
+  change independently.
 - **Current action:** checkbox, title, concise instruction and its relevant timing.
   Physical elapsed time appears beneath that action, for example “Brats · 46 min on
   the grill · over estimate”. No separate Cooking now panel or phase timer tiles.
@@ -253,12 +256,13 @@ notifications. Keep the accepted logo, Beerometer visual identity and #103 contr
 
 ## Review points before coding
 
-This second pass replaces the first pass's repeated timing figures, separate
+This third pass restores the Beerometer's beers-first hierarchy while retaining
+the second pass's removal of repeated timing figures, the separate
 Cooking now panel and unhelpful “Needs a check” forecast. The underlying runtime
 requirements remain intact.
 
-1. One whole-cook remaining duration and one serving estimate in the Beerometer;
-   beer equivalent secondary, session elapsed/projected total in details.
+1. Beers remaining primary, whole-cook time underneath, one serving estimate at
+   the bottom with lateness grouped beside it. Session/projected totals in details.
 2. Relevant elapsed time integrated into the current action; other dishes a quiet
    supporting line, with one global next action.
 3. Grounded provisional ETA where possible, clearly labeled earliest-serving bound
