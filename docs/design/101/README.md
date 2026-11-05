@@ -11,7 +11,7 @@ checkbox, concise information and optional Step details. No extra timer tiles,
 Start buttons, timestamp prompts, phase-classification forms or setup screens.
 These screenshots are static design examples, not captures of implemented #101.
 
-## Proposed mobile experience: third review pass
+## Proposed mobile experience: latest review pass
 
 The first proposal repeated timing information and gave concurrent activities too
 much prominence. The second overcorrected the Beerometer hierarchy. This pass
@@ -22,8 +22,10 @@ restores beers first while retaining the simpler action and bottom serving estim
   dark/amber identity and 90-minute beer scale. Remove projected total and session
   elapsed from the default view; retain them in Cook details & tools.
 - **Serving target:** appears once above the meter and remains unchanged. Only show
-  a lateness note when helpful, directly beneath the estimated serving time inside
-  the meter. Nothing sits between the meter and the next action. The estimate can
+  a small, muted target difference inline with the serving estimate when helpful:
+  **5:15 PM (+15 min)**. Do not use a separate “late” line. The no-range bound
+  retains its uncertainty: **5:15 PM+ (+15 min or more)**. Nothing sits between
+  the meter and the next action. The estimate can
   change independently.
 - **Current action:** checkbox, title, concise instruction and its relevant timing.
   Physical elapsed time appears beneath that action, for example “Brats · 46 min on

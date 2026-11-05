@@ -2,7 +2,7 @@
 
 **NOW: #101 design/requirements only.** The owner wants to review the mobile
 experience and time-recalculation examples before underlying implementation.
-The third pass restores beers first, time underneath and estimated serving/lateness
+The latest pass restores beers first, time underneath and estimated serving/lateness
 together at the bottom of the meter. It retains one action,
 with elapsed context integrated into that card and honest revised ETA/bounds.
 Read [the design proposal](design/101/README.md) and the latest GitHub #101 decision

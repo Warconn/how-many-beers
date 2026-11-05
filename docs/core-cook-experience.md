@@ -4,7 +4,7 @@ The owner-approved direction and proposed mobile examples are in
 [the #101 design review](design/101/README.md). This proposal is not implemented.
 It distinguishes actual action/phase observations from estimated passive time,
 keeps one global next action, and preserves the serving target alongside a changing
-full-meal forecast. The third design pass restores beers as the primary meter
+full-meal forecast. The latest design pass restores beers as the primary meter
 reading, whole-meal time underneath, and estimated serving with any lateness at
 the bottom. It retains elapsed activity context inside the action card and a useful
 earliest-serving bound if heating has no usable remaining estimate. Repeated

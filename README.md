@@ -154,6 +154,6 @@ The next cooking increment is in design/requirements only. Review the proposed
 implementation. These static examples change no application code, stored cooks,
 phase events or database. They preserve the accepted checkbox-first experience
 and separate the #109 serving target from the changing full-meal forecast.
-The third review pass restores beers first with time underneath, retaining the
+The latest review pass restores beers first with time underneath, retaining the
 bottom serving estimate and grouping lateness there. Repeated clocks stay hidden;
 activity context is integrated into the action.

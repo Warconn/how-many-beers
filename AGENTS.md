@@ -29,8 +29,8 @@ remaining work visible. Start Cook is a session event, not a start for every dis
 One global next action; integrate relevant elapsed time and quiet concurrent
 activity context into its card, not a separate Cooking now panel. Proposed meter
 prioritizes beers remaining, with whole-meal time underneath and estimated serving
-at the bottom. Group lateness with that serving estimate, never between the meter
-and the action. Keep session/projected totals in details. Use a grounded revised ETA or
+at the bottom. Show any positive target difference inline beside the estimate,
+e.g. 5:15 PM (+15 min), without a separate “late” line between meter and action. Keep session/projected totals in details. Use a grounded revised ETA or
 a labeled moving earliest-serving lower bound; never fabricate a range. This is
 a design proposal, not implemented behavior. Optional corrections/remaining estimates
 stay in Step details. Corrections reflow derived values while keeping unrelated
