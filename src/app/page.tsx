@@ -598,16 +598,16 @@ function CookExperience() {
               {(meal.dishes.length>0 || showDishSetup) && <button id="add-dish-button" type="button" className={showDishSetup?"cancel-add-dish":"button secondary"} aria-label={showDishSetup?"Cancel adding":"+ Add a dish"} aria-expanded={showDishSetup} aria-controls="menu-add-dish" onClick={()=>{setEditingDishId(null);setMethodReview(null);setShowDishSetup(v=>!v)}}>{showDishSetup ? <><Icon name="close"/> Cancel</> : "+ Add a dish"}</button>}
             </div>
             {meal.dishes.length===0 && (!recipeFirst||!showDishSetup) && <div className="empty-planner-choices">
-              <button id={!showDishSetup?"add-dish-button":undefined} type="button" className="button primary" onClick={()=>{setAddMethod('template');setShowDishSetup(true)}}>Start with a template</button>
-              <button type="button" className="button secondary" onClick={()=>{setAddMethod('recipe');setShowDishSetup(true)}}>Upload a recipe</button>
+              <button id={!showDishSetup?"add-dish-button":undefined} type="button" className="button primary" onClick={()=>{setAddMethod('template');setShowDishSetup(true)}}>{recipeFirst?"Choose a template":"Start with a template"}</button>
+              <button type="button" className="button secondary" onClick={()=>{setAddMethod('recipe');setShowDishSetup(true)}}>{recipeFirst?"Add your own recipe":"Upload a recipe"}</button>
               <p className="muted small">Choose a starter or use your own recipe. You can add more dishes afterward.</p>
             </div>}
-            {meal.dishes.length>0 && <p className="muted small menu-guidance">{showDishSetup ? "Choose a starter or import your recipe. Everything stays in this cook." : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
+            {meal.dishes.length>0 && <p className="muted small menu-guidance">{showDishSetup ? (recipeFirst?"Choose a template or add your own recipe. Everything stays in this meal.":"Choose a starter or import your recipe. Everything stays in this cook.") : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
             {showDishSetup && <section id="menu-add-dish" className="menu-add-dish" role="region" aria-label="Add dish">
               {!(recipeFirst&&methodReview)&&<h3>Add a dish</h3>}
               {meal.dishes.length>0&&!(recipeFirst&&methodReview) && <div className="add-method-tabs" role="group" aria-label="Add dish method">
-                <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>Start from template</button>
-                <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>Import a recipe</button>
+                <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>{recipeFirst?"Choose a template":"Start from template"}</button>
+                <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>{recipeFirst?"Add your own recipe":"Import a recipe"}</button>
               </div>
               }
               {recipeFirst&&methodReview?<RecipeMethodReview meal={methodReview} onChange={setMethodReview} onBack={()=>setMethodReview(null)} onAdd={async()=>{if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,methodReview,true)});setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>document.getElementById('serve-at')?.focus());}}/>:addMethod==="template" ? <>
@@ -622,7 +622,7 @@ function CookExperience() {
               </div>
               </> : <div className="recipe-import-inline">
                 {!draft ? <>
-                <p className="muted small">Paste instructions or upload a text file. We'll find written times for you to review. Recipe URLs aren't supported yet.</p>
+                <p className="muted small">{recipeFirst?"Write your steps, paste a recipe, or upload a text file. We’ll pick up any times you include.":"Paste instructions or upload a text file. We'll find written times for you to review. Recipe URLs aren't supported yet."}</p>
                 <label htmlFor="recipe-name">Recipe title</label>
                 <input id="recipe-name" value={recipeName} onChange={e=>setRecipeName(e.target.value)} placeholder="Grandma's mac & cheese"/>
                 <label htmlFor="recipe-text">Recipe instructions</label>

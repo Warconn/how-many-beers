@@ -137,3 +137,26 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .method-review input, .method-review textarea { font-weight: 400; }
 .method-review-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
 .method-review-fields > label { display: block; margin-block: 1rem; font-weight: 600; }
+
+/* Keep the recipe-review list compact and make moving independent of editing. */
+.method-review-steps { margin-block: 1rem .6rem; }
+.method-review-steps > li { position: relative; padding-block: .65rem; }
+.method-review-heading { align-items: center; gap: .45rem; }
+.method-review-heading strong { flex: 1; }
+.method-review-heading .step-drag-grip { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; width: 36px; min-height: 44px; margin-left: -.4rem; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--muted, #777168); cursor: grab; touch-action: none; user-select: none; }
+.method-review-heading .step-drag-grip:active { cursor: grabbing; }
+.method-review .method-review-actions { margin-block: .4rem; }
+.method-review .method-review-actions .button { margin: 0; }
+.method-review details { margin-block: .35rem; }
+.method-review p.small { margin-block: .4rem; }
+.method-review-fields { padding-bottom: 0; }
+.method-review-steps > li.is-dragging { opacity: .55; }
+.method-review-steps > li.drop-before::before, .method-review-steps > li.drop-after::after { content: ''; position: absolute; left: 0; right: 0; height: 3px; background: var(--accent, #a54d2a); border-radius: 2px; pointer-events: none; }
+.method-review-steps > li.drop-before::before { top: -2px; }
+.method-review-steps > li.drop-after::after { bottom: -2px; }
+.method-review-heading { display: grid; grid-template-columns: 36px minmax(0,1fr) auto; column-gap: .45rem; row-gap: 0; }
+.method-review-heading .step-drag-grip { grid-column: 1; grid-row: 1 / span 2; }
+.method-review-heading strong { grid-column: 2; grid-row: 1 / span 2; }
+.method-review-heading > span { grid-column: 3; grid-row: 1; text-align: right; max-width: 7rem; }
+.method-review-heading .collapsed-step-edit { grid-column: 3; grid-row: 2; justify-self: end; margin: 0; min-height: 44px; padding: 7px 12px; }
+.method-review-fields > .button { margin-block: 4px; }

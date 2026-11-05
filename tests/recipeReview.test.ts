@@ -41,3 +41,13 @@ it('preserves the first addition timestamp when resubmitting during a live cook'
  const current={...newMeal(),dishes:[createDish('brisket')],mode:'cooking' as const,startedAt:'2026-11-05T12:00:00Z'},review=recipeReview(createDish('brats'),current.serveAt),once=addReviewedDish(current,review);
  once.dishes[1].executionAddedAt='2026-11-05T12:05:00Z';const again=addReviewedDish(once,review,true);expect(again.dishes[1].executionAddedAt).toBe('2026-11-05T12:05:00Z');expect(again.startedAt).toBe(current.startedAt);
 });
+import {reorderReviewedStep} from '../src/domain/recipeReview';
+import {parseRecipeText} from '../src/domain/recipe';
+it('drops steps before and after targets while reflowing known durations',()=>{
+ const draft=recipeReview(parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nCool (10 minutes)'),newMeal().serveAt),tasks=cookTimeline(draft),before=structuredClone(draft);
+ const moved=reorderReviewedStep(draft,tasks[0].id,tasks[2].id,true),order=cookTimeline(moved);
+ expect(order.slice(0,3).map(t=>t.id)).toEqual([tasks[1].id,tasks[2].id,tasks[0].id]);
+ expect(Date.parse(order[1].scheduledAt!)-Date.parse(order[0].scheduledAt!)).toBe(15*60000);
+ expect(moved.serveAt).toBe(draft.serveAt);expect(moved.events??[]).toEqual(draft.events??[]);expect(draft).toEqual(before);
+ const back=reorderReviewedStep(moved,tasks[0].id,tasks[1].id,false);expect(cookTimeline(back).slice(0,3).map(t=>t.id)).toEqual(tasks.slice(0,3).map(t=>t.id));
+});

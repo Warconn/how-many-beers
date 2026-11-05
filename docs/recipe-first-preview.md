@@ -15,8 +15,8 @@ engine changes are part of this slice. Do not merge automatically.
 1. Open `/recipe-first/` and Plan a new cook (or account Plan another cook).
 2. Pick a method-labeled template or paste/upload recipe text. The first dish comes
    before the serving-time form. Existing plan dates remain intact when adding dishes.
-3. Review the method's name/equipment and existing duration estimates. Edit a step
-   for its title/instructions/duration or move/remove controls. Add a step as needed.
+3. Review the method's name/equipment and existing duration estimates. Drag its collapsed grip to reorder, or focus the grip and use Up/Down keys.
+   Edit a step for its title/instructions/duration or removal. Add a step as needed.
    Condition checks retain their guidance; estimates never imply safe doneness.
 4. Add to meal to commit through the existing persistence mechanism. A failed save
    retains the review. Back/Cancel leaves the meal untouched; Home asks before
@@ -71,10 +71,19 @@ guidance retained:
 - [Mobile method review](screenshots/issue-103-method-mobile.png)
 - [Mobile two-dish meal](screenshots/issue-103-meal-mobile.png)
 
-Local typecheck, all 369 unit tests, eight desktop/mobile prototype browser cases,
+Local typecheck, all 370 unit tests, ten desktop/mobile prototype browser cases,
 and three focused desktop account journeys passed. The Cloudflare static export
 build passed and includes `/recipe-first/`. Full PR CI and actual iPhone/WebKit
 captures remain the final validation gate. No hosted migrations were applied.
 
 Resubmitting a protected add also retains the original dish/custom-step creation
 timestamps during an active cook; replay never restarts that timing anchor.
+
+Owner review refinement: condensed row/footer spacing, put Edit beside the estimate,
+and renamed the experimental choices Choose a template / Add your own recipe.
+The latter explicitly supports writing steps, pasting or uploading text. Grips
+support mouse/touch pointer capture with an insertion marker and edge scrolling;
+rows commit their new order only on drop. Keyboard Up/Down works without an editor,
+retains focus, and announces position. Move controls were removed from the editor.
+The pointer test uses native CDP touch on mobile Chromium and mouse pointer input
+on desktop/WebKit; a physical iPhone touch check is still useful during owner review.
