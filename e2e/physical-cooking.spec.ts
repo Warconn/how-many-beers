@@ -34,6 +34,7 @@ test('overrun remains active; real removal/rest updates serving and inline targe
  let m=concurrent();m=recordEvent(m,'brats:check','completed',at('16:15'));m=recordEvent(m,'potatoes:rest','completed',at('16:45'));
  await open(page,m,'16:46');await expect(meter(page)).toContainText('0.1+');await expect(meter(page)).toContainText('Earliest serving');await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime',at('16:56').replace('Z','.000Z'));
  await page.clock.fastForward(9*60000);await page.getByRole('button',{name:'Full checklist',exact:true}).first().click();
+ await expect(page.getByRole('region',{name:'Full cook checklist'}).getByRole('button',{name:'Open step: Begin monitored rest/hold for Brats',exact:true})).toContainText('Earliest start');
  await page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{name:'Complete Begin monitored rest/hold for Brats',exact:true}).click({noWaitAfter:true});
  await expect(meter(page)).toContainText('0h 10m');await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime',at('17:05').replace('Z','.000Z'));await expect(meter(page)).toContainText('(+5 min)');
  const sameLine=await page.locator('.beerometer-serving-value').evaluate(el=>{const t=el.querySelector('time')!.getBoundingClientRect(),d=el.querySelector('small')!.getBoundingClientRect();return Math.abs(t.top-d.top)<10;});expect(sameLine).toBe(true);
