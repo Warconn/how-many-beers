@@ -137,3 +137,10 @@ provide a confirmation, completed history stays untouched, and account cancellat
 waits for a server receipt. Install the additive dev migration before the capability-
 gated account control appears. Guest trials remain temporary; legacy local canceled
 records remain retained and backup-compatible. See [rollout details](docs/account-cooks.md).
+
+Multiple upcoming account plans are implemented for review in #83, dependent on #61.
+Home separates future meals from the single current cook. Each future plan saves
+independently, and starting it is acknowledged atomically. Current cook/history and
+upcoming plans have explicitly separate backup files; keep both for a full account
+backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
+See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).

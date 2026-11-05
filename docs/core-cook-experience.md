@@ -527,3 +527,13 @@ only an acknowledged cancellation removes the cook from active/resume. Canceled
 records remain retained outside normal completed history. Guests keep their existing
 trial/legacy persistence policy; account writes preserve ownership, original actuals
 and idempotent recovery. A new cook can start after successful cancellation.
+
+## Upcoming account cooks (#83)
+
+With the savedPlans server capability, Home shows one current cooking session plus
+independent future plans. Plan another cook and Cook Again create future documents,
+never replacement live sessions. Reuse the existing planner for each selected plan;
+explicit start is blocked while another cook is active. Navigation protects pending
+per-plan drafts and preserves current actuals. Upcoming plan backups are separate
+from the existing cook/history backup, with clearly labeled scopes and atomic merge.
+This is account-only; guest behavior and the timing/execution model remain unchanged.

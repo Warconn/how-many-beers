@@ -20,8 +20,12 @@ const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
 type Candidate = { snapshot: LocalSnapshot; legacy: boolean };
 export function useCookWorkspace() {
   const enabled = process.env.NEXT_PUBLIC_ENABLE_CLOUD_COOKS === "true";
+  const mounted=useRef(true);
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
   const account = useAccount(),
     cloud = useAccountCook(enabled);
+  const ownerScope=useRef(account.ownerId);ownerScope.current=account.ownerId;
+  const assertOwner=(owner:string)=>{if(!mounted.current||ownerScope.current!==owner)throw Error("Your account changed. Reopen your plans before continuing.");};
   const plansEnabled=!!(enabled&&account.ownerId&&cloud.state.canPlan);
   const upcoming=useUpcomingPlans(plansEnabled);
   const [legacySelection,setLegacySelection]=useState<{owner:string;id:string}|null>(null);
@@ -211,6 +215,7 @@ export function useCookWorkspace() {
     setTransitionError('');
   };
   const exportUpcomingPlans=async()=>{
+    const owner=account.ownerId;
     if(!plansEnabled||!account.ownerId||!account.client)throw Error('Upcoming plans are not available for this account yet.');
     await flushCurrent();
     try{await upcoming.flush();}catch{await upcoming.protectSelected();}
@@ -218,13 +223,16 @@ export function useCookWorkspace() {
     const current=currentMeal();
     const raw=cloud.store.current?.currentDocument();
     const legacy=current&&raw&&hasUpcomingContent(current)?{id:current.id,...raw,timeZone:cloud.store.current?.state().activeTimeZone??cloud.state.activeTimeZone??Intl.DateTimeFormat().resolvedOptions().timeZone??'UTC'}:undefined;
+    assertOwner(owner!);
     return exportSavedPlans(plans,new Date().toISOString(),legacy);
   };
   const importUpcomingPlans=async(text:string)=>{
+    const owner=account.ownerId;
     if(!plansEnabled||!account.ownerId||!account.client)throw Error('Upcoming plans are not available for this account yet.');
     const documents=validateSavedPlansBackup(text);
     await flushCurrent();await upcoming.flush();
     await savedPlanAPI(account.client,account.ownerId).import(crypto.randomUUID(),documents);
+    assertOwner(owner!);
     await upcoming.refresh();
   };
   const save = async (change: { active?: Meal; history?: HistoryLibrary; canceled?: LocalSnapshot["canceled"] }) => {
@@ -344,10 +352,17 @@ export function useCookWorkspace() {
     setTransitionError("");
     if (enabled && account.ownerId) {
       const wasBlocked = cloud.state.phase === "blocked";
-      if(selectedStore())await upcoming.retry();
-      if (cloud.store.current) await cloud.store.current.retry();
-      else cloud.restart();
-      if (wasBlocked&&!isSelectedPlan) setSelection((v) => v + 1);
+      // Confirm the critical workspace receipt first. A successful promotion
+      // removes its source plan, so reading that plan first would create a false
+      // conflict and strand an otherwise acknowledged cook.
+      if(wasBlocked){
+        if(cloud.store.current)await cloud.store.current.retry();else cloud.restart();
+        if(selectedStore()&&!selectedStore()!.dirty()){upcoming.releaseSelection();selectLegacy(null);await upcoming.refresh().catch(()=>{});}
+        if(!selectedStore())setSelection(v=>v+1);
+      }else{
+        if(selectedStore())await upcoming.retry();
+        if(cloud.store.current)await cloud.store.current.retry();else cloud.restart();
+      }
     } else local.retry();
   };
   const reloadAccount = async () => {

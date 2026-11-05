@@ -52,7 +52,7 @@ out of scope. Do not create manual QA/acceptance tickets.
 
 - **All accounts are free for now. No paid tier, subscriptions or billing implementation.**
 - Guests can try the cooking workflow without sign-in, but the intended **new guest experience** has no persistent saves, tracked completed-cook history or account tracking. Clearly disclose that mode's limits.
-- Signed-in users have exactly **one** saved active/planning cook, plus a list of **unlimited completed cooks** (subject to reasonable technical limits). View details and Cook Again stay free.
+- Signed-in users retain **one active cook** and **unlimited completed cooks** (subject to reasonable technical limits). #83 account builds with the savedPlans server capability also support multiple independent upcoming plans; older schema builds keep their one planning/active workspace. View details and Cook Again stay free.
 - **No cooking analytics dashboard** required. A simple, useful Previous Cooks list is the focus.
 - Multiple future account plans are approved after #61 as #83; the separate personal recipe library remains outside this sequence.
 - **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
