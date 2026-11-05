@@ -52,7 +52,7 @@ out of scope. Do not create manual QA/acceptance tickets.
 
 - **All accounts are free for now. No paid tier, subscriptions or billing implementation.**
 - Guests can try the cooking workflow without sign-in, but the intended **new guest experience** has no persistent saves, tracked completed-cook history or account tracking. Clearly disclose that mode's limits.
-- Signed-in users have exactly **one** saved active/planning cook, plus a list of **unlimited completed cooks** (subject to reasonable technical limits). View details and Cook Again stay free.
+- Signed-in users retain **one active cook** and **unlimited completed cooks** (subject to reasonable technical limits). #83 account builds with the savedPlans server capability also support multiple independent upcoming plans; older schema builds keep their one planning/active workspace. View details and Cook Again stay free.
 - **No cooking analytics dashboard** required. A simple, useful Previous Cooks list is the focus.
 - Multiple future account plans are approved after #61 as #83; the separate personal recipe library remains outside this sequence.
 - **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
@@ -134,6 +134,12 @@ resource/dependency optimization remains #3. See docs/step-timing.md.
 ## Account menu refinement (October 28, 2026)
 
 The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/download UI is removed during pre-1.0 (#60), with no automatic replacement import; leave stored records and recovery mechanisms intact. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.
+
+Upcoming-plan saving reuses that existing mechanism: automatic bounded transient
+retries, owner-scoped protected drafts, and honest status in the existing icon. Do
+not add separate plan recovery/retry prompts or Resume draft controls. Never
+automatically overwrite a conflicting newer-device plan or claim an unconfirmed
+start succeeded. The owner accepted Cancel Cook as implemented; preserve its flow.
 
 Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
 
