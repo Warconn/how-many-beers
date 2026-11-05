@@ -27,7 +27,8 @@ readable dates, touch controls, explicit current/upcoming separation and backup 
 | Upcoming list | [Capture](screenshots/issue-83-list-desktop.png) | [Capture](screenshots/issue-83-list-mobile.png) |
 
 - Detect a stale future-plan revision without overwriting either record; recovery
-  controls remain usable outside inert editing content so the active cook can resume.
+  controls remain usable outside inert editing content, including explicit confirmed
+  Load saved plan and return to the current cook.
 - Lose the promotion acknowledgment, confirm the original receipt before re-reading
   its removed source, and retain the exact single cooking-start timestamp.
 

@@ -365,6 +365,13 @@ export function useCookWorkspace() {
       }
     } else local.retry();
   };
+  const reloadSelectedPlan=async()=>{
+    const selected=selectedStore();
+    if(!selected)throw Error('Select the future plan before loading its saved version.');
+    await selected.reload();
+    if(!mounted.current||selected.owner!==ownerScope.current)throw Error('Your account changed. Reopen the plan.');
+    await upcoming.refresh();setTransitionError('');
+  };
   const reloadAccount = async () => {
     if (cloud.store.current) await cloud.store.current.reload();
     else cloud.restart();
@@ -396,6 +403,7 @@ export function useCookWorkspace() {
     plansError:upcoming.listError,
     plansLoading:upcoming.listPhase==='loading',
     reloadPlans:upcoming.refresh,
+    reloadSelectedPlan,
     createPlan,openPlan,returnToCurrent,startSelectedPlan,
     refreshUpcomingPlans:upcoming.refresh,
     exportUpcomingPlans,importUpcomingPlans,
