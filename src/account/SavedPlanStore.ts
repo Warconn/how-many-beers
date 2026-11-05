@@ -26,7 +26,7 @@ export class SavedPlanStore{
  private timer:ReturnType<typeof setTimeout>|undefined;
  private inflight:Promise<void>|null=null;
  constructor(readonly owner:string,readonly planId:string,private api:SavedPlanAPI,private storage:RecoveryStorage,
-  private emit:(state:SavedPlanState)=>void,private maySend:()=>boolean=()=>true,private readonlyMode=false,seedMeal?:Meal){
+  private emit:(state:SavedPlanState)=>void,private maySend:()=>boolean=()=>true,private readonlyMode=false,seedMeal?:Meal,seedContext?:{serveInstant:string|null;timeZone:string}){
   this.key=savedPlanCacheKey(owner,planId);
   try{
    this.baseline=storage.getItem(this.key);
@@ -60,7 +60,14 @@ export class SavedPlanStore{
     }
     this.visible=this.desired?this.displayDraft():(this.base?planMeal(this.base):null);
    }else if(seedMeal){
-    this.desired=validatePlanMeal(seedMeal,planId);this.desiredServeInstant=planDocument(this.desired).serveInstant;this.desiredTimeZone=planTimeZone(this.desired,null);this.visible=this.displayDraft();this.phase='unsaved';
+    this.desired=validatePlanMeal(seedMeal,planId);
+    if(seedContext){
+     if(!(seedContext.serveInstant===null||typeof seedContext.serveInstant==='string'&&Number.isFinite(Date.parse(seedContext.serveInstant))))
+      throw Error('Invalid new-plan serving instant.');
+     new Intl.DateTimeFormat('en',{timeZone:seedContext.timeZone});
+    }
+    this.desiredServeInstant=seedContext?seedContext.serveInstant:planDocument(this.desired).serveInstant;
+    this.desiredTimeZone=seedContext?seedContext.timeZone:planTimeZone(this.desired,null);this.visible=this.displayDraft();this.phase='unsaved';
     this.persist();
    }
   }catch{

@@ -88,6 +88,11 @@ describe('isolated saved-plan recovery',()=>{
   const restored=f.store(meal.id);await restored.connect();expect(restored.state().meal?.serveAt).toBe('2026-11-08T10:00');
   await restored.flush();expect(f.records.get(meal.id)?.serveInstant).toBe('2026-11-08T18:00:00.000Z');expect(f.records.get(meal.id)?.timeZone).toBe('UTC');
  });
+ it('uses the owner creation index’s original target context when rebuilding a missing document journal',async()=>{
+  vi.stubEnv('TZ','America/Los_Angeles');const meal={...make('Recovered from creation index'),serveAt:'2026-11-08T10:00'},f=fixture();
+  const s=new SavedPlanStore(owner,meal.id,f.api,f.storage,()=>{},()=>true,false,meal,{serveInstant:'2026-11-08T18:00:00.000Z',timeZone:'UTC'});stores.push(s);
+  await s.connect();await s.flush();expect(f.records.get(meal.id)?.serveInstant).toBe('2026-11-08T18:00:00.000Z');expect(f.records.get(meal.id)?.timeZone).toBe('UTC');
+ });
  it('refuses a stale save and keeps its pending plan exportable',async()=>{
   const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();s.edit(m=>({...m,name:'Pending edit'}));
   const other={...p,revision:2,meal:{...p.meal,name:'Other device'}};f.records.set(p.id,other);
