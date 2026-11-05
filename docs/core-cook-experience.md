@@ -1,20 +1,14 @@
-## Current release and next work (November 5, 2026)
+## Current release and owner-approved roadmap (November 4 ET / November 5 UTC, 2026)
 
-The November 5 release adds #21 visual consistency and #97 checklist-first cooking
-to #96's completed #92/#84/#62/#85/#77/#86 delivery. See
-[release notes](releases/2026-11-05.md) and verify deployment status in the release PR.
+[Release #100](https://github.com/Warconn/how-many-beers/pull/100) has shipped #21's visual system, #97's checkbox-first Cooking Mode, and reviewed spacing/Beerometer cleanup, building on #96's #92/#84/#62/#85/#77/#86 functionality. See [release validation](releases/2026-11-05.md). The current simple checklist has optional phase logging/correction under Step details; checking a generic prep action does **not** establish physical grilling/rest elapsed time. Maintain historical events, accounts, guest recovery and food-safety constraints.
 
-Cooking shows one action, a relevant duration or manual checkpoint and a checkbox.
-Optional physical-start corrections and logging live in Step details; check-offs
-never prove a physical interval elapsed. The accepted compact mobile layout and
-Beerometer cleanup remain. Preserve actual events, accounts, guests and history.
+**Current order:** finish in-flight #61 (soft cancellation) and parallel #71 (CI optimization), complete already-in-flight #83 (multiple free upcoming account plans with only one active session), then plan **#103 recipe-first selection/customization/reuse**, followed by design and scoped implementation of **#101 active cooking phases, global next actions and a live whole-cook Beerometer**. See the [canonical product roadmap](product-roadmap.md) and [working queue](work-queue.md). This is a roadmap, **not a claim the future features are implemented**.
 
-The owner's new timing concept needs separate discovery. #61 retained cancellation
-and then #83 multiple upcoming plans remain the prepared next capability sequence,
-not part of this release. See cook-lifecycle-plan.md. No manual QA tickets.
+**#103 product intent:** A new/returning cook chooses a saved *personal recipe*, a historical multi-dish *Cook again*, or creates a new recipe from an existing named template or pasted/uploaded text. The short pre-cook review helps tailor phases and duration to the method actually used, without rapidly checking off mismatched template steps later. A saved recipe is not the same as a completed cook session. Keep one meal session able to contain several dishes.
 
-Historical implementation notes follow, with the latest explicit contract taking
-precedence where prior rollout/status notes differ.
+**#101 product intent:** Checking a concrete placement action starts that dish's physical phase; checking “Remove from heat” explicitly ends it. Several dish phases may run concurrently while one global Up next shows time-based checkpoints. Temperature readings remain optional for a “Check temperature” action. Beerometer continuously reflects remaining **whole-cook work from now**, correctly accounting for overlap, overruns and edited actual starts, without treating the old estimated finish as a fixed countdown anchor or assuming food safe when an estimate expires.
+
+**Deferred until the core cooking experience is locked in:** #2 URL recipe import, #11 opt-in timers/notifications and #3 advanced resource/dependency scheduling. #18 alternative curated methods and #12 equipment profiles/#14–#17 speculative extensions were closed not planned. #68 and #69 are consolidated in deferred #105; concrete safety, security and data-loss needs still take precedence. Older dated implementation notes below are historical and do not override these current decisions.
 
 ## Account cook increment (#19/#20, October 28, 2026)
 
