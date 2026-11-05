@@ -104,8 +104,11 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
       - name: Run regression shard ${{ matrix.shard }}/2
         env:
-          PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/regression-results-${{ matrix.shard }}.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/raw-regression-results-${{ matrix.shard }}.json
         run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --reporter=github,html,json
+      - name: Prepare compact timing report
+        if: always()
+        run: node scripts/compact-playwright-timings.mjs test-results/raw-regression-results-${{ matrix.shard }}.json test-results/regression-results-${{ matrix.shard }}.json
       - name: Upload browser report, screenshots and traces
         if: always()
         uses: actions/upload-artifact@v4
@@ -123,7 +126,11 @@ jobs:
         with:
           name: cooking-review-regression-${{ matrix.shard }}
           path: |
-            test-results/**/*.png
+            test-results/cooking-simplicity-*/*.png
+            test-results/design-system-*/*.png
+            test-results/live-cook-start-*/*.png
+            test-results/whole-cook-duration-*/*.png
+            test-results/cancel-cook-*/*.png
             test-results/regression-results-*.json
           if-no-files-found: error
           retention-days: 14
