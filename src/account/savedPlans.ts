@@ -17,7 +17,7 @@ export type SavedPlanAPI={
 };
 export function validatePlanMeal(value:unknown,expectedId?:string):ExtendedMeal{
   if(!isMeal(value)||(expectedId!==undefined&&value.id!==expectedId)||value.mode==='cooking'||value.startedAt||
-    Object.keys(value.completed).length||(value as ExtendedMeal).events?.some(e=>['started','completed','temperature','equipment'].includes(e.kind)))
+    Object.keys(value.completed).length||(value as ExtendedMeal).events?.some(e=>e.kind!=='removed'))
     throw Error('Upcoming plans cannot contain an active or completed cook.');
   return migrateMeal(value);
 }

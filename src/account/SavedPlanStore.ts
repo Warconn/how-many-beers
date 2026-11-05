@@ -1,11 +1,11 @@
-import type {Meal} from '../domain/meal';
+import {localDateTime,type Meal} from '../domain/meal';
 import type {ExtendedMeal} from '../domain/cookState';
 import {AccountConflict,equal,type RawCook} from './workspace';
 import type {RecoveryStorage} from './recoveryStorage';
 import {parseSavedPlan,planDocument,planMeal,planTimeZone,validatePlanMeal,type SavedPlan,type SavedPlanAPI} from './savedPlans';
 
 type PlanOperation={id:string;revision:number;document:RawCook;timeZone:string;snapshot:ExtendedMeal};
-type PlanCache={version:1;owner:string;planId:string;base:SavedPlan|null;desired:ExtendedMeal|null;operation:PlanOperation|null};
+type PlanCache={version:1;owner:string;planId:string;base:SavedPlan|null;desired:ExtendedMeal|null;desiredServeInstant?:string|null;desiredTimeZone?:string;operation:PlanOperation|null};
 export type SavedPlanState={meal:ExtendedMeal|null;plan:SavedPlan|null;phase:'loading'|'load-error'|'saved'|'syncing'|'unsaved'|'conflict';error:string};
 export const savedPlanCacheKey=(owner:string,id:string)=>`how-many-beers:account:v1:${owner}:plan:${id}`;
 /** One document's recoverable edit; never writes the current cook or another plan. */
@@ -13,6 +13,8 @@ export class SavedPlanStore{
  readonly key:string;
  private base:SavedPlan|null=null;
  private desired:ExtendedMeal|null=null;
+ private desiredServeInstant:string|null|undefined;
+ private desiredTimeZone:string|undefined;
  private operation:PlanOperation|null=null;
  private visible:ExtendedMeal|null=null;
  private phase:SavedPlanState['phase']='loading';
@@ -35,31 +37,44 @@ export class SavedPlanStore{
     this.base=c.base?parseSavedPlan(c.base):null;
     if(this.base&&this.base.id!==planId)throw Error('Recovery plan mismatch.');
     this.desired=c.desired?validatePlanMeal(c.desired,planId):null;
+    this.desiredServeInstant=c.desiredServeInstant;
+    this.desiredTimeZone=c.desiredTimeZone;
+    if(this.desiredServeInstant!==undefined&&this.desiredServeInstant!==null&&
+      (typeof this.desiredServeInstant!=='string'||!Number.isFinite(Date.parse(this.desiredServeInstant))))
+      throw Error('Invalid recovery serving instant.');
+    if(this.desiredTimeZone!==undefined)new Intl.DateTimeFormat('en',{timeZone:this.desiredTimeZone});
     if(c.operation){
      const op=c.operation;
      validatePlanMeal(op.snapshot,planId);
      if(typeof op.id!=='string'||!op.id||!Number.isSafeInteger(op.revision)||op.revision<0||
        op.revision!==(this.base?.revision??0)||typeof op.timeZone!=='string'||!this.desired||
-       !equal(op.snapshot,op.document?.meal)||!equal(planDocument(op.snapshot),op.document))
+       !equal(op.snapshot,op.document?.meal)||!(op.document.serveInstant===null||
+        typeof op.document.serveInstant==='string'&&Number.isFinite(Date.parse(op.document.serveInstant))))
       throw Error('Invalid plan recovery request.');
+     new Intl.DateTimeFormat('en',{timeZone:op.timeZone});
      this.operation=op;
+     // Older journals can recover their immutable request metadata without
+     // reinterpreting a local input in a different browser time zone.
+     if(this.desiredServeInstant===undefined&&equal(this.desired,op.snapshot))this.desiredServeInstant=op.document.serveInstant;
+     if(this.desiredTimeZone===undefined&&equal(this.desired,op.snapshot))this.desiredTimeZone=op.timeZone;
     }
-    this.visible=this.desired??(this.base?planMeal(this.base):null);
+    this.visible=this.desired?this.displayDraft():(this.base?planMeal(this.base):null);
    }else if(seedMeal){
-    this.desired=validatePlanMeal(seedMeal,planId);this.visible=this.desired;this.phase='unsaved';
+    this.desired=validatePlanMeal(seedMeal,planId);this.desiredServeInstant=planDocument(this.desired).serveInstant;this.desiredTimeZone=planTimeZone(this.desired,null);this.visible=this.displayDraft();this.phase='unsaved';
     this.persist();
    }
   }catch{
    this.blocked=true;this.phase='load-error';this.error='Saved plan recovery could not be read safely. Your draft has not been replaced.';
   }
  }
+ private displayDraft():ExtendedMeal{return {...this.desired!,...(this.desiredServeInstant?{serveAt:localDateTime(new Date(this.desiredServeInstant))}:{})};}
  state():SavedPlanState{return {meal:this.visible,plan:this.base,phase:this.phase,error:this.error};}
  private publish(){if(!this.disposed)this.emit(this.state());}
  private persist(){
   if(this.readonlyMode)throw new AccountConflict('Another tab is editing this plan. Close it and reload here.');
   if(this.blocked)throw Error(this.error);
   if(this.storage.getItem(this.key)!==this.baseline)throw new AccountConflict('Another tab changed this plan. Download your draft before reloading.');
-  const raw=JSON.stringify({version:1,owner:this.owner,planId:this.planId,base:this.base,desired:this.desired,operation:this.operation} satisfies PlanCache);
+  const raw=JSON.stringify({version:1,owner:this.owner,planId:this.planId,base:this.base,desired:this.desired,desiredServeInstant:this.desiredServeInstant,desiredTimeZone:this.desiredTimeZone,operation:this.operation} satisfies PlanCache);
   this.storage.setItem(this.key,raw);this.baseline=raw;
  }
  private failed(error:unknown){
@@ -74,12 +89,12 @@ export class SavedPlanStore{
    const remote=await this.api.read(this.planId);if(this.disposed)return;
    if(remote&&this.base&&remote.revision<this.base.revision)return;
    if(this.readonlyMode){
-    this.base=remote;this.visible=remote?planMeal(remote):this.visible;
+    this.base=remote;this.desired=null;this.operation=null;this.visible=remote?planMeal(remote):this.visible;
     this.failed(new AccountConflict('Another tab is editing this plan. Close it and reload here.'));return;
    }
    if(this.operation&&remote?.writeId===this.operation.id){
     const done=this.operation;this.base=remote;this.operation=null;
-    if(equal(this.desired,done.snapshot))this.desired=null;
+    if(equal(this.desired,done.snapshot)){this.desired=null;this.desiredServeInstant=undefined;this.desiredTimeZone=undefined;}
    }else if(this.operation&&((remote?.revision??0)!==(this.base?.revision??0))){
     // Retry by immutable request ID to distinguish an acknowledged lost response
     // from a genuinely stale edit. Never rebase an unconfirmed write on a read.
@@ -88,7 +103,7 @@ export class SavedPlanStore{
     this.failed(new AccountConflict('This plan changed on another device. Download your draft before loading the account version.'));return;
    }else this.base=remote;
    if(!remote&&!this.desired){this.failed(new AccountConflict('This plan is no longer upcoming. Return Home to see your current cooks.'));return;}
-   this.visible=this.desired??(this.base?planMeal(this.base):null);this.phase=this.desired?'unsaved':'saved';this.error='';
+   this.visible=this.desired?this.displayDraft():(this.base?planMeal(this.base):null);this.phase=this.desired?'unsaved':'saved';this.error='';
    this.persist();await this.storage.settled?.();this.publish();if(this.desired)this.schedule();
   }catch(error){if(!this.disposed)this.failed(error);}
  }
@@ -98,7 +113,12 @@ export class SavedPlanStore{
  }
  edit(fn:(meal:Meal)=>Meal):void{
   if(!this.visible||this.blocked||this.readonlyMode||['conflict','load-error'].includes(this.phase))throw Error('Resolve plan saving before editing.');
-  this.desired=validatePlanMeal(fn(this.visible),this.planId);this.visible=this.desired;
+  const previous=this.visible,next=validatePlanMeal(fn(this.visible),this.planId);
+  if(next.serveAt!==previous.serveAt||this.desiredServeInstant===undefined){
+   this.desiredServeInstant=next.serveAt===previous.serveAt&&this.base?this.base.serveInstant:planDocument(next).serveInstant;
+   this.desiredTimeZone=planTimeZone(next,this.base);
+  }
+  this.desired=next;this.visible=this.displayDraft();
   try{
    this.persist();this.phase='syncing';this.error='';this.publish();
    void this.storage.settled?.().catch(error=>{if(!this.disposed)this.failed(error);});this.schedule();
@@ -111,7 +131,7 @@ export class SavedPlanStore{
   if(this.blocked||this.readonlyMode||this.phase==='conflict')throw new AccountConflict(this.error||'This plan needs recovery.');
   if(!this.maySend()){this.failed(Error('Reconnect and verify your account before saving this plan.'));throw Error(this.error);}
   if(!this.operation)this.operation={id:crypto.randomUUID(),revision:this.base?.revision??0,
-   document:planDocument(this.desired),timeZone:planTimeZone(this.desired,this.base),snapshot:this.desired};
+   document:{meal:this.desired,serveInstant:this.desiredServeInstant!==undefined?this.desiredServeInstant:planDocument(this.desired).serveInstant},timeZone:this.desiredTimeZone??planTimeZone(this.desired,this.base),snapshot:this.desired};
   const op=this.operation;
   const sending=(async()=>{
    try{
@@ -122,8 +142,8 @@ export class SavedPlanStore{
       !(remote.writeId===op.id||remote.writeReceipt?.operationId===op.id&&remote.writeReceipt.planId===this.planId))
       throw Error('The plan save has not been confirmed. Keep your draft open and retry.');
     const newerLocal=this.desired&&!equal(this.desired,op.snapshot),diverged=newerLocal&&remote.revision>op.revision+1;
-    this.base=remote;this.operation=null;if(!newerLocal)this.desired=null;
-    this.visible=this.desired??planMeal(remote);this.phase=diverged?'conflict':this.desired?'syncing':'saved';
+    this.base=remote;this.operation=null;if(!newerLocal){this.desired=null;this.desiredServeInstant=undefined;this.desiredTimeZone=undefined;}
+    this.visible=this.desired?this.displayDraft():planMeal(remote);this.phase=diverged?'conflict':this.desired?'syncing':'saved';
     this.error=diverged?'Another device changed this plan while your later edits were pending. Download your draft before loading the account version.':'';
     try{this.persist();await this.storage.settled?.();}catch(error){
      if(error instanceof AccountConflict){this.phase='conflict';this.error=error.message;}
@@ -143,7 +163,8 @@ export class SavedPlanStore{
   if(this.inflight)await this.inflight.catch(()=>{});
   const remote=await this.api.read(this.planId);if(this.disposed)return;
   if(!remote)throw new AccountConflict('This plan is no longer upcoming. Return Home to see your current cooks.');
-  this.base=remote;this.desired=null;this.operation=null;this.visible=planMeal(remote);this.phase='saved';this.error='';
+  this.base=remote;this.desired=null;this.desiredServeInstant=undefined;this.desiredTimeZone=undefined;this.operation=null;this.visible=planMeal(remote);this.phase='saved';this.error='';
+  if(this.readonlyMode){this.failed(new AccountConflict('Another tab is editing this plan. Close it and reload here.'));return;}
   await this.storage.rebase?.();this.baseline=this.storage.getItem(this.key);this.blocked=false;
   this.persist();await this.storage.settled?.();this.publish();
  }

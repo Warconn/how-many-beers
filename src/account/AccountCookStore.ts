@@ -434,7 +434,8 @@ export class AccountCookStore {
     if (!this.state().canPlan) throw Error("Upcoming plans are not available for this account yet.");
     if (!planId || !Number.isSafeInteger(planRevision) || planRevision < 1)
       throw Error("Save the plan before starting it.");
-    if (this.visible.active.mode === "cooking" || this.visible.active.startedAt)
+    if (this.visible.active.mode === "cooking" || this.visible.active.startedAt ||
+      Object.keys(this.visible.active.completed).length || this.visible.active.events?.some(e=>e.kind!=="removed"))
       throw Error("Finish or cancel your current cook before starting another.");
     this.criticalRequested = true;
     this.publish();
