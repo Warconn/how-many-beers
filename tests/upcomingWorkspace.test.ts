@@ -17,16 +17,16 @@ vi.mock('../src/account/useUpcomingPlans',async()=>{
  return {...actual,useUpcomingPlans:()=>f.plans};
 });
 import {useCookWorkspace} from '../src/account/useCookWorkspace';
-import {currentHasActuals,hasUpcomingContent} from '../src/account/useUpcomingPlans';
+import {currentHasActuals,hasUpcomingContent,PendingPlanIndex,pendingPlansKey,mergePendingPlans} from '../src/account/useUpcomingPlans';
 let workspace:ReturnType<typeof useCookWorkspace>;
 function render(){function Probe(){workspace=useCookWorkspace();return null;}renderToString(createElement(Probe));return workspace!;}
-function selected(){return {state:()=>({plan:{id:'future-plan',revision:7},meal:f.plans.state.meal,phase:'saved',error:''}),save:vi.fn().mockResolvedValue(undefined),edit:vi.fn(),flush:vi.fn().mockResolvedValue(undefined),dirty:()=>false,recoveryExport:()=>'{"planDraft":true}'};}
+function selected(){return {owner:'owner-a',state:()=>({plan:{id:'future-plan',revision:7},meal:f.plans.state.meal,phase:'saved',error:''}),save:vi.fn().mockResolvedValue(undefined),edit:vi.fn(),flush:vi.fn().mockResolvedValue(undefined),dirty:()=>false,recoveryExport:()=>'{"planDraft":true}'};}
 beforeEach(()=>{
  vi.stubEnv('NEXT_PUBLIC_ENABLE_CLOUD_COOKS','true');
  f.account={ownerId:'owner-a',phase:'authenticated',client:{}};
  const active=migrateMeal({...newMeal(),name:'Pumpkin seeds tonight',mode:'cooking',startedAt:'2026-11-05T01:00:00Z',dishes:[createDish('side')]});
  const snapshot={active,history:emptyHistory()};
- f.cloud={state:{snapshot,backup:snapshot,phase:'saved',error:'',canPlan:true,canCancel:true},store:{current:{state:()=>({snapshot:f.cloud.state.snapshot}),save:vi.fn().mockResolvedValue(undefined),edit:vi.fn(),flush:vi.fn().mockResolvedValue(undefined),promote:vi.fn().mockResolvedValue(undefined),cancel:vi.fn().mockResolvedValue(undefined),retry:vi.fn().mockResolvedValue(undefined),recoveryExport:()=>'{"live":true}'}},restart:vi.fn()};
+ f.cloud={state:{snapshot,backup:snapshot,phase:'saved',error:'',canPlan:true,canCancel:true},store:{current:{owner:'owner-a',state:()=>({snapshot:f.cloud.state.snapshot}),save:vi.fn().mockResolvedValue(undefined),edit:vi.fn(),flush:vi.fn().mockResolvedValue(undefined),promote:vi.fn().mockResolvedValue(undefined),cancel:vi.fn().mockResolvedValue(undefined),retry:vi.fn().mockResolvedValue(undefined),recoveryExport:()=>'{"live":true}'}},restart:vi.fn()};
  f.local={meal:null,history:emptyHistory(),status:'saved',error:'',canceled:{version:1,cooks:[]}};
  f.plans={plans:[],selectedId:null,state:{meal:null,plan:null,phase:'loading',error:''},listPhase:'saved',listError:'',store:{current:null},open:vi.fn().mockResolvedValue(undefined),create:vi.fn().mockResolvedValue('created-plan'),flush:vi.fn().mockResolvedValue(undefined),close:vi.fn().mockResolvedValue(undefined),releaseSelection:vi.fn(),refresh:vi.fn().mockResolvedValue(undefined),retry:vi.fn().mockResolvedValue(undefined)};
 });
@@ -70,5 +70,30 @@ describe('upcoming workspace document routing',()=>{
  it('list failures remain separate from the live cook save status and selected recovery exports the right draft',()=>{
   f.plans.listPhase='load-error';f.plans.listError='Cannot load upcoming plans';let w=render();expect(w.plansError).toBe('Cannot load upcoming plans');expect(w.status).toBe('saved');expect(w.currentCook!.name).toBe('Pumpkin seeds tonight');
   f.plans.selectedId='future-plan';f.plans.store.current=selected();f.plans.state={meal:migrateMeal(newMeal()),phase:'unsaved',error:'Pending plan'};w=render();expect(w.recoveryExport()).toBe('{"planDraft":true}');expect(w.status).toBe('unsaved');expect(w.backup!.active.name).toBe('Pumpkin seeds tonight');
+ });
+});
+
+
+describe('owner-scoped pending-plan discovery',()=>{
+ function storage(){const data=new Map<string,string>();return {data,getItem:(key:string)=>data.get(key)??null,setItem:(key:string,value:string)=>{data.set(key,value);}};}
+ it('durably indexes the full seed before a server row exists and discovers it after reload',async()=>{
+  const port=storage(),seed=migrateMeal({...newMeal(),name:'Sunday brats',dishes:[createDish('brats')]});const index=new PendingPlanIndex('owner-a',port);
+  await index.add(seed);const restored=new PendingPlanIndex('owner-a',port);
+  expect(restored.list()).toHaveLength(1);expect(restored.list()[0]).toMatchObject({id:seed.id,meal:JSON.parse(JSON.stringify(seed)),revision:0,pending:true});expect(port.data.has(pendingPlansKey('owner-a'))).toBe(true);
+ });
+ it('keeps pending drafts separate and removes only acknowledged IDs',async()=>{
+  const port=storage(),a=migrateMeal(newMeal()),b=migrateMeal(newMeal()),index=new PendingPlanIndex('owner-a',port);
+  await index.add(a);await index.add(b);const pending=index.list(),confirmed={...pending[0],revision:2,pending:false};
+  const merged=mergePendingPlans([confirmed],pending);expect(merged).toHaveLength(2);expect(merged.find(p=>p.id===a.id)!.revision).toBe(2);expect(merged.find(p=>p.id===b.id)!.pending).toBe(true);
+  await index.remove([a.id]);expect(new PendingPlanIndex('owner-a',port).list().map(p=>p.id)).toEqual([b.id]);
+ });
+ it('does not acknowledge failed index storage and rejects another owner cache',async()=>{
+  const port=storage(),index=new PendingPlanIndex('owner-a',{...port,setItem:()=>{throw Error('Storage full');}});
+  await expect(index.add(newMeal())).rejects.toThrow('Storage full');expect(index.list()).toEqual([]);expect(port.data.size).toBe(0);
+  port.data.set(pendingPlansKey('owner-a'),JSON.stringify({version:1,owner:'owner-b',plans:[]}));expect(()=>new PendingPlanIndex('owner-a',port)).toThrow('could not be read safely');
+ });
+ it('rebases an index mutation without deleting another independently created draft',async()=>{
+  const port=storage(),a=migrateMeal(newMeal()),b=migrateMeal(newMeal()),first=new PendingPlanIndex('owner-a',port),other=new PendingPlanIndex('owner-a',port);
+  await first.add(a);await other.add(b);expect(new PendingPlanIndex('owner-a',port).list().map(p=>p.id).sort()).toEqual([a.id,b.id].sort());
  });
 });

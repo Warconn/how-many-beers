@@ -152,14 +152,14 @@ export function useCookWorkspace() {
   const selectedPhase=upcoming.state.phase;
   const status=selectedDocument?(selectedPhase==='saved'?currentStatus:selectedPhase==='loading'?'loading':selectedPhase==='load-error'?'recovery':selectedPhase==='conflict'?'conflict':'unsaved'):currentStatus;
   const locked=currentLocked||(selectedDocument&&['loading','load-error','conflict'].includes(selectedPhase));
-  const selectedStore=()=>upcoming.store.current;
+  const selectedStore=()=>upcoming.store.current?.owner===account.ownerId?upcoming.store.current:null;
   const flushCurrent=async()=>{
     if(enabled&&account.ownerId){
-      if(!cloud.store.current)throw Error('Account cooks are loading.');
+      if(!cloud.store.current||cloud.store.current.owner!==account.ownerId)throw Error('Account cooks are loading.');
       await cloud.store.current.flush(true);
     }
   };
-  const currentMeal=()=>cloud.store.current?.state().snapshot?.active??data?.active??null;
+  const currentMeal=()=>(cloud.store.current?.owner===account.ownerId?cloud.store.current?.state().snapshot?.active:null)??data?.active??null;
   const legacyPlan=currentCook&&hasUpcomingContent(currentCook)?{
     id:currentCook.id,meal:currentCook,revision:0,legacy:true as const,
     serveInstant:Number.isFinite(Date.parse(currentCook.serveAt))?new Date(currentCook.serveAt).toISOString():null,
@@ -371,6 +371,7 @@ export function useCookWorkspace() {
     upcomingPlans,
     selectedPlanId,
     isSelectedPlan,
+    hasSelectedPlan:()=>upcoming.hasSelection()||(legacyRef.current?.owner===account.ownerId&&!!legacyRef.current),
     selectedPlanPhase:selectedDocument?selectedPhase:null,
     planError:upcoming.state.error||upcoming.listError,
     planListPhase:upcoming.listPhase,
