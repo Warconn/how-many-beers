@@ -15,7 +15,10 @@ Npm downloads use setup-node caching keyed by package-lock. Browser caching is i
 
 ## Review evidence
 
-Download `playwright-<suite>-report` artifacts from Actions. Inspect PNGs and open HTML with `npx playwright show-report <report-directory>`; inspect traces with `npx playwright show-trace <trace.zip>`. Locally use `--headed`, `--ui` or `--trace on` with the relevant Playwright command. Tests that explicitly attach screenshots retain them; ordinary automatic screenshots capture failures. Do not replace reviewed visual evidence with only type/unit checks.
+Download `playwright-auth-report`, `playwright-accounts-report`,
+`playwright-offline-report` and both `playwright-regression-<shard>-report` artifacts
+from Actions. The combined `cooking-review-screenshots` and separate
+`account-review-screenshots` artifacts support smaller visual downloads. Inspect PNGs and open HTML with `npx playwright show-report <report-directory>`; inspect traces with `npx playwright show-trace <trace.zip>`. Locally use `--headed`, `--ui` or `--trace on` with the relevant Playwright command. Tests that explicitly attach screenshots retain them; ordinary automatic screenshots capture failures. Do not replace reviewed visual evidence with only type/unit checks.
 
 ## Baseline
 
@@ -42,7 +45,9 @@ Cloudflare's check on that dev commit reports identical start/end timestamps (19
 
 The feature PR must pass all suites, including existing UI and offline/reliability specs. After the reviewed change lands in dev, inspect the separate dev run before full-day owner QA and any main promotion. Production promotion remains separate.
 
-Local validation: typecheck and 136 unit tests pass. Browser download is blocked by the workspace domain policy and local server execution requires additional network permission; browser verification is delegated to the feature CI run.
+Historical #54 local validation was typecheck and 136 units, with browser
+verification in CI because that environment blocked downloads/server access.
+The current #71 validation below supersedes that historical environment note.
 
 ## Regression sharding follow-up (#71)
 
@@ -106,11 +111,67 @@ maintenance. The additional runner repeats setup and may increase total job time
 measure that tradeoff alongside wall time. Cloudflare deployment timing/gating is
 unchanged and no hosting speed improvement is claimed.
 
-### Validation and resulting measurements
+### Measured after-results and validation
 
-Pending the focused feature PR's full CI. Before pushing, actionlint, typecheck and
-277 unit tests passed. Local discovery verified exact disjoint shard coverage.
-Actual local Chromium sharded runs passed 9 desktop and 9 mobile checks, produced
-valid JSON timing reports with zero skipped/flaky cases, and desktop/mobile
-screenshots were opened and inspected. Real WebKit, auth/account recovery and
-production/offline remain mandatory in full CI.
+Five complete successful runs at immutable workflow head `01f921a`, on the same
+257-regression-case / 357-total-browser workload and 277 unit tests. The following
+final documentation commit does not change workflow commands or application code.
+Queue is workflow creation to the first job starting; active wall is first job
+start to final job completion. Wall includes queue and final workflow coordination.
+
+| Run | Workflow wall (s) | Initial queue (s) | Active wall (s) | Runner-minutes |
+| --- | ---: | ---: | ---: | ---: |
+| [41964609720](https://github.com/Warconn/how-many-beers/actions/runs/41964609720) | 328 | 2 | 325 | 21.47 |
+| [41964664936](https://github.com/Warconn/how-many-beers/actions/runs/41964664936) | 425 | 81 | 344 | 21.27 |
+| [41965407691](https://github.com/Warconn/how-many-beers/actions/runs/41965407691) | 360 | 3 | 356 | 19.93 |
+| [41966055458](https://github.com/Warconn/how-many-beers/actions/runs/41966055458) | 375 | 3 | 371 | 21.78 |
+| [41966728240](https://github.com/Warconn/how-many-beers/actions/runs/41966728240) | 402 | 3 | 398 | 20.32 |
+
+Wall median **375s**, empirical p90 **425s**, versus baseline
+632s / 700s: **40.7% lower median feedback time**.
+Median consumed job time **21.27 runner-minutes** versus 20.83,
+**2.1% higher**; empirical runner-time p90
+21.78min versus 21.02min. Consumed seconds are not billed minutes;
+per-job rounding and plan rules can change actual charges. The extra runner repeats
+setup, so this is a responsiveness improvement with a measured setup/cost tradeoff.
+
+All ten regression shard jobs restored warm npm caches. Baseline includes four
+warm runs and one cold/miss run; dependency installation was only 4–8s, so this
+does not account for the execution-time improvement.
+
+One sample includes 81s deliberately queued behind an obsolete branch run; it is
+retained rather than hidden. Another auth runner spent 198s installing browsers/OS
+packages while its tests took a normal 102s. Active-wall median is
+356s, p90 398s. Five observations are a small
+sample and p90 is nearest-rank (the maximum here), not a promised service level.
+The three identical-workload baseline runs also have a 632s median, so the older
+four-case workload difference does not explain the measured median improvement.
+
+The compact timing reports from [run 41964609720](https://github.com/Warconn/how-many-beers/actions/runs/41964609720)
+verify an exact disjoint union of **257** cases: **106 desktop Chromium, 106 mobile
+Chromium and 45 iPhone/WebKit**, with **zero skipped or flaky regression cases**.
+The longest file totals were `cook-flow.spec.ts` 67.1s,
+`template-estimates.spec.ts` 60.5s and `cooking-simplicity.spec.ts` 54.0s summed
+across cases/projects, not additional wall time. The slowest
+individual case was the physical smoker/rest provenance journey at 9.8s. These are
+distinct integration/safety/recovery journeys; no assertion, browser or setup
+coverage was cut to chase marginal savings. Test-count sharding avoids a brittle
+hand-maintained file split. Auth/accounts or runner provisioning can now become
+the critical path, so further sharding has diminishing returns.
+
+Local validation: official actionlint, typecheck, 277 unit tests, exact full-suite
+shard-discovery union, and actual sharded 9-desktop + 9-mobile checks passed. The
+compact-report helper was checked against real 129/128-case raw reports: identities,
+outcomes, durations, retry indexes, start timestamps and aggregate stats remain
+identical while embedded attachment/stdout/stderr data is omitted only from review
+copies. Full raw diagnostics remain in normal reports. Current compact JSON is
+under 0.2MB per shard in the reviewed CI run, avoiding duplicated multi-megabyte
+attachment payloads.
+
+Actual desktop/mobile/iPhone screenshots were downloaded, opened and inspected.
+The stable [combined visual/timing artifact](https://github.com/Warconn/how-many-beers/actions/runs/41964609720/artifacts/13387216508)
+is **4.03MB**, and the [account review artifact](https://github.com/Warconn/how-many-beers/actions/runs/41964609720/artifacts/13386439413)
+is **6.00MB**, both below the workspace 32MiB transfer limit. The core regression
+collector includes cancellation; the separate account collector automatically
+includes new account specs. Full shard reports retain all other PNGs, videos,
+traces and raw JSON. Final docs-head full CI is recorded in PR #102 before it is declared review-ready.
