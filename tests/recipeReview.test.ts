@@ -37,3 +37,7 @@ it('rejects a review trying to overwrite a different dish override',()=>{
 it('can resubmit an unstarted protected add without duplicates while preserving real activity',()=>{
  const current={...newMeal(),dishes:[createDish('brisket')]};let review=recipeReview(createDish('brats'),current.serveAt);const once=addReviewedDish(current,review);review={...review,dishes:[{...review.dishes[0],name:'Revised brats'}]};const twice=addReviewedDish(once,review,true);expect(twice.dishes).toHaveLength(2);expect(twice.dishes[1].name).toBe('Revised brats');expect(twice.dishes[0]).toEqual(current.dishes[0]);const actual=recordEvent(once,cookTimeline(once).find(t=>t.dishId===review.dishes[0].id)!.id,'completed','2026-11-05T12:00:00Z');expect(()=>addReviewedDish(actual,review,true)).toThrow('activity');
 });
+it('preserves the first addition timestamp when resubmitting during a live cook',()=>{
+ const current={...newMeal(),dishes:[createDish('brisket')],mode:'cooking' as const,startedAt:'2026-11-05T12:00:00Z'},review=recipeReview(createDish('brats'),current.serveAt),once=addReviewedDish(current,review);
+ once.dishes[1].executionAddedAt='2026-11-05T12:05:00Z';const again=addReviewedDish(once,review,true);expect(again.dishes[1].executionAddedAt).toBe('2026-11-05T12:05:00Z');expect(again.startedAt).toBe(current.startedAt);
+});

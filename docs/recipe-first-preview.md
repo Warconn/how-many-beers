@@ -71,7 +71,10 @@ guidance retained:
 - [Mobile method review](screenshots/issue-103-method-mobile.png)
 - [Mobile two-dish meal](screenshots/issue-103-meal-mobile.png)
 
-Local typecheck, all 368 unit tests, eight desktop/mobile prototype browser cases,
+Local typecheck, all 369 unit tests, eight desktop/mobile prototype browser cases,
 and three focused desktop account journeys passed. The Cloudflare static export
 build passed and includes `/recipe-first/`. Full PR CI and actual iPhone/WebKit
 captures remain the final validation gate. No hosted migrations were applied.
+
+Resubmitting a protected add also retains the original dish/custom-step creation
+timestamps during an active cook; replay never restarts that timing anchor.
