@@ -105,6 +105,11 @@ describe('physical phases behind the checklist',()=>{
   const d={...createDish('side'),id:'a',cookMinutes:45,restMinutes:10},m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
   expect(project(m,'16:01').remaining).toBe(project(m,'16:00').remaining!-1);expect(project(m,'16:01').phases?.[0].actualStart).toBeNull();
  });
+ it('an actual cooking start outranks overdue unchecked preparation without checking it automatically',()=>{
+  const d={...createDish('side'),id:'a',cookMinutes:45,restMinutes:10};let m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
+  m=recordEvent(m,'a:start','completed',at('16:30'));
+  expect(project(m,'16:31').remaining).toBe(54);expect(project(m,'16:31').finish).toBe(at('17:25').replace('Z','.000Z'));expect(m.completed['a:prep']).toBeUndefined();
+ });
  it('a recipe without a reviewed heat-end action falls back, and edited serving actions remain',()=>{
   const d=parseRecipeText('Roast only','Roast (15 minutes)'),m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));expect(m.phasePlan?.phases).toHaveLength(0);
   const seeds=parseRecipeText('Seeds','Roast (15 minutes)\nCool (10 minutes)'),plan={...newMeal(),dishes:[seeds],taskOverrides:{[seeds.id+':serve']:{title:'Check food before serving'}}};

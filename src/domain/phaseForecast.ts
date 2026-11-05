@@ -62,7 +62,10 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
      const expired=p.kind==='heating'&&actualStart!==null&&actualEnd===null&&(predicted===null||predicted<=now);
      const unscheduled=t.timingMode==='unscheduled'&&actualStart===null;
      const conflict=actualStart===null&&fixed!==null&&fixed<earliest;
-     const unresolved:boolean=actualEnd===null&&(expired||minutes===null||unscheduled||conflict||unknown||!!prior?.uncertain);
+     // Recorded physical progress outranks hypothetical unfinished preparation;
+     // do not require perfect bookkeeping to trust an actual loading/rest start.
+     const precedingUnknown:boolean=actualStart===null&&(unknown||!!prior?.uncertain);
+     const unresolved:boolean=actualEnd===null&&(expired||minutes===null||unscheduled||conflict||precedingUnknown);
      const finish=actualEnd??Math.max(start,predicted??start,expired?now:start);
      const state:LivePhase={id:p.id,dishId,kind:p.kind,startTaskId:p.startTaskId,actualStart:actual.start?.occurredAt??null,actualEnd:actual.end?.occurredAt??null,start:iso(start),finish:iso(finish),minutes,elapsed:actualStart===null?0:Math.max(0,((actualEnd??now)-actualStart)/minute),active:actualStart!==null&&actualEnd===null,overrun,uncertain:unresolved};
      states.set(p.id,state);
