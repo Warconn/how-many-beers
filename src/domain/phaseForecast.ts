@@ -33,20 +33,25 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
   const rank=new Map(order.map((id,i)=>[id,i]));
   own.sort((a,b)=>(rank.get(a.id)??Infinity)-(rank.get(b.id)??Infinity));
   const dish=meal.dishes.find(d=>d.id===dishId);
+  const independent=!dish&&!(meal as ExtendedMeal).planningGeneralSequence;
+  const generalPositions=own.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
+  const generalOrigin=generalPositions.length?Math.min(...generalPositions):anchor;
   let cursor=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor),unknown=false;
   let previousPrep:{planned:number;start:number;minutes:number}|undefined;
   for(const t of own){
    if(plan.suppressed.includes(t.id))continue;
+   if(independent){cursor=stamp(t.executionAddedAt)??anchor+Math.max(0,(stamp(t.scheduledAt)??generalOrigin)-generalOrigin);unknown=false;}
    const action=plan.actions[t.id],phases=(action?.starts??[]).map(id=>plan.phases.find(p=>p.id===id)).filter((p):p is CookingPhase=>!!p);
    const done=stamp(meal.completed[t.id]);
    const planned=stamp(t.scheduledAt),preparation=t.templateStage?.kind==='preparation';
+   if(!preparation)previousPrep=undefined;
    const overlap=preparation&&!t.userSequence&&!dish?.planningStepOrder?.length&&previousPrep&&planned!==null?Math.max(0,previousPrep.minutes-(planned-previousPrep.planned)/minute):0;
    const prepStart=previousPrep?previousPrep.start+(previousPrep.minutes-overlap)*minute:cursor;
    if(phases.length){
     for(const p of phases){
      const actual=phaseObservations(meal,p.id),actualStart=stamp(actual.start?.occurredAt),actualEnd=stamp(actual.end?.occurredAt),minutes=phaseLength(p);
      const prior=p.after?states.get(p.after):undefined;
-     const earliest=Math.max(now,preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor);
+     const earliest=Math.max(now,preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor)+(p.leadMinutes??0)*minute;
      const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
      const start=actualStart??Math.max(earliest,fixed??earliest);
      const nominal=minutes===null?null:start+minutes*minute;
@@ -69,7 +74,7 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
    }
    const checkpoint=action?.checkpoint;
    const ends=(action?.ends??[]).map(id=>states.get(id)).filter((p):p is LivePhase=>!!p);
-   if(checkpoint||ends.length){
+   if(checkpoint||ends.length&&!(length(t)!>0)){
     const p=checkpoint?states.get(checkpoint.phaseId):ends.at(-1);
     const derived=p?checkpoint?Date.parse(p.start)+(p.minutes??0)*checkpoint.fraction*minute:Date.parse(p.finish):Math.max(cursor,now);
     const at=t.timingMode==='fixed'?stamp(t.scheduledAt)??derived:derived;
@@ -78,16 +83,20 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
     // changes the phase; rapid check-offs cannot manufacture cooked minutes.
     continue;
    }
-   if(done!==null){cursor=Math.max(cursor,done);if(preparation&&planned!==null)previousPrep={planned,start:done,minutes:0};continue;}
+   if(done!==null){if(independent)continue;cursor=Math.max(cursor,done);if(preparation&&planned!==null)previousPrep={planned,start:done,minutes:0};continue;}
    const minutes=length(t),actual=events.filter(e=>e.taskId===t.id&&e.kind==='started'&&!e.phaseEstimate&&!e.phaseObservations).at(-1);
    const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
-   const start=stamp(actual?.occurredAt)??Math.max(now,preparation?prepStart:cursor,fixed??0);
-   const conflict=fixed!==null&&!actual&&fixed<Math.max(now,cursor);
-   const unresolved=unknown||minutes===null||t.timingMode==='unscheduled'||conflict;
+   // Ordinary preparation estimates can run from the session/creation anchor.
+   // This is a projection only; physical intervals still require actual starts.
+   const start=stamp(actual?.occurredAt)??fixed??Math.max(unknown?now:anchor,stamp(t.executionAddedAt)??anchor,preparation?prepStart:cursor);
+   const conflict=fixed!==null&&!actual&&fixed<Math.max(anchor,cursor);
    const finish=start+Math.max(0,minutes??0)*minute;
-   forecasts[t.id]={start:iso(start),finish:iso(finish),status:unresolved?'unknown':t.isCondition?'condition':'estimated',lowerBound:unresolved,...(minutes!==null?{}:{reason:'Duration unknown; showing earliest timing from known work.'})};
-   cursor=Math.max(cursor,finish);unknown=unresolved;
+   const overdue=minutes!==null&&minutes>0&&finish<=now;
+   const unresolved=unknown||minutes===null||t.timingMode==='unscheduled'||conflict||overdue;
+   forecasts[t.id]={start:iso(start),finish:iso(finish),status:overdue?'overdue':unresolved?'unknown':t.isCondition?'condition':'estimated',lowerBound:unresolved,...(overdue?{reason:'Estimate elapsed; the action remains unchecked.'}:minutes!==null?{}:{reason:'Duration unknown; showing earliest timing from known work.'})};
+   cursor=Math.max(cursor,finish,overdue?now:anchor);unknown=unresolved;
    if(preparation&&planned!==null&&minutes!==null)previousPrep={planned,start,minutes};
+   if(independent){end=Math.max(end,cursor);uncertain ||=unknown;}
   }
   end=Math.max(end,cursor);uncertain ||= unknown;
  }

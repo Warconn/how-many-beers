@@ -29,8 +29,8 @@ Serve checkbox or automatic archive. Finish cook remains a separate deliberate a
 
 - Fresh sessions capture a versioned phasePlan of authored IDs/relationships. Old
   active sessions are not upgraded or reinterpreted. Their forecast path remains.
-- Imported instructions get conservative cookingKind suggestions at parsing/review,
-  not during execution. Unclear steps retain ordinary checklist behavior. The
+- Imported instructions get conservative cookingKind suggestions at parsing/review (or once at a fresh start for older reviewed plans),
+  not while executing actions. Unclear steps retain ordinary checklist behavior. The
   automatically added planner Serve row is omitted from execution only when the
   final reviewed phase is passive; authored serving/safety actions are retained.
 - Compound phaseObservations are metadata on one existing completion event. Optional

@@ -128,6 +128,7 @@ jobs:
           path: |
             test-results/cancel-cook-*/*.png
             test-results/cooking-simplicity-*/*.png
+            test-results/physical-cooking-*/*.png
             test-results/design-system-*/*.png
             test-results/live-cook-start-*/*.png
             test-results/whole-cook-duration-*/*.png

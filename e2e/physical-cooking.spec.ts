@@ -2,6 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import {newMeal,createDish,type Dish} from '../src/domain/meal';
 import {startCookSession,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 import {parseRecipeText} from '../src/domain/recipe';
+test.use({timezoneId:'UTC'});
 const at=(t:string)=>`2026-11-08T${t}:00Z`;
 function concurrent(recorded='16:00'){
  const brats: Dish={...createDish('side'),name:'Brats',id:'brats',cookMinutes:45,restMinutes:10};
@@ -70,5 +71,5 @@ test('Sunday brisket keeps full cooking/rest work after rapid preparation and co
  const d=createDish('brisket');let m=startCookSession({...newMeal(),name:'Sunday brisket',serveAt:at('18:00'),dishes:[d]},at('16:00'));
  for(const key of ['prep','season','preheat','start','raise225','spritz','check','wrap'])m=recordEvent(m,d.id+':'+key,'completed',at('16:01'));
  await open(page,m,'16:02');await expect(meter(page)).toContainText('15h 39m');
- const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(stored.events.flatMap((e:any)=>e.phaseObservations??[]).filter((o:any)=>o.boundary==='end')).toHaveLength(0);expect(stored.serveAt).toBe(at('18:00'));
+ const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(stored.events.flatMap((e:any)=>e.phaseObservations??[]).filter((o:any)=>o.boundary==='end')).toHaveLength(0);expect(stored.serveAt).toBe(at('18:00'));await page.setViewportSize({width:320,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });

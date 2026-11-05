@@ -11,7 +11,7 @@ const strings=(v:unknown)=>Array.isArray(v)&&v.every(text);
 const record=(v:unknown,check:(v:unknown)=>boolean)=>object(v)&&Object.values(v).every(check);
 function phasePlan(v:unknown):boolean{
  return object(v)&&v.version===1&&Array.isArray(v.phases)&&v.phases.length<=1000
-  &&v.phases.every(p=>object(p)&&['id','dishId','startTaskId','durationTaskId'].every(k=>text(p[k]))&&['heating','passive'].includes(String(p.kind))&&strings(p.endTaskIds)&&duration(p.minutes)&&optional(p.upperMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.after,text))
+  &&v.phases.every(p=>object(p)&&['id','dishId','startTaskId','durationTaskId'].every(k=>text(p[k]))&&['heating','passive'].includes(String(p.kind))&&strings(p.endTaskIds)&&duration(p.minutes)&&optional(p.upperMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.leadMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.after,text))
   &&new Set(v.phases.map(p=>p.id)).size===v.phases.length
   &&record(v.order,strings)&&strings(v.suppressed)&&record(v.actions,a=>object(a)&&optional(a.starts,strings)&&optional(a.ends,strings)&&optional(a.checkpoint,c=>object(c)&&text(c.phaseId)&&number(c.fraction)&&c.fraction>=0&&c.fraction<=100));
 }

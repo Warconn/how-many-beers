@@ -3,7 +3,7 @@ import type {CookEvent,ExtendedMeal} from './cookState';
 import {templateSteps} from '../data/cookTemplates';
 import {turkeyPreparation} from './turkeyPrep';
 
-export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string};
+export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string;leadMinutes?:number};
 export type PhaseAction={starts?:string[];ends?:string[];checkpoint?:{phaseId:string;fraction:number}};
 export type PhasePlan={version:1;phases:CookingPhase[];actions:Record<string,PhaseAction>;order:Record<string,string[]>;suppressed:string[]};
 export type PhaseObservation={phaseId:string;boundary:'start'|'end'};
@@ -36,17 +36,22 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
    let previous:CookingPhase|undefined;
    for(const t of own){
     const step=d.steps?.find(s=>d.id+':'+s.id===t.id);
-    if(!step?.cookingKind)continue;
+    if(!step)continue;
+    // Older saved plans may predate parser hints. Compile the same conservative
+    // suggestions once at a fresh start, never from a running session's titles.
+    const kind=step.cookingKind??recipeCookingKind(step.instructions??step.title,t.durationMinutes??step.minutes);
+    if(!kind)continue;
     // Only explicitly timed, reviewed source steps carry these relationships.
     // A next physical instruction (including cool/rest) is a real transition.
     const key=t.id.slice(d.id.length+1);
-    const p=phase(d,'phase-'+key,key,[],step.cookingKind,step.minutes,previous?.id.slice(d.id.length+1));
+    const p=phase(d,'phase-'+key,key,[],kind,step.minutes,previous?.id.slice(d.id.length+1));
     if(p&&previous){previous.endTaskIds.push(t.id);(action(t.id).ends??=[]).push(previous.id);}
     previous=p;
    }
    if(previous){
     const last=own.filter(t=>!t.id.endsWith(':serve')).at(-1);
-    if(previous.kind==='passive'&&last?.id===previous.startTaskId)plan.suppressed.push(d.id+':serve');
+    const servingEdit=(meal as ExtendedMeal).taskOverrides?.[d.id+':serve'];
+    if(previous.kind==='passive'&&last?.id===previous.startTaskId&&!servingEdit)plan.suppressed.push(d.id+':serve');
    }
    continue;
   }
@@ -54,14 +59,14 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
   const stages=d.preset==='brats'||d.preset==='wings'?15:0;
   const range=presets[d.preset].cookRangeMinutes;
   const upper=d.brisketPlan?.applied?.smokeMax??(range&&d.cookMinutes===presets[d.preset].cookMinutes?range[1]-stages:undefined);
-  const heatEnd=d.preset==='brats'?'bath':d.preset==='wings'?'oil':'rest';
+  const heatEnd=d.preset==='brats'?'bath':d.preset==='wings'?'fry':'rest';
   const heat=phase(d,'heat','start',[heatEnd],'heating',nominal-stages,undefined,upper??undefined);
   if(d.preset==='brats'){
    phase(d,'sear','bath',['finish'],'heating',15,'heat');
    if(rest>0)phase(d,'rest','finish',['serve'],'passive',rest,'sear');
   }else if(d.preset==='wings'){
    phase(d,'fry','fry',['finish'],'heating',3);
-   if(rest>0)phase(d,'rest','finish',['serve'],'passive',rest,'fry');
+   if(rest>0){const resting=phase(d,'rest','finish',['serve'],'passive',rest,'fry');if(resting)resting.leadMinutes=2;}
   }else if(rest>0)phase(d,'rest','rest',['serve'],'passive',rest,'heat');
   // A condition check is never a heat-end observation. The actual removal/rest
   // instruction is the physical boundary, even if all checks were ticked early.
@@ -69,7 +74,7 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
    const source=templateSteps[d.preset];
    for(const t of own){
     const key=t.id.slice(d.id.length+1),entry=source?.find(s=>s.id===key);
-    if(!plan.actions[t.id]&&(entry?.anchor==='progress'||key==='check'||key==='wrap'||key==='finish'||t.isCondition&&!t.templateStage))action(t.id).checkpoint={phaseId:heat.id,fraction:entry?.anchor==='progress'?(entry.progress??0.5)*nominal/(nominal-stages):key==='finish'||key==='hold'?1:0.5};
+    if(!plan.actions[t.id]&&!t.templateStage&&(entry?.anchor==='progress'||key==='check'||key==='wrap'||key==='finish'||t.isCondition))action(t.id).checkpoint={phaseId:heat.id,fraction:entry?.anchor==='progress'?(entry.progress??0.5)*nominal/(nominal-stages):key==='finish'||key==='hold'?1:0.5};
    }
   }
   // Refrigerated preparation has real start/end boundaries too. Expiring these
@@ -88,6 +93,16 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
   const ambiguous=plan.phases.some(p=>p.dishId===d.id&&p.endTaskIds.some(id=>order.indexOf(id)<order.indexOf(p.startTaskId)));
   if(ambiguous){plan.phases=plan.phases.filter(p=>p.dishId!==d.id);for(const id of order)delete plan.actions[id];plan.suppressed=plan.suppressed.filter(id=>!order.includes(id));}
  }
+ // A heating instruction with no reviewed removal/transition has no reliable
+ // physical end. Keep that ambiguous work in the ordinary checklist flow.
+ const unsupported=new Set(plan.phases.filter(p=>p.kind==='heating'&&!p.endTaskIds.length).map(p=>p.id));
+ plan.phases=plan.phases.filter(p=>!unsupported.has(p.id));
+ for(const a of Object.values(plan.actions)){
+  if(a.starts)a.starts=a.starts.filter(id=>!unsupported.has(id));
+  if(a.ends)a.ends=a.ends.filter(id=>!unsupported.has(id));
+  if(a.checkpoint&&unsupported.has(a.checkpoint.phaseId))delete a.checkpoint;
+ }
+ for(const p of plan.phases)if(p.after&&unsupported.has(p.after))delete p.after;
  return plan;
 }
 

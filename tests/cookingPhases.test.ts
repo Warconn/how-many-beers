@@ -1,9 +1,10 @@
 import {describe,it,expect} from 'vitest';
 import {newMeal,createDish,type Dish} from '../src/domain/meal';
-import {cookTimeline,recordEvent,startCookSession,setStepDuration,moveStep,addDishToMeal} from '../src/domain/cookState';
+import {cookTimeline,recordEvent,startCookSession,setStepDuration,moveStep,addDishToMeal,type ExtendedMeal} from '../src/domain/cookState';
 import {cookProjection} from '../src/domain/cookProjection';
 import {recordRemainingEstimate} from '../src/domain/cookingPhases';
 import {parseRecipeText} from '../src/domain/recipe';
+import {guidedCookingSteps} from '../src/domain/cookingFocus';
 import {exportBackup,validateBackup,archiveCook,emptyHistory,repeatArchivedCook} from '../src/domain/cookHistory';
 const at=(time:string)=>'2026-11-08T'+time+':00Z';
 function setup(){
@@ -95,11 +96,51 @@ describe('physical phases behind the checklist',()=>{
   m=moveStep(m,'a:rest','up','a',true);m=moveStep(m,'a:rest','up','a',true);m=moveStep(m,'a:rest','up','a',true);
   expect(()=>startCookSession(m,at('16:00'))).not.toThrow();expect(startCookSession(m,at('16:00')).phasePlan?.phases).toHaveLength(0);
  });
+ it('a deliberately later preheat stays after actual cooking instead of overlapping it',()=>{
+  const d={...createDish('brats'),id:'a'};let m=moveStep({...newMeal(),dishes:[d]},'a:start','up','a',true);
+  m=startCookSession(m,at('16:00'));m=recordEvent(m,'a:prep','completed',at('16:01'));m=recordEvent(m,'a:start','started',at('16:05'));m=recordEvent(m,'a:start','completed',at('16:06'));
+  expect(project(m,'16:06').forecasts['a:preheat'].finish).toBe(at('18:25').replace('Z','.000Z'));
+ });
+ it('ordinary prep estimates use elapsed session time without inventing dish starts',()=>{
+  const d={...createDish('side'),id:'a',cookMinutes:45,restMinutes:10},m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
+  expect(project(m,'16:01').remaining).toBe(project(m,'16:00').remaining!-1);expect(project(m,'16:01').phases?.[0].actualStart).toBeNull();
+ });
+ it('a recipe without a reviewed heat-end action falls back, and edited serving actions remain',()=>{
+  const d=parseRecipeText('Roast only','Roast (15 minutes)'),m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));expect(m.phasePlan?.phases).toHaveLength(0);
+  const seeds=parseRecipeText('Seeds','Roast (15 minutes)\nCool (10 minutes)'),plan={...newMeal(),dishes:[seeds],taskOverrides:{[seeds.id+':serve']:{title:'Check food before serving'}}};
+  expect(startCookSession(plan,at('16:00')).phasePlan?.suppressed).toEqual([]);
+ });
  it('ordinary replay, backups and history preserve new observations; Cook Again resets them',()=>{
   const m=setup(),roundtrip=validateBackup(exportBackup(m,emptyHistory(),at('16:20'))).active;
   expect(project(roundtrip,'16:20')).toEqual(project(m,'16:20'));
   const h=archiveCook(m,emptyHistory(),'fine',at('18:00'));expect(h.cooks[0].meal.events).toEqual(m.events);
   const again=repeatArchivedCook(h.cooks[0]);expect(again.phasePlan).toBeUndefined();expect(again.events).toEqual([]);
+ });
+ it('keeps full-checklist order stable while live priority advances across dishes',()=>{
+  const m=setup(),tasks=cookTimeline(m),p=project(m,'16:20'),a=guidedCookingSteps(tasks,m.completed,null,p.forecasts);
+  const done=recordEvent(m,a.current!.id,'completed',at('16:20')),b=guidedCookingSteps(cookTimeline(done),done.completed,null,project(done,'16:20').forecasts);
+  expect(b.ordered.map(t=>t.id)).toEqual(a.ordered.map(t=>t.id));expect(b.current?.id).not.toBe(a.current?.id);
+ });
+ it('retains concurrency for independent general tasks with the same explicit start',()=>{
+  const m:ExtendedMeal={...newMeal(),customTasks:[20,30].map((durationMinutes,i)=>({id:'general-'+i,dishId:'custom',dishName:'General prep',title:'Independent activity '+i,instructions:'',scheduledAt:at('16:00'),durationMinutes,isCondition:false})),taskOverrides:{'general-0':{scheduledAt:at('16:00')},'general-1':{scheduledAt:at('16:00')}}};
+  expect(project(startCookSession(m,at('16:00')),'16:00').remaining).toBe(30);
+ });
+ it('the real brat template retains its covered/searing allowances and one physical transition',()=>{
+  const d={...createDish('brats'),id:'a'};let m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
+  for(const key of ['prep','preheat','start'])m=recordEvent(m,'a:'+key,'completed',at('16:00'));
+  expect(project(m,'16:00').remaining).toBe(135);m=recordEvent(m,'a:check','completed',at('17:00'));expect(project(m,'17:00').remaining).toBe(75);
+  m=recordEvent(m,'a:bath','completed',at('18:05'));expect(project(m,'18:05').remaining).toBe(15);expect(m.events?.at(-1)?.phaseObservations).toEqual([{phaseId:'a:heat',boundary:'end'},{phaseId:'a:sear',boundary:'start'}]);
+ });
+ it('wings preserve oil/drain/rest allowances and preparing the fryer does not end smoking',()=>{
+  const d={...createDish('wings'),id:'a'};let m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
+  for(const key of ['dry','prep','preheat','start'])m=recordEvent(m,'a:'+key,'completed',at('16:00'));
+  expect(project(m,'16:00').remaining).toBe(200);m=recordEvent(m,'a:oil','completed',at('17:00'));
+  expect(project(m,'17:00').phases?.find(p=>p.id==='a:heat')?.actualEnd).toBeNull();
+  m=recordEvent(m,'a:fry','completed',at('19:00'));expect(project(m,'19:00').phases?.find(p=>p.id==='a:heat')?.actualEnd).toBe(at('19:00'));
+ });
+ it('fresh starts can compile conservative reviewed imports saved before hints existed',()=>{
+  const d=parseRecipeText('Seeds','Roast (15 minutes)\nCool (10 minutes)');for(const step of d.steps!)delete step.cookingKind;
+  expect(startCookSession({...newMeal(),dishes:[d]},at('16:00')).phasePlan?.phases).toHaveLength(2);
  });
  it('does not retrofit an existing started session',()=>{
   const legacy={...newMeal(),mode:'cooking' as const,startedAt:at('16:00'),dishes:[createDish('brats')]};

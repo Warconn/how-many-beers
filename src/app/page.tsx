@@ -170,7 +170,7 @@ function CookExperience() {
 
   const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
   const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
-  const forecasts=useMemo(()=>meal?liveStepForecasts(meal,timeline,clockNow):{},[meal,timeline,clockNow]);
+  const forecasts=useMemo(()=>projection?.forecasts??(meal?liveStepForecasts(meal,timeline,clockNow):{}),[meal,timeline,clockNow,projection]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
   const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal)] : [], [meal]);
   const cookingTasks=meal?.phasePlan?timeline.filter(t=>!meal.phasePlan!.suppressed.includes(t.id)):timeline;
