@@ -316,6 +316,12 @@ begin
  if exists(select 1 from public.cook_sessions c where c.owner_user_id=account_owner and c.state in ('planning','active') and public.cook_has_actual_activity(c.plan->'meal')
   and c.id::text is distinct from active->'meal'->>'id' and not exists(select 1 from jsonb_array_elements(document->'history') h where h->>'id'=c.id::text)) then
   raise exception 'Finish or cancel the current cook before replacing it' using errcode='40001';end if;
+ -- A v1 client can replace/clear its single planning slot without knowing about
+ -- Upcoming. Preserve that legacy draft before ordinary snapshot reconciliation.
+ -- Explicitly archiving the same ID remains the normal finish transition.
+ if exists(select 1 from public.cook_sessions c where c.owner_user_id=account_owner and c.state='planning' and not public.cook_has_actual_activity(c.plan->'meal')
+  and c.id::text is distinct from active->'meal'->>'id' and not exists(select 1 from jsonb_array_elements(document->'history') h where h->>'id'=c.id::text)) then
+  perform public.transfer_legacy_planning(account_owner);end if;
  delete from public.cook_sessions c where c.owner_user_id=account_owner and (
   (c.state='completed' and not exists(select 1 from jsonb_array_elements(document->'history') h where h->>'id'=c.id::text))
   or(c.state in ('planning','active') and c.id::text is distinct from active->'meal'->>'id' and not exists(select 1 from jsonb_array_elements(document->'history') h where h->>'id'=c.id::text)));

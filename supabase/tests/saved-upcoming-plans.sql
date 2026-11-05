@@ -117,6 +117,26 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001'
 select pg_temp.denied($q$select public.lock_saved_plan_workspace(auth.uid())$q$,'private workspace-lock helper has no public execute grant');
 select set_config('request.jwt.claim.sub','',true);
 select pg_temp.denied($q$select public.list_saved_cook_plans('00000000-0000-4000-8000-000000000001')$q$,'missing identity cannot list through definer plan API');
+-- Old single-slot clients must preserve legacy plans they do not know to list.
+reset role;
+insert into auth.users values ('00000000-0000-4000-8000-000000000004');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000004',true);
+select public.save_cook_workspace(auth.uid(),0,'5a000000-0000-4000-8000-000000000001',jsonb_set(pg_temp.doc('19000000-0000-4000-8000-000000000011','Original legacy Sunday'),'{active,meal,events}','[{"id":"legacy-reorder","taskId":"removed-step","kind":"removed","occurredAt":"2021-04-04T03:07:00Z"}]'),'America/New_York');
+select plan as original_v1_plan from public.cook_sessions where id='19000000-0000-4000-8000-000000000011' \gset
+select jsonb_agg(to_jsonb(e) order by id) as original_v1_events from public.cook_events e \gset
+select public.save_cook_workspace(auth.uid(),1,'5a000000-0000-4000-8000-000000000002',pg_temp.doc('19000000-0000-4000-8000-000000000012','Replacement planning slot'),'America/New_York');
+select pg_temp.ok((select state='planned' and plan=:'original_v1_plan'::jsonb from public.cook_sessions where id='19000000-0000-4000-8000-000000000011') and (select jsonb_agg(to_jsonb(e) order by id) from public.cook_events e)=:'original_v1_events'::jsonb,'old v1 planning replacement retains original meal and event/received timestamps');
+select pg_temp.ok(jsonb_array_length(public.list_saved_cook_plans(auth.uid())->'plans')=1 and public.load_cook_workspace(auth.uid())->'active'->'meal'->>'id'='19000000-0000-4000-8000-000000000012','old client replacement creates one retained Upcoming reference and its new planning slot');
+select public.save_cook_workspace(auth.uid(),2,'5a000000-0000-4000-8000-000000000003','{"active":null,"history":[]}','America/New_York');
+select pg_temp.ok(jsonb_array_length(public.list_saved_cook_plans(auth.uid())->'plans')=2 and public.load_cook_workspace(auth.uid())->'active'='null'::jsonb,'old v1 clear preserves omitted legacy planning as Upcoming');
+select public.save_cook_workspace(auth.uid(),3,'5a000000-0000-4000-8000-000000000004','{"active":null,"history":[]}','America/New_York');
+select pg_temp.ok(jsonb_array_length(public.list_saved_cook_plans(auth.uid())->'plans')=2 and (select count(*)=2 from public.cook_sessions where state='planned'),'repeated v1 clears cannot duplicate or delete retained planning records');
+select public.save_cook_workspace(auth.uid(),4,'5a000000-0000-4000-8000-000000000005',jsonb_set(jsonb_set(pg_temp.doc('19000000-0000-4000-8000-000000000013','Normal finished dinner'),'{active,meal,mode}','"cooking"'),'{active,meal,startedAt}','"2026-11-01T12:00:00Z"'),'America/New_York');
+select public.load_cook_workspace(auth.uid())->'active' as finish_active \gset
+select jsonb_build_object('id','19000000-0000-4000-8000-000000000013','meal',:'finish_active'::jsonb->'meal','serveInstant',:'finish_active'::jsonb->'serveInstant','archivedAt','2026-11-01T15:00:00Z','plannedTimeline','[]'::jsonb,'feedback','Finished normally') as finish_archive \gset
+select public.save_cook_workspace(auth.uid(),5,'5a000000-0000-4000-8000-000000000006',jsonb_build_object('active',null,'history',jsonb_build_array(:'finish_archive'::jsonb)),'America/New_York');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->'history'->0->>'feedback'='Finished normally' and (select state='completed' from public.cook_sessions where id='19000000-0000-4000-8000-000000000013') and jsonb_array_length(public.list_saved_cook_plans(auth.uid())->'plans')=2,'normal explicit finish archives once instead of transferring the finished cook to Upcoming');
 set local role anon;
 select pg_temp.denied($q$select public.list_saved_cook_plans('00000000-0000-4000-8000-000000000001')$q$,'anonymous cannot list private plans');
 select pg_temp.denied($q$select public.import_saved_cook_plans('00000000-0000-4000-8000-000000000001','57000000-0000-4000-8000-000000000001','[]')$q$,'anonymous cannot import plans');
