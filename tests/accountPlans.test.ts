@@ -11,7 +11,7 @@ import {exportSavedPlans,validateSavedPlansBackup,planDocument,planMeal,planTime
 const owner='00000000-0000-4000-8000-000000000001',at='2026-11-04T18:00:00Z';
 const copy=<T>(v:T):T=>structuredClone(v);
 const stores:{dispose:()=>void}[]=[];
-afterEach(()=>{stores.splice(0).forEach(s=>s.dispose());vi.unstubAllEnvs();});
+afterEach(()=>{stores.splice(0).forEach(s=>s.dispose());vi.useRealTimers();vi.unstubAllEnvs();});
 const make=(name:string):ExtendedMeal=>migrateMeal({...newMeal(),name,serveAt:'2026-11-08T18:00',dishes:[createDish('brats')]});
 function plan(meal=make('Sunday brats'),revision=1):SavedPlan{return {...planDocument(meal),meal,id:meal.id,revision,timeZone:'UTC',createdAt:at,updatedAt:at,writeId:crypto.randomUUID()};}
 function fixture(initial:SavedPlan[]=[]){
@@ -46,6 +46,44 @@ describe('isolated saved-plan recovery',()=>{
   expect(f.records.get(a.id)?.meal.name).toBe('Sunday dinner');expect(f.records.get(b.id)).toEqual(b);
   expect(f.calls.map(c=>c.id)).toEqual([a.id]);expect(s.state().phase).toBe('saved');
   expect(()=>s.edit(m=>({...m,id:b.id}))).toThrow('Upcoming plans');
+ });
+ it('automatically saves a transiently failed draft using its original immutable request',async()=>{
+  vi.useFakeTimers();const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();
+  s.edit(m=>({...m,name:'Saved in the background'}));f.fail();await vi.advanceTimersByTimeAsync(500);
+  expect(f.calls).toHaveLength(1);expect(s.state().phase).toBe('unsaved');expect(s.dirty()).toBe(true);
+  const journal=JSON.parse(f.values.get(savedPlanCacheKey(owner,p.id))!);expect(journal.desired.name).toBe('Saved in the background');
+  expect(journal.operation.id).toBe(f.calls[0].writeId);expect(f.records.get(p.id)).toEqual(p);
+  f.fail(false);await vi.advanceTimersByTimeAsync(999);expect(f.calls).toHaveLength(1);expect(s.state().phase).not.toBe('saved');
+  await vi.advanceTimersByTimeAsync(1);expect(f.calls).toHaveLength(2);expect(f.calls[1].writeId).toBe(f.calls[0].writeId);
+  expect(s.state().phase).toBe('saved');expect(s.dirty()).toBe(false);expect(f.records.get(p.id)?.meal.name).toBe('Saved in the background');
+  expect(vi.getTimerCount()).toBe(0);
+ });
+ it('bounds background retry attempts and resumes safely on a later browser wake event',async()=>{
+  vi.useFakeTimers();const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();s.edit(m=>({...m,name:'Keep trying safely'}));f.fail();
+  await expect(s.flush()).rejects.toThrow('offline');await vi.advanceTimersByTimeAsync(15000);
+  expect(f.calls).toHaveLength(5);expect(new Set(f.calls.map(c=>c.writeId)).size).toBe(1);expect(vi.getTimerCount()).toBe(0);
+  await vi.advanceTimersByTimeAsync(60000);expect(f.calls).toHaveLength(5);expect(s.dirty()).toBe(true);expect(s.state().phase).toBe('unsaved');
+  f.fail(false);await s.retryAutomatic();expect(f.calls).toHaveLength(6);expect(f.calls[5].writeId).toBe(f.calls[0].writeId);expect(s.state().phase).toBe('saved');
+ });
+ it('stops automatic retries when the document is disposed',async()=>{
+  vi.useFakeTimers();const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();s.edit(m=>({...m,name:'Do not send after disposal'}));f.fail();
+  await expect(s.flush()).rejects.toThrow('offline');s.dispose();await vi.advanceTimersByTimeAsync(60000);await s.retryAutomatic();
+  expect(f.calls).toHaveLength(1);expect(f.records.get(p.id)).toEqual(p);expect(vi.getTimerCount()).toBe(0);
+ });
+ it('stops automatic sends when account verification changes, retaining the owner’s draft',async()=>{
+  vi.useFakeTimers();const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();s.edit(m=>({...m,name:'Only my account'}));f.fail();
+  await expect(s.flush()).rejects.toThrow('offline');f.verify(false);await vi.advanceTimersByTimeAsync(60000);await s.retryAutomatic();
+  expect(f.calls).toHaveLength(1);expect(s.dirty()).toBe(true);expect(vi.getTimerCount()).toBe(0);
+  f.verify(true);f.fail(false);await s.retryAutomatic();expect(f.calls).toHaveLength(2);expect(f.calls[1].writeId).toBe(f.calls[0].writeId);expect(s.state().phase).toBe('saved');
+ });
+ it('keeps revision conflicts paused across automatic wakeups and document reloads',async()=>{
+  vi.useFakeTimers();const p=plan(),f=fixture([p]),read=vi.fn(f.api.read),api={...f.api,read},s=f.store(p.id,undefined,owner,false,api);await s.connect();
+  s.edit(m=>({...m,name:'Preserved local draft'}));const other={...p,revision:2,meal:{...p.meal,name:'Other device'}};f.records.set(p.id,other);
+  await expect(s.flush()).rejects.toBeInstanceOf(AccountConflict);expect(JSON.parse(f.values.get(savedPlanCacheKey(owner,p.id))!).conflicted).toBe(true);
+  await vi.advanceTimersByTimeAsync(60000);await s.retryAutomatic();await s.connect();expect(f.calls).toHaveLength(1);expect(read).toHaveBeenCalledTimes(1);
+  s.dispose();const restored=f.store(p.id,undefined,owner,false,api);await restored.connect();await restored.retryAutomatic();await vi.advanceTimersByTimeAsync(60000);
+  expect(restored.state().phase).toBe('conflict');expect(restored.state().meal?.name).toBe('Preserved local draft');expect(f.records.get(p.id)).toEqual(other);
+  expect(f.calls).toHaveLength(1);expect(read).toHaveBeenCalledTimes(1);expect(vi.getTimerCount()).toBe(0);
  });
  it('journals new plan creation by its own identity before claiming it is saved',async()=>{
   const meal=make('A new upcoming cook'),f=fixture(),s=f.store(meal.id,meal);
@@ -231,10 +269,11 @@ describe('account atomic plan promotion',()=>{
   const s=f.store();await s.connect();await expect(s.promote(f.target.id,1)).rejects.toThrow('Finish or cancel');expect(f.calls).toHaveLength(0);
  });
  it('retries a lost promotion receipt after a later cook exists without restarting the original plan',async()=>{
-  const f=promotionFixture(),s=f.store();await s.connect();f.lose();await expect(s.promote(f.target.id,1)).rejects.toThrow('response lost');s.dispose();
+  const f=promotionFixture(),s=f.store();await s.connect();f.lose();await expect(s.promote(f.target.id,1)).rejects.toThrow('response lost');expect(s.state().pendingOperation).toBe('promote');const operationId=s.state().pendingOperationId;expect(operationId).toBe(f.calls[0].id);s.dispose();
   const next={...make('A later cook'),mode:'cooking' as const,startedAt:at};f.set({...f.get(),revision:3,writeId:crypto.randomUUID(),active:{meal:next,serveInstant:null}});
   const restored=f.store();await restored.connect();expect(restored.state().phase).toBe('blocked');expect(restored.state().snapshot!.active.id).toBe(f.legacy.id);
-  await restored.promote(f.target.id,1);expect(f.calls[0].id).toBe(f.calls[1].id);expect(f.get().active!.meal.id).toBe(next.id);expect(restored.state().snapshot!.active.id).toBe(next.id);
+  expect(restored.state().pendingOperation).toBe('promote');expect(restored.state().pendingOperationId).toBe(operationId);
+  await restored.promote(f.target.id,1);expect(restored.state().pendingOperation).toBeNull();expect(restored.state().pendingOperationId).toBeNull();expect(f.calls[0].id).toBe(f.calls[1].id);expect(f.get().active!.meal.id).toBe(next.id);expect(restored.state().snapshot!.active.id).toBe(next.id);
  });
  it('keeps the prior workspace visible and recoverable when a plan revision is stale',async()=>{
   const f=promotionFixture(),s=f.store();await s.connect();await expect(s.promote(f.target.id,2)).rejects.toBeInstanceOf(AccountConflict);

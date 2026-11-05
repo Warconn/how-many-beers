@@ -55,6 +55,8 @@ type Cache = {
 export type AccountState = {
   canCancel?: boolean;
   canPlan?: boolean;
+  pendingOperation?: "promote" | "cancel" | "save" | null;
+  pendingOperationId?: string | null;
   activeTimeZone?: string | null;
   snapshot: LocalSnapshot | null;
   backup: LocalSnapshot | null;
@@ -191,6 +193,8 @@ export class AccountCookStore {
       canCancel: !!this.base?.capabilities?.cancelCook && !!this.api.cancel && !this.readonlyMode,
       canPlan: !!this.base?.capabilities?.savedPlans && !!this.api.promote && !this.readonlyMode,
       activeTimeZone: this.base?.activeTimeZone,
+      pendingOperation: this.operation ? this.operation.kind ?? "save" : null,
+      pendingOperationId: this.operation?.id ?? null,
       snapshot: this.visible,
       backup,
       phase:
