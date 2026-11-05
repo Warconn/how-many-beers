@@ -163,7 +163,7 @@ export function useCookWorkspace() {
   const currentCook=data?.active??null;
   const selectedDocument=!!upcoming.selectedId;
   const selectedPhase=upcoming.state.phase;
-  const savePhase=combinedSavePhase(cloud.state.phase,selectedDocument?selectedPhase:null,upcoming.savingPhase??'saved');
+  const savePhase=combinedSavePhase(cloud.state.phase,selectedDocument?selectedPhase:null,plansEnabled?(upcoming.savingPhase??'saved'):'saved');
   const status=selectedDocument?(selectedPhase==='saved'?currentStatus:selectedPhase==='loading'?'loading':selectedPhase==='load-error'?'recovery':selectedPhase==='conflict'?'conflict':'unsaved'):currentStatus;
   const locked=currentLocked||(selectedDocument&&['loading','load-error','conflict'].includes(selectedPhase));
   const selectedStore=()=>upcoming.store.current?.owner===account.ownerId?upcoming.store.current:null;
