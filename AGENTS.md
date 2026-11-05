@@ -14,17 +14,25 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: Retained cancellation, then multiple upcoming plans
+### NOW: #103 isolated recipe-first review experiment
 
-Production #100 is deployed at `190bf6168fbaf9fe2c3d75770200101a26bcc539`;
-dev `6e6629a0323714dc0eebebf0929a153986474b7b` has the same application tree.
-#21/#98 and #97/#99 are delivered and closed, alongside the completed #96 scope
-(#92/#84/#62/#85/#77/#86). Never start duplicate implementations.
+The owner approved trying meal-first for this iteration while retaining a preference
+for time-first long term. New methods get a concise review; familiar recipes should
+not need repeated mandatory review. Cook Again is a whole meal; a saved recipe is
+one dish. Keep the work self-contained for possible rejection/replacement.
 
-The owner approved implementing **#61 first, then #83**, with **#71 CI feedback
-improvements in parallel**. Use isolated feature branches and focused PRs targeting
-dev. This approval covers implementation and testing, not automatic merges or
-production deployment. Update this queue and linked issues as delivery progresses.
+The chooser/review slice uses `/recipe-first/` on its isolated feature branch.
+The ordinary homepage remains accepted behavior. This slice does not add recipe
+library persistence, hosted schema changes or #101 phase semantics. Review the flow
+with the owner before widening scope or merging. See docs/recipe-first-preview.md.
+No automatic dev/main merges or production releases are authorized.
+
+#61/#104, #83/#107 and #71/#102 are merged into dev at `4b4b31f` with full CI and
+Cloudflare preview confirmed. Production remains #100 at `190bf61`. Hosted schema
+verification/migration application is separate; do not claim it happened here.
+Do not duplicate delivered #21/#97/#92/#84/#62/#85/#77/#86 work.
+
+### Existing lifecycle safeguards to preserve
 
 #61 retains canceled records, excludes them from active/completed views, permits a
 new cook only after acknowledged cancellation, and protects against stale-device

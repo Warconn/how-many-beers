@@ -117,3 +117,23 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .upcoming-backups { border-top:1px solid var(--line); margin-top:16px; padding-top:12px; }
 .upcoming-backups summary { min-height:44px; display:list-item; cursor:pointer; color:var(--accent-dark); font-weight:600; }
 .plan-active-notice { margin:16px 0; padding:16px; border-left:3px solid var(--accent); background:var(--surface); }
+
+/* #103 review route: scoped so accepted planner/cooking layouts are unaffected. */
+.method-review { max-width: 48rem; margin-inline: auto; }
+.method-review h3 { margin-block: .4rem .8rem; }
+.method-review > label { display: block; margin-block: 1rem; font-weight: 600; }
+.method-review input, .method-review textarea { width: 100%; }
+.method-review-steps { list-style: none; margin: 1.5rem 0; padding: 0; }
+.method-review-steps > li { padding-block: 1.1rem; border-top: 1px solid var(--line, #ded8cf); }
+.method-review-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.method-review-heading strong { min-width: 0; overflow-wrap: anywhere; }
+.method-review-heading > span { flex-shrink: 0; color: #805d43; }
+.method-review details { margin-block: .7rem; }
+.method-review pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.method-review-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .8rem; }
+.method-review-actions .icon-button { min-width: 44px; min-height: 44px; }
+.method-review form label { display: block; margin-block: .8rem; font-weight: 600; }
+@media(max-width: 600px) { .method-review-heading { align-items: flex-start; } .method-review-heading > span { max-width: 7rem; text-align: right; } }
+.method-review input, .method-review textarea { font-weight: 400; }
+.method-review-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.method-review-fields > label { display: block; margin-block: 1rem; font-weight: 600; }

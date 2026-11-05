@@ -127,6 +127,7 @@ jobs:
           name: cooking-review-regression-${{ matrix.shard }}
           path: |
             test-results/cancel-cook-*/*.png
+            test-results/recipe-first-*/*.png
             test-results/cooking-simplicity-*/*.png
             test-results/design-system-*/*.png
             test-results/live-cook-start-*/*.png

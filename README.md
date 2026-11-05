@@ -144,3 +144,11 @@ independently, and starting it is acknowledged atomically. Current cook/history 
 upcoming plans have explicitly separate backup files; keep both for a full account
 backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
 See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).
+
+## Recipe-first review experiment (#103)
+
+The isolated feature branch exposes `/recipe-first/` for reviewing the proposed
+meal-first chooser and concise method editor. `/` retains accepted behavior. See
+[scope and test path](docs/recipe-first-preview.md). Personal recipe persistence is
+a later slice of #103, not a capability claimed by this prototype. Do not merge or
+release this experiment before owner review.
