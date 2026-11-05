@@ -1,5 +1,5 @@
 import {newMeal,type Dish,type Meal,type PlannedTask} from './meal';
-import {cookTimeline,moveStep,type ExtendedMeal} from './cookState';
+import {cookTimeline,type ExtendedMeal} from './cookState';
 
 /** A recipe review is an uncommitted planning document, never the live cook. */
 export function recipeReview(dish:Dish,serveAt:string):ExtendedMeal{
@@ -39,15 +39,4 @@ export function reviewDuration(meal:ExtendedMeal,task:PlannedTask):number|null{
  return override!==undefined?override:task.durationMinutes??task.templateStage?.minutes??null;
 }
 
-/** Place a reviewed step next to a drop target using the existing planning reflow. */
-export function reorderReviewedStep(meal:ExtendedMeal,id:string,target:string,after:boolean):ExtendedMeal{
- if(id===target)return meal;
- let next=meal;const limit=cookTimeline(meal).length*2+2;
- for(let n=0;n<limit;n++){
-  const tasks=cookTimeline(next),from=tasks.findIndex(t=>t.id===id),to=tasks.findIndex(t=>t.id===target);
-  if(from<0||to<0)throw Error('Choose an existing step to move.');
-  if(from===(after?to+1:to-1))return next;
-  next=moveStep(next,id,from<to?'down':'up',meal.dishes[0].id,true);
- }
- return next;
-}
+export {reorderPlannedStep as reorderReviewedStep} from './stepReorder';

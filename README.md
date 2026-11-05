@@ -157,3 +157,7 @@ The recipe-first experiment shows short step instructions inline, expands longer
 text on demand, and labels the combined schedule **Review Meal Plan**. Generic
 review guidance and method-reference chrome are omitted; saved recipe/source data
 and the ordinary homepage remain intact.
+
+Recipe review and prototype meal-planning rows share drag grips, upper-right Edit
+and editor-contained Remove. The reusable action placement standard lives in
+[the design system](docs/design-system.md#reusable-step-rows-and-actions-103-review).

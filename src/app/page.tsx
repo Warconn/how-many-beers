@@ -2,7 +2,10 @@
 
 import {useRecipeFirst} from '@/components/RecipeFirstContext';
 import RecipeMethodReview from '@/components/RecipeMethodReview';
-import {recipeReview,addReviewedDish} from '@/domain/recipeReview';
+import {useStepReorder} from '@/components/useStepReorder';
+import {StepReorderHelp} from '@/components/StepListControls';
+import {reorderPlannedStep} from '@/domain/stepReorder';
+import {recipeReview,addReviewedDish,reviewDuration} from '@/domain/recipeReview';
 import UpcomingCooks from '@/components/UpcomingCooks';
 import CancelCookDialog from '@/components/CancelCookDialog';
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -200,6 +203,10 @@ function CookExperience() {
     setMessage("Recipe loaded. Review the text and select Preview recipe.");
   };
 
+  const planReorder=useStepReorder(!recipeFirst||view!=='planning'||!!editingStep||!!newStepDishId||!!methodReview||workspace.locked,(id,target,after)=>{
+    patch(current=>reorderPlannedStep(current,id,target,after));setClockNow(Date.now());setMessage('');
+  });
+
   if (!meal) return <main className="shell"><header className="site-header"><h1>How Many Beers?</h1><AccountControl view={view} cookId={workspace.selectedPlanId??''} canReload={false} savePhase={workspace.kind==='account'?workspace.savePhase:undefined}/></header><div className="panel"><p role="status">Loading your cook...</p>{workspace.isSelectedPlan&&<button type="button" className="button secondary" onClick={()=>void workspace.returnToCurrent().then(()=>setView('home')).catch(()=>{})}>Home</button>}{workspace.authUnavailable&&<AccountPanel/>}</div></main>;
 
 
@@ -384,6 +391,7 @@ function CookExperience() {
       index={index}
       count={visibleTasks.length}
       compact={compact}
+      planningControls={recipeFirst&&mode==='planning'?{grip:planReorder.grip(task.id),dragging:planReorder.list===(compact?'dish-'+task.dishId:'meal-plan')&&planReorder.dragging===task.id,drop:planReorder.list===(compact?'dish-'+task.dishId:'meal-plan')&&planReorder.drop?.id===task.id?(planReorder.drop.after?'after':'before'):null,duration:reviewDuration(meal,task)}:undefined}
       editorId={context+"-step-"+task.id}
       editing={editingStep?.id===task.id && editingStep.context===context}
       onEditingChange={open=>{if(open && mode==="cooking")setGuidedTaskId(task.id);setEditingStep(open?{id:task.id,context}:null);}}
@@ -465,7 +473,7 @@ function CookExperience() {
       {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&!workspace.isSelectedPlan&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}
       {workspace.kind==='account'&&['conflict','blocked'].includes(workspace.cloudPhase)&&!workspace.isSelectedPlan&&workspace.pendingOperation!=='promote'&&<section className="panel" aria-label="Account cook recovery"><h2>Keep your cook safe</h2><p>{workspace.cloudPhase==='conflict'?'Another device has a newer version. Download a backup before loading it.':'The last action has not been confirmed. Retry it before continuing.'}</p><button type="button" className="button primary" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" className="button secondary" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button><button type="button" className="button secondary" onClick={()=>{if(window.confirm('Load the latest account cooks and discard this tab’s pending changes? Download a backup first.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your backup and retry.'));}}>Load account version</button></section>}
       {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&<nav aria-label="Plan navigation"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button></nav>}
-      <div className="cook-content" inert={workspace.locked}>
+      <div className="cook-content" inert={workspace.locked}>{recipeFirst&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
       {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
         <p>Your existing saved data is protected. Download recovery data above before resetting anything. It preserves the original data for recovery; it is not a normal cook backup.</p>
@@ -712,7 +720,7 @@ function CookExperience() {
                   {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
                   </details>
                   {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Use Edit for a fixed start or other step details.</p>}
-                  <section className="inline-dish-steps" role="region" aria-label={d.name+" steps"}>
+                  <section className="inline-dish-steps" data-step-list={"dish-"+d.id} role="region" aria-label={d.name+" steps"}>
                   {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
                   {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
                     <label htmlFor={"new-step-"+d.id}>Step title</label>
@@ -752,7 +760,7 @@ function CookExperience() {
             <section className="checklist-preview" id="checklist-preview" aria-label={recipeFirst?"Meal plan preview":"Cooking checklist preview"}>
               <div className="preview-intro"><h3>{recipeFirst?"Meal plan":"Cooking checklist"}</h3></div>
               <p className="muted small">Review all dishes together. Check off steps and record actual readings in Cooking Mode.</p>
-              <div className="checklist preview-task-list">{timeline.map(task => taskCard(task, "planning"))}</div>
+              <div className="checklist preview-task-list" data-step-list="meal-plan">{timeline.map(task => taskCard(task, "planning"))}</div>
               <AddStepForm onAdd={addCustom}/>
               {message && <p className="form-error" role="alert">{message}</p>}
             </section>

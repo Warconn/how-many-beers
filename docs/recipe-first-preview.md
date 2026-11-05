@@ -28,9 +28,10 @@ engine changes are part of this slice. Do not merge automatically.
 
 ## Isolation and limits
 
-A React context enables only the separate review route. One new component contains
-review controls; one helper grafts an unstarted single-dish draft into its target
-meal, excluding fabricated cooking activity and rejecting cross-dish overrides.
+A React context enables only the experimental route. The review component and
+shared step controls serve recipe review and meal planning; a helper grafts an
+unstarted single-dish draft into its target meal, excluding fabricated cooking
+activity and rejecting cross-dish overrides.
 The existing template generator, parser, editing/reordering helpers, planner,
 Beerometer and account save mechanisms remain the source of behavior.
 
@@ -71,7 +72,7 @@ guidance retained:
 - [Mobile method review](screenshots/issue-103-method-mobile.png)
 - [Mobile two-dish meal](screenshots/issue-103-meal-mobile.png)
 
-Local typecheck, all 370 unit tests, twelve desktop/mobile prototype browser cases,
+Local typecheck, all 372 unit tests, fourteen desktop/mobile prototype browser cases,
 and three focused desktop account journeys passed. The Cloudflare static export
 build passed and includes `/recipe-first/`. Full PR CI and actual iPhone/WebKit
 captures remain the final validation gate. No hosted migrations were applied.
@@ -106,3 +107,18 @@ labels and accepted layout remain unchanged.
 Browser checks cover short instructions visible immediately, long instruction
 expansion/collapse without data loss, template and imported dishes together in the
 Meal plan preview, and retained mouse/touch/keyboard movement.
+
+The same step controls now extend into the meal's dish editor and combined Meal
+plan preview: grip at left, Edit at upper right, supporting information beneath
+the heading, and Remove inside the open editor with Save/Cancel. See the reusable
+[step-row action standard](design-system.md#reusable-step-rows-and-actions-103-review).
+Dragging uses the existing timing reflow and saving path; it changes only the
+selected dish sequence and retains actual activity and other dishes. The accepted
+root page and Cooking Mode are unaffected.
+
+Actual shared-control planner captures:
+
+- [Desktop planning rows](screenshots/issue-103-planning-actions-desktop.png)
+- [Mobile planning rows](screenshots/issue-103-planning-actions-mobile.png)
+- [Desktop editor actions](screenshots/issue-103-planning-editor-desktop.png)
+- [Mobile editor actions](screenshots/issue-103-planning-editor-mobile.png)

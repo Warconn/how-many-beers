@@ -29,6 +29,10 @@ No automatic dev/main merges or production releases are authorized.
 The review shows smaller instructions inline, expands only long text, and omits
 the generic guidance/method-reference footer. Review Meal Plan names the combined
 meal preview; collapsed grips keep moving steps separate from editing.
+Recipe review and prototype meal-planning rows share StepListControls/useStepReorder:
+grip left, Edit upper right, Save/Cancel together and Remove inside the editor.
+Reuse the documented row/action pattern in docs/design-system.md; do not reintroduce
+per-row move-arrow footers or alter Cooking Mode as part of this experiment.
 
 #61/#104, #83/#107 and #71/#102 are merged into dev at `4b4b31f` with full CI and
 Cloudflare preview confirmed. Production remains #100 at `190bf61`. Hosted schema
