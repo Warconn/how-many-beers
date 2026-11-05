@@ -3,11 +3,13 @@ import {type ExtendedMeal} from './cookState';
 import {liveStepForecasts,forecastClock,type StepForecast} from './cookForecast';
 import {physicalStartedEvent,physicalPhase} from './physicalPhase';
 import {sessionAnchor,stamp,iso,stepMinutes,actualStart} from './executionTimeline';
+import {phaseProjection,type LivePhase} from './phaseForecast';
 /** Shared live finish, remaining and projected total. Calendar targets are
  * comparison data, never implicit cooking/holding appointments. */
-export type CookProjection={forecasts:Record<string,StepForecast>;finish:string|null;remaining:number|null;projected:number|null;elapsed:number;provisional:boolean;reason:string};
+export type CookProjection={forecasts:Record<string,StepForecast>;finish:string|null;remaining:number|null;projected:number|null;elapsed:number;provisional:boolean;reason:string;phases?:LivePhase[];minimumRemaining?:number;earliestFinish?:string};
 export function cookProjection(meal:Meal,timeline:PlannedTask[],clock:number):CookProjection{
  if(!Number.isFinite(clock))return {forecasts:{},finish:null,remaining:null,projected:null,elapsed:0,provisional:true,reason:'Timing unavailable'};
+ if(meal.phasePlan)return phaseProjection(meal,timeline,forecastClock(meal,clock));
  const now=forecastClock(meal,clock),anchor=sessionAnchor(meal,now),elapsed=Math.max(0,(now-anchor)/60000),forecasts=liveStepForecasts(meal,timeline,now);
  const remaining=timeline.filter(t=>!meal.completed[t.id]);
  if(!remaining.length)return {forecasts,finish:iso(now),remaining:0,projected:elapsed,elapsed,provisional:false,reason:'All steps checked'};

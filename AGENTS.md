@@ -14,17 +14,21 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: Retained cancellation, then multiple upcoming plans
+### NOW: #101 implementation, approved November 5
 
-Production #100 is deployed at `190bf6168fbaf9fe2c3d75770200101a26bcc539`;
-dev `6e6629a0323714dc0eebebf0929a153986474b7b` has the same application tree.
-#21/#98 and #97/#99 are delivered and closed, alongside the completed #96 scope
-(#92/#84/#62/#85/#77/#86). Never start duplicate implementations.
+The owner accepted the mobile design and worked timing examples, then explicitly
+instructed implementation. Work on feat/101-live-cooking from dev4b4b31f. Preserve
+the approved beers-first meter, time beneath and serving estimate with an inline
+positive target difference. Current action remains checkbox-first; physical elapsed
+and quiet concurrent context belong inside it, optional corrections in Step details.
+See docs/design/101/README.md for governing requirements and reviewed concepts.
+New sessions opt into explicit physical relationships. Preserve legacy active cooks,
+actual timestamps, completed history, guest/account saving and planning behavior.
+No automatic merge, hosted migration or production release. #109 planning remains
+separate. #103 controls in PR108 are accepted but unmerged; do not bundle that PR.
+#61/#83/#71 are merged in dev. Production remains #100 at190bf61.
 
-The owner approved implementing **#61 first, then #83**, with **#71 CI feedback
-improvements in parallel**. Use isolated feature branches and focused PRs targeting
-dev. This approval covers implementation and testing, not automatic merges or
-production deployment. Update this queue and linked issues as delivery progresses.
+### Existing lifecycle safeguards
 
 #61 retains canceled records, excludes them from active/completed views, permits a
 new cook only after acknowledged cancellation, and protects against stale-device

@@ -1,5 +1,6 @@
 import type {PlannedTask} from './meal';
 import {chronologicalTasks} from './stepTiming';
+import type {StepForecast} from './cookForecast';
 
 /** Planned clock groups only: no dependency solver or automatic completion. */
 export function cookingFocus(tasks:PlannedTask[],completed:Record<string,string>,now:number){
@@ -16,9 +17,10 @@ export function cookingFocus(tasks:PlannedTask[],completed:Record<string,string>
 }
 
 /** Selection is view state. Previewing a step never changes completion or events. */
-export function guidedCookingSteps(tasks:PlannedTask[],completed:Record<string,string>,selectedId:string|null=null){
+export function guidedCookingSteps(tasks:PlannedTask[],completed:Record<string,string>,selectedId:string|null=null,forecasts?:Record<string,StepForecast>){
   const instant=(task:PlannedTask)=>{const at=task.scheduledAt?Date.parse(task.scheduledAt):NaN;return Number.isFinite(at)?at:Infinity;};
-  const ordered=chronologicalTasks(tasks);
+  const byId=new Map(tasks.map(t=>[t.id,t]));
+  const ordered=forecasts?chronologicalTasks(tasks.map(t=>({...t,scheduledAt:forecasts[t.id]?.start??t.scheduledAt}))).map(t=>byId.get(t.id)!):chronologicalTasks(tasks);
   const unfinished=ordered.filter(t=>!completed[t.id]);
   let first=unfinished[0]??null;
   // An imported recipe may have only a serving time. Review its untimed work first.
