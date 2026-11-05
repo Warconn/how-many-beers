@@ -237,3 +237,20 @@ The Beerometer retains its design and math. At session start, identical projecte
 and remaining durations appear once, with zero elapsed hidden. Distinct projected
 duration and nonzero elapsed remain available as the cook progresses. Completed
 history retains frozen actual duration. This supersedes older unchanged-display notes.
+
+## Canceling an active cook (#61)
+
+Cancel cook is a secondary action in Cook details & tools, also available on Home's
+current-cook card. Confirmation names the cook, focuses Keep cooking, and separates
+cancellation from finishing. Canceling retains the cook and actual activity without
+adding completed history; a fresh cook becomes available only after saving succeeds.
+Failure keeps the original cook recoverable and offers retry. Cancellation never
+means food is ready and does not change the execution projection.
+
+Accounts use an owner/revision-checked transactional RPC and a durable operation
+receipt. Lost responses can be retried after reload without canceling a newer cook.
+The account control is available only when the installed server advertises the
+cancellation capability. Apply the additive migration to dev before enabling it.
+Legacy browser cooks retain canceled envelopes atomically alongside active/history
+storage and include them in backups. New guest trials retain the envelope only in
+memory, preserving their existing temporary policy. No canceled-history/restore UI.

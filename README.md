@@ -131,3 +131,9 @@ use aligned Edit, Move and Remove controls; Add a step stays below the list.
 Cooking Mode now uses one progress treatment and a single content column. Completed
 cooks have one primary Finish action and checklist review, while Finish cook early
 is available under Cook details & tools. The Beerometer retains the accepted design and calculations while hiding duplicate initial totals and zero elapsed.
+
+Retained **Cancel cook** is implemented for review in #61: Home and Cooking Mode
+provide a confirmation, completed history stays untouched, and account cancellation
+waits for a server receipt. Install the additive dev migration before the capability-
+gated account control appears. Guest trials remain temporary; legacy local canceled
+records remain retained and backup-compatible. See [rollout details](docs/account-cooks.md).

@@ -18,13 +18,23 @@ import {
 } from "./workspace";
 import type { RecoveryStorage } from "./recoveryStorage";
 type StoragePort = RecoveryStorage;
-type Operation = {
+type SaveOperation = {
+  kind?: "save";
   id: string;
   revision: number;
   document: Document;
   snapshot: LocalSnapshot;
   critical: boolean;
 };
+type CancelOperation = {
+  kind: "cancel";
+  id: string;
+  revision: number;
+  cookId: string;
+  snapshot: LocalSnapshot;
+  critical: true;
+};
+type Operation = SaveOperation | CancelOperation;
 type Cache = {
   version: 1;
   owner: string;
@@ -33,6 +43,7 @@ type Cache = {
   operation: Operation | null;
 };
 export type AccountState = {
+  canCancel?: boolean;
   snapshot: LocalSnapshot | null;
   backup: LocalSnapshot | null;
   phase:
@@ -99,19 +110,29 @@ export class AccountCookStore {
           )
             throw Error("Invalid recovery operation.");
           validSnapshot(c.operation.snapshot);
-          const data = parseRemote({
-            ...c.operation.document,
-            revision: c.operation.revision,
-            writeId: c.operation.id,
-          });
-          // An inconsistent journal is protected rather than replayed.
-          if (
-            !equal(encode(c.operation.snapshot, this.base), {
-              active: data.active,
-              history: data.history,
-            })
-          )
-            throw Error("Invalid recovery request.");
+          if (c.operation.kind === "cancel") {
+            if (!c.operation.critical || typeof c.operation.cookId !== "string" ||
+              c.operation.cookId !== c.operation.snapshot.active.id ||
+              c.operation.cookId !== this.base.active?.meal.id ||
+              !equal(this.desired, c.operation.snapshot))
+              throw Error("Invalid cancellation recovery request.");
+          } else {
+            if (c.operation.kind !== undefined && c.operation.kind !== "save")
+              throw Error("Unsupported recovery operation.");
+            const data = parseRemote({
+              ...c.operation.document,
+              revision: c.operation.revision,
+              writeId: c.operation.id,
+            });
+            // An inconsistent journal is protected rather than replayed.
+            if (
+              !equal(encode(c.operation.snapshot, this.base), {
+                active: data.active,
+                history: data.history,
+              })
+            )
+              throw Error("Invalid recovery request.");
+          }
           this.operation = c.operation;
         }
         this.visible = this.desired ?? decode(this.base, this.empty);
@@ -146,6 +167,7 @@ export class AccountCookStore {
       };
     }
     return {
+      canCancel: !!this.base?.capabilities?.cancelCook && !!this.api.cancel && !this.readonlyMode,
       snapshot: this.visible,
       backup,
       phase:
@@ -207,6 +229,15 @@ export class AccountCookStore {
         this.phase = "conflict";
         this.error =
           "Another tab is editing this account cook. Close it, then reload saved cooks here.";
+        this.publish();
+        return;
+      }
+      // A normal read cannot acknowledge an operation-specific cancellation.
+      // Its response may have been lost before another cook was created. Keep
+      // the original request blocked and retry it explicitly for its receipt.
+      if (this.operation?.kind === "cancel") {
+        this.phase = "blocked";
+        this.error = "Cancellation has not been confirmed. Retry before starting another cook.";
         this.publish();
         return;
       }
@@ -330,6 +361,49 @@ export class AccountCookStore {
       this.publish();
     }
   }
+  async cancel(cookId: string): Promise<void> {
+    // Retrying the dialog must replay its immutable operation, never generate a
+    // second cancellation or target a newer cook from another device.
+    if (!this.criticalRequested && this.operation?.kind === "cancel" &&
+      this.operation.cookId === cookId && this.phase === "blocked") {
+      await this.retry();
+      return;
+    }
+    if (this.criticalRequested || !this.visible || !this.base ||
+      ["conflict", "blocked", "saving", "load-error"].includes(this.phase))
+      throw Error("Resolve account saving before canceling this cook.");
+    if (!this.state().canCancel)
+      throw Error("Cancel cook is not available for this account yet.");
+    if (this.visible.active.id !== cookId)
+      throw Error("The current cook changed. Review it before canceling.");
+    this.criticalRequested = true;
+    this.publish();
+    try {
+      if (this.inflight) await this.inflight;
+      if (this.desired) await this.flush();
+      if (this.disposed) throw Error("Account changed.");
+      if (this.visible.active.id !== cookId || this.base.active?.meal.id !== cookId)
+        throw new AccountConflict("The current cook changed. Reload before canceling.");
+      this.desired = this.visible;
+      this.operation = {
+        kind: "cancel", id: crypto.randomUUID(), revision: this.base.revision,
+        cookId, snapshot: this.visible, critical: true,
+      };
+      this.phase = "saving";
+      this.error = "";
+      try {
+        this.persist();
+        this.publish();
+        await this.flush(true);
+      } catch (error) {
+        this.failed(error, true);
+        throw error;
+      }
+    } finally {
+      this.criticalRequested = false;
+      this.publish();
+    }
+  }
   async flush(explicit = false): Promise<void> {
     if (this.inflight) {
       await this.inflight;
@@ -367,15 +441,17 @@ export class AccountCookStore {
         this.phase = operation.critical ? "saving" : "syncing";
         this.error = "";
         this.publish();
-        const remote = await this.api.write(
-          operation.revision,
-          operation.id,
-          operation.document,
-        );
+        const remote = operation.kind === "cancel"
+          ? await this.api.cancel!(operation.revision, operation.id, operation.cookId)
+          : await this.api.write(operation.revision, operation.id, operation.document);
         if (this.disposed) return;
+        if (operation.kind === "cancel" &&
+          (remote.cancellation?.operationId !== operation.id ||
+            remote.cancellation.cookId !== operation.cookId))
+          throw Error("Cancellation has not been confirmed. Keep this cook open and retry.");
         this.base = remote;
         this.operation = null;
-        if (equal(this.desired, operation.snapshot)) this.desired = null;
+        if (operation.kind === "cancel" || equal(this.desired, operation.snapshot)) this.desired = null;
         this.visible = this.desired ?? decode(remote, this.empty);
         this.phase = this.desired ? "syncing" : "saved";
         this.error = "";

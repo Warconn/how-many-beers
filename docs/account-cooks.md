@@ -60,3 +60,20 @@ records and ownership/recovery mechanisms remain intact; normal history backups,
 account retrieval and sign-in/sign-out are unchanged. App-update detection stays
 mounted silently, and only an available update produces an action with existing
 save/draft guards. No routine “No update is waiting” message is shown.
+
+## Retained cancellation rollout (#61)
+
+Apply `202611050001_retained_cancellation.sql` after the existing two migrations,
+first on dev. It retains canceled sessions/events, narrows active selectors to
+planning/active, prevents ordinary workspace saves from deleting or resurrecting
+canceled records, and adds owner/revision-checked `cancel_cook` with an idempotent
+receipt. New UI checks `capabilities.cancelCook` before offering account cancellation.
+Old frontends remain safe against retained terminal records. Roll back the UI by
+hiding the capability/control; do not drop canceled data or restore unsafe old RPCs.
+
+The local SQL harness tests fresh and seeded upgrades, ownership, terminal guards,
+unchanged actual/received timestamps and real concurrent cancel/save/finish calls.
+Hosted migration/schema verification remains a rollout step: this development
+session has no configured Supabase management connection and does not alter hosted
+projects. Account browser tests use isolated fixture backends. Production remains
+unchanged until a separately reviewed deployment.

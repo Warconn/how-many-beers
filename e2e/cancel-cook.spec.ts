@@ -1,0 +1,24 @@
+import {test,expect} from '@playwright/test';
+import {createDish,newMeal} from '../src/domain/meal';
+import {cookTimeline,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
+import {archiveCook,emptyHistory,ACTIVE_KEY,HISTORY_KEY} from '../src/domain/cookHistory';
+const at='2026-11-05T12:00:00Z';
+test('cancel keeps records outside completed history, survives reload and allows a new cook',async({page},info)=>{
+ let meal:ExtendedMeal={...newMeal(),name:'Abandoned brats',mode:'cooking',startedAt:at,dishes:[createDish('brats')]};
+ meal=recordEvent(meal,cookTimeline(meal)[0].id,'completed',at);
+ const history=archiveCook({...newMeal(),name:'Previous dinner',dishes:[createDish('side')]},emptyHistory(),'Keep this dinner',at);
+ await page.goto('/');await page.evaluate(({meal,history})=>{localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(meal));localStorage.setItem('how-many-beers:history:v1',JSON.stringify(history));},{meal,history});await page.reload();
+ await page.getByRole('button',{name:'Cancel cook',exact:true}).click();
+ const confirm=page.getByRole('dialog',{name:'Cancel this cook?',exact:true});await expect(confirm.getByRole('button',{name:'Keep cooking',exact:true})).toBeFocused();
+ await page.screenshot({path:info.outputPath('cancel-confirm.png'),scale:'css',style:'nextjs-portal{display:none}'});
+ await confirm.getByRole('button',{name:'Keep cooking',exact:true}).click();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(meal);
+ await page.getByRole('button',{name:/Continue cooking/}).click();await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Cancel cook',exact:true}).click();
+ await confirm.getByRole('button',{name:'Cancel cook',exact:true}).click();await expect(confirm).not.toBeVisible();
+ await expect(page.getByText('Cook canceled.',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:/Continue cooking/})).toHaveCount(0);
+ const saved=await page.evaluate(()=>({active:JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!),canceled:JSON.parse(localStorage.getItem('how-many-beers:canceled:v1')!),history:JSON.parse(localStorage.getItem('how-many-beers:history:v1')!)}));
+ expect(saved.active.id).not.toBe(meal.id);expect(saved.canceled.cooks).toHaveLength(1);expect(saved.canceled.cooks[0]).toMatchObject({state:'canceled',meal:JSON.parse(JSON.stringify(meal))});expect(saved.history).toEqual(history);
+ await page.reload();await expect(page.getByRole('button',{name:/Continue cooking/})).toHaveCount(0);await page.getByRole('button',{name:/Past cooks and backups/}).click();await expect(page.getByText('Previous dinner',{exact:true})).toBeVisible();await expect(page.getByText('Abandoned brats',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?',exact:true})).toBeVisible();
+ await page.screenshot({path:info.outputPath('after-cancel.png'),scale:'css',style:'nextjs-portal{display:none}'});
+});

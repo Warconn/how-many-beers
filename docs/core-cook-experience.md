@@ -520,3 +520,10 @@ unknown work and food-readiness checks remain explicit. Planning an active cook
 does not modify its recorded starts, completions or notes. Current/upcoming
 forecasts and the Beerometer share that sequence without changing the Beerometer
 UI. Existing plans do not silently migrate. See step-timing.md.
+
+## Retained cancellation (#61)
+Cancel cook is separate from Finish cook. Confirmation defaults to Keep cooking;
+only an acknowledged cancellation removes the cook from active/resume. Canceled
+records remain retained outside normal completed history. Guests keep their existing
+trial/legacy persistence policy; account writes preserve ownership, original actuals
+and idempotent recovery. A new cook can start after successful cancellation.

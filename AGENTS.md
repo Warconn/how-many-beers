@@ -14,40 +14,39 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: Finish and stabilize the approved production release
+### NOW: Retained cancellation, then multiple upcoming plans
 
-The November 5 release contains #21 (visual design system, PR #98) and #97
-(checklist-first Cooking Mode, PR #99), plus the accepted November 3 compact
-planning/cooking layout and Beerometer cleanup. These extend production #96
-(`925cbacd348afd43640d69b2db1c173352c95fd1`), which delivered #92 (#93/#95),
-#84 (#94), #62/#85 (#89), #77 (#80/#90) and #86 (#91). Do not duplicate these
-implementations. See docs/releases/2026-11-05.md for the release contract/evidence;
-verify live main/dev and release PR status before describing deployment as complete.
+Production #100 is deployed at `190bf6168fbaf9fe2c3d75770200101a26bcc539`;
+dev `6e6629a0323714dc0eebebf0929a153986474b7b` has the same application tree.
+#21/#98 and #97/#99 are delivered and closed, alongside the completed #96 scope
+(#92/#84/#62/#85/#77/#86). Never start duplicate implementations.
 
-The owner explicitly authorized this stabilization and production promotion after
-all gates pass: finish #99, full CI, merge dev, full integration CI on that dev
-commit, release PR dev → main, full candidate CI/build, then merge and confirm the
-actual Cloudflare deployment of the intended main commit. Never bypass failures
-or force a merge. Inspect desktop/mobile/iPhone screenshots. No production account
-or cook-data mutations during smoke tests. Significant unresolved issues block
-promotion. Reconcile #21/#97 after release, not merely after implementation.
+The owner approved implementing **#61 first, then #83**, with **#71 CI feedback
+improvements in parallel**. Use isolated feature branches and focused PRs targeting
+dev. This approval covers implementation and testing, not automatic merges or
+production deployment. Update this queue and linked issues as delivery progresses.
 
-Cooking defaults to one action, concise instructions, relevant duration/checkpoint
-and a checkbox. Optional physical starts/corrections and temperature/equipment
-logging live in Step details. A checkbox is not proof of elapsed cooking/resting.
-Corrections append events; preserve original observations, stable IDs, saved cooks,
-authentication, ownership, guest behavior and planning/forecast semantics. Keep the
-accepted Beerometer simplification: no duplicate initial projected duration or zero
-elapsed reading. Do not redesign accepted functions or the execution model.
+#61 retains canceled records, excludes them from active/completed views, permits a
+new cook only after acknowledged cancellation, and protects against stale-device
+resurrection. Fresh guest trials remain in-memory; legacy guest/account retention
+and existing completed history must remain intact. SQL migrations are additive and
+must pass real PostgreSQL security, seeded-upgrade and race checks. Capability-gate
+new account controls until their RPC/schema exists. Do not change hosted Supabase
+without verified environment access and explicit deployment scope.
 
-**Next planning sequence remains #61, then #83**, but neither is implementation
-scope for this release. Review docs/cook-lifecycle-plan.md before database work.
-#83 must wait for #61's lifecycle/migration design. #69/#70 sync, #2 URL import,
-paid tiers and social login are also excluded. The owner's new in-progress timing
-concept requires a separate discovery conversation; do not infer requirements or
-change the timing engine ahead of that discussion. No manual QA/acceptance tickets.
-#87 is the completed historical queue; #4 was owner-tested and #5 closed at the
-owner's request without claiming extra calibration research.
+#83 follows the understood/tested #61 lifecycle foundation: separate account-owned
+saved plans, one active cook, independent edits and safe atomic promotion. No future
+plan may overwrite active progress. Preserve legacy planning drafts, actual events,
+backups, account ownership and guest behavior. See docs/cook-lifecycle-plan.md.
+
+#71 may improve CI independently while preserving all browser projects, account,
+offline and security coverage, required aggregate gates and actual screenshot review.
+Measure wall-clock and runner cost rather than claiming unmeasured speedups.
+
+Cooking keeps the accepted checklist-first flow and Beerometer display/calculations.
+The separate timing-concept discovery (#101) must not alter this implementation's
+execution model. #69/#70 sync, URL import, paid/social and unrelated methods remain
+out of scope. Do not create manual QA/acceptance tickets.
 
 ### Approved free-tier product boundary
 
