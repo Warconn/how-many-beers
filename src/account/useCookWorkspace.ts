@@ -163,7 +163,7 @@ export function useCookWorkspace() {
   const legacyPlan=currentCook&&hasUpcomingContent(currentCook)?{
     id:currentCook.id,meal:currentCook,revision:0,legacy:true as const,
     serveInstant:Number.isFinite(Date.parse(currentCook.serveAt))?new Date(currentCook.serveAt).toISOString():null,
-    timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',
+    timeZone:cloud.state.activeTimeZone??Intl.DateTimeFormat().resolvedOptions().timeZone??'UTC',
   }:null;
   const upcomingPlans:UpcomingPlan[]=[...upcoming.plans.map(plan=>({...plan,meal:planMeal(plan)})),...(plansEnabled&&legacyPlan&&!upcoming.plans.some(p=>p.id===legacyPlan.id)?[legacyPlan]:[])].sort((a,b)=>(a.serveInstant??'9999').localeCompare(b.serveInstant??'9999')||a.id.localeCompare(b.id));
   const createPlan=async(seed?:Meal)=>{
@@ -192,7 +192,7 @@ export function useCookWorkspace() {
     if(currentHasActuals(current)){
       const intendedId=selected?.state().plan?.id??(legacyRef.current?.owner===account.ownerId?legacyRef.current.id:null);
       if(current?.id===intendedId&&!selected?.dirty()){
-        upcoming.releaseSelection();selectLegacy(null);await upcoming.refresh().catch(()=>{});return;
+        await upcoming.forgetSelected().catch(()=>{});upcoming.releaseSelection();selectLegacy(null);await upcoming.refresh().catch(()=>{});return;
       }
       throw Error('Finish or cancel your current cook before starting another. Your upcoming plan is still saved.');
     }
@@ -201,7 +201,7 @@ export function useCookWorkspace() {
       const plan=selected.state().plan;
       if(!plan)throw Error('Save the upcoming plan before starting it.');
       await cloud.store.current.promote(plan.id,plan.revision);
-      upcoming.releaseSelection();selectLegacy(null);
+      await upcoming.forgetSelected().catch(()=>{});upcoming.releaseSelection();selectLegacy(null);
       await upcoming.refresh().catch(()=>{});
     }else if(legacyRef.current?.owner===account.ownerId&&legacyRef.current.id===current?.id){
       await cloud.store.current.save({active:{...current,mode:'cooking',startedAt:new Date().toISOString()}});
@@ -214,7 +214,7 @@ export function useCookWorkspace() {
     await flushCurrent();await upcoming.flush();
     const plans=await savedPlanAPI(account.client,account.ownerId).list();
     const current=currentMeal();
-    const legacy=current&&hasUpcomingContent(current)?{id:current.id,...planDocument(current),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}:undefined;
+    const legacy=current&&hasUpcomingContent(current)?{id:current.id,...planDocument(current),timeZone:cloud.state.activeTimeZone??Intl.DateTimeFormat().resolvedOptions().timeZone??'UTC'}:undefined;
     return exportSavedPlans(plans,new Date().toISOString(),legacy);
   };
   const importUpcomingPlans=async(text:string)=>{

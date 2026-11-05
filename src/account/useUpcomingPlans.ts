@@ -9,7 +9,7 @@ import {newMeal,type Meal} from '../domain/meal';
 import {migrateMeal,type ExtendedMeal} from '../domain/cookState';
 
 export type UpcomingPlan={id:string;meal:Meal;revision:number;legacy?:boolean;pending?:boolean;serveInstant:string|null;timeZone:string};
-export type PendingPlan=SavedPlan&{pending:true};
+export type PendingPlan=SavedPlan&{pending:true;sourceRevision?:number;needsRecovery?:boolean};
 export const pendingPlansKey=(owner:string)=>`how-many-beers:account:v1:${owner}:pending-plans`;
 /** Index precedes a new plan journal, so even a crash between writes can recover its seed. */
 export class PendingPlanIndex{
@@ -24,7 +24,7 @@ export class PendingPlanIndex{
     if(index.version!==1||index.owner!==this.owner||!Array.isArray(index.plans))throw Error('Upcoming draft recovery could not be read safely.');
     const ids=new Set<string>();
     this.entries=index.plans.map((entry:PendingPlan)=>{
-      if(!entry||typeof entry.id!=='string'||ids.has(entry.id)||!Number.isFinite(Date.parse(entry.createdAt))||typeof entry.timeZone!=='string'||!(entry.serveInstant===null||typeof entry.serveInstant==='string'&&Number.isFinite(Date.parse(entry.serveInstant))))throw Error('Invalid upcoming draft recovery.');
+      if(!entry||(entry.sourceRevision!==undefined&&(!Number.isSafeInteger(entry.sourceRevision)||entry.sourceRevision<0))||typeof entry.id!=='string'||ids.has(entry.id)||!Number.isFinite(Date.parse(entry.createdAt))||typeof entry.timeZone!=='string'||!(entry.serveInstant===null||typeof entry.serveInstant==='string'&&Number.isFinite(Date.parse(entry.serveInstant))))throw Error('Invalid upcoming draft recovery.');
       ids.add(entry.id);new Intl.DateTimeFormat('en',{timeZone:entry.timeZone});
       return {...entry,meal:validatePlanMeal(entry.meal,entry.id),revision:0,writeId:null,pending:true};
     });
@@ -43,15 +43,25 @@ export class PendingPlanIndex{
     });
     this.queued=work;return work;
   }
-  add(meal:Meal):Promise<void>{
+  add(meal:Meal,sourceRevision=0):Promise<void>{
     const valid=validatePlanMeal(meal),now=new Date().toISOString();
-    return this.change(entries=>entries.some(entry=>entry.id===valid.id)?entries:[...entries,{id:valid.id,revision:0,...planDocument(valid),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',createdAt:now,updatedAt:now,writeId:null,pending:true}]);
+    return this.change(entries=>entries.some(entry=>entry.id===valid.id)?entries:[...entries,{id:valid.id,revision:0,...planDocument(valid),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',createdAt:now,updatedAt:now,writeId:null,pending:true,sourceRevision,needsRecovery:sourceRevision===0}]);
+  }
+  protect(document:{meal:ExtendedMeal;serveInstant:string|null;timeZone:string},sourceRevision:number):Promise<void>{
+    const valid=validatePlanMeal(document.meal),now=new Date().toISOString();
+    if(!(document.serveInstant===null||typeof document.serveInstant==='string'&&Number.isFinite(Date.parse(document.serveInstant))))throw Error('Invalid draft serving instant.');
+    new Intl.DateTimeFormat('en',{timeZone:document.timeZone});
+    return this.change(entries=>[...entries.filter(entry=>entry.id!==valid.id),{id:valid.id,revision:0,...document,meal:valid,createdAt:entries.find(entry=>entry.id===valid.id)?.createdAt??now,updatedAt:now,writeId:null,pending:true,sourceRevision,needsRecovery:true}]);
   }
   remove(ids:string[]):Promise<void>{return this.change(entries=>entries.filter(entry=>!ids.includes(entry.id)));}
   close(){this.storage.close?.();}
 }
 export function mergePendingPlans(saved:SavedPlan[],pending:PendingPlan[]):(SavedPlan&{pending?:boolean})[]{
-  const ids=new Set(saved.map(plan=>plan.id));return orderPlans([...saved,...pending.filter(plan=>!ids.has(plan.id))]);
+  const ids=new Set(saved.map(plan=>plan.id));
+  return orderPlans([...saved.map(plan=>{
+    const draft=pending.find(entry=>entry.id===plan.id&&entry.needsRecovery);
+    return draft?{...plan,meal:draft.meal,serveInstant:draft.serveInstant,timeZone:draft.timeZone,pending:true}:plan;
+  }),...pending.filter(plan=>!ids.has(plan.id))]);
 }
 const initial:SavedPlanState={meal:null,plan:null,phase:'loading',error:''};
 /** Planning-marked records can still contain real observations from older builds. */
@@ -59,7 +69,7 @@ export function currentHasActuals(meal:Meal|null|undefined):boolean{
   return !!meal&&(meal.mode==='cooking'||!!meal.startedAt||Object.keys(meal.completed).length>0||((meal as {events?:{kind:string}[]}).events??[]).some(e=>e.kind!=='removed'));
 }
 export function hasUpcomingContent(meal:Meal|null|undefined):boolean{
-  return !!meal&&!currentHasActuals(meal)&&(meal.dishes.length>0||((meal as ExtendedMeal).customTasks?.length??0)>0||meal.name!=='Next cook'||Object.keys(meal.notes).length>0);
+  return !!meal&&!currentHasActuals(meal)&&(meal.dishes.length>0||((meal as ExtendedMeal).customTasks?.length??0)>0||meal.name!=='Next cook'||Object.keys(meal.notes).length>0||((meal as ExtendedMeal).events?.length??0)>0||Object.keys((meal as ExtendedMeal).taskOverrides??{}).length>0);
 }
 /** Each selected plan has its own recovery document and writer lock. */
 export function useUpcomingPlans(enabled:boolean){
@@ -70,38 +80,71 @@ export function useUpcomingPlans(enabled:boolean){
   const [state,setState]=useState<SavedPlanState>(initial);
   const [listPhase,setListPhase]=useState<'loading'|'saved'|'load-error'>('loading');
   const [listError,setListError]=useState('');
+  const selectedReadonly=useRef(false);
   const store=useRef<SavedPlanStore|null>(null),release=useRef<(()=>void)|null>(null);
-  const index=useRef<{owner:string;value:PendingPlanIndex}|null>(null),listRequest=useRef(0);
+  const index=useRef<{owner:string;value:PendingPlanIndex}|null>(null),indexOpening=useRef<{owner:string;promise:Promise<PendingPlanIndex>}|null>(null),listRequest=useRef(0);
+  const localAcknowledgements=useRef(0),acknowledgedRevisions=useRef(new Map<string,number>());
   const selectedRef=useRef<{owner:string;id:string}|null>(null);
   const activeOwner=useRef(ownerId),allowed=useRef(false),opening=useRef(false),generation=useRef(0);
   activeOwner.current=ownerId;allowed.current=phase==='authenticated';
   const isCurrent=(owner:string)=>activeOwner.current===owner;
   const api=enabled&&ownerId&&client?savedPlanAPI(client,ownerId):null;
   const getIndex=async(owner:string)=>{
+    if(!isCurrent(owner))throw Error('Your account changed while opening draft recovery.');
     if(index.current?.owner===owner)return index.current.value;
-    const storage=await recoveryStorage(pendingPlansKey(owner));
-    if(!isCurrent(owner)){storage.close?.();throw Error('Your account changed while opening draft recovery.');}
-    const value=new PendingPlanIndex(owner,storage);index.current?.value.close();index.current={owner,value};return value;
+    if(indexOpening.current?.owner===owner)return indexOpening.current.promise;
+    const promise=(async()=>{
+      const storage=await recoveryStorage(pendingPlansKey(owner));
+      if(!isCurrent(owner)){storage.close?.();throw Error('Your account changed while opening draft recovery.');}
+      if(index.current?.owner===owner){storage.close?.();return index.current.value;}
+      let value:PendingPlanIndex;
+      try{value=new PendingPlanIndex(owner,storage);}catch(error){storage.close?.();throw error;}
+      index.current?.value.close();index.current={owner,value};return value;
+    })();
+    indexOpening.current={owner,promise};
+    try{return await promise;}finally{if(indexOpening.current?.promise===promise)indexOpening.current=null;}
   };
   const forgetPending=async(id:string)=>{
     if(!ownerId)return;
     const pending=await getIndex(ownerId);
     if(pending.list().some(plan=>plan.id===id))await pending.remove([id]);
   };
-  const refresh=async()=>{
+  const refresh=async():Promise<void>=>{
     if(!api||!ownerId)throw Error('Upcoming plans are not available for this account yet.');
     if(!allowed.current)throw Error('Verify your account before loading upcoming plans.');
-    const owner=ownerId,request=++listRequest.current,version=generation.current;
+    const owner=ownerId,request=++listRequest.current,version=generation.current,knownWrites=localAcknowledgements.current;
     try{
       const pending=await getIndex(owner);
       if(!isCurrent(owner)||request!==listRequest.current||version!==generation.current)return;
       setScope(owner);setPlans(previous=>mergePendingPlans(previous.filter(plan=>!plan.pending),pending.list()));
       const next=await api.list();
       if(!isCurrent(owner)||request!==listRequest.current||version!==generation.current)return;
-      const confirmed=next.filter(plan=>pending.list().some(p=>p.id===plan.id)).map(plan=>plan.id);
-      if(confirmed.length)await pending.remove(confirmed);
+      if(knownWrites!==localAcknowledgements.current)return refresh();
+      const recoverable:PendingPlan[]=[],stale:string[]=[];
+      for(const draft of pending.list()){
+        let recovery:Awaited<ReturnType<typeof recoveryStorage>>|undefined;
+        try{
+          recovery=await recoveryStorage(savedPlanCacheKey(owner,draft.id));
+          const raw=recovery.getItem(savedPlanCacheKey(owner,draft.id));
+          if(raw){
+            const cached=JSON.parse(raw);
+            if(cached.owner!==owner||cached.planId!==draft.id||cached.version!==1)throw Error('Invalid recovery scope.');
+            if(cached.desired||cached.operation){
+              const meal=validatePlanMeal(cached.desired??cached.operation.snapshot,draft.id);
+              recoverable.push({...draft,meal,serveInstant:cached.desiredServeInstant!==undefined?cached.desiredServeInstant:cached.operation?.document?.serveInstant??draft.serveInstant,timeZone:cached.desiredTimeZone??cached.operation?.timeZone??draft.timeZone,needsRecovery:true});
+            }else if(cached.base){
+              if(next.some(plan=>plan.id===draft.id))recoverable.push({...draft,needsRecovery:false});
+              else if(selectedRef.current?.id===draft.id&&store.current?.dirty())recoverable.push(draft);
+              else stale.push(draft.id);
+            }else recoverable.push(draft);
+          }else if((draft.sourceRevision??0)>0)stale.push(draft.id);
+          else recoverable.push(draft);
+        }catch{recoverable.push({...draft,needsRecovery:true});}
+        finally{recovery?.close?.();}
+      }
+      if(stale.length)await pending.remove(stale);
       if(!isCurrent(owner)||request!==listRequest.current||version!==generation.current)return;
-      setPlans(mergePendingPlans(next,pending.list()));setListPhase('saved');setListError('');
+      setPlans(mergePendingPlans(next,recoverable));setListPhase('saved');setListError('');
     }catch(e){
       if(isCurrent(owner)&&request===listRequest.current&&version===generation.current){setListPhase('load-error');setListError(e instanceof Error?e.message:'Could not load upcoming plans.');}
       throw e;
@@ -109,7 +152,7 @@ export function useUpcomingPlans(enabled:boolean){
   };
   const releaseSelection=()=>{
     store.current?.dispose();store.current=null;release.current?.();release.current=null;
-    selectedRef.current=null;setSelected(null);setState(initial);
+    selectedRef.current=null;selectedReadonly.current=false;setSelected(null);setState(initial);
   };
   useEffect(()=>{
     generation.current++;opening.current=false;releaseSelection();index.current?.value.close();index.current=null;setPlans([]);setScope(ownerId);setListError('');setListPhase('loading');
@@ -128,7 +171,6 @@ export function useUpcomingPlans(enabled:boolean){
     if(!current)return;
     if(!selection||!isCurrent(selection.owner))throw Error('Confirm your account before saving this plan.');
     await current.flush(true);
-    if(current.state().plan)await forgetPending(selection.id);
   };
   const acquire=async(name:string)=>{
     if(!navigator.locks)return {readonly:false,release:()=>{}};
@@ -147,28 +189,34 @@ export function useUpcomingPlans(enabled:boolean){
     opening.current=true;
     const owner=ownerId,version=generation.current;
     try{
-      await flush();
+      await close();
       if(!isCurrent(owner)||version!==generation.current)throw Error('Your account changed while opening the plan.');
-      releaseSelection();
       const lock=await acquire('how-many-beers:account-plan-writer:'+owner+':'+id);
       if(!isCurrent(owner)||version!==generation.current){lock.release();throw Error('Your account changed while opening the plan.');}
-      release.current=lock.release;
+      release.current=lock.release;selectedReadonly.current=lock.readonly;
       const pending=await getIndex(owner);
       if(seed){await pending.add(seed);setScope(owner);setPlans(previous=>mergePendingPlans(previous.filter(plan=>!plan.pending),pending.list()));}
+      else if(!pending.list().some(plan=>plan.id===id)){
+        const known=plans.find(plan=>plan.id===id)??await api.read(id);
+        if(!known)throw Error('This plan is no longer upcoming. Return Home to see your current cooks.');
+        await pending.add(planMeal(known),known.revision);
+      }
       const recovered=pending.list().find(plan=>plan.id===id);
-      const recoveredSeed=seed??(recovered?planMeal(recovered):undefined);
+      const recoveredSeed=seed??(recovered&&(recovered.sourceRevision??0)===0?planMeal(recovered):undefined);
       if(!isCurrent(owner)||version!==generation.current){lock.release();throw Error('Your account changed while opening the plan.');}
       const recovery=await recoveryStorage(savedPlanCacheKey(owner,id));
       if(!isCurrent(owner)||version!==generation.current){recovery.close?.();lock.release();throw Error('Your account changed while opening the plan.');}
       const next=new SavedPlanStore(owner,id,api,recovery,s=>{
         if(!isCurrent(owner)||version!==generation.current)return;
         setState(s);
-        if(s.plan)setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),s.plan!]));
-      },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed);
+        if(s.plan){
+          if(acknowledgedRevisions.current.get(s.plan.id)!==s.plan.revision){acknowledgedRevisions.current.set(s.plan.id,s.plan.revision);localAcknowledgements.current++;}
+          setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),s.plan!]));
+        }
+      },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined);
       store.current=next;selectedRef.current={owner,id};setSelected({owner,id});setState(next.state());
       await next.connect();
       if(recoveredSeed)await next.flush(true);
-      if(next.state().plan)await forgetPending(id);
       if(['load-error','conflict'].includes(next.state().phase))throw Error(next.state().error||'This plan could not be opened safely.');
     }catch(error){
       if(!store.current){release.current?.();release.current=null;}
@@ -181,13 +229,32 @@ export function useUpcomingPlans(enabled:boolean){
     await open(meal.id,meal);
     return meal.id;
   };
-  const close=async()=>{await flush();releaseSelection();};
+  const forgetSelected=async()=>{
+    const selection=selectedRef.current,current=store.current;
+    if(selection&&current&&!selectedReadonly.current&&!current.dirty()&&current.state().plan)await forgetPending(selection.id);
+  };
+  const close=async()=>{
+    try{await flush();await forgetSelected();}
+    catch(error){
+      const current=store.current,selection=selectedRef.current;
+      if(!current||!selection||!isCurrent(selection.owner))throw error;
+      if(!current.dirty()){
+        // A read-only/unavailable document without local changes is safe to leave.
+        if(current.state().phase==='conflict'||current.state().phase==='load-error'){releaseSelection();return;}
+        throw error;
+      }
+      const document=await current.protectDraft();
+      const pending=await getIndex(selection.owner);await pending.protect(document,current.state().plan?.revision??0);
+      setPlans(previous=>mergePendingPlans(previous.filter(plan=>!plan.pending),pending.list()));
+    }
+    releaseSelection();
+  };
   const retry=async()=>{if(store.current)await store.current.retry();else await refresh();};
   return {
     plans:scope===ownerId?plans:[],
     selectedId:selected?.owner===ownerId?selected.id:null,
     state:selected?.owner===ownerId?state:initial,
-    listPhase,listError,store,open,create,flush,close,releaseSelection,refresh,retry,
+    listPhase,listError,store,open,create,flush,close,releaseSelection,forgetSelected,refresh,retry,
     hasSelection:()=>!!selectedRef.current&&selectedRef.current.owner===activeOwner.current,
   };
 }
