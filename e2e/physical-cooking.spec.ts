@@ -29,6 +29,7 @@ test('global next action, concurrent remaining work and quiet beers-first presen
  await page.reload();await page.getByRole('button',{name:/Continue cooking/}).first().click();await expect(meter(page)).toContainText('0h 34m');
  await page.clock.fastForward(37000);await expect(page.getByRole('region',{name:'Current step',exact:true}).locator('.task-dish')).not.toContainText(/\d+\.\d+ min/);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.completed['brats:check']).toBe(at('16:20').replace('Z','.000Z'));expect(saved.events.find((e:any)=>e.phaseObservations?.some((o:any)=>o.phaseId==='brats:heat'&&o.boundary==='end'))).toBeUndefined();
+ await page.getByRole('button',{name:'Edit plan',exact:true}).click();await page.clock.fastForward(60000);await expect(meter(page)).toContainText('0h 32m');
 });
 test('overrun remains active; real removal/rest updates serving and inline target difference',async({page},info)=>{
  let m=concurrent();m=recordEvent(m,'brats:check','completed',at('16:15'));m=recordEvent(m,'potatoes:rest','completed',at('16:45'));
