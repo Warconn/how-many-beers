@@ -62,12 +62,15 @@ were not readable with this task's integration, so no hosting/protection changes
 are claimed. Main build and PostgreSQL security workflows are untouched.
 
 Regression HTML reports, videos, screenshots and traces upload as
-`playwright-regression-1-report` and `playwright-regression-2-report`; other suite
+`playwright-regression-1-report` and `playwright-regression-2-report`; other full-suite
 artifact names stay unchanged. The `regression` job combines review images into
-the existing small `cooking-review-screenshots` artifact, including evidence from
+the existing small `cooking-review-screenshots` artifact using all regression PNGs
+(including future specs such as cancellation), with evidence from
 finished tests if another shard fails. It also includes each shard's JSON timing
 report, allowing per-file/browser profiling without downloading large videos.
-Combined review upload remains required, and partial evidence never turns a failed
+Account PNGs also upload independently as `account-review-screenshots`, so new
+account UI flows can be inspected without large videos/traces. Combined regression
+review upload remains required, and partial evidence never turns a failed
 shard green. Actual screenshot inspection remains a review step.
 
 ### Measured baseline

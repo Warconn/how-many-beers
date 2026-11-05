@@ -75,6 +75,14 @@ jobs:
             playwright-offline-report/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Upload account review screenshots
+        if: always() && matrix.suite == 'accounts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: account-review-screenshots
+          path: test-results-accounts/**/*.png
+          if-no-files-found: ignore
+          retention-days: 14
 
   regression_shards:
     name: regression (${{ matrix.shard }}/2)
@@ -115,10 +123,7 @@ jobs:
         with:
           name: cooking-review-regression-${{ matrix.shard }}
           path: |
-            test-results/cooking-simplicity-*/*.png
-            test-results/design-system-*/*.png
-            test-results/live-cook-start-*/*.png
-            test-results/whole-cook-duration-*/*.png
+            test-results/**/*.png
             test-results/regression-results-*.json
           if-no-files-found: error
           retention-days: 14
