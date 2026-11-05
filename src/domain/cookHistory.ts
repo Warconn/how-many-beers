@@ -3,6 +3,7 @@ import type {ExtendedMeal} from "./cookState";
 import {newMeal} from "./meal";
 import type {Meal, PlannedTask} from "./meal";
 import {isStoredMeal,isStoredTask} from './storageValidation';
+import {readCanceled,type CanceledLibrary} from './canceledCooks';
 
 export const HISTORY_KEY = "how-many-beers:history:v1";
 export const ACTIVE_KEY = "how-many-beers:meal:v1";
@@ -22,6 +23,7 @@ export type CookBackup = {
   format: typeof BACKUP_FORMAT;
   version:1;
   exportedAt:string;
+  canceled?:CanceledLibrary;
   active:ExtendedMeal;
   history:HistoryLibrary;
 };
@@ -111,12 +113,12 @@ export function repeatArchivedCook(entry:ArchivedCook): ExtendedMeal {
   };
 }
 
-export function exportBackup(active:Meal,history:HistoryLibrary,exportedAt:string):string {
-  const result:CookBackup={format:BACKUP_FORMAT,version:1,exportedAt,active:migrateMeal(active),history};
+export function exportBackup(active:Meal,history:HistoryLibrary,exportedAt:string,canceled?:CanceledLibrary):string {
+  const result:CookBackup={format:BACKUP_FORMAT,version:1,exportedAt,active:migrateMeal(active),history,...(canceled?{canceled:readCanceled(canceled)}:{})};
   return JSON.stringify(result,null,2);
 }
 
-export function validateBackup(text:string):{active:ExtendedMeal;history:HistoryLibrary} {
+export function validateBackup(text:string):{active:ExtendedMeal;history:HistoryLibrary;canceled?:CanceledLibrary} {
   if(new TextEncoder().encode(text).byteLength>MAX_BACKUP_BYTES)throw new Error("Backup file is too large (32 MB maximum).");
   const parsed:unknown=JSON.parse(text);
   if(!parsed || typeof parsed!=="object")throw new Error("Invalid backup.");
@@ -124,5 +126,5 @@ export function validateBackup(text:string):{active:ExtendedMeal;history:History
   if(b.format!==BACKUP_FORMAT || b.version!==1 || !isMeal(b.active)){
     throw new Error("This is not a supported How Many Beers backup.");
   }
-  return {active:migrateMeal(b.active),history:readHistory(b.history)};
+  return {active:migrateMeal(b.active),history:readHistory(b.history),...(b.canceled!==undefined?{canceled:readCanceled(b.canceled)}:{})};
 }
