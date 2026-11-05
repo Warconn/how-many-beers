@@ -79,6 +79,20 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      # Keep visual review evidence small enough to inspect independently of videos/traces.
+      - name: Upload release review screenshots
+        if: always() && matrix.suite == 'regression'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cooking-review-screenshots
+          path: |
+            test-results/cooking-simplicity-*/*.png
+            test-results/design-system-*/*.png
+            test-results/live-cook-start-*/*.png
+            test-results/whole-cook-duration-*/*.png
+          if-no-files-found: error
+          retention-days: 14
+
   # Preserve the existing required check name; skipped/canceled suites must fail it.
   playwright:
     if: always()

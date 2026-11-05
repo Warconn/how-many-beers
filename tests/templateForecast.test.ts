@@ -70,3 +70,16 @@ it('explicit phase starts work after legacy automatic records and reopening, wit
  m=recordEvent(m,id,'started','2026-10-29T21:05Z');expect(f(m,now+600000)[at(m,'wrap').id].template?.at).toBe('2026-10-30T07:29:00.000Z');expect(m.events!.slice(0,oldEvents.length)).toEqual(oldEvents);
  m=recordEvent(m,id,'reopened','2026-10-29T21:20Z');m=recordEvent(m,id,'started','2026-10-29T21:25Z');expect(f(m,Date.parse('2026-10-29T21:30Z'))[id].finish).toBe('2026-10-30T10:25:00.000Z');
 });
+
+it('uses the latest append-only physical correction even when its time is earlier, retaining history',()=>{
+ let m=complete(make(),['prep','season','preheat']);const id=m.dishes[0].id+':start';
+ m=recordEvent(m,id,'started','2026-10-29T21:05Z');const original=structuredClone(m.events!);
+ m=recordEvent(m,id,'started','2026-10-29T21:02Z',undefined,undefined,'Corrected actual phase start');
+ expect(f(m)[id].finish).toBe('2026-10-30T10:02:00.000Z');
+ expect(m.events!.slice(0,original.length)).toEqual(original);
+ expect(f(JSON.parse(JSON.stringify(m)))[id]).toEqual(f(m)[id]);
+ m=recordEvent(m,id,'reopened','2026-10-29T21:06Z');
+ m=recordEvent(m,id,'started','2026-10-29T21:07Z');
+ expect(f(m,Date.parse('2026-10-29T21:08Z'))[id].finish).toBe('2026-10-30T10:07:00.000Z');
+ expect(m.events!.slice(0,original.length)).toEqual(original);
+});

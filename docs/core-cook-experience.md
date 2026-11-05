@@ -1,15 +1,17 @@
-## Current baseline and next work (November 2, 2026)
+## Current release and next work (November 5, 2026)
 
-Release #96 is production: #92, #84, #62/#85, #77 and #86 are complete. The next
-approved visual pass is #21 using the established #45 identity throughout the app,
-without altering the Beerometer or accepted behavior. See design-system.md.
+The November 5 release adds #21 visual consistency and #97 checklist-first cooking
+to #96's completed #92/#84/#62/#85/#77/#86 delivery. See
+[release notes](releases/2026-11-05.md) and verify deployment status in the release PR.
 
-Cooking should read as one action, a useful duration/checkpoint and a checkbox.
-The remaining competing Start/logging controls are tracked separately in #97;
-#84's layout/progress/finishing work remains complete. #61 retained cancellation
-is next, then #83 multiple upcoming account plans with one active cook. Investigate
-those lifecycle/storage changes separately; see cook-lifecycle-plan.md. No automatic
-merges or releases, and no manual QA tickets while the owner tests real cooks.
+Cooking shows one action, a relevant duration or manual checkpoint and a checkbox.
+Optional physical-start corrections and logging live in Step details; check-offs
+never prove a physical interval elapsed. The accepted compact mobile layout and
+Beerometer cleanup remain. Preserve actual events, accounts, guests and history.
+
+The owner's new timing concept needs separate discovery. #61 retained cancellation
+and then #83 multiple upcoming plans remain the prepared next capability sequence,
+not part of this release. See cook-lifecycle-plan.md. No manual QA tickets.
 
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.

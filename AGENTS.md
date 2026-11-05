@@ -10,46 +10,44 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priorities and decision rules (October 27, 2026)
+## Current priorities and decision rules (November 5, 2026)
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: November 2 owner-approved visual polish
+### NOW: Finish and stabilize the approved production release
 
-Production release #96 is merged into main at `925cbacd348afd43640d69b2db1c173352c95fd1`.
-Dev `4577b015bc0e3c4241065a834760171a115e3d76` has the same application tree.
-Delivered and promoted: #92 (#93/#95), #84 (#94), #62/#85 (#89), #77 (#80/#90)
-and #86 (#91). These tickets are completed; never treat them as new development.
-#87 is the completed historical execution queue. #4 was owner-tested and closed;
-#5 was closed at the owner's request without claiming extra calibration research.
+The November 5 release contains #21 (visual design system, PR #98) and #97
+(checklist-first Cooking Mode, PR #99), plus the accepted November 3 compact
+planning/cooking layout and Beerometer cleanup. These extend production #96
+(`925cbacd348afd43640d69b2db1c173352c95fd1`), which delivered #92 (#93/#95),
+#84 (#94), #62/#85 (#89), #77 (#80/#90) and #86 (#91). Do not duplicate these
+implementations. See docs/releases/2026-11-05.md for the release contract/evidence;
+verify live main/dev and release PR status before describing deployment as complete.
 
-**Primary work now: #21**, applying the approved #45 visual identity throughout
-planning, Cooking Mode, history, controls and empty/error states. Preserve the logo,
-Beerometer appearance/calculations and accepted functions. See docs/design-system.md.
-Use a focused feature PR targeting dev; no automatic merge or production release.
-Inspect actual desktop/mobile screenshots and run appropriate unit, browser,
-account, offline and iPhone/WebKit checks. Preserve stored cooks, actuals and ownership.
+The owner explicitly authorized this stabilization and production promotion after
+all gates pass: finish #99, full CI, merge dev, full integration CI on that dev
+commit, release PR dev → main, full candidate CI/build, then merge and confirm the
+actual Cloudflare deployment of the intended main commit. Never bypass failures
+or force a merge. Inspect desktop/mobile/iPhone screenshots. No production account
+or cook-data mutations during smoke tests. Significant unresolved issues block
+promotion. Reconcile #21/#97 after release, not merely after implementation.
 
-The November 1 checklist-first concern is not fully solved by #84's delivered
-layout. #97 tracks the remaining competing physical Start/logging controls and
-redundant-step review. Recommend coordinating it with #21 as a **separate functional
-PR**, preserving actual-start and safety semantics; do not silently include it in
-visual polish or claim it is complete. This recommendation is not approval to
-implement or merge #97. Do not reopen #84 or create manual QA/acceptance tickets;
-the owner is actively testing real cooks.
+Cooking defaults to one action, concise instructions, relevant duration/checkpoint
+and a checkbox. Optional physical starts/corrections and temperature/equipment
+logging live in Step details. A checkbox is not proof of elapsed cooking/resting.
+Corrections append events; preserve original observations, stable IDs, saved cooks,
+authentication, ownership, guest behavior and planning/forecast semantics. Keep the
+accepted Beerometer simplification: no duplicate initial projected duration or zero
+elapsed reading. Do not redesign accepted functions or the execution model.
 
-**Next approved sequence: #61, then #83.** During #21 investigate and prepare only;
-no database/lifecycle implementation belongs in its PR. #61 needs retained canceled
-state, terminal guards, acknowledged writes and preserved guest/history behavior.
-#83 needs multiple account plans and one active cook without overwriting it. Review
-Supabase lifecycle/RLS/RPC deletion constraints before either database change. See
-docs/cook-lifecycle-plan.md for verified hazards, decisions and migration sequencing.
-Do not begin #83 database changes until #61's design/migration implications are clear.
-
-Other backlog work (#69/#70 sync, #2 URL import, #3 scheduling, #67 social sign-in,
-timers and future paid features) remains outside this approved sequence. Do not
-independently reprioritize it. The owner maintains the backlog. Reconcile confirmed
-shipped development tickets when explicitly requested; do not create QA tickets.
+**Next planning sequence remains #61, then #83**, but neither is implementation
+scope for this release. Review docs/cook-lifecycle-plan.md before database work.
+#83 must wait for #61's lifecycle/migration design. #69/#70 sync, #2 URL import,
+paid tiers and social login are also excluded. The owner's new in-progress timing
+concept requires a separate discovery conversation; do not infer requirements or
+change the timing engine ahead of that discussion. No manual QA/acceptance tickets.
+#87 is the completed historical queue; #4 was owner-tested and #5 closed at the
+owner's request without claiming extra calibration research.
 
 ### Approved free-tier product boundary
 

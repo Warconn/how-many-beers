@@ -65,7 +65,12 @@ test('brat cook stays checkbox-first with opt-in actual start and append-only co
  await guide.getByText('Step details',{exact:true}).click();
  await guide.getByRole('button',{name:'Record actual start now',exact:true}).click();
  const correct=guide.getByRole('button',{name:'Correct actual start time',exact:true});
- await correct.click();await guide.getByLabel('Actual start date and time',{exact:true}).fill('2026-10-29T21:02');
+ await correct.click();
+ await guide.getByLabel('Actual start date and time',{exact:true}).fill('2026-10-29T21:05');
+ await guide.getByRole('button',{name:'Save actual start',exact:true}).click();
+ await expect(guide.getByRole('alert')).toContainText('not in the future');
+ expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!) as ExtendedMeal)).events?.filter(e=>e.taskId===taskId&&e.kind==='started')).toHaveLength(1);
+ await guide.getByLabel('Actual start date and time',{exact:true}).fill('2026-10-29T21:02');
  await guide.getByRole('button',{name:'Save actual start',exact:true}).click();
  const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!) as ExtendedMeal);
  const physical=(after.events??[]).filter(e=>e.taskId===taskId&&e.kind==='started'&&e.startSource==='physical');

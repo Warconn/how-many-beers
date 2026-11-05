@@ -220,3 +220,20 @@ focus to that action. Draft edits/readings still block navigation and finishing.
 Trial guests see honest sign-in/save and finish-without-saving choices; accounts
 retain the same archive semantics. Layout changes do not write cooking events or
 alter plan dates, forecasts, notes, activity logs or archived cooks.
+
+
+## Checklist-first execution and accepted display cleanup (#97)
+
+The checkbox is the sole prominent current-step action. Each next step begins with
+Step details collapsed. Optional physical-start recording/correction and temperature
+or equipment logs are inside Step details, alongside original plan, full instructions,
+notes and activity. Start-time drafts retain navigation protection. Invalid/future
+actual times cannot be saved. Corrections append new observations; the latest
+appended physical correction anchors estimates without overwriting earlier events.
+Ordinary checks do not record physical starts, elapse a cook/rest interval or prove
+condition-driven readiness. No saved template steps or historical records are rewritten.
+
+The Beerometer retains its design and math. At session start, identical projected
+and remaining durations appear once, with zero elapsed hidden. Distinct projected
+duration and nonzero elapsed remain available as the cook progresses. Completed
+history retains frozen actual duration. This supersedes older unchanged-display notes.
