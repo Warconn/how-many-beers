@@ -1,5 +1,8 @@
 # Guided Cooking Mode (#26)
 
+> **Roadmap note (November 2026):** This file documents the **released** checklist-first behavior. The approved *future design* is [#101 concurrent active cooking phases, time-based checkpoints, and a rolling whole-cook Beerometer](https://github.com/Warconn/how-many-beers/issues/101), after [#103 recipe-first planning and reuse](https://github.com/Warconn/how-many-beers/issues/103). In that future model, checking a concrete “Place on grill” action starts the phase and an explicit “Remove from heat” action ends it; concurrent dishes remain under Cooking now with a global Up next. Temperature checks will be time-based actions with optional logging, not mandatory measurement entry. Whole-cook remaining work updates from the current time, including overrun uncertainty and corrections. **None of that future phase behavior is released by this doc change.** [#11 notifications](https://github.com/Warconn/how-many-beers/issues/11) are separately deferred. See [current roadmap](product-roadmap.md).
+
+
 Cooking Mode opens one action with a concise instruction and a single duration/finish
 summary. Step details preserves planned timing, full recipe instructions, notes and
 actual readings. Condition checks say Check when ready. The guide chooses the earliest unfinished step in chronological order,
