@@ -14,6 +14,7 @@ import {
   parseRemote,
   type Document,
   type Remote,
+  type RawCook,
   type WorkspaceAPI,
 } from "./workspace";
 import type { RecoveryStorage } from "./recoveryStorage";
@@ -159,6 +160,10 @@ export class AccountCookStore {
         "Saved recovery data could not be read safely. It has not been replaced.";
       this.storageBlocked = true;
     }
+  }
+  /** Exact acknowledged payload for lossless backup of the legacy planning slot. */
+  currentDocument(): RawCook | null {
+    return structuredClone(this.base?.active ?? null);
   }
   state(): AccountState {
     let backup = this.desired ?? this.visible;
