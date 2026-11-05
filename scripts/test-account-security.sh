@@ -38,11 +38,17 @@ for account_database in hmb_clean hmb_upgrade; do
   if [ "$account_database" = hmb_upgrade ] && [ "$sql_file" = supabase/migrations/202610280002_account_cook_workspace.sql ]; then
    account_psql < supabase/tests/cancellation-upgrade-seed.sql
   fi
+  if [ "$account_database" = hmb_upgrade ] && [ "$sql_file" = supabase/migrations/202611050001_retained_cancellation.sql ]; then
+   account_psql < supabase/tests/cancellation-upgrade-verify.sql
+   account_psql < supabase/tests/plans-upgrade-seed.sql
+  fi
  done
  if [ "$account_database" = hmb_upgrade ]; then
-  account_psql < supabase/tests/cancellation-upgrade-verify.sql
+  account_psql < supabase/tests/plans-upgrade-verify.sql
  fi
  account_psql < supabase/tests/account-workspace.sql
  account_psql < supabase/tests/retained-cancellation.sql
+ account_psql < supabase/tests/saved-upcoming-plans.sql
  bash supabase/tests/cancellation-races.sh "$account_container" "$account_database"
+ bash supabase/tests/saved-plan-races.sh "$account_container" "$account_database"
 done
