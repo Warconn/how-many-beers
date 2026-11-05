@@ -2,7 +2,7 @@ import {afterEach,describe,it,expect,vi} from 'vitest';
 import type {SupabaseClient} from '@supabase/supabase-js';
 import {SavedPlanStore,savedPlanCacheKey} from '../src/account/SavedPlanStore';
 import {AccountCookStore} from '../src/account/AccountCookStore';
-import {AccountConflict,equal,type Remote,type WorkspaceAPI} from '../src/account/workspace';
+import {AccountConflict,equal,parseRemote,type Remote,type WorkspaceAPI} from '../src/account/workspace';
 import {createDish,newMeal} from '../src/domain/meal';
 import {migrateMeal,type ExtendedMeal} from '../src/domain/cookState';
 import {emptyHistory} from '../src/domain/cookHistory';
@@ -76,6 +76,15 @@ describe('isolated saved-plan recovery',()=>{
   expect(s.state().phase).toBe('conflict');expect(s.state().meal?.name).toBe('Later local draft');expect(s.recoveryExport()).toContain('Later local draft');
   expect(f.records.get(p.id)).toEqual(other);expect(f.calls).toHaveLength(2);
  });
+ it('keeps a newer-remote conflict locked when its post-ack recovery cache write also fails',async()=>{
+  const p=plan(),f=fixture([p]);let failAfterAck=false;
+  const api={...f.api,write:async(...args:Parameters<SavedPlanAPI['write']>)=>{const result=await f.api.write(...args);if(failAfterAck)f.storageFull();return result;}};
+  const s=f.store(p.id,undefined,owner,false,api);await s.connect();s.edit(m=>({...m,name:'First committed edit'}));f.lose();
+  await expect(s.flush()).rejects.toThrow('response lost');s.edit(m=>({...m,name:'Later local draft'}));
+  const other={...copy(f.records.get(p.id)!),revision:3,meal:{...p.meal,name:'Other device changed it'},writeId:crypto.randomUUID()};f.records.set(p.id,other);failAfterAck=true;
+  await expect(s.retry()).rejects.toBeInstanceOf(AccountConflict);expect(s.state().phase).toBe('conflict');expect(f.records.get(p.id)).toEqual(other);
+  f.storageFull(false);await s.protectDraft();await expect(s.flush()).rejects.toBeInstanceOf(AccountConflict);expect(s.state().meal?.name).toBe('Later local draft');
+ });
  it('retains an unconfirmed request instant when the browser time zone changes before reload',async()=>{
   vi.stubEnv('TZ','UTC');const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();s.edit(m=>({...m,serveAt:'2026-11-08T18:00',name:'Preserve target'}));f.fail();
   await expect(s.flush()).rejects.toThrow('offline');s.dispose();vi.stubEnv('TZ','America/Los_Angeles');
@@ -110,6 +119,27 @@ describe('isolated saved-plan recovery',()=>{
   await expect(s.flush()).rejects.toThrow('storage full');expect(f.calls).toHaveLength(0);f.storageFull(false);f.verify(false);
   await expect(s.retry()).rejects.toThrow('verify');expect(f.calls).toHaveLength(0);expect(s.state().meal?.name).toBe('Retain me');
   f.verify(true);await s.retry();expect(f.records.get(p.id)?.meal.name).toBe('Retain me');
+ });
+ it('does not allow the editor to release its draft until the recovery transaction commits',async()=>{
+  const p=plan(),f=fixture([p]);let failCommit=false,released=false;
+  const storage={...f.storage,settled:async()=>{if(failCommit)throw Error('IndexedDB commit failed');}};
+  const s=new SavedPlanStore(owner,p.id,f.api,storage,()=>{});stores.push(s);await s.connect();
+  s.edit(m=>({...m,name:'Keep this future draft',serveAt:'2026-11-09T20:00'}));f.fail();await expect(s.flush()).rejects.toThrow('offline');
+  const calls=f.calls.length;failCommit=true;
+  await expect(s.protectDraft().then(()=>{released=true;})).rejects.toThrow('commit failed');
+  expect(released).toBe(false);expect(s.dirty()).toBe(true);expect(s.state().meal?.name).toBe('Keep this future draft');expect(f.calls).toHaveLength(calls);
+  failCommit=false;const protectedDraft=await s.protectDraft();
+  expect(protectedDraft.meal.name).toBe('Keep this future draft');expect(protectedDraft.serveInstant).toBe(planDocument(protectedDraft.meal).serveInstant);
+  expect(s.state().phase).toBe('unsaved');expect(f.records.get(p.id)).toEqual(p);expect(f.calls).toHaveLength(calls);
+ });
+ it('protects a revision-conflicted draft without rebasing or enabling a stale cloud overwrite',async()=>{
+  const p=plan(),f=fixture([p]);let failCommit=false;
+  const s=new SavedPlanStore(owner,p.id,f.api,{...f.storage,settled:async()=>{if(failCommit)throw Error('IndexedDB commit failed');}},()=>{});stores.push(s);await s.connect();
+  s.edit(m=>({...m,name:'My protected draft'}));const other={...p,revision:2,meal:{...p.meal,name:'Other device'}};f.records.set(p.id,other);
+  await expect(s.flush()).rejects.toBeInstanceOf(AccountConflict);failCommit=true;
+  await expect(s.protectDraft()).rejects.toThrow('commit failed');expect(s.state().phase).toBe('conflict');
+  failCommit=false;await s.protectDraft();expect(s.state().phase).toBe('conflict');
+  await expect(s.flush()).rejects.toBeInstanceOf(AccountConflict);expect(f.records.get(p.id)).toEqual(other);expect(s.recoveryExport()).toContain('My protected draft');
  });
  it('separates account/plan recovery keys and protects another owner’s corrupt cache',async()=>{
   const p=plan(),f=fixture([p]),s=f.store(p.id);await s.connect();s.edit(m=>({...m,name:'PRIVATE'}));
@@ -161,6 +191,12 @@ describe('upcoming-plan backups and RPC boundaries',()=>{
   const client={rpc:(name:string,values:unknown)=>{calls.push({name,values});return {abortSignal:async()=>({data:{plans:[p],importReceipt:{operationId:bad?'wrong':id,planIds:[p.id]}},error:null})};}} as unknown as SupabaseClient;
   const api=savedPlanAPI(client,owner);await expect(api.import(id,docs)).rejects.toThrow('not been confirmed');bad=false;
   const result=await api.import(id,docs);expect(result.plans).toEqual([p]);expect(calls[1]).toMatchObject({name:'import_saved_cook_plans',values:{expected_owner:owner,write_id:id,documents:docs}});
+ });
+ it('preserves the server current-cook time zone while accepting older metadata-free snapshots',()=>{
+  const base={revision:0,writeId:null,active:null,history:[]};
+  expect(parseRemote({...base,activeTimeZone:'America/New_York'}).activeTimeZone).toBe('America/New_York');
+  expect(parseRemote({...base,activeTimeZone:null}).activeTimeZone).toBeNull();expect(parseRemote(base).activeTimeZone).toBeUndefined();
+  expect(()=>parseRemote({...base,activeTimeZone:'Unsupported/Zone'})).toThrow('time zone');
  });
  it('rejects unsafe remote plan metadata without presenting it as an editable draft',()=>{
   const p=plan();expect(()=>parseSavedPlan({...p,revision:-1})).toThrow('metadata');expect(()=>parseSavedPlan({...p,meal:{...p.meal,id:'different'}})).toThrow('Upcoming');

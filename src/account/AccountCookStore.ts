@@ -54,6 +54,7 @@ type Cache = {
 export type AccountState = {
   canCancel?: boolean;
   canPlan?: boolean;
+  activeTimeZone?: string | null;
   snapshot: LocalSnapshot | null;
   backup: LocalSnapshot | null;
   phase:
@@ -184,6 +185,7 @@ export class AccountCookStore {
     return {
       canCancel: !!this.base?.capabilities?.cancelCook && !!this.api.cancel && !this.readonlyMode,
       canPlan: !!this.base?.capabilities?.savedPlans && !!this.api.promote && !this.readonlyMode,
+      activeTimeZone: this.base?.activeTimeZone,
       snapshot: this.visible,
       backup,
       phase:

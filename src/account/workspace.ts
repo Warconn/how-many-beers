@@ -22,6 +22,7 @@ export type Remote = Document & {
   capabilities?: { cancelCook?: boolean; savedPlans?: boolean };
   cancellation?: CancellationReceipt;
   promotion?: PromotionReceipt;
+  activeTimeZone?: string | null;
 };
 export type WorkspaceAPI = {
   read: () => Promise<Remote>;
@@ -73,6 +74,11 @@ export function parseRemote(value: unknown): Remote {
       !validInstant(v.active.serveInstant))
   )
     throw Error("Invalid account cook.");
+  if (v.activeTimeZone !== undefined && v.activeTimeZone !== null) {
+    if (typeof v.activeTimeZone !== "string") throw Error("Invalid account cook time zone.");
+    try { new Intl.DateTimeFormat("en", { timeZone: v.activeTimeZone }); }
+    catch { throw Error("Invalid account cook time zone."); }
+  }
   readHistory({ version: 1, cooks: v.history });
   if (!v.history.every((a) => validInstant(a.serveInstant)))
     throw Error("Invalid account serving time.");

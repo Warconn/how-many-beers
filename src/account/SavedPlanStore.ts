@@ -154,6 +154,7 @@ export class SavedPlanStore{
     this.error=diverged?'Another device changed this plan while your later edits were pending. Download your draft before loading the account version.':'';
     try{this.persist();await this.storage.settled?.();}catch(error){
      if(error instanceof AccountConflict){this.phase='conflict';this.error=error.message;}
+     else if(diverged){this.phase='conflict';this.error+=' Recovery storage is unavailable; keep this page open and download your draft.';}
      else{this.phase=this.desired?'unsaved':'saved';this.error=this.desired?'Recovery storage is unavailable. Download your draft before closing.':'Your plan is saved, but recovery storage is unavailable. Download a backup before going offline.';}
     }
     this.publish();
@@ -163,6 +164,27 @@ export class SavedPlanStore{
   if(!this.disposed&&this.desired){
    if(this.state().phase==='conflict')throw new AccountConflict(this.error);
    if(explicit)await this.flush(true);else this.schedule();
+  }
+ }
+ /** Retain a failed future-plan edit before returning to the separate live cook.
+  * This acknowledges only local recovery, never a cloud save or a revision rebase. */
+ async protectDraft():Promise<{meal:ExtendedMeal;serveInstant:string|null;timeZone:string}>{
+  if(this.disposed||!this.maySend())throw Error('Confirm your account before protecting this plan draft.');
+  if(this.inflight)await this.inflight.catch(()=>{});
+  if(this.disposed||!this.maySend()||!this.visible)throw Error('Your account changed before the draft could be protected.');
+  try{
+   this.persist();await this.storage.settled?.();
+   if(this.disposed||!this.maySend())throw Error('Your account changed before the draft could be protected.');
+   return {meal:this.visible,
+    serveInstant:this.desired?(this.desiredServeInstant!==undefined?this.desiredServeInstant:planDocument(this.desired).serveInstant):(this.base?this.base.serveInstant:planDocument(this.visible).serveInstant),
+    timeZone:this.desired?this.desiredTimeZone??planTimeZone(this.desired,this.base):this.base?.timeZone??planTimeZone(this.visible,null)};
+  }catch(error){
+   // A failed recovery write must not unlock a revision conflict and allow a
+   // later automatic save to overwrite the other device's plan.
+   if(error instanceof AccountConflict)this.phase='conflict';
+   else if(this.phase!=='conflict'&&this.phase!=='load-error')this.phase='unsaved';
+   this.error=error instanceof Error?error.message:'The plan draft could not be protected. Keep this page open.';
+   this.publish();throw error;
   }
  }
  async retry():Promise<void>{if(this.phase==='load-error'||!this.desired)return this.connect();await this.flush(true);}
