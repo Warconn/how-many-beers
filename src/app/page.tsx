@@ -1,5 +1,6 @@
 "use client";
 
+import CancelCookDialog from '@/components/CancelCookDialog';
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
@@ -101,7 +102,7 @@ function CookExperience() {
   const workspace=useCookWorkspace();
   const {meal,history,status:storageStatus,error:storageError,setError:setStorageError,patch,save,retry,reset,restore,recoveryExport}=workspace;
   const [view, setView] = useState<"home" | "planning" | "cooking" | "history">("home");
-  useEffect(()=>{setView('home');setEditingStep(null);setNewStepDishId(null);setShowDishSetup(false);setRecipeText('');setRecipeName('');},[workspace.selection]);
+  useEffect(()=>{setView('home');setEditingStep(null);setNewStepDishId(null);setShowDishSetup(false);setShowCancel(false);setRecipeText('');setRecipeName('');},[workspace.selection]);
   const accountReturnHandled=useRef(false);
   useEffect(()=>{
     if(!meal||accountReturnHandled.current)return;
@@ -133,6 +134,8 @@ function CookExperience() {
   const [navigationNote,setNavigationNote] = useState("");
   const [outcome,setOutcome] = useState("");
   const [showFinish,setShowFinish] = useState(false);
+  const [showCancel,setShowCancel] = useState(false);
+  const cancelTrigger=useRef<HTMLButtonElement|null>(null);
   const [planSaveResult,setPlanSaveResult] = useState<"saved"|"error"|null>(null);
 
   useEffect(()=>{
@@ -242,6 +245,11 @@ function CookExperience() {
     window.scrollTo({top:0,behavior:"instant"});
   };
   const persistNewMeal = async(next:Meal) => {await save({active:next});returnHome();};
+  const dismissCancel = () => {setShowCancel(false);requestAnimationFrame(()=>cancelTrigger.current?.focus());};
+  const confirmCancel = async () => {
+    await workspace.cancel(meal.id);
+    setShowCancel(false);returnHome();setMessage("Cook canceled.");
+  };
   const finishCook = async () => {
     if(workspace.kind==='trial'){window.dispatchEvent(new Event('hmb-open-account'));return;}
     if(!meal) return;
@@ -269,7 +277,7 @@ function CookExperience() {
   const downloadBackup = () => {
     if(!meal)return;
     try{
-      const blob=new Blob([exportBackup(workspace.backup?.active??meal,workspace.backup?.history??history,new Date().toISOString())],{type:"application/json"});
+      const blob=new Blob([exportBackup(workspace.backup?.active??meal,workspace.backup?.history??history,new Date().toISOString(),workspace.backup?.canceled)],{type:"application/json"});
       const url=URL.createObjectURL(blob);
       const anchor=document.createElement("a");
       anchor.href=url;
@@ -396,10 +404,11 @@ function CookExperience() {
     }
   };
 
-  const canUpdate=!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
+  const canUpdate=!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!showCancel&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen"+(!remaining.length?" cooking-screen-complete":"") : "planning-screen")}>
+      {showCancel&&<CancelCookDialog name={meal.name} temporary={workspace.kind==='trial'} onDismiss={dismissCancel} onConfirm={confirmCancel}/>}
       {storageError && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
         <div className="storage-recovery-actions">
           {storageStatus!=='recovery'&&<button type="button" onClick={downloadBackup}>Download backup</button>}
@@ -445,6 +454,7 @@ function CookExperience() {
             <p className="home-product-line">Plan every dish. Time your dinner. Enjoy the cook.</p>
             <p className="muted">Set your serving time, bring your dishes into one plan, and follow a guided checklist when it’s time to cook.</p>
           </>}</div>
+          {message==='Cook canceled.'&&<p className="notice" role="status">Cook canceled.</p>}
           {planSaveResult==="saved" && <p className="notice" role="status">Plan saved. Come back here to start when you’re ready.</p>}
           {hasActiveWork && <section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{cookInProgress ? "In progress" : "Planning"}</span></div>
@@ -460,6 +470,7 @@ function CookExperience() {
                 <button type="button" className="button primary" disabled={!!startBlockReason} aria-describedby={startBlockReason?"home-start-help":undefined} onClick={startCooking}>Start cooking</button>
                 <button type="button" className="button secondary" onClick={()=>{setPlanSaveResult(null);setView("planning");}}>Resume planning <Icon name="arrow-right"/></button>
               </>}
+              {cookInProgress&&workspace.canCancel&&<button type="button" className="button secondary" disabled={workspace.locked} onClick={e=>{cancelTrigger.current=e.currentTarget;setShowCancel(true);}}>Cancel cook</button>}
               {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
           </section>}
@@ -524,7 +535,8 @@ function CookExperience() {
               <section className="panel cook-summary"><p className="eyebrow">ON THE MENU</p>{meal.dishes.map(d=><div className="menu-item" key={d.id}><strong>{d.name}</strong><span>{d.equipment}</span></div>)}<p className="muted small">{focus.now.length} planned earlier · {focus.untimed.length} untimed</p></section>
               {warnings.length>0 && <section className="panel cook-warnings"><strong>Things to watch</strong>{warnings.map((w,i)=><p key={i}>{w}</p>)}</section>}
               <p className="muted small cook-safety-note">Use a food thermometer, verify doneness and monitor safe holding. The checklist cannot confirm readiness by time alone.</p>
-              <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>{(remaining.length>0||!timeline.length)&&!showFinish&&<button id="finish-cook-trigger" type="button" className="button secondary" disabled={cookingDraftOpen||(!timeline.length&&!meal.dishes.length)} onClick={openFinishCook}>Finish cook early</button>}</details>
+              <AddStepForm compact onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/>{(remaining.length>0||!timeline.length)&&!showFinish&&<button id="finish-cook-trigger" type="button" className="button secondary" disabled={cookingDraftOpen||(!timeline.length&&!meal.dishes.length)} onClick={openFinishCook}>Finish cook early</button>}
+              {cookInProgress&&workspace.canCancel&&<p className="cancel-cook-entry"><button type="button" className="button secondary" disabled={cookingDraftOpen||workspace.locked} onClick={e=>{cancelTrigger.current=e.currentTarget;setShowCancel(true);}}>Cancel cook</button></p>}</details>
             </section>
           </div>
           {remaining.length>0&&<nav className="cook-guide-bar" aria-label="Cooking guide">

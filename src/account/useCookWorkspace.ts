@@ -12,6 +12,7 @@ import {
 import { newMeal, type Meal } from "@/domain/meal";
 import { migrateMeal } from "@/domain/cookState";
 import { useAccountCook } from "./useAccountCook";
+import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
 import { meaningful, mergeHistory } from "./workspace";
 const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
 type Candidate = { snapshot: LocalSnapshot; legacy: boolean };
@@ -52,7 +53,7 @@ export function useCookWorkspace() {
             const snapshot = new LocalCookStore(window.localStorage).load(
               false,
             );
-            if (meaningful(snapshot)) {
+            if (meaningful(snapshot)||(snapshot.canceled?.cooks.length??0)>0) {
               candidate = { snapshot, legacy: true };
               allowed = mode === "guest";
             }
@@ -76,7 +77,7 @@ export function useCookWorkspace() {
   );
   const guest =
     legacyAllowed && local.meal
-      ? { active: migrateMeal(local.meal), history: local.history }
+      ? { active: migrateMeal(local.meal), history: local.history, canceled:local.canceled }
       : trial;
   if (mode === "guest" && legacyScope === "guest")
     guestRef.current = { snapshot: guest, legacy: legacyAllowed };
@@ -96,7 +97,7 @@ export function useCookWorkspace() {
   const data =
     mode === "disabled"
       ? local.meal
-        ? { active: migrateMeal(local.meal), history: local.history }
+        ? { active: migrateMeal(local.meal), history: local.history, canceled:local.canceled }
         : null
       : account.ownerId
         ? (cloud.state.snapshot ?? guestRef.current?.snapshot ?? trial)
@@ -137,13 +138,16 @@ export function useCookWorkspace() {
     (mode === "checking" ||
       (!!account.ownerId &&
         ["loading", "load-error", "saving", "blocked", "conflict"].includes(cloud.state.phase)));
-  const save = async (change: { active?: Meal; history?: HistoryLibrary }) => {
+  const save = async (change: { active?: Meal; history?: HistoryLibrary; canceled?: LocalSnapshot["canceled"] }) => {
     if (enabled && account.ownerId) {
       if (!cloud.store.current) throw Error("Account cooks are loading.");
       await cloud.store.current.save(change);
     } else if (mode === "disabled" || legacyAllowed) local.save(change);
     else if (mode === "guest") {
+      const retained=trialRef.current.canceled??emptyCanceled();
+      if(change.active&&retained.cooks.some(c=>c.meal.id===change.active!.id)||change.history?.cooks.some(c=>retained.cooks.some(r=>r.meal.id===c.id)))throw Error('A canceled cook cannot be restored as active or completed.');
       const next = {
+        ...trialRef.current,
         active: migrateMeal(change.active ?? trialRef.current.active),
         history: change.history ?? trialRef.current.history,
       };
@@ -151,6 +155,19 @@ export function useCookWorkspace() {
       setTrial(next);
     } else throw Error("Confirm your account before saving.");
     setTransitionError("");
+  };
+  const cancel = async (cookId:string) => {
+    if(!data||data.active.id!==cookId||!(data.active.mode==='cooking'||data.active.startedAt))throw Error('This cook is no longer active. Reload your saved cooks.');
+    if(enabled&&account.ownerId){
+      if(!cloud.store.current)throw Error('Account cooks are loading.');
+      await cloud.store.current.cancel(cookId);
+    }else if(mode==='disabled'||legacyAllowed)local.cancel(cookId);
+    else if(mode==='guest'){
+      const current=trialRef.current;
+      const next={...current,active:migrateMeal(newMeal()),canceled:retainCanceled(current.active,current.canceled??emptyCanceled(),new Date().toISOString())};
+      trialRef.current=next;setTrial(next);
+    }else throw Error('Confirm your account before canceling.');
+    setTransitionError('');setSelection(v=>v+1);
   };
   const patch = (fn: (m: Meal) => Meal) => {
     try {
@@ -262,6 +279,8 @@ export function useCookWorkspace() {
     setError: setTransitionError,
     patch,
     save,
+    cancel,
+    canCancel: enabled&&account.ownerId?!!cloud.state.canCancel:true,
     retry,
     reset,
     restore,

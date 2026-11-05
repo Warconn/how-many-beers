@@ -1,24 +1,19 @@
-# Current owner-approved sequence: November 5, 2026
+# Current owner-approved queue
 
-Finish and stabilize the November 5 release: #21 / PR #98 plus #97 / PR #99,
-including accepted November 3 spacing, Cooking Mode layout and Beerometer cleanup.
-Full feature CI → merge dev → full integration CI → release PR dev to main → full
-candidate CI/build → merge → actual Cloudflare deployment confirmation. No failing
-check bypass, force merge or production account/cook-data mutations. See
-[release notes](releases/2026-11-05.md); verify live status before claiming release.
-The #96 deliveries (#92, #84, #62/#85, #77 and #86) remain complete.
+Production #100 (`190bf61`) is deployed. #21 and #97 are completed; dev and
+production had the same source tree at this sequence's kickoff.
 
-After shipping, discuss the owner's in-progress cooking/timing concept separately.
-Do not infer its requirements or redesign execution during stabilization.
+1. **#61:** Retained cancellation, authoritative account transition, local/trial
+   support and terminal-state protection. Separate reviewed PR to dev.
+2. **#83:** Multiple independent upcoming account plans plus one active cook,
+   using the tested #61 lifecycle design. Preserve all active/history data.
+3. **In parallel, #71:** Measured CI feedback improvements without losing coverage.
 
-Prepared capability sequence, not implementation scope in this session:
-1. **#61:** Retained cancellation, authoritative lifecycle, terminal guards and safe
-   recovery. Review Supabase constraints/RLS/RPC first.
-2. **#83:** Multiple account plans and one live cook, after #61 design is understood.
-   No active-cook replacement or guest scope expansion. Separate feature PRs.
-
-#69/#70 sync, #2 URL import, paid tiers and social login remain excluded. No manual
-QA/acceptance tickets. Reconcile #21/#97 only after their actual release.
+The owner approved implementation, not merges or deployment. Feature branches and
+focused PRs to dev, database security/upgrade/race checks, desktop/mobile/iPhone
+browser tests and actual screenshots. Capability-gate until migrations are available.
+Fresh guest trials remain temporary. #101 timing discovery stays separate; no new
+execution model, advanced sync, URL import, paid or social-login work.
 
 The following older queue is historical and superseded by this section.
 

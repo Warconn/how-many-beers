@@ -86,6 +86,7 @@ jobs:
         with:
           name: cooking-review-screenshots
           path: |
+            test-results/cancel-cook-*/*.png
             test-results/cooking-simplicity-*/*.png
             test-results/design-system-*/*.png
             test-results/live-cook-start-*/*.png

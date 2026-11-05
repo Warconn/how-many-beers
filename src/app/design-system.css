@@ -103,3 +103,7 @@ label { font-size:var(--text-sm); line-height:1.5; }
 /* Leave room for the native select arrow at 16 px, including narrow iPhones. */
 .step-editor .duration-controls { grid-template-columns:minmax(0,1fr) 120px; }
 .step-editor .duration-controls select { padding-inline:10px; }
+
+.cancel-cook-dialog { max-width:480px; width:calc(100% - 32px); }
+.cancel-cook-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+.cancel-cook-actions .button { min-height:44px; }
