@@ -28,7 +28,7 @@ export default function CookingStepSummary({task,forecast,activePhase}:{task:Pla
  const instruction=brief(task,rest);
  return <>
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
-  <p className="task-dish">{task.dishName}{activePhase?.active&&<> · {formatDuration(activePhase.elapsed)} {activePhase.kind==='heating'?'cooking':'resting/cooling'}{activePhase.overrun?' · over estimate':''}</>}</p>
+  <p className="task-dish">{task.dishName}{activePhase?.active&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>
   {instruction&&<p className="muted small">{instruction}</p>}
   <p className="cooking-step-timing">
    {condition?'Check when ready':<>

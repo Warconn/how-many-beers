@@ -27,6 +27,7 @@ test('global next action, concurrent remaining work and quiet beers-first presen
  await page.clock.fastForward(60000);await expect(meter(page)).toContainText('0h 34m');
  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({style:'nextjs-portal{display:none}',path:info.outputPath('concurrent-cooking.png'),fullPage:true,scale:'css'});
  await page.reload();await page.getByRole('button',{name:/Continue cooking/}).first().click();await expect(meter(page)).toContainText('0h 34m');
+ await page.clock.fastForward(37000);await expect(page.getByRole('region',{name:'Current step',exact:true}).locator('.task-dish')).not.toContainText(/\d+\.\d+ min/);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.completed['brats:check']).toBe(at('16:20').replace('Z','.000Z'));expect(saved.events.find((e:any)=>e.phaseObservations?.some((o:any)=>o.phaseId==='brats:heat'&&o.boundary==='end'))).toBeUndefined();
 });
 test('overrun remains active; real removal/rest updates serving and inline target difference',async({page},info)=>{
@@ -72,4 +73,13 @@ test('Sunday brisket keeps full cooking/rest work after rapid preparation and co
  for(const key of ['prep','season','preheat','start','raise225','spritz','check','wrap'])m=recordEvent(m,d.id+':'+key,'completed',at('16:01'));
  await open(page,m,'16:02');await expect(meter(page)).toContainText('15h 39m');
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(stored.events.flatMap((e:any)=>e.phaseObservations??[]).filter((o:any)=>o.boundary==='end')).toHaveLength(0);expect(stored.serveAt).toBe(at('18:00'));await page.setViewportSize({width:320,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});
+test('optional remaining estimate can be canceled, saved and reloaded without extending itself',async({page})=>{
+ let m=concurrent();m=recordEvent(m,'potatoes:rest','completed',at('16:45'));await open(page,m,'16:46');
+ const step=page.getByRole('region',{name:'Current step',exact:true});await step.getByText('Step details',{exact:true}).click();
+ const input=step.getByLabel('Remaining estimate (minutes, optional)',{exact:true});await input.fill('8');await expect(page.getByRole('button',{name:'Full checklist',exact:true})).toBeDisabled();
+ await step.getByRole('button',{name:'Cancel estimate',exact:true}).click();await expect(page.getByRole('button',{name:'Full checklist',exact:true})).toBeEnabled();
+ await input.fill('8');await step.getByRole('button',{name:'Update estimate',exact:true}).click();await expect(meter(page)).toContainText('0h 18m');await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime',at('17:04').replace('Z','.000Z'));
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).first().click();await expect(meter(page)).toContainText('0h 18m');await page.clock.fastForward(8*60000);await expect(meter(page)).toContainText('Earliest serving');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.events.filter((e:any)=>e.phaseEstimate)).toHaveLength(1);expect(saved.events.some((e:any)=>e.phaseObservations?.some((o:any)=>o.phaseId==='brats:heat'&&o.boundary==='end'))).toBe(false);
 });
