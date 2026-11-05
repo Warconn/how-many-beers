@@ -1,24 +1,32 @@
-# Current owner-approved sequence: November 5, 2026
+# Current owner-approved sequence (November 4 ET / November 5 UTC, 2026)
 
-Finish and stabilize the November 5 release: #21 / PR #98 plus #97 / PR #99,
-including accepted November 3 spacing, Cooking Mode layout and Beerometer cleanup.
-Full feature CI → merge dev → full integration CI → release PR dev to main → full
-candidate CI/build → merge → actual Cloudflare deployment confirmation. No failing
-check bypass, force merge or production account/cook-data mutations. See
-[release notes](releases/2026-11-05.md); verify live status before claiming release.
-The #96 deliveries (#92, #84, #62/#85, #77 and #86) remain complete.
+**Canonical decisions:** [Product roadmap](product-roadmap.md). Verify live GitHub branches, issues, PRs, CI and current release before starting Codex work. The older October queue below is historical and **must not** be followed for new assignments.
 
-After shipping, discuss the owner's in-progress cooking/timing concept separately.
-Do not infer its requirements or redesign execution during stabilization.
+## Shipped baseline
 
-Prepared capability sequence, not implementation scope in this session:
-1. **#61:** Retained cancellation, authoritative lifecycle, terminal guards and safe
-   recovery. Review Supabase constraints/RLS/RPC first.
-2. **#83:** Multiple account plans and one live cook, after #61 design is understood.
-   No active-cook replacement or guest scope expansion. Separate feature PRs.
+[Production PR #100](https://github.com/Warconn/how-many-beers/pull/100) released #21 visual consistency and #97 checklist-first Cooking Mode plus accepted spacing/Beerometer UI, beyond earlier #96 fixes. These are **completed**. Do not rerun them.
 
-#69/#70 sync, #2 URL import, paid tiers and social login remain excluded. No manual
-QA/acceptance tickets. Reconcile #21/#97 only after their actual release.
+## Finish what is in flight
+
+1. **#61 Retained cancellation:** [PR #104](https://github.com/Warconn/how-many-beers/pull/104), open when this decision was recorded. Finish and review DB lifecycle/authorization/migration, account/guest recovery, full CI and mobile screenshots. No automatic hosted migration, merge or deployment. #83 depends on its lifecycle contract.
+2. **#71 CI feedback:** [PR #102](https://github.com/Warconn/how-many-beers/pull/102) independent in-flight work. Validate full desktop/mobile/iPhone coverage, evidence, timing and costs before merge. No app feature changes.
+3. **#83 Multiple upcoming saved cooks:** User confirms Codex has work in flight. Verify the live branch/PR rather than assuming delivery. Separate plans for a signed-in account plus a single active cook; keep existing history, events, and guest contracts safe. Review after #61's lifecycle is understood.
+
+## Next product priorities, once the above is reviewed
+
+4. **#103 Recipe-first cook creation and reuse:** Next *user experience* priority after #83. Agree on the first small slice of “What are you cooking?” → saved personal recipe / prior Cook Again / create new with template or existing text import → concise editable plan → add other dishes. Preserve separate recipe and cook-session concepts, and avoid a full onboarding wizard. Review design with owner before coding.
+5. **#101 Concurrent cooking phases and rolling Beerometer:** Follow as its own design-then-implementation track. Checking a “place on grill” step starts a phase, “remove from heat” ends it; time-based check actions remain optional for readings, concurrent dishes stay visible, Up next is global, and Beerometer estimates total remaining work from **now**. Corrections reflow the forecast, and timer expiry never proves food safe. No notifications or advanced scheduler scope.
+
+After #103/#101, use the app on real multi-dish cooks and reevaluate pain points before adding more features.
+
+## Intentionally Later or closed
+
+- **#2 URL import** and **#11 timers/notifications:** owner explicitly deferred until the core cook experience is stable. Existing text import continues; computing checkpoint due times in #101 is not implementing reminder delivery.
+- **#3 advanced cross-dish dependencies**, #6 learned timing, #9 photo/PDF import, #13 voice, #46 monetization, #67 social login and #70 multi-device concurrent edits are later/parked.
+- **#105** consolidates closed #68/#69 privacy/data and offline reliability concepts as future considerations. Address concrete security, data loss or legal requirements promptly rather than waiting for a feature cycle.
+- **#12/#14/#15/#16/#17/#18** were closed not planned; no expanded equipment profiles, smart probes, sharing, groceries/nutrition, AI coach or alternative bundled methods.
+
+Use feature branches and reviewable PRs into `dev`. No automatic merges, production deployments or hosted schema changes; inspect CI and user-facing screenshots.
 
 The following older queue is historical and superseded by this section.
 
