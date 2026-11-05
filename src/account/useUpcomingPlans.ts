@@ -300,7 +300,7 @@ export function useUpcomingPlans(enabled:boolean){
       }
       await protectSelected();
     }
-    releaseSelection();
+    releaseSelection();requestAutomatic();
   };
   automatic.current=async()=>{
     if(automaticRun.current||!enabled||!ownerId||!api||!allowed.current||opening.current)return;
