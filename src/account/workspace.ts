@@ -15,16 +15,19 @@ export type RawCook = {
 export type RawArchive = ArchivedCook & { serveInstant: string | null };
 export type Document = { active: RawCook | null; history: RawArchive[] };
 export type CancellationReceipt = { operationId: string; cookId: string; canceledAt: string };
+export type PromotionReceipt = { operationId: string; planId: string; cookId: string };
 export type Remote = Document & {
   revision: number;
   writeId: string | null;
-  capabilities?: { cancelCook?: boolean };
+  capabilities?: { cancelCook?: boolean; savedPlans?: boolean };
   cancellation?: CancellationReceipt;
+  promotion?: PromotionReceipt;
 };
 export type WorkspaceAPI = {
   read: () => Promise<Remote>;
   write: (revision: number, id: string, document: Document) => Promise<Remote>;
   cancel?: (revision: number, id: string, cookId: string) => Promise<Remote>;
+  promote?: (revision: number, id: string, planId: string, planRevision: number) => Promise<Remote>;
 };
 export class AccountConflict extends Error {}
 export const equal = (a: unknown, b: unknown): boolean => {
@@ -77,11 +80,17 @@ export function parseRemote(value: unknown): Remote {
     (!v.capabilities || typeof v.capabilities !== "object" ||
       (v.capabilities.cancelCook !== undefined && typeof v.capabilities.cancelCook !== "boolean")))
     throw Error("Invalid account capabilities.");
+  if (v.capabilities?.savedPlans !== undefined && typeof v.capabilities.savedPlans !== "boolean")
+    throw Error("Invalid account capabilities.");
   if (v.cancellation !== undefined &&
     (!v.cancellation || typeof v.cancellation.operationId !== "string" ||
       typeof v.cancellation.cookId !== "string" || typeof v.cancellation.canceledAt !== "string" ||
       !Number.isFinite(Date.parse(v.cancellation.canceledAt))))
     throw Error("Invalid cancellation receipt.");
+  if (v.promotion !== undefined &&
+    (!v.promotion || typeof v.promotion.operationId !== "string" ||
+      typeof v.promotion.planId !== "string" || typeof v.promotion.cookId !== "string"))
+    throw Error("Invalid plan promotion receipt.");
   return v;
 }
 export function decode(
@@ -163,6 +172,13 @@ export function workspaceAPI(
         expected_revision: revision,
         write_id: id,
         target_cook_id: cookId,
+      }),
+    promote: (revision, id, planId, planRevision) =>
+      call("promote_saved_cook_plan", {
+        expected_workspace_revision: revision,
+        expected_plan_revision: planRevision,
+        target_plan_id: planId,
+        write_id: id,
       }),
   };
 }

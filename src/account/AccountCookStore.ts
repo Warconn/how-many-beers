@@ -34,7 +34,16 @@ type CancelOperation = {
   snapshot: LocalSnapshot;
   critical: true;
 };
-type Operation = SaveOperation | CancelOperation;
+type PromoteOperation = {
+  kind: "promote";
+  id: string;
+  revision: number;
+  planId: string;
+  planRevision: number;
+  snapshot: LocalSnapshot;
+  critical: true;
+};
+type Operation = SaveOperation | CancelOperation | PromoteOperation;
 type Cache = {
   version: 1;
   owner: string;
@@ -44,6 +53,7 @@ type Cache = {
 };
 export type AccountState = {
   canCancel?: boolean;
+  canPlan?: boolean;
   snapshot: LocalSnapshot | null;
   backup: LocalSnapshot | null;
   phase:
@@ -116,6 +126,11 @@ export class AccountCookStore {
               c.operation.cookId !== this.base.active?.meal.id ||
               !equal(this.desired, c.operation.snapshot))
               throw Error("Invalid cancellation recovery request.");
+          } else if (c.operation.kind === "promote") {
+            if (!c.operation.critical || typeof c.operation.planId !== "string" ||
+              !Number.isSafeInteger(c.operation.planRevision) || c.operation.planRevision < 1 ||
+              !equal(this.desired, c.operation.snapshot))
+              throw Error("Invalid promotion recovery request.");
           } else {
             if (c.operation.kind !== undefined && c.operation.kind !== "save")
               throw Error("Unsupported recovery operation.");
@@ -168,6 +183,7 @@ export class AccountCookStore {
     }
     return {
       canCancel: !!this.base?.capabilities?.cancelCook && !!this.api.cancel && !this.readonlyMode,
+      canPlan: !!this.base?.capabilities?.savedPlans && !!this.api.promote && !this.readonlyMode,
       snapshot: this.visible,
       backup,
       phase:
@@ -235,9 +251,11 @@ export class AccountCookStore {
       // A normal read cannot acknowledge an operation-specific cancellation.
       // Its response may have been lost before another cook was created. Keep
       // the original request blocked and retry it explicitly for its receipt.
-      if (this.operation?.kind === "cancel") {
+      if (this.operation?.kind === "cancel" || this.operation?.kind === "promote") {
         this.phase = "blocked";
-        this.error = "Cancellation has not been confirmed. Retry before starting another cook.";
+        this.error = this.operation.kind === "cancel"
+          ? "Cancellation has not been confirmed. Retry before starting another cook."
+          : "Starting your saved plan has not been confirmed. Retry before continuing.";
         this.publish();
         return;
       }
@@ -404,6 +422,46 @@ export class AccountCookStore {
       this.publish();
     }
   }
+  async promote(planId: string, planRevision: number): Promise<void> {
+    if (!this.criticalRequested && this.operation?.kind === "promote" &&
+      this.operation.planId === planId && this.phase === "blocked") {
+      await this.retry();
+      return;
+    }
+    if (this.criticalRequested || !this.visible || !this.base ||
+      ["conflict", "blocked", "saving", "load-error"].includes(this.phase))
+      throw Error("Resolve account saving before starting this plan.");
+    if (!this.state().canPlan) throw Error("Upcoming plans are not available for this account yet.");
+    if (!planId || !Number.isSafeInteger(planRevision) || planRevision < 1)
+      throw Error("Save the plan before starting it.");
+    if (this.visible.active.mode === "cooking" || this.visible.active.startedAt)
+      throw Error("Finish or cancel your current cook before starting another.");
+    this.criticalRequested = true;
+    this.publish();
+    try {
+      if (this.inflight) await this.inflight;
+      if (this.desired) await this.flush();
+      if (this.disposed) throw Error("Account changed.");
+      this.desired = this.visible;
+      this.operation = {
+        kind: "promote", id: crypto.randomUUID(), revision: this.base.revision,
+        planId, planRevision, snapshot: this.visible, critical: true,
+      };
+      this.phase = "saving";
+      this.error = "";
+      try {
+        this.persist();
+        this.publish();
+        await this.flush(true);
+      } catch (error) {
+        this.failed(error, true);
+        throw error;
+      }
+    } finally {
+      this.criticalRequested = false;
+      this.publish();
+    }
+  }
   async flush(explicit = false): Promise<void> {
     if (this.inflight) {
       await this.inflight;
@@ -443,15 +501,21 @@ export class AccountCookStore {
         this.publish();
         const remote = operation.kind === "cancel"
           ? await this.api.cancel!(operation.revision, operation.id, operation.cookId)
+          : operation.kind === "promote"
+          ? await this.api.promote!(operation.revision, operation.id, operation.planId, operation.planRevision)
           : await this.api.write(operation.revision, operation.id, operation.document);
         if (this.disposed) return;
         if (operation.kind === "cancel" &&
           (remote.cancellation?.operationId !== operation.id ||
             remote.cancellation.cookId !== operation.cookId))
           throw Error("Cancellation has not been confirmed. Keep this cook open and retry.");
+        if (operation.kind === "promote" &&
+          (remote.promotion?.operationId !== operation.id || remote.promotion.planId !== operation.planId ||
+            remote.promotion.cookId !== operation.planId))
+          throw Error("Starting your saved plan has not been confirmed. Keep it open and retry.");
         this.base = remote;
         this.operation = null;
-        if (operation.kind === "cancel" || equal(this.desired, operation.snapshot)) this.desired = null;
+        if (operation.kind === "cancel" || operation.kind === "promote" || equal(this.desired, operation.snapshot)) this.desired = null;
         this.visible = this.desired ?? decode(remote, this.empty);
         this.phase = this.desired ? "syncing" : "saved";
         this.error = "";
