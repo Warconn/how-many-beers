@@ -16,6 +16,15 @@ import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
 import { meaningful, mergeHistory } from "./workspace";
 import {useUpcomingPlans,currentHasActuals,hasUpcomingContent,type UpcomingPlan} from './useUpcomingPlans';
 import {savedPlanAPI,planMeal,exportSavedPlans,validateSavedPlansBackup} from './savedPlans';
+type SavePhase='loading'|'load-error'|'saved'|'syncing'|'unsaved'|'conflict'|'saving'|'blocked';
+/** A current critical transition always owns the existing account saving indicator. */
+export function combinedSavePhase(current:SavePhase,selected:SavePhase|null,future:SavePhase='saved'):SavePhase{
+  if(['loading','load-error','saving','blocked','conflict'].includes(current))return current;
+  for(const phase of [selected,future])if(phase==='conflict'||phase==='load-error')return phase;
+  if(current==='unsaved'||selected==='unsaved'||future==='unsaved')return 'unsaved';
+  if(current==='syncing'||selected==='syncing'||selected==='loading'||future==='syncing'||future==='loading')return 'syncing';
+  return current;
+}
 const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
 type Candidate = { snapshot: LocalSnapshot; legacy: boolean };
 export function useCookWorkspace() {
@@ -154,6 +163,7 @@ export function useCookWorkspace() {
   const currentCook=data?.active??null;
   const selectedDocument=!!upcoming.selectedId;
   const selectedPhase=upcoming.state.phase;
+  const savePhase=combinedSavePhase(cloud.state.phase,selectedDocument?selectedPhase:null,upcoming.savingPhase??'saved');
   const status=selectedDocument?(selectedPhase==='saved'?currentStatus:selectedPhase==='loading'?'loading':selectedPhase==='load-error'?'recovery':selectedPhase==='conflict'?'conflict':'unsaved'):currentStatus;
   const locked=currentLocked||(selectedDocument&&['loading','load-error','conflict'].includes(selectedPhase));
   const selectedStore=()=>upcoming.store.current?.owner===account.ownerId?upcoming.store.current:null;
@@ -365,6 +375,58 @@ export function useCookWorkspace() {
       }
     } else local.retry();
   };
+  const promotionAutomatic=useRef<{id:string;resume:(restart?:boolean)=>void}|null>(null);
+  const completedPromotion=useRef<string|null>(null);
+  useEffect(()=>{
+    if(!enabled||!account.ownerId||account.phase!=='authenticated'||cloud.state.pendingOperation!=='promote'||!cloud.state.pendingOperationId)return;
+    const owner=account.ownerId,source=cloud.store.current,operationId=cloud.state.pendingOperationId;
+    if(!source||source.owner!==owner)return;
+    let disposed=false,attempts=0,timer:ReturnType<typeof setTimeout>|undefined,running=false;
+    const owned=()=>mounted.current&&ownerScope.current===owner&&cloud.store.current===source;
+    const pending=()=>!disposed&&owned()&&source.state().phase==='blocked'&&source.state().pendingOperation==='promote'&&source.state().pendingOperationId===operationId;
+    const finish=async()=>{
+      const after=source.state();
+      if(!owned()||after.phase!=='saved'||after.pendingOperation==='promote'||completedPromotion.current===operationId)return;
+      completedPromotion.current=operationId;
+      const selected=selectedStore();
+      if(selected&&!selected.dirty()&&selected.state().plan?.id===after.snapshot?.active.id){
+        await upcoming.forgetSelected().catch(()=>{});
+        if(!owned())return;
+        upcoming.releaseSelection();selectLegacy(null);
+      }
+      await upcoming.refresh().catch(()=>{});
+      if(owned()&&!selectedStore())setSelection(value=>value+1);
+    };
+    const schedule=(restart=false)=>{
+      if(restart){attempts=0;if(timer)clearTimeout(timer);timer=undefined;}
+      if(!pending()||running||timer||attempts>=4)return;
+      timer=setTimeout(()=>{timer=undefined;void attempt();},[1000,2000,4000,8000][attempts]);
+    };
+    const attempt=async()=>{
+      if(!pending()||running)return;
+      running=true;attempts++;
+      try{await source.retry();}catch{/* The same immutable receipt remains pending until acknowledged. */}
+      finally{running=false;await finish();schedule();}
+    };
+    const resume=()=>{if(document.visibilityState!=='hidden')schedule(true);};
+    const controller={id:operationId,resume:schedule};promotionAutomatic.current=controller;
+    schedule();
+    window.addEventListener('online',resume);window.addEventListener('focus',resume);document.addEventListener('visibilitychange',resume);
+    return()=>{
+      disposed=true;if(timer)clearTimeout(timer);
+      if(promotionAutomatic.current===controller)promotionAutomatic.current=null;
+      window.removeEventListener('online',resume);window.removeEventListener('focus',resume);document.removeEventListener('visibilitychange',resume);
+      // Acknowledgement clears pendingOperation during publish, before retry()'s
+      // continuation. Finalize by owner/receipt rather than the disposed effect.
+      void finish();
+    };
+    // The controller survives saving/blocked transitions; each immutable receipt has one bounded budget.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[enabled,account.ownerId,account.phase,cloud.state.pendingOperation,cloud.state.pendingOperationId]);
+  useEffect(()=>{
+    const controller=promotionAutomatic.current;
+    if(cloud.state.phase==='blocked'&&cloud.state.pendingOperation==='promote'&&controller&&controller.id===cloud.state.pendingOperationId)controller.resume();
+  },[cloud.state.phase,cloud.state.pendingOperation,cloud.state.pendingOperationId]);
   const reloadSelectedPlan=async()=>{
     const selected=selectedStore();
     if(!selected)throw Error('Select the future plan before loading its saved version.');
@@ -398,6 +460,8 @@ export function useCookWorkspace() {
     isSelectedPlan,
     hasSelectedPlan:()=>upcoming.hasSelection()||(legacyRef.current?.owner===account.ownerId&&!!legacyRef.current),
     selectedPlanPhase:selectedDocument?selectedPhase:null,
+    selectedSavePhase:selectedDocument?selectedPhase:null,
+    savePhase,
     planError:upcoming.state.error||upcoming.listError,
     planListPhase:upcoming.listPhase,
     plansError:upcoming.listError,

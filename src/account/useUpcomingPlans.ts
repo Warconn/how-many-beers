@@ -97,6 +97,11 @@ export function useUpcomingPlans(enabled:boolean){
   const [state,setState]=useState<SavedPlanState>(initial);
   const [listPhase,setListPhase]=useState<'loading'|'saved'|'load-error'>('loading');
   const [listError,setListError]=useState('');
+  const [automaticPhase,setAutomaticPhase]=useState<SavedPlanState['phase']>('saved');
+  const [actionError,setActionError]=useState('');
+  const automatic=useRef<(()=>Promise<void>)|null>(null),automaticRun=useRef<Promise<void>|null>(null);
+  const retryTimer=useRef<ReturnType<typeof setTimeout>|null>(null),retryAttempt=useRef(0),resumeSelected=useRef(false),resumeAgain=useRef(false);
+  const backgroundGeneration=useRef(0),worker=useRef<{id:string;store?:SavedPlanStore;release:()=>void}|null>(null);
   const selectedReadonly=useRef(false);
   const store=useRef<SavedPlanStore|null>(null),release=useRef<(()=>void)|null>(null);
   const index=useRef<{owner:string;value:PendingPlanIndex}|null>(null),indexOpening=useRef<{owner:string;promise:Promise<PendingPlanIndex>}|null>(null),listRequest=useRef(0);
@@ -167,12 +172,20 @@ export function useUpcomingPlans(enabled:boolean){
       throw e;
     }
   };
+  const stopBackground=()=>{
+    backgroundGeneration.current++;worker.current?.store?.dispose();worker.current?.release();worker.current=null;
+  };
+  const requestAutomatic=(restart=false)=>{
+    if(restart){retryAttempt.current=0;resumeSelected.current=true;if(retryTimer.current)clearTimeout(retryTimer.current);retryTimer.current=null;}
+    if(automaticRun.current){resumeAgain.current=true;return;}
+    void automatic.current?.();
+  };
   const releaseSelection=()=>{
     store.current?.dispose();store.current=null;release.current?.();release.current=null;
     selectedRef.current=null;selectedReadonly.current=false;setSelected(null);setState(initial);
   };
   useEffect(()=>{
-    generation.current++;opening.current=false;releaseSelection();index.current?.value.close();index.current=null;setPlans([]);setScope(ownerId);setListError('');setListPhase('loading');
+    generation.current++;opening.current=false;releaseSelection();index.current?.value.close();index.current=null;setPlans([]);setAutomaticPhase('saved');setActionError('');setScope(ownerId);setListError('');setListPhase('loading');
     if(enabled&&ownerId&&client)void refresh().catch(()=>{});
     return ()=>{generation.current++;store.current?.dispose();store.current=null;release.current?.();release.current=null;selectedRef.current=null;index.current?.value.close();index.current=null;};
     // Refresh is intentionally scoped to account/capability changes, not a new API object on render.
@@ -202,8 +215,11 @@ export function useUpcomingPlans(enabled:boolean){
   const open=async(id:string,seed?:Meal)=>{
     if(!enabled||!api||!ownerId||!allowed.current)throw Error('Confirm your account before opening an upcoming plan.');
     if(opening.current)throw Error('Wait for the current plan to finish opening.');
-    if(selectedRef.current?.id===id&&selectedRef.current.owner===ownerId){await flush();return;}
-    opening.current=true;
+    if(selectedRef.current?.id===id&&selectedRef.current.owner===ownerId){
+      try{await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
+      return;
+    }
+    opening.current=true;stopBackground();
     const owner=ownerId,version=generation.current;
     try{
       await close();
@@ -233,12 +249,13 @@ export function useUpcomingPlans(enabled:boolean){
       },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined);
       store.current=next;selectedRef.current={owner,id};setSelected({owner,id});setState(next.state());
       await next.connect();
-      if(recoveredSeed)await next.flush(true);
-      if(['load-error','conflict'].includes(next.state().phase))throw Error(next.state().error||'This plan could not be opened safely.');
+      if(recoveredSeed){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
+      if(!next.state().meal)throw Error(next.state().error||'This plan could not be opened safely.');
+      setActionError('');
     }catch(error){
-      if(!store.current){release.current?.();release.current=null;}
+      if(!store.current){release.current?.();release.current=null;setActionError(error instanceof Error?error.message:'This plan has not been saved.');}
       throw error;
-    }finally{opening.current=false;}
+    }finally{opening.current=false;requestAutomatic();}
   };
   const create=async(seed?:Meal)=>{
     const meal=migrateMeal(seed??newMeal());
@@ -285,12 +302,100 @@ export function useUpcomingPlans(enabled:boolean){
     }
     releaseSelection();
   };
+  automatic.current=async()=>{
+    if(automaticRun.current||!enabled||!ownerId||!api||!allowed.current||opening.current)return;
+    const owner=ownerId,version=generation.current,background=backgroundGeneration.current;
+    const valid=()=>isCurrent(owner)&&allowed.current&&version===generation.current&&background===backgroundGeneration.current&&!opening.current;
+    const run=(async()=>{
+      let needsRetry=false,unsaved=false,conflicted=false;
+      try{
+        if(resumeSelected.current){
+          resumeSelected.current=false;
+          const selectedStore=store.current;
+          if(selectedRef.current?.owner===owner&&selectedStore){
+            try{await selectedStore.retryAutomatic();}catch{/* Store phase and immutable request remain authoritative. */}
+          }
+        }
+        if(!valid())return;
+        const pending=await getIndex(owner);
+        for(const draft of pending.list()){
+          if(!valid())return;
+          if(selectedRef.current?.id===draft.id)continue;
+          const lock=await acquire('how-many-beers:account-plan-writer:'+owner+':'+draft.id);
+          if(lock.readonly){lock.release();continue;}
+          const entry={id:draft.id,release:lock.release,store:undefined as SavedPlanStore|undefined};worker.current=entry;
+          let recovery:Awaited<ReturnType<typeof recoveryStorage>>|undefined;
+          try{
+            if(!valid())return;
+            recovery=await recoveryStorage(savedPlanCacheKey(owner,draft.id));
+            if(!valid())return;
+            const raw=recovery.getItem(savedPlanCacheKey(owner,draft.id));
+            const cached=raw?JSON.parse(raw):null;
+            if(cached?.owner&&cached.owner!==owner)throw Error('Upcoming draft ownership could not be verified.');
+            if(cached?.conflicted&&(cached.desired||cached.operation)){conflicted=true;continue;}
+            const document=backupPendingPlan(draft,raw,owner,new Set());
+            if(!document)continue;
+            if(raw===null&&(draft.sourceRevision??0)>0){conflicted=true;continue;}
+            setAutomaticPhase('syncing');
+            const current=new SavedPlanStore(owner,draft.id,api,recovery,s=>{
+              if(valid()&&s.phase==='syncing')setAutomaticPhase('syncing');
+            },()=>valid()&&selectedRef.current?.id!==draft.id,false,planMeal(document),{serveInstant:document.serveInstant,timeZone:document.timeZone});
+            entry.store=current;
+            await current.connect();if(!valid())return;
+            try{await current.retryAutomatic();}catch{/* The journal is retained until an acknowledged retry. */}
+            if(!valid())return;
+            const after=current.state();
+            if(after.phase==='saved'&&!current.dirty()){
+              await pending.remove([draft.id]);
+              if(after.plan){localAcknowledgements.current++;setPlans(previous=>orderPlans([...previous.filter(plan=>plan.id!==draft.id),after.plan!]));}
+            }else if(after.phase==='conflict')conflicted=true;
+            else if(current.dirty()||after.phase==='load-error'){unsaved=true;needsRetry=after.phase!=='load-error'||needsRetry;}
+          }catch(error){
+            unsaved=true;needsRetry=!(error instanceof AccountConflict)||needsRetry;
+          }finally{
+            entry.store?.dispose();if(!entry.store)recovery?.close?.();entry.release();if(worker.current===entry)worker.current=null;
+          }
+        }
+        if(!valid())return;
+        try{await refresh();}catch{unsaved=true;needsRetry=true;}
+      }catch{if(valid()){unsaved=true;needsRetry=true;}}
+      finally{
+        if(valid()){
+          setAutomaticPhase(conflicted?'conflict':unsaved?'unsaved':'saved');
+          if(needsRetry&&retryAttempt.current<4&&!retryTimer.current){
+            const delay=[1000,2000,4000,8000][retryAttempt.current++];
+            retryTimer.current=setTimeout(()=>{retryTimer.current=null;requestAutomatic();},delay);
+          }
+        }
+      }
+    })();
+    automaticRun.current=run;
+    try{await run;}finally{
+      if(automaticRun.current===run){
+        automaticRun.current=null;
+        if(resumeAgain.current){resumeAgain.current=false;if(isCurrent(owner)&&allowed.current)requestAutomatic();}
+      }
+    }
+  };
+  useEffect(()=>{
+    if(!enabled||!ownerId||!client||phase!=='authenticated')return;
+    const resume=()=>{if(document.visibilityState!=='hidden')requestAutomatic(true);};
+    const initialTimer=setTimeout(resume,0);
+    window.addEventListener('online',resume);window.addEventListener('focus',resume);document.addEventListener('visibilitychange',resume);
+    return()=>{
+      clearTimeout(initialTimer);if(retryTimer.current)clearTimeout(retryTimer.current);retryTimer.current=null;automaticRun.current=null;resumeAgain.current=false;stopBackground();
+      window.removeEventListener('online',resume);window.removeEventListener('focus',resume);document.removeEventListener('visibilitychange',resume);
+    };
+    // Resume reads the current guarded owner/store refs instead of a stale editor closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[enabled,ownerId,client,phase]);
+  const savingPhase:SavedPlanState['phase']=actionError||listPhase==='load-error'?'unsaved':automaticPhase==='conflict'?'conflict':automaticPhase==='syncing'?'syncing':automaticPhase==='unsaved'?'unsaved':plans.some(plan=>plan.pending)?'unsaved':listPhase==='loading'?'syncing':'saved';
   const retry=async()=>{if(store.current)await store.current.retry();else await refresh();};
   return {
     plans:scope===ownerId?plans:[],
     selectedId:selected?.owner===ownerId?selected.id:null,
     state:selected?.owner===ownerId?state:initial,
-    listPhase,listError,store,open,create,flush,close,releaseSelection,forgetSelected,protectSelected,withPendingBackup,refresh,retry,
+    listPhase,listError,savingPhase,actionError,store,open,create,flush,close,releaseSelection,forgetSelected,protectSelected,withPendingBackup,refresh,retry,
     hasSelection:()=>!!selectedRef.current&&selectedRef.current.owner===activeOwner.current,
   };
 }

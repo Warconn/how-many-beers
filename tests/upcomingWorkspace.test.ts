@@ -16,7 +16,7 @@ vi.mock('../src/account/useUpcomingPlans',async()=>{
  const actual=await vi.importActual<typeof import('../src/account/useUpcomingPlans')>('../src/account/useUpcomingPlans');
  return {...actual,useUpcomingPlans:()=>f.plans};
 });
-import {useCookWorkspace} from '../src/account/useCookWorkspace';
+import {useCookWorkspace,combinedSavePhase} from '../src/account/useCookWorkspace';
 import {currentHasActuals,hasUpcomingContent,PendingPlanIndex,pendingPlansKey,mergePendingPlans,backupPendingPlan} from '../src/account/useUpcomingPlans';
 let workspace:ReturnType<typeof useCookWorkspace>;
 function render(){function Probe(){workspace=useCookWorkspace();return null;}renderToString(createElement(Probe));return workspace!;}
@@ -123,4 +123,26 @@ describe('owner-scoped pending-plan discovery',()=>{
   expect(()=>backupPendingPlan(entry,raw,'other-owner',new Set())).toThrow('could not be read safely');expect(()=>backupPendingPlan(entry,'{bad','owner-a',new Set())).toThrow('could not be read safely');
  });
 
+});
+
+
+describe('existing account saving indicator for future plans',()=>{
+ it.each([
+  ['saved','syncing','saved','syncing'],
+  ['saved','unsaved','saved','unsaved'],
+  ['saved','conflict','saved','conflict'],
+  ['saving','unsaved','conflict','saving'],
+  ['blocked','saved','syncing','blocked'],
+  ['conflict','saved','saved','conflict'],
+  ['saved',null,'unsaved','unsaved'],
+  ['saved',null,'syncing','syncing'],
+  ['saved','saved','saved','saved'],
+ ] as const)('combines current %s / selected %s / future %s as %s',(current,selected,future,expected)=>{
+  expect(combinedSavePhase(current,selected,future)).toBe(expected);
+ });
+ it('exposes the selected save phase while critical physical-cook persistence takes precedence',()=>{
+  f.plans.selectedId='future-plan';f.plans.store.current=selected();f.plans.state={meal:migrateMeal(newMeal()),phase:'syncing',error:''};
+  let w=render();expect(w.selectedSavePhase).toBe('syncing');expect(w.savePhase).toBe('syncing');
+  f.cloud.state.phase='blocked';w=render();expect(w.savePhase).toBe('blocked');
+ });
 });
