@@ -22,8 +22,12 @@ test('brisket weight planning is explicit, updates the schedule and preserves re
   await expect(planner.getByLabel('Cooking profile',{exact:true})).toBeHidden();
   await planner.scrollIntoViewIfNeeded();await planner.screenshot({path:info.outputPath('compact-recommendation.png')});
   await planner.getByRole('button',{name:'Use recommended timing',exact:true}).click();
-  await expect(planner.getByRole('button',{name:'Timing applied',exact:true})).toBeDisabled();
-  await expect(planner.getByRole('status')).toContainText('Using estimated timing');
+  await expect(planner.getByRole('status')).toContainText('Timing applied');
+  await expect(planner.getByRole('button',{name:'Timing applied',exact:true})).toHaveCount(0);
+  await expect(planner.getByRole('button',{name:'Use manual timing',exact:true})).toBeVisible();
+  const appliedBox=await planner.locator('.timing-choice').boundingBox();
+  expect(appliedBox).not.toBeNull();
+  expect(appliedBox!.height).toBeLessThan(90);
   const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!) as ExtendedMeal);
   const first=await saved();
   await planner.locator('.timing-choice').scrollIntoViewIfNeeded();await planner.locator('.timing-choice').screenshot({path:info.outputPath('timing-choice.png')});

@@ -35,7 +35,7 @@ test('save for later returns Home without starting, survives reopening and start
  await reopened.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(reopened.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
  const active=await saved(reopened);expect(active.mode).toBe('cooking');expect(active.startedAt).toBeTruthy();
  expect({...active,mode:meal.mode,startedAt:undefined}).toEqual({...meal,startedAt:undefined});
- await reopened.getByRole('button',{name:'← Home',exact:true}).click();await expect(reopened.getByRole('button',{name:'Start cooking',exact:true})).toHaveCount(0);
+ await reopened.getByRole('button',{name:'Home',exact:true}).click();await expect(reopened.getByRole('button',{name:'Start cooking',exact:true})).toHaveCount(0);
  await reopened.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(reopened)).toEqual(active);expect(await reopened.evaluate(k=>localStorage.getItem(k),HISTORY_KEY)).toBe(oldHistory);
 });
 
@@ -58,7 +58,7 @@ test('invalid and untimed drafts can be saved; active cooks keep their history',
  const untimed={...newMeal(),dishes:[parseRecipeText('Sauce','Mix\nSimmer')]};await load(page,untimed);await page.getByRole('button',{name:'Save plan for later',exact:true}).click();await expect(page.getByRole('region',{name:'Planned start',exact:true})).toContainText('No confirmed start time');
  const base=fixture();const active=recordEvent({...base,mode:'cooking',startedAt:'2026-11-24T20:00:00Z'},base.dishes[0].id+':prep','completed','2026-11-24T20:00:00Z');
  await load(page,active);await expect(page.getByRole('button',{name:'Save plan for later',exact:true})).toHaveCount(0);await page.getByRole('button',{name:'Continue cooking',exact:true}).click();expect(await saved(page)).toEqual(active);
- await load(page,{...active,mode:undefined});await page.getByRole('button',{name:'← Home',exact:true}).click();await page.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(page)).toEqual(active);
+ await load(page,{...active,mode:undefined});await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(page)).toEqual(active);
 });
 
 test('a general-prep-only plan stays discoverable and can be saved untimed',async({page})=>{

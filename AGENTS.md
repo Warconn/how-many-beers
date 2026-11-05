@@ -10,28 +10,44 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priorities and decision rules (October 27, 2026)
+## Current priorities and decision rules (November 5, 2026)
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: November 1 owner-approved fixes
+### NOW: Finish and stabilize the approved production release
 
-Latest dev includes the tested #87 Wave 1 work: #86 (#91), combined #85/#62 UI (#89), and remaining #77 imports (#90), merged at fbcf91c. Production remains the earlier #88 release (3973bb4). Do not duplicate these deliveries.
+The November 5 release contains #21 (visual design system, PR #98) and #97
+(checklist-first Cooking Mode, PR #99), plus the accepted November 3 compact
+planning/cooking layout and Beerometer cleanup. These extend production #96
+(`925cbacd348afd43640d69b2db1c173352c95fd1`), which delivered #92 (#93/#95),
+#84 (#94), #62/#85 (#89), #77 (#80/#90) and #86 (#91). Do not duplicate these
+implementations. See docs/releases/2026-11-05.md for the release contract/evidence;
+verify live main/dev and release PR status before describing deployment as complete.
 
-The owner requested **#92 planning-aware step reorder first**, then **#84 Cooking Mode cleanup** where the presentation work stays separate. #92 initially merged via #93 and #84 via #94 at 4f48697, both with green full CI. The owner has now explicitly rejected the #93 template-phase reorder restriction: every dish step must be movable, with following estimates based on preceding known durations. Refine #92 accordingly, retaining fixed/recorded anchors and specific conflicts, actual physical starts, manual readiness checks and all persisted data. New user sequences must not silently migrate existing plans. Deliver to dev for owner manual QA before production. Use isolated feat branches/PRs targeting dev, preserve all account/guest data and actual logs, run full browser/account/offline CI and inspect actual desktop/mobile screenshots. Deliver fixes on dev for owner testing; **do not promote production** until separately approved. #84's #86 integration dependency is satisfied by merged, green dev; avoid rewriting forecast logic during layout cleanup.
+The owner explicitly authorized this stabilization and production promotion after
+all gates pass: finish #99, full CI, merge dev, full integration CI on that dev
+commit, release PR dev → main, full candidate CI/build, then merge and confirm the
+actual Cloudflare deployment of the intended main commit. Never bypass failures
+or force a merge. Inspect desktop/mobile/iPhone screenshots. No production account
+or cook-data mutations during smoke tests. Significant unresolved issues block
+promotion. Reconcile #21/#97 after release, not merely after implementation.
 
-#4 real-device QA was completed by the owner and closed. #5 was closed at the owner's request, not as a claim that its remaining source/calibration research was performed. #61/#83 lifecycle/schema changes, #69/#70 sync, #2 URL import, #3 full scheduling and #67 social sign-in remain outside this batch. The owner is maintaining the remaining backlog; do not independently reprioritize or close other tickets.
+Cooking defaults to one action, concise instructions, relevant duration/checkpoint
+and a checkbox. Optional physical starts/corrections and temperature/equipment
+logging live in Step details. A checkbox is not proof of elapsed cooking/resting.
+Corrections append events; preserve original observations, stable IDs, saved cooks,
+authentication, ownership, guest behavior and planning/forecast semantics. Keep the
+accepted Beerometer simplification: no duplicate initial projected duration or zero
+elapsed reading. Do not redesign accepted functions or the execution model.
 
-### NEXT, not immediate coding queue
-
-- [#11 timers and overdue cues](https://github.com/Warconn/how-many-beers/issues/11).
-- [#2 URL recipe import](https://github.com/Warconn/how-many-beers/issues/2).
-- [#3 deeper cross-dish scheduling](https://github.com/Warconn/how-many-beers/issues/3).
-- A separate reusable saved-recipe library (requires account/cook persistence; create/scope an implementation ticket before coding).
-- Advanced portion of [#20](https://github.com/Warconn/how-many-beers/issues/20): robust offline outbox/replay, simultaneous live multi-device editing and merge/conflict resolution.
-- [#21 cross-app design cleanup](https://github.com/Warconn/how-many-beers/issues/21) after #45 establishes brand components.
-
-**No fixed relative order among Next tickets** has been approved; obtain a fresh product-priority choice before starting one. #11 and #2 appearing in a Codex "next coding priorities" recommendation ahead of unfinished Now scope is a priority mistake. "Later" and monetization [#46](https://github.com/Warconn/how-many-beers/issues/46) do not block free launch.
+**Next planning sequence remains #61, then #83**, but neither is implementation
+scope for this release. Review docs/cook-lifecycle-plan.md before database work.
+#83 must wait for #61's lifecycle/migration design. #69/#70 sync, #2 URL import,
+paid tiers and social login are also excluded. The owner's new in-progress timing
+concept requires a separate discovery conversation; do not infer requirements or
+change the timing engine ahead of that discussion. No manual QA/acceptance tickets.
+#87 is the completed historical queue; #4 was owner-tested and #5 closed at the
+owner's request without claiming extra calibration research.
 
 ### Approved free-tier product boundary
 
@@ -39,7 +55,7 @@ The owner requested **#92 planning-aware step reorder first**, then **#84 Cookin
 - Guests can try the cooking workflow without sign-in, but the intended **new guest experience** has no persistent saves, tracked completed-cook history or account tracking. Clearly disclose that mode's limits.
 - Signed-in users have exactly **one** saved active/planning cook, plus a list of **unlimited completed cooks** (subject to reasonable technical limits). View details and Cook Again stay free.
 - **No cooking analytics dashboard** required. A simple, useful Previous Cooks list is the focus.
-- Multiple saved future plans and a separate personal recipe library are not Now.
+- Multiple future account plans are approved after #61 as #83; the separate personal recipe library remains outside this sequence.
 - **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
 - Scope of #19 is identity/ownership/security; scope of #20's Now slice is saving, retrieval, history and basic cross-device access. Do not make full advanced sync a prerequisite to first account-backed history.
 - The live public origin is **https://howmanybeers.app** on Cloudflare. The integrated dev preview is **https://dev.how-many-beers.pages.dev/**. The owner confirmed Cloudflare Pages uses `main` as its Production branch; `dev` and feature branches use Preview variables. Any legacy GitHub Pages references are historical, not current production routing.
@@ -54,7 +70,7 @@ The owner requested **#92 planning-aware step reorder first**, then **#84 Cookin
 ## Branches, review and deployment
 
 - `main` is the stable release branch. The canonical live site is https://howmanybeers.app on Cloudflare. GitHub Pages URLs, if still reachable, are legacy.
-- `dev` is the integrated preview branch at https://dev.how-many-beers.pages.dev/. Cloudflare Pages uses `main` as its Production branch (owner-confirmed October 28, 2026). Configure dev and feature account builds through Preview variables; leave Production account rollout disabled until a separate production Supabase project is ready.
+- `dev` is the integrated preview branch at https://dev.how-many-beers.pages.dev/. Cloudflare Pages uses `main` as its Production branch (owner-confirmed October 28, 2026). Configure dev and feature account builds through Preview variables; Production accounts/cloud saving already work against the separate production Supabase project; preserve those settings.
 - Work from an up-to-date `dev` on an isolated `feat/*` branch. Use a feature branch named for the active issue, e.g. `feat/19-free-accounts`. Codex may use a `codex/*` branch if required by the environment. Point the PR at **`dev`, never `main`**.
 - Do not commit work in progress directly to `dev` or `main`. Do not merge a PR or deploy to production without explicit approval.
 - GitHub Actions should run on feature PRs, and Cloudflare should update the primary dev URL only when reviewed changes merge to `dev`.

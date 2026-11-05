@@ -1,3 +1,21 @@
+## Current release and next work (November 5, 2026)
+
+The November 5 release adds #21 visual consistency and #97 checklist-first cooking
+to #96's completed #92/#84/#62/#85/#77/#86 delivery. See
+[release notes](releases/2026-11-05.md) and verify deployment status in the release PR.
+
+Cooking shows one action, a relevant duration or manual checkpoint and a checkbox.
+Optional physical-start corrections and logging live in Step details; check-offs
+never prove a physical interval elapsed. The accepted compact mobile layout and
+Beerometer cleanup remain. Preserve actual events, accounts, guests and history.
+
+The owner's new timing concept needs separate discovery. #61 retained cancellation
+and then #83 multiple upcoming plans remain the prepared next capability sequence,
+not part of this release. See cook-lifecycle-plan.md. No manual QA tickets.
+
+Historical implementation notes follow, with the latest explicit contract taking
+precedence where prior rollout/status notes differ.
+
 ## Account cook increment (#19/#20, October 28, 2026)
 
 The opt-in account preview adds code-first email sign-in and one account-backed active/planning cook with searchable completed history, details and Cook Again. Acknowledged server writes precede critical transitions; automatic edits retain pending recovery and offer retry/export on failure. Another device retrieves account data after verified sign-in. Stale clients cannot silently replace newer data.

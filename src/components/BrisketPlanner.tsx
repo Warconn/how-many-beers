@@ -1,4 +1,5 @@
 'use client';
+import Icon from './Icon';
 import type { Dish } from '@/domain/meal';
 import { applyBrisketTiming, brisketDefaults, estimateBrisket, type BrisketInputs } from '@/domain/brisketEstimate';
 const hours=(n:number)=>Number((n/60).toFixed(2));
@@ -21,11 +22,11 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <p className="muted small">Brisket timing varies. Starting early gives you room to rest and hold.</p>
       {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The recommended start has passed. Serving time may be at risk; review your plan.</p>}
     </div>}
-    <div className="timing-choice">
-      <p role="status"><strong>{estimated?'Using estimated timing':'Using manual timing'}</strong><span>{estimated ? dirty?'Recommendation changed; apply to update.':'Recommendation applied.' : 'Recommendation not applied.'}</span></p>
+    <div className={"timing-choice"+(current?" is-applied":"")}>
+      <p role="status"><strong>{current?'Timing applied':estimated?'Using estimated timing':'Using manual timing'}</strong>{!current&&<span>{estimated?'Recommendation changed; apply to update.':'Recommendation not applied.'}</span>}</p>
       <div className="timing-choice-actions">
-        <button type="button" className="button primary" disabled={estimate.smokeMax===null || current} onClick={()=>onChange(applyBrisketTiming({...dish,brisketPlan:{...dish.brisketPlan,mode:'manual',inputs}},serveAt))}>{current?'Timing applied':'Use recommended timing'}</button>
-        {estimated && <button type="button" className="link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Use manual timing</button>}
+        {!current&&<button type="button" className="button primary" disabled={estimate.smokeMax===null} onClick={()=>onChange(applyBrisketTiming({...dish,brisketPlan:{...dish.brisketPlan,mode:'manual',inputs}},serveAt))}>Use recommended timing</button>}
+        {estimated&&<button type="button" className="link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Use manual timing</button>}
       </div>
     </div>
     <details><summary>Timing details</summary>
@@ -52,7 +53,7 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <ul className="small">{estimate.assumptions.map(a=><li key={a}>{a}</li>)}</ul>
       <label className="personal-rule"><input type="checkbox" checked={inputs.comparePersonal} onChange={e=>set({comparePersonal:e.target.checked})}/>Compare my 1.5 hr/lb rule</label>
       {inputs.comparePersonal && inputs.weightLb && <p className="small">Personal comparison: {inputs.weightLb*1.5} hours of smoke, plus rest/hold. User recollection, not validated guidance; not used in the recommendation.</p>}
-      <div className="template-sources">{estimate.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} ↗</a>)}</div>
+      <div className="template-sources">{estimate.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} <Icon name="external"/></a>)}</div>
     </details>
   </section>;
 }

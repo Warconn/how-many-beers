@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./design-system.css";
 import {AccountProvider} from "@/auth/AccountProvider";
 
 const site = "https://howmanybeers.app";

@@ -1,3 +1,29 @@
+# Current owner-approved sequence: November 5, 2026
+
+Finish and stabilize the November 5 release: #21 / PR #98 plus #97 / PR #99,
+including accepted November 3 spacing, Cooking Mode layout and Beerometer cleanup.
+Full feature CI → merge dev → full integration CI → release PR dev to main → full
+candidate CI/build → merge → actual Cloudflare deployment confirmation. No failing
+check bypass, force merge or production account/cook-data mutations. See
+[release notes](releases/2026-11-05.md); verify live status before claiming release.
+The #96 deliveries (#92, #84, #62/#85, #77 and #86) remain complete.
+
+After shipping, discuss the owner's in-progress cooking/timing concept separately.
+Do not infer its requirements or redesign execution during stabilization.
+
+Prepared capability sequence, not implementation scope in this session:
+1. **#61:** Retained cancellation, authoritative lifecycle, terminal guards and safe
+   recovery. Review Supabase constraints/RLS/RPC first.
+2. **#83:** Multiple account plans and one live cook, after #61 design is understood.
+   No active-cook replacement or guest scope expansion. Separate feature PRs.
+
+#69/#70 sync, #2 URL import, paid tiers and social login remain excluded. No manual
+QA/acceptance tickets. Reconcile #21/#97 only after their actual release.
+
+The following older queue is historical and superseded by this section.
+
+---
+
 # Work queue: October 28, 2026
 
 October 28 account status: PR #58 contains the opt-in #19 sign-in foundation and initial #20 account saving/history implementation. Email-code delivery needs the supplied Supabase template; cloud cooks require migration 002 and the preview build flag. Hosted two-account/retrieval QA, account linking/deletion/privacy and advanced synchronization remain open. See [setup and limits](account-cooks.md). Continue this delivery before starting Next work.

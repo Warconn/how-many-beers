@@ -27,7 +27,7 @@ test('one guided step, next-step footer and a flat whole-cook checklist preserve
  await page.screenshot({path:info.outputPath('flat-cook-checklist.png'),fullPage:true});
  await checklist.getByRole('button',{name:'Open step: Choose a serving tray for General prep',exact:true}).click();await expect(guide).toContainText('Time not estimated');expect(await saved(page)).toEqual(original);
  await page.getByRole('button',{name:'Edit plan',exact:true}).click();expect(await saved(page)).toEqual(original);await page.getByRole('button',{name:'Continue cooking',exact:true}).click();
- await page.getByRole('button',{name:'← Home',exact:true}).click();await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(guide.getByRole('article',{name:'Check the bark',exact:true})).toBeVisible();expect(await saved(page)).toEqual(original);
+ await page.getByRole('button',{name:'Home',exact:true}).click();await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(guide.getByRole('article',{name:'Check the bark',exact:true})).toBeVisible();expect(await saved(page)).toEqual(original);
  for(const width of [375,768,1280]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
 });
 

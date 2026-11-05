@@ -609,3 +609,22 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .cooking-screen .cook-header{margin-bottom:12px}.cooking-screen .progress-heading{margin:0 0 10px}.cooking-screen .guided-step{margin-top:16px}.cooking-screen-complete{padding-bottom:40px}.cooking-screen .cook-sidebar{padding:0 4px}.cooking-screen .cook-extra-tools>summary{min-height:44px;display:flex;align-items:center;cursor:pointer;list-style:none}.cooking-screen .cook-extra-tools>summary::before{content:"▸";margin-right:7px}.cooking-screen .cook-extra-tools[open]>summary::before{content:"▾"}
 
 .cooking-screen .cook-extra-tools>summary::-webkit-details-marker{display:none}
+
+/* #99 mobile planning spacing review: keep brisket guidance readable without
+   stacking status, disabled CTA and oversized disclosure separators. */
+.brisket-planner { padding-bottom:8px; margin-bottom:8px; }
+.brisket-planner .brisket-window { margin:8px 0; padding:9px 12px; }
+.brisket-planner .brisket-window p { margin:4px 0; line-height:1.4; }
+.brisket-planner .brisket-window p:first-child { margin-top:0; }
+.brisket-planner .brisket-window p:last-child { margin-bottom:0; }
+.brisket-planner .timing-choice { margin:8px 0 0; padding:9px 0; }
+.brisket-planner .timing-choice.is-applied { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; }
+.brisket-planner .timing-choice.is-applied>p { display:block; margin:0; }
+.brisket-planner .timing-choice .timing-choice-actions { gap:10px; }
+.brisket-planner details { margin-top:4px; }
+.brisket-planner summary { padding:8px 0; }
+.dish-inline-editor .dish-advanced { padding:0 0 4px; }
+.dish-inline-editor .dish-advanced summary { padding:8px 0; }
+.dish-inline-editor .inline-dish-steps { padding-top:2px; }
+.dish-inline-editor .compact-task { padding:11px 0; }
+.dish-inline-editor .compact-task .task-main p { margin:4px 0; }
