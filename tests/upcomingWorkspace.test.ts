@@ -17,7 +17,7 @@ vi.mock('../src/account/useUpcomingPlans',async()=>{
  return {...actual,useUpcomingPlans:()=>f.plans};
 });
 import {useCookWorkspace} from '../src/account/useCookWorkspace';
-import {currentHasActuals,hasUpcomingContent,PendingPlanIndex,pendingPlansKey,mergePendingPlans} from '../src/account/useUpcomingPlans';
+import {currentHasActuals,hasUpcomingContent,PendingPlanIndex,pendingPlansKey,mergePendingPlans,backupPendingPlan} from '../src/account/useUpcomingPlans';
 let workspace:ReturnType<typeof useCookWorkspace>;
 function render(){function Probe(){workspace=useCookWorkspace();return null;}renderToString(createElement(Probe));return workspace!;}
 function selected(){return {owner:'owner-a',state:()=>({plan:{id:'future-plan',revision:7},meal:f.plans.state.meal,phase:'saved',error:''}),save:vi.fn().mockResolvedValue(undefined),edit:vi.fn(),flush:vi.fn().mockResolvedValue(undefined),dirty:()=>false,recoveryExport:()=>'{"planDraft":true}'};}
@@ -114,6 +114,13 @@ describe('owner-scoped pending-plan discovery',()=>{
   await index.add(meal,1);reject=true;
   await expect(index.protect({meal:{...meal,name:'Do not lose this'},serveInstant:null,timeZone:'UTC'},1)).rejects.toThrow('Cannot retain draft');
   expect(index.list()[0].meal.name).toBe(meal.name);
+ });
+
+ it('exports the protected journal version without overwriting the confirmed source and rejects foreign/corrupt recovery',async()=>{
+  const port=storage(),meal=migrateMeal({...newMeal(),name:'Confirmed plan'}),index=new PendingPlanIndex('owner-a',port);await index.add(meal,3);
+  const entry=index.list()[0],edited={...meal,name:'Protected offline edit'},raw=JSON.stringify({version:1,owner:'owner-a',planId:meal.id,base:null,desired:edited,operation:null,desiredServeInstant:null,desiredTimeZone:'UTC'});
+  const backup=backupPendingPlan(entry,raw,'owner-a',new Set([meal.id]));expect(backup!.meal.name).toBe('Protected offline edit');expect(entry.meal.name).toBe('Confirmed plan');
+  expect(()=>backupPendingPlan(entry,raw,'other-owner',new Set())).toThrow('could not be read safely');expect(()=>backupPendingPlan(entry,'{bad','owner-a',new Set())).toThrow('could not be read safely');
  });
 
 });

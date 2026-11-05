@@ -15,7 +15,7 @@ import { useAccountCook } from "./useAccountCook";
 import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
 import { meaningful, mergeHistory } from "./workspace";
 import {useUpcomingPlans,currentHasActuals,hasUpcomingContent,type UpcomingPlan} from './useUpcomingPlans';
-import {savedPlanAPI,planMeal,planDocument,exportSavedPlans,validateSavedPlansBackup} from './savedPlans';
+import {savedPlanAPI,planMeal,exportSavedPlans,validateSavedPlansBackup} from './savedPlans';
 const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
 type Candidate = { snapshot: LocalSnapshot; legacy: boolean };
 export function useCookWorkspace() {
@@ -160,9 +160,10 @@ export function useCookWorkspace() {
     }
   };
   const currentMeal=()=>(cloud.store.current?.owner===account.ownerId?cloud.store.current?.state().snapshot?.active:null)??data?.active??null;
+  const legacySource=cloud.store.current?.owner===account.ownerId?cloud.store.current?.currentDocument?.():null;
   const legacyPlan=currentCook&&hasUpcomingContent(currentCook)?{
     id:currentCook.id,meal:currentCook,revision:0,legacy:true as const,
-    serveInstant:Number.isFinite(Date.parse(currentCook.serveAt))?new Date(currentCook.serveAt).toISOString():null,
+    serveInstant:legacySource?legacySource.serveInstant:Number.isFinite(Date.parse(currentCook.serveAt))?new Date(currentCook.serveAt).toISOString():null,
     timeZone:cloud.state.activeTimeZone??Intl.DateTimeFormat().resolvedOptions().timeZone??'UTC',
   }:null;
   const upcomingPlans:UpcomingPlan[]=[...upcoming.plans.map(plan=>({...plan,meal:planMeal(plan)})),...(plansEnabled&&legacyPlan&&!upcoming.plans.some(p=>p.id===legacyPlan.id)?[legacyPlan]:[])].sort((a,b)=>(a.serveInstant??'9999').localeCompare(b.serveInstant??'9999')||a.id.localeCompare(b.id));
@@ -211,10 +212,12 @@ export function useCookWorkspace() {
   };
   const exportUpcomingPlans=async()=>{
     if(!plansEnabled||!account.ownerId||!account.client)throw Error('Upcoming plans are not available for this account yet.');
-    await flushCurrent();await upcoming.flush();
-    const plans=await savedPlanAPI(account.client,account.ownerId).list();
+    await flushCurrent();
+    try{await upcoming.flush();}catch{await upcoming.protectSelected();}
+    const plans=await upcoming.withPendingBackup(await savedPlanAPI(account.client,account.ownerId).list());
     const current=currentMeal();
-    const legacy=current&&hasUpcomingContent(current)?{id:current.id,...planDocument(current),timeZone:cloud.state.activeTimeZone??Intl.DateTimeFormat().resolvedOptions().timeZone??'UTC'}:undefined;
+    const raw=cloud.store.current?.currentDocument();
+    const legacy=current&&raw&&hasUpcomingContent(current)?{id:current.id,...raw,timeZone:cloud.store.current?.state().activeTimeZone??cloud.state.activeTimeZone??Intl.DateTimeFormat().resolvedOptions().timeZone??'UTC'}:undefined;
     return exportSavedPlans(plans,new Date().toISOString(),legacy);
   };
   const importUpcomingPlans=async(text:string)=>{

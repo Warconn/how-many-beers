@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useAccount} from '@/auth/AccountProvider';
 import {recoveryStorage,type RecoveryStorage} from './recoveryStorage';
 import {SavedPlanStore,savedPlanCacheKey,type SavedPlanState} from './SavedPlanStore';
-import {savedPlanAPI,orderPlans,validatePlanMeal,planDocument,planMeal,type SavedPlan} from './savedPlans';
+import {savedPlanAPI,orderPlans,validatePlanMeal,planDocument,planMeal,parseSavedPlan,type SavedPlan} from './savedPlans';
 import {AccountConflict} from './workspace';
 import {newMeal,type Meal} from '../domain/meal';
 import {migrateMeal,type ExtendedMeal} from '../domain/cookState';
@@ -62,6 +62,23 @@ export function mergePendingPlans(saved:SavedPlan[],pending:PendingPlan[]):(Save
     const draft=pending.find(entry=>entry.id===plan.id&&entry.needsRecovery);
     return draft?{...plan,meal:draft.meal,serveInstant:draft.serveInstant,timeZone:draft.timeZone,pending:true}:plan;
   }),...pending.filter(plan=>!ids.has(plan.id))]);
+}
+/** Backups include protected local edits without replacing any server document. */
+export function backupPendingPlan(draft:PendingPlan,raw:string|null,owner:string,confirmedIds:Set<string>):PendingPlan|null{
+  if(raw===null)return draft.needsRecovery&&((draft.sourceRevision??0)>0||!confirmedIds.has(draft.id))?draft:null;
+  try{
+    const cached=JSON.parse(raw);
+    if(cached.version!==1||cached.owner!==owner||cached.planId!==draft.id)throw Error('Invalid recovery scope.');
+    if(cached.base)parseSavedPlan(cached.base);
+    if(!cached.desired&&!cached.operation)return null;
+    if(!cached.desired)throw Error('Invalid pending plan journal.');
+    const meal=validatePlanMeal(cached.desired,draft.id);
+    const serveInstant=cached.desiredServeInstant!==undefined?cached.desiredServeInstant:cached.operation?.document?.serveInstant??draft.serveInstant;
+    const timeZone=cached.desiredTimeZone??cached.operation?.timeZone??draft.timeZone;
+    if(!(serveInstant===null||typeof serveInstant==='string'&&Number.isFinite(Date.parse(serveInstant))))throw Error('Invalid draft serving instant.');
+    new Intl.DateTimeFormat('en',{timeZone});
+    return {...draft,meal,serveInstant,timeZone,needsRecovery:true};
+  }catch{throw Error('An upcoming draft could not be read safely. Open it and download its recovery data before exporting all plans.');}
 }
 const initial:SavedPlanState={meal:null,plan:null,phase:'loading',error:''};
 /** Planning-marked records can still contain real observations from older builds. */
@@ -137,7 +154,7 @@ export function useUpcomingPlans(enabled:boolean){
               else if(selectedRef.current?.id===draft.id&&store.current?.dirty())recoverable.push(draft);
               else stale.push(draft.id);
             }else recoverable.push(draft);
-          }else if((draft.sourceRevision??0)>0)stale.push(draft.id);
+          }else if((draft.sourceRevision??0)>0&&!draft.needsRecovery)stale.push(draft.id);
           else recoverable.push(draft);
         }catch{recoverable.push({...draft,needsRecovery:true});}
         finally{recovery?.close?.();}
@@ -233,6 +250,27 @@ export function useUpcomingPlans(enabled:boolean){
     const selection=selectedRef.current,current=store.current;
     if(selection&&current&&!selectedReadonly.current&&!current.dirty()&&current.state().plan)await forgetPending(selection.id);
   };
+  const protectSelected=async()=>{
+    const current=store.current,selection=selectedRef.current;
+    if(!current||!selection)return;
+    if(!isCurrent(selection.owner))throw Error('Confirm your account before protecting this draft.');
+    const document=await current.protectDraft();
+    const pending=await getIndex(selection.owner);await pending.protect(document,current.state().plan?.revision??0);
+    setPlans(previous=>mergePendingPlans(previous.filter(plan=>!plan.pending),pending.list()));
+  };
+  const withPendingBackup=async(confirmed:SavedPlan[]):Promise<SavedPlan[]>=>{
+    if(!ownerId||!isCurrent(ownerId)||!allowed.current)throw Error('Verify your account before exporting plans.');
+    const pending=await getIndex(ownerId),documents=new Map(confirmed.map(plan=>[plan.id,plan])),ids=new Set(documents.keys());
+    for(const draft of pending.list()){
+      const recovery=await recoveryStorage(savedPlanCacheKey(ownerId,draft.id));
+      try{
+        if(!isCurrent(ownerId))throw Error('Your account changed while exporting plans.');
+        const protectedPlan=backupPendingPlan(draft,recovery.getItem(savedPlanCacheKey(ownerId,draft.id)),ownerId,ids);
+        if(protectedPlan)documents.set(protectedPlan.id,protectedPlan);
+      }finally{recovery.close?.();}
+    }
+    return orderPlans([...documents.values()]);
+  };
   const close=async()=>{
     try{await flush();await forgetSelected();}
     catch(error){
@@ -243,9 +281,7 @@ export function useUpcomingPlans(enabled:boolean){
         if(current.state().phase==='conflict'||current.state().phase==='load-error'){releaseSelection();return;}
         throw error;
       }
-      const document=await current.protectDraft();
-      const pending=await getIndex(selection.owner);await pending.protect(document,current.state().plan?.revision??0);
-      setPlans(previous=>mergePendingPlans(previous.filter(plan=>!plan.pending),pending.list()));
+      await protectSelected();
     }
     releaseSelection();
   };
@@ -254,7 +290,7 @@ export function useUpcomingPlans(enabled:boolean){
     plans:scope===ownerId?plans:[],
     selectedId:selected?.owner===ownerId?selected.id:null,
     state:selected?.owner===ownerId?state:initial,
-    listPhase,listError,store,open,create,flush,close,releaseSelection,forgetSelected,refresh,retry,
+    listPhase,listError,store,open,create,flush,close,releaseSelection,forgetSelected,protectSelected,withPendingBackup,refresh,retry,
     hasSelection:()=>!!selectedRef.current&&selectedRef.current.owner===activeOwner.current,
   };
 }
