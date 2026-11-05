@@ -14,12 +14,21 @@ import { migrateMeal } from "@/domain/cookState";
 import { useAccountCook } from "./useAccountCook";
 import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
 import { meaningful, mergeHistory } from "./workspace";
+import {useUpcomingPlans,currentHasActuals,hasUpcomingContent,type UpcomingPlan} from './useUpcomingPlans';
+import {savedPlanAPI,planMeal,planDocument,exportSavedPlans,validateSavedPlansBackup} from './savedPlans';
 const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
 type Candidate = { snapshot: LocalSnapshot; legacy: boolean };
 export function useCookWorkspace() {
   const enabled = process.env.NEXT_PUBLIC_ENABLE_CLOUD_COOKS === "true";
   const account = useAccount(),
     cloud = useAccountCook(enabled);
+  const plansEnabled=!!(enabled&&account.ownerId&&cloud.state.canPlan);
+  const upcoming=useUpcomingPlans(plansEnabled);
+  const [legacySelection,setLegacySelection]=useState<{owner:string;id:string}|null>(null);
+  const legacyRef=useRef<{owner:string;id:string}|null>(null);
+  const selectLegacy=(value:{owner:string;id:string}|null)=>{legacyRef.current=value;setLegacySelection(value);};
+  const selectedPlanId=upcoming.selectedId??(legacySelection?.owner===account.ownerId?legacySelection.id:null);
+  const isSelectedPlan=selectedPlanId!==null;
   const [legacyScope, setLegacyScope] = useState<string | null>(null),
     [legacyAllowed, setLegacyAllowed] = useState(false),
     [legacyCandidate, setLegacyCandidate] = useState<Candidate | null>(null);
@@ -110,7 +119,7 @@ export function useCookWorkspace() {
     enabled && account.ownerId
       ? cloud.state.backup
       : data;
-  const status =
+  const currentStatus =
     mode === "disabled" || (mode === "guest" && legacyAllowed)
       ? local.status
       : account.ownerId
@@ -133,15 +142,96 @@ export function useCookWorkspace() {
       : legacyAllowed || mode === "disabled"
         ? local.error
         : "");
-  const locked =
+  const currentLocked =
     enabled &&
     (mode === "checking" ||
       (!!account.ownerId &&
         ["loading", "load-error", "saving", "blocked", "conflict"].includes(cloud.state.phase)));
+  const currentCook=data?.active??null;
+  const selectedDocument=!!upcoming.selectedId;
+  const selectedPhase=upcoming.state.phase;
+  const status=selectedDocument?(selectedPhase==='saved'?currentStatus:selectedPhase==='loading'?'loading':selectedPhase==='load-error'?'recovery':selectedPhase==='conflict'?'conflict':'unsaved'):currentStatus;
+  const locked=currentLocked||(selectedDocument&&['loading','load-error','conflict'].includes(selectedPhase));
+  const selectedStore=()=>upcoming.store.current;
+  const flushCurrent=async()=>{
+    if(enabled&&account.ownerId){
+      if(!cloud.store.current)throw Error('Account cooks are loading.');
+      await cloud.store.current.flush(true);
+    }
+  };
+  const currentMeal=()=>cloud.store.current?.state().snapshot?.active??data?.active??null;
+  const legacyPlan=currentCook&&hasUpcomingContent(currentCook)?{
+    id:currentCook.id,meal:currentCook,revision:0,legacy:true as const,
+    serveInstant:Number.isFinite(Date.parse(currentCook.serveAt))?new Date(currentCook.serveAt).toISOString():null,
+    timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',
+  }:null;
+  const upcomingPlans:UpcomingPlan[]=[...upcoming.plans.map(plan=>({...plan,meal:planMeal(plan)})),...(plansEnabled&&legacyPlan&&!upcoming.plans.some(p=>p.id===legacyPlan.id)?[legacyPlan]:[])].sort((a,b)=>(a.serveInstant??'9999').localeCompare(b.serveInstant??'9999')||a.id.localeCompare(b.id));
+  const createPlan=async(seed?:Meal)=>{
+    if(!plansEnabled)throw Error('Upcoming plans are not available for this account yet.');
+    await flushCurrent();selectLegacy(null);
+    return upcoming.create(seed);
+  };
+  const openPlan=async(id:string)=>{
+    if(!plansEnabled||!account.ownerId)throw Error('Upcoming plans are not available for this account yet.');
+    await flushCurrent();
+    const current=currentMeal();
+    if(current?.id===id&&hasUpcomingContent(current)){
+      await upcoming.close();selectLegacy({owner:account.ownerId,id});return;
+    }
+    selectLegacy(null);await upcoming.open(id);
+  };
+  const returnToCurrent=async()=>{
+    await flushCurrent();await upcoming.close();selectLegacy(null);
+  };
+  const startSelectedPlan=async(id?:string)=>{
+    if(id)await openPlan(id);
+    if(!plansEnabled||!account.ownerId||!cloud.store.current)throw Error('Account cooks are loading.');
+    await flushCurrent();
+    const current=currentMeal();
+    const selected=selectedStore();
+    if(currentHasActuals(current)){
+      const intendedId=selected?.state().plan?.id??(legacyRef.current?.owner===account.ownerId?legacyRef.current.id:null);
+      if(current?.id===intendedId&&!selected?.dirty()){
+        upcoming.releaseSelection();selectLegacy(null);await upcoming.refresh().catch(()=>{});return;
+      }
+      throw Error('Finish or cancel your current cook before starting another. Your upcoming plan is still saved.');
+    }
+    if(selected){
+      await selected.flush(true);
+      const plan=selected.state().plan;
+      if(!plan)throw Error('Save the upcoming plan before starting it.');
+      await cloud.store.current.promote(plan.id,plan.revision);
+      upcoming.releaseSelection();selectLegacy(null);
+      await upcoming.refresh().catch(()=>{});
+    }else if(legacyRef.current?.owner===account.ownerId&&legacyRef.current.id===current?.id){
+      await cloud.store.current.save({active:{...current,mode:'cooking',startedAt:new Date().toISOString()}});
+      selectLegacy(null);
+    }else throw Error('Select an upcoming plan before starting.');
+    setTransitionError('');
+  };
+  const exportUpcomingPlans=async()=>{
+    if(!plansEnabled||!account.ownerId||!account.client)throw Error('Upcoming plans are not available for this account yet.');
+    await flushCurrent();await upcoming.flush();
+    const plans=await savedPlanAPI(account.client,account.ownerId).list();
+    const current=currentMeal();
+    const legacy=current&&hasUpcomingContent(current)?{id:current.id,...planDocument(current),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}:undefined;
+    return exportSavedPlans(plans,new Date().toISOString(),legacy);
+  };
+  const importUpcomingPlans=async(text:string)=>{
+    if(!plansEnabled||!account.ownerId||!account.client)throw Error('Upcoming plans are not available for this account yet.');
+    const documents=validateSavedPlansBackup(text);
+    await flushCurrent();await upcoming.flush();
+    await savedPlanAPI(account.client,account.ownerId).import(crypto.randomUUID(),documents);
+    await upcoming.refresh();
+  };
   const save = async (change: { active?: Meal; history?: HistoryLibrary; canceled?: LocalSnapshot["canceled"] }) => {
     if (enabled && account.ownerId) {
       if (!cloud.store.current) throw Error("Account cooks are loading.");
-      await cloud.store.current.save(change);
+      const selected=selectedStore();
+      if(selected){
+        if(change.active)await selected.save(change.active);
+        if(change.history)await cloud.store.current.save({history:change.history});
+      }else await cloud.store.current.save(change);
     } else if (mode === "disabled" || legacyAllowed) local.save(change);
     else if (mode === "guest") {
       const retained=trialRef.current.canceled??emptyCanceled();
@@ -157,7 +247,8 @@ export function useCookWorkspace() {
     setTransitionError("");
   };
   const cancel = async (cookId:string) => {
-    if(!data||data.active.id!==cookId||!(data.active.mode==='cooking'||data.active.startedAt))throw Error('This cook is no longer active. Reload your saved cooks.');
+    const current=currentMeal();
+    if(!current||current.id!==cookId||!currentHasActuals(current))throw Error('This cook is no longer active. Reload your saved cooks.');
     if(enabled&&account.ownerId){
       if(!cloud.store.current)throw Error('Account cooks are loading.');
       await cloud.store.current.cancel(cookId);
@@ -171,7 +262,7 @@ export function useCookWorkspace() {
   };
   const patch = (fn: (m: Meal) => Meal) => {
     try {
-      if (enabled && account.ownerId) cloud.store.current?.edit(fn);
+      if (enabled && account.ownerId){const selected=selectedStore();if(selected)selected.edit(fn);else cloud.store.current?.edit(fn);}
       else if (mode === "disabled" || legacyAllowed) local.patch(fn);
       else if (mode === "guest") {
         const next = {
@@ -250,9 +341,10 @@ export function useCookWorkspace() {
     setTransitionError("");
     if (enabled && account.ownerId) {
       const wasBlocked = cloud.state.phase === "blocked";
+      if(selectedStore())await upcoming.retry();
       if (cloud.store.current) await cloud.store.current.retry();
       else cloud.restart();
-      if (wasBlocked) setSelection((v) => v + 1);
+      if (wasBlocked&&!isSelectedPlan) setSelection((v) => v + 1);
     } else local.retry();
   };
   const reloadAccount = async () => {
@@ -272,10 +364,25 @@ export function useCookWorkspace() {
     else await save(snapshot);
   };
   return {
-    meal: data?.active ?? null,
+    meal: selectedDocument?upcoming.state.meal:currentCook,
+    currentCook,
+    currentCookInProgress:currentHasActuals(currentCook),
+    plansEnabled,
+    upcomingPlans,
+    selectedPlanId,
+    isSelectedPlan,
+    selectedPlanPhase:selectedDocument?selectedPhase:null,
+    planError:upcoming.state.error||upcoming.listError,
+    planListPhase:upcoming.listPhase,
+    plansError:upcoming.listError,
+    plansLoading:upcoming.listPhase==='loading',
+    reloadPlans:upcoming.refresh,
+    createPlan,openPlan,returnToCurrent,startSelectedPlan,
+    refreshUpcomingPlans:upcoming.refresh,
+    exportUpcomingPlans,importUpcomingPlans,
     history: data?.history ?? emptyHistory(),
     status,
-    error,
+    error:selectedDocument?(upcoming.state.error||error):error,
     setError: setTransitionError,
     patch,
     save,
@@ -286,7 +393,7 @@ export function useCookWorkspace() {
     restore,
     recoveryExport:
       enabled && account.ownerId
-        ? () => cloud.store.current?.recoveryExport() ?? "{}"
+        ? () => selectedStore()?.recoveryExport()??cloud.store.current?.recoveryExport()??"{}"
         : local.recoveryExport,
     backup,
     authUnavailable: account.phase === "unavailable",
