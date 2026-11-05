@@ -40,9 +40,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - suite: regression
-            browsers: chromium webkit
-            command: npm run test:e2e
           - suite: auth
             browsers: chromium webkit
             command: npx playwright test --config playwright.auth.config.ts
@@ -78,26 +75,99 @@ jobs:
             playwright-offline-report/
           if-no-files-found: ignore
           retention-days: 14
-
-      # Keep visual review evidence small enough to inspect independently of videos/traces.
-      - name: Upload release review screenshots
-        if: always() && matrix.suite == 'regression'
+      - name: Upload account review screenshots
+        if: always() && matrix.suite == 'accounts'
         uses: actions/upload-artifact@v4
         with:
-          name: cooking-review-screenshots
+          name: account-review-screenshots
+          path: test-results-accounts/**/*.png
+          if-no-files-found: ignore
+          retention-days: 14
+
+  regression_shards:
+    name: regression (${{ matrix.shard }}/2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright browsers and OS dependencies
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run regression shard ${{ matrix.shard }}/2
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/raw-regression-results-${{ matrix.shard }}.json
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --reporter=github,html,json
+      - name: Prepare compact timing report
+        if: always()
+        run: node scripts/compact-playwright-timings.mjs test-results/raw-regression-results-${{ matrix.shard }}.json test-results/regression-results-${{ matrix.shard }}.json
+      - name: Upload browser report, screenshots and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-regression-${{ matrix.shard }}-report
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+      # Review images and timings remain independently downloadable from large traces/videos.
+      - name: Upload shard review screenshots and timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cooking-review-regression-${{ matrix.shard }}
           path: |
             test-results/cancel-cook-*/*.png
             test-results/cooking-simplicity-*/*.png
             test-results/design-system-*/*.png
             test-results/live-cook-start-*/*.png
             test-results/whole-cook-duration-*/*.png
+            test-results/cancel-cook-*/*.png
+            test-results/regression-results-*.json
           if-no-files-found: error
           retention-days: 14
+
+  # Keep the existing regression check and combined screenshot artifact names.
+  # Partial screenshots survive a failed shard, but cannot turn its gate green.
+  regression:
+    if: always()
+    needs: regression_shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Collect shard review evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cooking-review-regression-*
+          path: review-screenshots
+          merge-multiple: true
+      - name: Upload combined review screenshots and timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cooking-review-screenshots
+          path: review-screenshots/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Require every regression shard
+        if: always()
+        env:
+          SHARDS_RESULT: ${{ needs.regression_shards.result }}
+        run: test "$SHARDS_RESULT" = success
 
   # Preserve the existing required check name; skipped/canceled suites must fail it.
   playwright:
     if: always()
-    needs: [checks, browsers]
+    needs: [checks, browsers, regression]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -105,4 +175,5 @@ jobs:
         env:
           CHECKS_RESULT: ${{ needs.checks.result }}
           BROWSERS_RESULT: ${{ needs.browsers.result }}
-        run: test "$CHECKS_RESULT" = success && test "$BROWSERS_RESULT" = success
+          REGRESSION_RESULT: ${{ needs.regression.result }}
+        run: test "$CHECKS_RESULT" = success && test "$BROWSERS_RESULT" = success && test "$REGRESSION_RESULT" = success
