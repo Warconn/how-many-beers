@@ -1,8 +1,80 @@
 {
   "kind": "design-examples-not-current-application-output",
   "beerMinutes": 90,
-  "parallel": {"at":"16:20","bratsStart":"16:00","grillMinutes":45,"restMinutes":10,"potatoesStart":"16:10","potatoesMinutes":40,"expectedRemainingMinutes":35,"expectedFinish":"16:55","target":"17:00"},
-  "correction": {"at":"16:20","recordedStart":"16:12","correctedStart":"16:00","checkpointOffsetMinutes":15,"expectedCheckpointBefore":"16:27","expectedCheckpointAfter":"16:15","expectedRemainingBefore":47,"expectedRemainingAfter":35,"expectedFinishBefore":"17:07","expectedFinishAfter":"16:55","unchangedPotatoStart":"16:10","unchangedTarget":"17:00"},
-  "overrun": {"at":"16:46","start":"16:00","estimatedGrillMinutes":45,"expectedElapsedMinutes":46,"expectedHeatingActive":true,"expectedExactRemaining":null,"knownFollowingRestMinutes":10,"actualRemoveAndRest":"16:55","expectedFinishAfterActualTransition":"17:05","unchangedTarget":"17:00"},
-  "passiveCooling": {"actualStart":"16:15","estimatedMinutes":10,"at":"16:25","expectedRemaining":0,"actualEnd":null,"serveActionRequiredForClock":false,"cookAutomaticallyCompleted":false,"unchangedTarget":"16:30"}
+  "parallel": {
+    "at": "16:20",
+    "bratsStart": "16:00",
+    "grillMinutes": 45,
+    "restMinutes": 10,
+    "potatoesStart": "16:10",
+    "potatoesMinutes": 40,
+    "expectedRemainingMinutes": 35,
+    "expectedFinish": "16:55",
+    "target": "17:00"
+  },
+  "correction": {
+    "at": "16:20",
+    "recordedStart": "16:12",
+    "correctedStart": "16:00",
+    "checkpointOffsetMinutes": 15,
+    "expectedCheckpointBefore": "16:27",
+    "expectedCheckpointAfter": "16:15",
+    "expectedRemainingBefore": 47,
+    "expectedRemainingAfter": 35,
+    "expectedFinishBefore": "17:07",
+    "expectedFinishAfter": "16:55",
+    "unchangedPotatoStart": "16:10",
+    "unchangedTarget": "17:00"
+  },
+  "overrun": {
+    "at": "16:46",
+    "start": "16:00",
+    "estimatedGrillMinutes": 45,
+    "expectedElapsedMinutes": 46,
+    "expectedHeatingActive": true,
+    "expectedExactRemaining": null,
+    "knownFollowingRestMinutes": 10,
+    "actualRemoveAndRest": "16:55",
+    "expectedFinishAfterActualTransition": "17:05",
+    "unchangedTarget": "17:00",
+    "expectedEarliestFinish": "16:56",
+    "expectedMinimumRemainingMinutes": 10,
+    "exactFinishUnknown": true
+  },
+  "passiveCooling": {
+    "actualStart": "16:15",
+    "estimatedMinutes": 10,
+    "at": "16:25",
+    "expectedRemaining": 0,
+    "actualEnd": null,
+    "serveActionRequiredForClock": false,
+    "cookAutomaticallyCompleted": false,
+    "unchangedTarget": "16:30"
+  },
+  "rangedOverrun": {
+    "basis": "Illustrative explicit typical/upper recipe inputs; not current bundled template or importer behavior",
+    "at": "16:46",
+    "actualStart": "16:00",
+    "typicalGrillMinutes": 45,
+    "usableUpperGrillMinutes": 65,
+    "followingRestMinutes": 10,
+    "expectedRemainingMinutes": 29,
+    "expectedEstimatedServing": "17:15",
+    "actualRemoveAndRest": "16:55",
+    "expectedServingAfterActualTransition": "17:05",
+    "unchangedTarget": "17:00"
+  },
+  "earliestFallback": {
+    "branch": "Alternative to actual removal at 16:55; heating is still active",
+    "at": "17:05",
+    "actualStart": "16:00",
+    "usableUpperEstimate": null,
+    "knownRestMinutes": 10,
+    "expectedMinimumRemainingMinutes": 10,
+    "expectedEarliestServing": "17:15",
+    "displayedAsLowerBound": true,
+    "atNextMinute": "17:06",
+    "expectedNextEarliestServing": "17:16",
+    "heatingRemainsActive": true
+  }
 }

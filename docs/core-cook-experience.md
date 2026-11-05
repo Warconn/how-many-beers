@@ -4,7 +4,11 @@ The owner-approved direction and proposed mobile examples are in
 [the #101 design review](design/101/README.md). This proposal is not implemented.
 It distinguishes actual action/phase observations from estimated passive time,
 keeps one global next action, and preserves the serving target alongside a changing
-full-meal forecast. No new engine or storage behavior is enabled by these docs.
+full-meal forecast. The second design pass proposes one whole-meal duration and
+serving estimate, elapsed activity context inside the action card, and a useful
+earliest-serving bound if heating has no usable remaining estimate. Repeated
+totals and a separate Cooking now panel are removed from this proposal. No new
+engine or storage behavior is enabled by these docs.
 
 ## Current release and next work (November 5, 2026)
 

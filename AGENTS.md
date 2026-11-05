@@ -26,7 +26,12 @@ cooling/rest together. Passive estimated time may reach zero without a Serve box
 physical completion or cook archive. Heating overrun stays active with elapsed time
 and uncertain remaining duration; no routine five-minute extensions. Keep known
 remaining work visible. Start Cook is a session event, not a start for every dish.
-One global Up next and concise Cooking now; optional corrections/remaining estimates
+One global next action; integrate relevant elapsed time and quiet concurrent
+activity context into its card, not a separate Cooking now panel. Proposed meter
+prioritizes whole-meal time left plus one serving estimate, with beer equivalent
+secondary and session/projected totals in details. Use a grounded revised ETA or
+a labeled moving earliest-serving lower bound; never fabricate a range. This is
+a design proposal, not implemented behavior. Optional corrections/remaining estimates
 stay in Step details. Corrections reflow derived values while keeping unrelated
 actuals and the requested serving target. Imported ambiguity falls back to ordinary
 checklist behavior; no phase-classification setup screen or invented events.

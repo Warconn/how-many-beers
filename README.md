@@ -154,3 +154,5 @@ The next cooking increment is in design/requirements only. Review the proposed
 implementation. These static examples change no application code, stored cooks,
 phase events or database. They preserve the accepted checkbox-first experience
 and separate the #109 serving target from the changing full-meal forecast.
+The second review pass reduces repeated clocks, integrates activity context into
+the action and proposes useful revised serving estimates or earliest bounds.

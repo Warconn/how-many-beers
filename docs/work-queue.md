@@ -2,6 +2,8 @@
 
 **NOW: #101 design/requirements only.** The owner wants to review the mobile
 experience and time-recalculation examples before underlying implementation.
+The second pass focuses on one whole-meal duration/serving estimate and one action,
+with elapsed context integrated into that card and honest revised ETA/bounds.
 Read [the design proposal](design/101/README.md) and the latest GitHub #101 decision
 record. No runtime/engine/database changes, schema migration, automatic merge or
 production release are authorized by this design task.
