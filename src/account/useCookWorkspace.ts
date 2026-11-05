@@ -386,7 +386,7 @@ export function useCookWorkspace() {
     const pending=()=>!disposed&&owned()&&source.state().phase==='blocked'&&source.state().pendingOperation==='promote'&&source.state().pendingOperationId===operationId;
     const finish=async()=>{
       const after=source.state();
-      if(!owned()||after.phase!=='saved'||after.pendingOperation==='promote'||completedPromotion.current===operationId)return;
+      if(attempts===0||!owned()||after.phase!=='saved'||after.pendingOperation==='promote'||completedPromotion.current===operationId)return;
       completedPromotion.current=operationId;
       const selected=selectedStore();
       if(selected&&!selected.dirty()&&selected.state().plan?.id===after.snapshot?.active.id){
@@ -496,6 +496,7 @@ export function useCookWorkspace() {
           : "trial",
     locked,
     cloudPhase: cloud.state.phase,
+    pendingOperation:cloud.state.pendingOperation??null,
     earlierAvailable,
     candidate,
     accountSnapshot: cloud.state.snapshot,

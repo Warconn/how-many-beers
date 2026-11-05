@@ -12,8 +12,8 @@ Focused browser journeys cover desktop and Pixel-sized mobile Chromium:
 - Cancel the existing cook, atomically start a saved plan, check its steps, finish
   and find the new entry in normal history.
 - Transfer a meaningful legacy planning session once when another plan starts.
-- Fail the first plan save, export its recovery draft, reload, rediscover/resume it
-  and save without changing the current cook.
+- Fail the first plan save, reload, rediscover it through normal Edit plan, then
+  reconnect and save automatically without changing the current cook.
 - Export/import future plans without changing current cooking or completed history.
 - Fail a future-plan write, protect its private draft, and return to the real active
   cook without an extra active-workspace write or an invented save acknowledgment.
@@ -25,11 +25,12 @@ readable dates, touch controls, explicit current/upcoming separation and backup 
 | --- | --- | --- |
 | Home/current + future meals | [Capture](screenshots/issue-83-upcoming-desktop.png) | [Capture](screenshots/issue-83-upcoming-mobile.png) |
 | Upcoming list | [Capture](screenshots/issue-83-list-desktop.png) | [Capture](screenshots/issue-83-list-mobile.png) |
+| Quiet saving / protected edit | [Capture](screenshots/issue-83-saving-desktop.png) | [Capture](screenshots/issue-83-saving-mobile.png) |
 
-- Detect a stale future-plan revision without overwriting either record; recovery
-  controls remain usable outside inert editing content, including explicit confirmed
-  Load saved plan and return to the current cook.
-- Lose the promotion acknowledgment, confirm the original receipt before re-reading
+- Detect a stale future-plan revision without overwriting either record; the existing
+  account attention indicator remains truthful, and normal Home navigation permits
+  continuing the current cook without a separate recovery workflow.
+- Lose the promotion acknowledgment, automatically confirm the original receipt before re-reading
   its removed source, and retain the exact single cooking-start timestamp.
 
 Full CI adds real iPhone/WebKit account flows plus the existing unit, authentication,
@@ -43,3 +44,9 @@ Hosted schema verification/application is still required on dev. No Supabase
 management connection is configured in this environment. Review the additive #61
 migration first, then #83, and verify capabilities before account preview acceptance.
 Production remains release #100 until a separate authorized promotion.
+
+The owner accepted Cancel Cook and requested quiet automatic future-plan saving.
+The refinement removes plan-specific Retry, recovery, Load saved plan, Unsaved draft
+and Resume draft controls. Bounded retries and owner-scoped journals work behind
+the existing account save indicator. Revision conflicts are retained without
+automatic rebase, overwrite or false Saved feedback.
