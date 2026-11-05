@@ -198,7 +198,7 @@ function CookExperience() {
 
 
   const cooking = view === "cooking";
-  const cookInProgress = meal.mode === "cooking" || !!meal.startedAt || (!workspace.isSelectedPlan&&workspace.currentCookInProgress);
+  const cookInProgress = meal.mode === "cooking" || !!meal.startedAt || (workspace.plansEnabled&&!workspace.isSelectedPlan&&workspace.currentCookInProgress);
   const startBlockReason = timeline.length === 0 ? "Add a dish or prep step to start."
     : !Number.isFinite(new Date(meal.serveAt).getTime()) ? "Set a valid serving date and time to start." : "";
   const hasActiveWork = (workspace.plansEnabled&&workspace.upcomingPlans.length>0) || timeline.length > 0 || meal.dishes.length > 0 || Object.keys(meal.completed).length > 0 || !!meal.startedAt || ((meal as ExtendedMeal).events?.length ?? 0) > 0 || (meal.name !== "Next cook") || (meal.mode === "cooking");
