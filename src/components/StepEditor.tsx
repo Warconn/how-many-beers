@@ -9,8 +9,9 @@ type Props = {
   task: PlannedTask;
   onSave: (title: string, instructions: string, details: StepPlanEdit) => void;
   onCancel: () => void;
+  onRemove?: () => void;
 };
-export default function StepEditor({ task, onSave, onCancel }: Props) {
+export default function StepEditor({ task, onSave, onCancel,onRemove }: Props) {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [title, setTitle] = useState(task.title);
   const [instructions, setInstructions] = useState(task.instructions);
@@ -75,6 +76,6 @@ export default function StepEditor({ task, onSave, onCancel }: Props) {
     </div>
     </details>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="step-editor-actions"><button type="submit" className="button primary">Save</button><button type="button" className="button secondary" onClick={onCancel}>Cancel</button></div>
+    <div className="step-editor-actions"><button type="submit" className="button primary">Save</button><button type="button" className="button secondary" onClick={onCancel}>Cancel</button>{onRemove&&<button type="button" className="link danger step-editor-remove" aria-label={'Remove step: '+task.title} onClick={onRemove}>Remove step</button>}</div>
   </form>;
 }

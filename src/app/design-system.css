@@ -117,3 +117,67 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .upcoming-backups { border-top:1px solid var(--line); margin-top:16px; padding-top:12px; }
 .upcoming-backups summary { min-height:44px; display:list-item; cursor:pointer; color:var(--accent-dark); font-weight:600; }
 .plan-active-notice { margin:16px 0; padding:16px; border-left:3px solid var(--accent); background:var(--surface); }
+
+/* #103 review route: scoped so accepted planner/cooking layouts are unaffected. */
+.reviewing-method .workspace-heading { display: block; height: 0; min-height: 0; margin: 0; }
+.reviewing-method .workspace-heading .cancel-add-dish { position: absolute; right: 0; top: -8px; }
+.reviewing-method .menu-add-dish { border: 0; padding: 0; margin: 0; }
+.method-review { max-width: 48rem; margin-inline: auto; }
+.method-review h3 { margin: 0 0 4px; padding-right: 80px; }
+.method-review p.small { margin-block: 4px 12px; }
+.method-review-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.method-review-meta { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.method-review-meta > label { margin-block: 4px; }
+.method-review input,.method-review textarea { width: 100%; font-weight: 400; }
+.method-review-steps { list-style: none; margin: 12px 0 8px; padding: 0; }
+.method-review-steps > li { position: relative; padding-block: 10px; border-top: 1px solid var(--line); }
+.step-row-heading { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 6px; align-items: start; }
+.step-row-copy { min-width: 0; }
+.step-row-copy strong { display: block; font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+.step-row-copy > span { display: block; margin-top: 2px; color: var(--accent-dark); font-size: 12px; line-height: 1.4; }
+.step-drag-grip { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; margin: -4px 0 0 -8px; padding: 0; background: transparent; border: 0; border-radius: 6px; color: var(--muted); cursor: grab; touch-action: none; user-select: none; }
+.step-drag-grip:active { cursor: grabbing; }
+.step-row-edit { margin: -4px 0 0; min-width: 44px; min-height: 44px; padding: 7px 8px; background: transparent; color: var(--accent-dark); border: 0; border-radius: 6px; font-size: 14px; font-weight: 700; }
+.step-row-edit:hover { background: var(--accent-light); }
+.step-row-instructions { margin: 4px 0 0; color: var(--text-secondary); }
+.step-row-instructions p { margin: 0; font-size: 14px; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; }
+.step-row-instructions .instructions-preview { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+.step-row-instructions .link { margin: 0; padding: 0; font-size: 12px; }
+.method-review details { margin-block: 4px; }
+.method-review details summary { min-height: 44px; padding-block: 12px; font-size: 14px; }
+.method-review pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.method-review-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 8px 0; }
+.method-review-actions .button { margin: 0; }
+.method-review-actions .icon-button { min-width: 44px; min-height: 44px; }
+.method-review form label { display: block; margin-block: 12px; font-weight: 600; }
+.method-review-fields > .button { margin: 0; }
+.step-list-row.is-dragging { opacity: .55; }
+.step-list-row.drop-before::before,.step-list-row.drop-after::after { content: ''; position: absolute; left: 0; right: 0; height: 3px; background: var(--accent); border-radius: 2px; pointer-events: none; }
+.step-list-row.drop-before::before { top: -2px; }
+.step-list-row.drop-after::after { bottom: -2px; }
+@media(max-width: 600px) { .method-review-meta { grid-template-columns: minmax(0,1fr); gap: 8px; } }
+
+/* Reusable step actions, enabled in the #103 planning experiment only. */
+.method-review .step-row-instructions { margin-left: 38px; }
+.step-list-row { position: relative; }
+.step-editor-remove { margin-left: auto; min-height: 44px; }
+.standard-planning-step { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 12px 0; background: transparent; }
+.standard-planning-step .task-top { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 6px; align-items: start; }
+.standard-planning-step .task-main { display: contents; }
+.standard-planning-step .task-main > .between { display: block; grid-column: 2; grid-row: 1; }
+.standard-planning-step .task-main > *:not(.between) { grid-column: 2 / -1; margin: 0; }
+.standard-planning-step .task-top > .step-drag-grip { grid-column: 1; grid-row: 1; }
+.standard-planning-step .task-top > .step-row-edit { grid-column: 3; grid-row: 1; }
+.standard-planning-step .task-main .between strong { font-size: 16px; line-height: 1.4; }
+.standard-planning-step .task-main .between time { display: block; margin-top: 2px; white-space: normal; color: var(--text-secondary); font-size: 12px; font-weight: 400; line-height: 1.4; }
+.standard-planning-step .task-main > p.small { font-size: 14px; line-height: 1.45; }
+.standard-planning-step .step-editor { margin: 12px 0 0 38px; }
+.standard-planning-step .inline-step-duration { margin: 0; }
+
+.standard-planning-step .task-main .step-row-instructions p { margin: 0; font-size: 14px; line-height: 1.45; }
+.standard-planning-step .task-main > p.planned-step-details { margin: 0; line-height: 1.4; }
+.step-row-edit:disabled,.step-drag-grip:disabled { opacity: .4; cursor: not-allowed; }
+
+.standard-planning-step:first-child { border-top: 0; }
+.standard-planning-step .task-main > .step-row-timing { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.step-row-timing time { white-space: nowrap; font: inherit; color: inherit; }

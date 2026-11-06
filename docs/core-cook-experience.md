@@ -554,3 +554,13 @@ Upcoming plan saving uses the existing account save icon and automatic transient
 retries. Pending drafts are protected internally; there are no separate recovery,
 retry or Resume draft controls for future plans. Conflicting newer-device edits
 remain protected without automatic replacement. Cancel Cook is unchanged.
+
+## Isolated #103 method-review experiment
+
+On `/recipe-first/`, tailor one dish before adding it to the meal. Read short
+instructions inline, expand only overflowing text, edit beside the title/estimate,
+and drag a collapsed grip to reorder. The review omits the repeated generic
+guidance and method-reference footer. **Review Meal Plan** opens the combined
+steps across all dishes; it is distinct from reviewing one recipe method. This
+prototype does not alter accepted root-page behavior, cooking semantics, source
+data or persistence formats. Hold integration for owner review.

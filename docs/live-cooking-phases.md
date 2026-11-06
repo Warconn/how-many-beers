@@ -2,8 +2,9 @@
 
 Implementation follows the owner-approved November 5 design in
 [the mobile review](design/101/README.md). This feature branch targets dev; it is
-not merged or released. Planning changes in #109 and the accepted #103 prototype
-in PR #108 remain separate.
+not merged or released. Planning changes in #109 remain separate. The owner authorized merging the
+accepted #103 prototype PR #108 into dev and integrating that baseline here.
+Its recipe-first route and shared drag controls are preserved.
 
 ## Cooking interaction
 

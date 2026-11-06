@@ -1,6 +1,7 @@
 "use client";
 
-import {useEffect,useState} from "react";
+import {useEffect,useState,type ButtonHTMLAttributes} from "react";
+import {StepGrip,StepEditButton,StepInstructions} from './StepListControls';
 import type {PlannedTask} from "@/domain/meal";
 import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
@@ -24,6 +25,7 @@ type Props = {
   count: number;
   isNext?: boolean;
   compact?: boolean;
+  planningControls?: {grip:ButtonHTMLAttributes<HTMLButtonElement>;dragging:boolean;drop:'before'|'after'|null;duration:number|null};
   showTimingDetails?: boolean;
   hasServeTarget?: boolean;
   mode: "planning" | "cooking";
@@ -54,7 +56,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,forecast,index,count,isNext=false,compact=false,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,alsoCooking=[],onRemainingEstimate
+  task,forecast,index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,alsoCooking=[],onRemainingEstimate
 }:Props) {
   const [moveNotice,setMoveNotice]=useState("");
   const [detailsOpen,setDetailsOpen]=useState(false);
@@ -82,6 +84,8 @@ export default function TaskRow({
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
   const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
+  const standardPlanning=!!planningControls&&!isCooking;
+  const remove=()=>{if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();};
 
   const saveActualStart=()=>{
     const when=new Date(startTime);
@@ -104,14 +108,14 @@ export default function TaskRow({
     setReading("");setReadingNote("");setLogging(false);setError("");
   };
 
-  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
+  return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")+(standardPlanning?' standard-planning-step step-list-row '+(planningControls.dragging?'is-dragging ':'')+(planningControls.drop?'drop-'+planningControls.drop:''):'')} data-step-id={standardPlanning?task.id:undefined} data-step-group={standardPlanning?task.dishId:undefined} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
     <div className="task-top">
       {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging||startFormOpen||!!remainingEstimate.trim()}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
-      {!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
+      {standardPlanning?<StepGrip stepId={task.id} title={task.title} {...planningControls.grip}/>:!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
         {isCooking?<CookingStepSummary task={task} forecast={forecast} activePhase={activePhase}/>:<>
-        <div className="between"><strong>{task.title}</strong><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?formatted(task.scheduledAt):"Start time not set"}</time></div>
+        <div className={standardPlanning?'between step-row-copy':'between'}><strong>{task.title}</strong><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?formatted(task.scheduledAt):"Start time not set"}</time></div>
         {onDurationChange && <div className="inline-step-duration">
           <label htmlFor={editorId+'-duration'}>Estimated duration</label>
           <div><input id={editorId+'-duration'} aria-label="Estimated duration (minutes)" type="number" inputMode="decimal" min="0" max="43200" step="any" placeholder="Unknown" value={task.durationMinutes??''} disabled={editing||durationDisabled} aria-invalid={!!durationError} aria-describedby={durationError?editorId+'-duration-error':undefined} onChange={e=>{
@@ -121,17 +125,18 @@ export default function TaskRow({
           }}/><span>min</span></div>
           {durationError && <p id={editorId+'-duration-error'} className="form-error" role="alert">{durationError}</p>}
         </div>}
-        {onDurationChange ? (task.timingMode==='fixed'||estimatedFinish(task)) && <p className="planned-step-details">{task.timingMode==='fixed'?'Fixed start · ':''}{estimatedFinish(task)?'Estimated finish '+formatted(estimatedFinish(task)!):'Duration unknown'}</p> : (showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
+        {standardPlanning&&!onDurationChange?<p className="planned-step-details step-row-timing"><span>{task.timingMode==='fixed'?'Fixed start · ':''}{task.isCondition?'Check when ready':task.id.endsWith(':serve')?'Serving':planningControls.duration!=null?'Estimated '+formatDuration(planningControls.duration):'Duration unknown'}</span>{estimatedFinish(task)&&!task.id.endsWith(':serve')&&<span>Estimated finish <time dateTime={estimatedFinish(task)!}>{formatted(estimatedFinish(task)!)}</time></span>}</p>:onDurationChange ? (task.timingMode==='fixed'||estimatedFinish(task)) && <p className="planned-step-details">{task.timingMode==='fixed'?'Fixed start · ':''}{estimatedFinish(task)?'Estimated finish '+formatted(estimatedFinish(task)!):'Duration unknown'}</p> : (showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
         {!task.scheduledAt && (!onDurationChange||task.timingMode==='unscheduled') && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
         {(task.equipment !== task.baseEquipment || task.targetTempF != null) && <p className="planned-step-details">{[task.equipment !== task.baseEquipment ? task.equipment || "Equipment unspecified" : "", task.targetTempF != null ? "Target "+task.targetTempF+"°F (planned)" : ""].filter(Boolean).join(" · ")}</p>}
         {!!task.scheduleAdjustmentMinutes && <p className="planned-step-details">Follows adjusted dish timing</p>}
         {!compact && <p className="task-dish">{task.dishName}</p>}
-        {visibleInstructions && !(onDurationChange&&visibleInstructions==='Imported recipe step. Confirm instructions and timing.') && <p className="muted small">{visibleInstructions}</p>}
-        {task.isCondition && <span className="condition">Verify actual conditions</span>}
+        {visibleInstructions && !(onDurationChange&&visibleInstructions==='Imported recipe step. Confirm instructions and timing.') && (standardPlanning?<StepInstructions text={visibleInstructions}/>:<p className="muted small">{visibleInstructions}</p>)}
+        {task.isCondition && !standardPlanning && <span className="condition">Verify actual conditions</span>}
         {started && <p className="step-event">Started {formatted(started.occurredAt)}</p>}
         {completedAt && <p className="completed-time"><Icon name="check"/> Completed {formatted(completedAt)}</p>}
         </>}
       </div>
+      {standardPlanning&&!editing&&<StepEditButton title={task.title} id={editorId+'-trigger'} disabled={durationDisabled} onClick={()=>onEditingChange(true)}/>}
     </div>
     {isCooking&&alsoCooking.length>0&&<p className="also-cooking">Also cooking: {alsoCooking.join(' · ')}</p>}
     <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing||logging||startFormOpen,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
@@ -157,7 +162,7 @@ export default function TaskRow({
           <label htmlFor={editorId+'-remaining'}>Remaining estimate (minutes, optional)</label><input id={editorId+'-remaining'} type="number" min="0" max="43200" step="any" inputMode="decimal" value={remainingEstimate} onChange={e=>setRemainingEstimate(e.target.value)}/><div className="step-editor-actions"><button className="button primary" type="submit" disabled={!remainingEstimate.trim()}>Update estimate</button>{remainingEstimate.trim()&&<button className="button secondary" type="button" onClick={()=>{setRemainingEstimate('');setError('');}}>Cancel estimate</button>}</div>
         </form>}
       </div>{cookingTitle(task.title)!==task.title&&task.instructions!==task.title&&<p className="small">{task.title}</p>}<p className="small muted">{task.instructions}</p><p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}{estimatedFinish(task)?" · Planned finish "+formatted(estimatedFinish(task)!):""}</p>{forecast?.reason&&<p className="small muted">{forecast.reason}</p>}{forecast?.template?.at&&forecast.template.kind==='checkpoint'&&<p className="small muted"><StepForecastTime forecast={forecast} part="start"/></p>}<p className="small muted">{task.equipment}{task.targetTempF!=null?" · Target "+task.targetTempF+"°F (planned)":""}</p>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
-    <div className="task-actions" aria-label={"Manage "+task.title}>
+    {!standardPlanning&&<div className="task-actions" aria-label={"Manage "+task.title}>
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
 
       {!isCooking && <div className="step-move-controls" role="group" aria-label="Step order"><span aria-hidden="true">Move</span>
@@ -168,10 +173,10 @@ export default function TaskRow({
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
       }}/>
 
-    </div>
-    {!isCooking && <span className="sr-only" role="status">{moveNotice}</span>}
+    </div>}
+    {!isCooking && !standardPlanning && <span className="sr-only" role="status">{moveNotice}</span>}
     {moveError&&<p className="small" role="alert">{moveError}</p>}
-    {editing && <StepEditor task={task} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
+    {editing && <StepEditor task={task} onRemove={standardPlanning?remove:undefined} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {isCooking && <>
       {logging && <div className="reading-form">
         <div>

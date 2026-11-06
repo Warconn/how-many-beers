@@ -17,16 +17,24 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 ### NOW: #101 implementation, approved November 5
 
 The owner accepted the mobile design and worked timing examples, then explicitly
-instructed implementation. Work on feat/101-live-cooking from dev4b4b31f. Preserve
+instructed implementation. Work on feat/101-live-cooking, integrated with dev a514a77. Preserve
 the approved beers-first meter, time beneath and serving estimate with an inline
 positive target difference. Current action remains checkbox-first; physical elapsed
 and quiet concurrent context belong inside it, optional corrections in Step details.
 See docs/design/101/README.md for governing requirements and reviewed concepts.
 New sessions opt into explicit physical relationships. Preserve legacy active cooks,
 actual timestamps, completed history, guest/account saving and planning behavior.
-No automatic merge, hosted migration or production release. #109 planning remains
-separate. #103 controls in PR108 are accepted but unmerged; do not bundle that PR.
+No automatic merge of #101, hosted migration or production release. #109 planning remains
+separate. The owner authorized dev integration of accepted PR108; it is merged
+and its shared planning grips and recipe-first review are preserved here.
 #61/#83/#71 are merged in dev. Production remains #100 at190bf61.
+
+### Accepted recipe-first review
+
+PR108 provides the isolated /recipe-first/ flow and shared planning step rows.
+Preserve its left grip, upper-right Edit, grouped Save/Cancel and separated Remove.
+Reuse docs/design-system.md; do not restore per-row move-arrow footers.
+Recipe-library persistence remains separate; #103 is not fully complete.
 
 ### Existing lifecycle safeguards
 
