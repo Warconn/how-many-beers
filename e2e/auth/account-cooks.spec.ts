@@ -645,6 +645,7 @@ test('live estimates survive account reload without rewriting saved plans, activ
 test('compact step edits and order survive account saves with advanced options closed',async({page,context})=>{
  const remote=server();await remote.attach(context);await signIn(page);
  await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await page.getByRole('button',{name:'Edit Grilled beer-bath brats',exact:true}).click();
  const steps=page.getByRole('region',{name:'Grilled beer-bath brats steps',exact:true}),first=steps.getByRole('article',{name:'Build the brat and vegetable tray',exact:true});
  await first.getByRole('button',{name:/^Edit(?: |$)/}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
  await form.getByText(/^More options/).click();await form.getByLabel('Planned date and time',{exact:true}).fill('2026-01-01T12:30');await form.getByLabel('Equipment for this step',{exact:true}).fill('Patio grill');await form.getByLabel('Target food temperature (°F)',{exact:true}).fill('165');await form.getByRole('button',{name:'Save',exact:true}).click();
