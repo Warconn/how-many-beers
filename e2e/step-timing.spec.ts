@@ -50,7 +50,7 @@ test('schedule opens the shared editor; overnight timing and details preserve ac
   await page.reload();
   await page.getByRole('button', { name: /View cook/ }).click();
   await page.getByRole('button', { name: 'Edit Smoked brisket', exact: true }).click();
-  await page.getByRole('region', { name: 'Smoked brisket steps' }).getByRole('article', { name: task.title, exact: true }).getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('region', { name: 'Smoked brisket steps' }).getByRole('article', { name: task.title, exact: true }).getByRole('button', { name:/^Edit(?: |$)/ }).click();
   await expect(page.getByLabel('Planned date and time', { exact: true })).toHaveValue('2026-11-26T00:30');
 });
 
@@ -62,20 +62,20 @@ test('imported and general prep steps support dates, unknown durations, cancella
   await load(page, state);
   await page.getByRole('button', { name: 'Edit Soup', exact: true }).click();
   const row = page.getByRole('region', { name: 'Soup steps' }).getByRole('article', { name: 'Chop', exact: true });
-  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+  await row.getByRole('button', { name:/^Edit(?: |$)/ }).click();
   const form = page.getByRole('form', { name: 'Edit step', exact: true });
   if (!await form.locator('details').evaluate(el => (el as HTMLDetailsElement).open)) await form.getByText(/^More options/).click();
   await form.getByLabel('Planned date and time', { exact: true }).fill('2026-11-26T00:15');
   await form.getByLabel('Estimated duration (minutes)', { exact: true }).fill('25');
   await form.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(await saved(page)).toEqual(migrateMeal(state));
-  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+  await row.getByRole('button', { name:/^Edit(?: |$)/ }).click();
   if (!await form.locator('details').evaluate(el => (el as HTMLDetailsElement).open)) await form.getByText(/^More options/).click();
   await form.getByLabel('Planned date and time', { exact: true }).fill('2026-11-26T00:15');
   await form.getByLabel('Estimated duration (minutes)', { exact: true }).fill('25');
   await form.getByRole('button', { name: 'Save', exact: true }).click();
   await page.getByLabel('Serve date and time').fill('2026-11-26T18:00');
-  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+  await row.getByRole('button', { name:/^Edit(?: |$)/ }).click();
   await expect(form.getByLabel('Planned date and time', { exact: true })).toHaveValue('2026-11-26T00:15');
   if (!await form.locator('details').evaluate(el => (el as HTMLDetailsElement).open)) await form.getByText(/^More options/).click();
   await form.getByRole('button', { name: 'Use plan timing', exact: true }).click();
@@ -90,7 +90,7 @@ test('imported and general prep steps support dates, unknown durations, cancella
   await form.getByLabel('Estimated duration (minutes)', { exact: true }).fill('5');
   await form.getByRole('button', { name: 'Save', exact: true }).click();
   expect((await saved(page)).taskOverrides![custom.id]).toMatchObject({ scheduledAt: '2026-11-26T22:30:00.000Z', durationMinutes: 5 });
-  await page.getByRole('region', { name: 'Cooking checklist preview' }).getByRole('article', { name: 'Set table', exact: true }).getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('region', { name: 'Meal plan preview' }).getByRole('article', { name: 'Set table', exact: true }).getByRole('button', { name:/^Edit(?: |$)/ }).click();
   if (!await form.locator('details').evaluate(el => (el as HTMLDetailsElement).open)) await form.getByText(/^More options/).click();
   await form.getByLabel('Planned date and time', { exact: true }).fill('');
   await form.getByLabel('Estimated duration (minutes)', { exact: true }).fill('');
@@ -104,7 +104,7 @@ test('date editor rejects missing DST times and requires an explicit ambiguous o
   await page.getByRole('button', { name: 'Edit Smoked brisket', exact: true }).click();
   const row = page.getByRole('region', { name: 'Smoked brisket steps' }).getByRole('article').first();
   const taskId = cookTimeline(meal)[0].id;
-  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+  await row.getByRole('button', { name:/^Edit(?: |$)/ }).click();
   const form = page.getByRole('form', { name: 'Edit step', exact: true });
   if (!await form.locator('details').evaluate(el => (el as HTMLDetailsElement).open)) await form.getByText(/^More options/).click();
   await form.getByLabel('Planned date and time', { exact: true }).fill('2026-03-08T02:30');
@@ -119,7 +119,7 @@ test('date editor rejects missing DST times and requires an explicit ambiguous o
   await form.getByLabel('Estimated duration (minutes)', { exact: true }).fill('0');
   await form.getByRole('button', { name: 'Save', exact: true }).click();
   expect((await saved(page)).taskOverrides![taskId]).toMatchObject({ scheduledAt: '2026-11-01T06:30:00.000Z', durationMinutes: 0 });
-  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+  await row.getByRole('button', { name:/^Edit(?: |$)/ }).click();
   await form.getByLabel('Instructions', { exact: true }).fill('Keep the second occurrence of 1:30 AM.');
   await form.getByRole('button', { name: 'Save', exact: true }).click();
   expect((await saved(page)).taskOverrides![taskId].scheduledAt).toBe('2026-11-01T06:30:00.000Z');

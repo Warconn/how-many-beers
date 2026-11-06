@@ -555,12 +555,14 @@ retries. Pending drafts are protected internally; there are no separate recovery
 retry or Resume draft controls for future plans. Conflicting newer-device edits
 remain protected without automatic replacement. Cancel Cook is unchanged.
 
-## Isolated #103 method-review experiment
+## Approved method review and default planning
 
-On `/recipe-first/`, tailor one dish before adding it to the meal. Read short
+On `/`, tailor one dish before adding it to the meal. Read short
 instructions inline, expand only overflowing text, edit beside the title/estimate,
 and drag a collapsed grip to reorder. The review omits the repeated generic
 guidance and method-reference footer. **Review Meal Plan** opens the combined
-steps across all dishes; it is distinct from reviewing one recipe method. This
-prototype does not alter accepted root-page behavior, cooking semantics, source
-data or persistence formats. Hold integration for owner review.
+steps across all dishes; it is distinct from reviewing one recipe method. The owner approved this as the default planner. Older `/recipe-first/` bookmarks
+redirect home. Cooking semantics, source data and persistence formats are preserved.
+Account save errors use the existing status icon; genuine blockers have one accurate
+notice, with exceptional save tools behind Save details. Do not render duplicate
+recovery banners or describe a tab lock as a newer device version.

@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 
 test('empty plans invite dishes; prep-only plans and invalid serving times keep start validation', async ({ page }) => {
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await expect(page.getByText('READY WHEN YOU ARE', { exact: true })).toHaveCount(0);
   const start = page.getByRole('button', { name: 'Start cooking', exact: true });
   await expect(start).toHaveCount(0);
@@ -20,7 +20,7 @@ test('empty plans invite dishes; prep-only plans and invalid serving times keep 
   await page.getByLabel('Step title', { exact: true }).fill('Set the table');
   await page.getByRole('button', { name: 'Add step', exact: true }).click();
   await expect(start).toBeEnabled();
-  await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();
+  await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByLabel('Serve date and time').fill('');
   await expect(start).toBeDisabled();
   await expect(page.getByText('Set a valid serving date and time to start.', { exact: true })).toBeVisible();
@@ -30,10 +30,10 @@ test('empty plans invite dishes; prep-only plans and invalid serving times keep 
 
 test('planned cook has one compact action beneath the menu and optional checklist', async ({ page }, info) => {
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button', { name: 'Add smoked brisket' }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button', { name: 'Add smoked brisket' }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole('button', { name: '+ Add a dish', exact: true }).click();
-  await page.getByRole('button', { name: 'Add grilled beer-bath brats' }).click();
+  await page.getByRole('button', { name: 'Add grilled beer-bath brats' }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole('button', { name: 'Edit Grilled beer-bath brats', exact: true }).click();
   const actions = page.getByRole('region', { name: 'Cooking actions' });
   await expect(page.locator('.ready-panel')).toHaveCount(0);
@@ -45,11 +45,11 @@ test('planned cook has one compact action beneath the menu and optional checklis
   expect(actionBox!.y).toBeGreaterThanOrEqual(menuBox!.y + menuBox!.height);
   expect(actionBox!.y - menuBox!.y - menuBox!.height).toBeLessThan(40);
   expect(actionBox!.height).toBeLessThan(200);
-  await expect(page.getByRole('region', { name: 'Cooking checklist preview' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Review checklist', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Cooking checklist preview' })).toBeVisible();
-  await page.getByRole('button', { name: 'Hide checklist', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Cooking checklist preview' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Meal plan preview' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Review Meal Plan', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Meal plan preview' })).toBeVisible();
+  await page.getByRole('button', { name: 'Hide Meal Plan', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Meal plan preview' })).toHaveCount(0);
   await expect(page.getByText(/Schedules are estimates, not food-safety checks/)).toBeVisible();
   await page.getByRole('region', { name: 'Cook overview' }).evaluate(el => el.scrollIntoView({ block: 'start' }));
   await page.screenshot({ path: info.outputPath('cook-action.png'), fullPage: false });

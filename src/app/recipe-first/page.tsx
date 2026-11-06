@@ -1,5 +1,3 @@
-'use client';
-import Home from '../page';
-import {RecipeFirstProvider} from '@/components/RecipeFirstContext';
-/** Opt-in flow review only: the accepted homepage, recipe storage and database stay unchanged. */
-export default function RecipeFirstPreview(){return <RecipeFirstProvider value={true}><Home/></RecipeFirstProvider>;}
+import {redirect} from 'next/navigation';
+/** Preserve old feature-review bookmarks; approved planning now lives at /. */
+export default function RecipeFirstPreview(){redirect('/');}

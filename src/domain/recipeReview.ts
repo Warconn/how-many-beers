@@ -3,7 +3,11 @@ import {cookTimeline,addDishToMeal,type ExtendedMeal} from './cookState';
 
 /** A recipe review is an uncommitted planning document, never the live cook. */
 export function recipeReview(dish:Dish,serveAt:string):ExtendedMeal{
- return {...newMeal(),serveAt,dishes:[structuredClone(dish)]};
+ const draft=structuredClone(dish);
+ // Imported review is a sequential plan. Timing corrections should close the
+ // original estimate's gap, without changing the source recipe or old cooks.
+ if(draft.preset==='custom'&&!draft.planningSequence)draft.planningSequence=[...(draft.steps??[]).map(s=>s.id),'serve'];
+ return {...newMeal(),serveAt,dishes:[draft]};
 }
 export function addReviewedDish(current:Meal,review:ExtendedMeal,replaceUnstarted=false):ExtendedMeal{
  if(review.dishes.length!==1||review.startedAt||review.mode==='cooking'||Object.keys(review.completed).length||review.events?.some(e=>e.kind!=='removed'))throw Error('Only an unstarted recipe can be added.');

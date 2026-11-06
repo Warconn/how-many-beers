@@ -1,18 +1,10 @@
-# #103 isolated recipe-first review
+# Approved recipe-first planning
 
-Owner feedback: meal-first is acceptable for this iteration, while time-first is
-still the preferred long-term option. Familiar saved methods should not require
-repeated review. Cook Again repeats an entire meal; a future saved recipe is one
-dish. Keep the experiment self-contained and hold integration until owner review.
-
-This PR is the chooser/review slice, not completion of the personal recipe library.
-Use `/recipe-first/` on the feature preview. The ordinary `/` experience remains the
-accepted baseline. No hosted changes, migration, new account storage or #101 timing
-engine changes are part of this slice. Do not merge automatically.
+The owner approved this flow and requested the regular dev URL use it. Planning now lives at `/`; `/recipe-first/` redirects to `/` for old bookmarks. Feature previews may still use isolated flows while under review. Dev integration must not require a special side URL. This does not implement a personal recipe library or change hosted storage.
 
 ## Try the flow
 
-1. Open `/recipe-first/` and Plan a new cook (or account Plan another cook).
+1. Open `/` and Plan a new cook (or account Plan another cook).
 2. Pick a method-labeled template or paste/upload recipe text. The first dish comes
    before the serving-time form. Existing plan dates remain intact when adding dishes.
 3. Review the method's name/equipment and existing duration estimates. Drag its collapsed grip to reorder, or focus the grip and use Up/Down keys.

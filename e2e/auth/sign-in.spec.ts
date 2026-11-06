@@ -158,13 +158,13 @@ test("planner sign-in stays in the workspace and preserves an open recipe draft"
   await backend(page);
   await page.goto("/");
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
-    .click();
+    .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
   await page
-    .getByRole("button", { name: "Import a recipe", exact: true })
+    .getByRole("button", { name: "Add your own recipe", exact: true })
     .click();
   await page.getByLabel("Recipe title").fill("Friday beans");
   const before = await page.evaluate(() =>
@@ -206,10 +206,10 @@ test("account access works in cooking and history without changing cook progress
   await backend(page);
   await page.goto("/");
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
-    .click();
+    .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page
     .getByRole("button", { name: "Start cooking", exact: true })
     .click();
@@ -249,10 +249,10 @@ test("redirected sign-in can return to the same cooking view with exact saved pr
   await backend(page);
   await page.goto("/");
   await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
-    .click();
+    .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page
     .getByRole("button", { name: "Start cooking", exact: true })
     .click();

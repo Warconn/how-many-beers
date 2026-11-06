@@ -16,6 +16,6 @@ test('Beerometer is prominent and stays visible while planning and cooking',asyn
 test('empty or untimed plans never display a made-up beer count',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});
  if(await meter.count()){await expect(meter.locator('strong')).toHaveText('—');}else{await expect(page.getByRole('heading',{name:'What do you want to cook?',exact:true})).toBeVisible();}
- const choose=page.getByRole('button',{name:'Start with a template',exact:true});if(await choose.count())await choose.click();
- await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('');await expect(meter.locator('strong')).toHaveText('—');
+ const choose=page.getByRole('button',{name:'Choose a template',exact:true});if(await choose.count())await choose.click();
+ await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('');await expect(meter.locator('strong')).toHaveText('—');
 });

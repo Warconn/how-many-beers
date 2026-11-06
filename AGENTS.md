@@ -14,24 +14,25 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: #101 implementation, approved November 5
+### NOW: default dev entry and save-notice cleanup
 
-The owner accepted the mobile design and worked timing examples, then explicitly
-instructed implementation. Work on feat/101-live-cooking, integrated with dev a514a77. Preserve
-the approved beers-first meter, time beneath and serving estimate with an inline
-positive target difference. Current action remains checkbox-first; physical elapsed
-and quiet concurrent context belong inside it, optional corrections in Step details.
-See docs/design/101/README.md for governing requirements and reviewed concepts.
-New sessions opt into explicit physical relationships. Preserve legacy active cooks,
-actual timestamps, completed history, guest/account saving and planning behavior.
-No automatic merge of #101, hosted migration or production release. #109 planning remains
-separate. The owner authorized dev integration of accepted PR108; it is merged
-and its shared planning grips and recipe-first review are preserved here.
-#61/#83/#71 are merged in dev. Production remains #100 at190bf61.
+#101 is accepted and merged into dev at ab81a00, alongside PR108. Do not repeat
+that implementation. The owner requested the approved planner at `/` rather than
+a side URL for dev pushes. Implement and validate that integration on an isolated
+feature branch, then merge into dev as explicitly requested. Production remains
+#100 at190bf61; no production release or hosted migration is authorized.
+
+Preserve the beers-first meter, inline serving difference, checkbox-first physical
+cooking, legacy active sessions, completed history and account/guest saving. Collapse
+duplicate account-error presentations into one accurate notice. Optional exceptional
+save tools belong behind details; never silently discard pending changes or retry a
+conflict as an overwrite. #109 and recipe-library persistence remain separate.
 
 ### Accepted recipe-first review
 
-PR108 provides the isolated /recipe-first/ flow and shared planning step rows.
+The owner requested approved planning at the normal dev URL. PR108
+provides the default recipe-first flow and shared planning step rows; old
+/recipe-first/ bookmarks redirect to /. Feature review routes remain optional.
 Preserve its left grip, upper-right Edit, grouped Save/Cancel and separated Remove.
 Reuse docs/design-system.md; do not restore per-row move-arrow footers.
 Recipe-library persistence remains separate; #103 is not fully complete.

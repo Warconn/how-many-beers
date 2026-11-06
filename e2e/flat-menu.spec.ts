@@ -5,10 +5,11 @@ test('add and adjust dishes in one menu surface', async ({ page }, info) => {
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button', { name: 'Add smoked brisket' }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button', { name: 'Add smoked brisket' }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const menu = page.getByRole('region', { name: 'Cook overview' });
   const brisket = menu.getByRole('article', { name: 'Smoked brisket', exact: true });
+  await brisket.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
   await expect(brisket.getByRole('region', { name: 'Smoked brisket steps' })).toBeVisible();
   await expect(brisket.getByRole('button', { name: 'Edit Smoked brisket', exact: true })).toBeFocused();
   await expect(page.getByText('Back to menu', { exact: false })).toHaveCount(0);
@@ -20,8 +21,9 @@ test('add and adjust dishes in one menu surface', async ({ page }, info) => {
   await page.getByRole('button', { name: 'Cancel adding', exact: true }).click();
   await expect(menu.locator('.workspace-dish')).toHaveCount(1);
   await page.getByRole('button', { name: '+ Add a dish', exact: true }).click();
-  await page.getByRole('button', { name: 'Add grilled beer-bath brats' }).click();
+  await page.getByRole('button', { name: 'Add grilled beer-bath brats' }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const brats = menu.getByRole('article', { name: 'Grilled beer-bath brats', exact: true });
+  await brats.getByRole('button',{name:'Edit Grilled beer-bath brats',exact:true}).click();
   await expect(brats.getByRole('region', { name: 'Grilled beer-bath brats steps' })).toBeVisible();
   await expect(brisket.getByRole('region', { name: 'Smoked brisket steps' })).toHaveCount(0);
   await brisket.getByRole('button', { name: 'Edit Smoked brisket', exact: true }).click();
