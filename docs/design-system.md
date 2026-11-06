@@ -76,3 +76,37 @@ WebKit. Review real planning, active cooking and history screenshots before/afte
 verify focus, target sizes, overflow, text contrast and untouched stored records.
 Capture the Beerometer separately to compare the protected design. Run full unit,
 browser, account/auth and production/offline checks before declaring the PR ready.
+
+## Reusable step rows and actions (#103 review)
+
+Use this pattern for recipe-method review and meal planning on `/recipe-first/`.
+The accepted root planner and Cooking Mode keep their existing behavior until this
+experiment is reviewed. Reuse `StepListControls.tsx` and `useStepReorder.ts` for
+these views instead of building another action strip.
+
+| Element | Placement | Behavior |
+| --- | --- | --- |
+| Move grip | Far left, aligned with the step heading | Drag the collapsed row; Up/Down also moves it. Keep a 44 px target. |
+| Title and timing | Main heading column | Title first, planned date/estimate below it; allow wrapping. |
+| Edit | Upper right beside the heading | Quiet text button, same position in recipe and meal views. |
+| Instructions and metadata | Below the heading, aligned with its text | Smaller readable text; expand instructions only when over five rendered lines. Use plain checkpoint text rather than a separate warning-like badge. |
+| Save and Cancel | Bottom of the open editor, grouped on the left | Save is primary; Cancel closes the draft and restores focus to Edit. |
+| Remove step | Inside the open editor, separated to the right | Plain destructive label; committed removals retain their confirmation and recorded history. |
+| Add a step | Below the list | List-level action, never repeated on every row. |
+
+Do not add an Edit/Move/Remove footer to a collapsed step. On phones, keep the
+heading actions in place while text wraps; allow the editor footer to wrap rather
+than squeezing its controls. Disable movement and other row edits while a form is
+open. Do not move an editor when someone is typing.
+
+`data-step-list`, `data-step-id` and `data-step-group` identify one visible list,
+one stable task and its owning dish. A drag commits on drop, uses an insertion
+marker and edge scrolling, and can be canceled without changing the plan. Scope
+focus/targets to the initiating list, especially when a dish and the combined meal
+preview are both visible. All steps in a dish remain configurable; this introduces
+no template-phase restriction or cross-dish transfer.
+
+Call the existing planning reflow through `reorderPlannedStep`; do not derive a
+second schedule in the UI. Keep the serving target, independent dishes, physical
+events and existing save mechanism intact. Reordering is an edit, never proof that
+a cooking interval elapsed or that a condition is safe.
