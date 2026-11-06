@@ -485,13 +485,13 @@ function CookExperience() {
           <p className="small">{workspace.error}</p>
           <div className="storage-recovery-actions">
             <button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button>
-            <button type="button" onClick={downloadBackup}>Download backup</button>
+            <button type="button" onClick={()=>workspace.cloudPhase==='load-error'?downloadCookFile(recoveryExport(),'how-many-beers-account-backup.json'):downloadBackup()}>Download backup</button>
             <button type="button" onClick={()=>{if(window.confirm('Load the latest saved cooks and discard this tab’s pending changes? Download a backup first if you need to keep those changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not load saved cooks. Your changes remain in this tab.'));}}>Load account version</button>
           </div>
         </details>
       </section>}
       {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&<nav aria-label="Plan navigation"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button></nav>}
-      <div className="cook-content" inert={workspace.locked}>{recipeFirst&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
+      <div className="cook-content" inert={workspace.locked}>{recipeFirst&&view==='planning'&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
       {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
         <p>Your existing saved data is protected. Download recovery data above before resetting anything. It preserves the original data for recovery; it is not a normal cook backup.</p>

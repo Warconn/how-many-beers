@@ -12,7 +12,7 @@ for(const input of ['paste','md','txt'])test(input+' retains editable recipe det
  await preview.getByLabel('Equipment',{exact:true}).fill('Backyard pellet smoker');
  await preview.getByRole('button',{name:'Add to meal',exact:true}).click();
  await page.getByRole('button',{name:'Edit Smoky BBQ Pumpkin Seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
- const details=page.getByRole('region',{name:'Smoky BBQ Pumpkin Seeds steps'});
+ const details=page.getByRole('article',{name:'Smoky BBQ Pumpkin Seeds',exact:true});
  await details.getByText('Ingredients & recipe reference',{exact:true}).click();
  await expect(details.getByLabel('Ingredients (one per line)')).toHaveValue('1.5 cups pumpkin seeds\n2 tsp olive oil\nsalt, garlic powder and paprika');
  await details.getByLabel('Ingredients (one per line)').fill('1.5 cups pumpkin seeds\n3 tsp olive oil\npaprika');await details.getByLabel('Source / notes').fill('Family recipe, adjusted');

@@ -66,3 +66,11 @@ it('compiles reviewed new-dish phases without starting them or disturbing a live
  expect(new Set(retry.phasePlan!.phases.map(p=>p.id)).size).toBe(retry.phasePlan!.phases.length);
  expect(retry.events).toEqual(before.events);
 });
+
+it('shorter imported review estimates reflow without a leftover original gap',async()=>{
+ const {parseRecipeText}=await import('../src/domain/recipe');const dish=parseRecipeText('Seeds','Roast for 10–15 minutes.\nCool completely.');const source=structuredClone(dish);
+ let review=recipeReview(dish,'2026-11-26T00:05');const own=cookTimeline(review).filter(t=>!t.id.endsWith(':serve')).sort((a,b)=>(a.recipeOrder??0)-(b.recipeOrder??0));
+ review=setStepDuration(review,own[0].id,12);review=setStepDuration(review,own[1].id,8);
+ const steps=cookTimeline(addReviewedDish({...newMeal(),serveAt:review.serveAt},review));const roast=steps.find(t=>t.id===own[0].id)!,cool=steps.find(t=>t.id===own[1].id)!;
+ expect(Date.parse(cool.scheduledAt!)-Date.parse(roast.scheduledAt!)).toBe(12*60000);expect(Date.parse(steps.find(t=>t.id.endsWith(':serve'))!.scheduledAt!)-Date.parse(roast.scheduledAt!)).toBe(20*60000);expect(dish).toEqual(source);
+});
