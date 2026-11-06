@@ -583,21 +583,15 @@ test("account menu stays clean while earlier records remain untouched", async ({
 });
 
 
-test('signed-in empty planner preserves serving time through cancel and reload',async({page,context},info)=>{
+test('signed-in meal-first planning preserves serving time through cancel and reload',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();
- await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();
- await page.getByLabel('Serve date and time').fill('2026-12-25T18:00');
- await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();
- await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
- await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
- await page.reload();await page.getByRole('button',{name:/Plan a new cook/}).click();
- await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
- await page.screenshot({path:info.outputPath('account-empty-planner.png'),fullPage:true});
- await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
- await expect(page.getByRole('heading',{name:'1 dish in this cook'})).toBeVisible();await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-12-25T18:00');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');await expect(page.getByRole('heading',{name:'1 dish in this cook'})).toBeVisible();
+ await page.screenshot({path:info.outputPath('account-meal-first-planner.png'),fullPage:true});
 });
-
 
 test('imported duration edits save and reload without changing another dish or history',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
@@ -605,7 +599,7 @@ test('imported duration edits save and reload without changing another dish or h
  await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
  const original=JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0]),history=JSON.stringify(remote.state.history);
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Pumpkin seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds\nCool completely');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();
- const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});
+ await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});
  for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','15'],['Cool completely','10']]){
   await steps.getByRole('article',{name,exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true}).fill(minutes);
  }
@@ -616,7 +610,7 @@ test('imported duration edits save and reload without changing another dish or h
 
 
 test('guest imported durations produce a plan without persisting a trial cook',async({page})=>{
- await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Trial seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Trial seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();await page.getByRole('button',{name:'Edit Trial seeds',exact:true}).click();
  for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','10']]){
   await page.getByRole('region',{name:'Trial seeds steps',exact:true}).getByRole('article',{name,exact:true}).getByRole('spinbutton',{name:'Estimated duration (minutes)',exact:true}).fill(minutes);
  }
