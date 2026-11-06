@@ -19,7 +19,7 @@ test('save for later returns Home without starting, survives reopening and start
  const meal=fixture();await load(page,meal);
  const oldHistory=await page.evaluate(k=>localStorage.getItem(k),HISTORY_KEY);
  await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
- const step=page.getByRole('region',{name:'Smoked brisket steps',exact:true}).getByRole('article').first();await step.getByRole('button',{name:'Edit',exact:true}).click();
+ const step=page.getByRole('region',{name:'Smoked brisket steps',exact:true}).getByRole('article').first();await step.getByRole('button',{name:/^Edit(?: |$)/}).click();
  await step.getByLabel('Instructions',{exact:true}).fill('Unsaved step draft');await expect(page.getByRole('button',{name:'Save plan for later',exact:true})).toBeDisabled();
  await step.getByRole('button',{name:'Cancel',exact:true}).click();
  await page.getByRole('button',{name:'Save plan for later',exact:true}).click();
@@ -66,12 +66,12 @@ test('a general-prep-only plan stays discoverable and can be saved untimed',asyn
  await page.getByRole('button',{name:'Save plan for later',exact:true}).click();
  await expect(page.getByRole('region',{name:'Planned start',exact:true})).toContainText('No confirmed start time');
  expect(await saved(page)).toEqual(meal);
- await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Review checklist',exact:true}).click();await expect(page.getByRole('article',{name:'Set the table',exact:true})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();await expect(page.getByRole('article',{name:'Set the table',exact:true})).toBeVisible();
 });
 
 test('planning actions align consistently on desktop and stack cleanly on phones',async({page},info)=>{
  await load(page,fixture());const actions=page.getByRole('region',{name:'Cooking actions',exact:true});const initial=page.viewportSize()!;
- const buttons=[actions.getByRole('button',{name:'Start cooking',exact:true}),actions.getByRole('button',{name:'Save plan for later',exact:true}),actions.getByRole('button',{name:'Review checklist',exact:true})];
+ const buttons=[actions.getByRole('button',{name:'Start cooking',exact:true}),actions.getByRole('button',{name:'Save plan for later',exact:true}),actions.getByRole('button',{name:'Review Meal Plan',exact:true})];
  for(const width of [375,768,1280]){
   await page.setViewportSize({width,height:900});const boxes=await Promise.all(buttons.map(b=>b.boundingBox()));
   for(const box of boxes)expect(box!.height).toBeGreaterThanOrEqual(48);

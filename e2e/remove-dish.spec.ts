@@ -51,8 +51,8 @@ test('remove is a separate keyboard action with a phone-sized target', async ({ 
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const dish = page.getByRole('region', { name: 'Cook overview' }).getByRole('article', { name: 'Smoked brisket', exact: true });
   const select = dish.getByRole('button', { name: 'Edit Smoked brisket', exact: true });
   const remove = dish.getByRole('button', { name: 'Remove Smoked brisket', exact: true });
@@ -77,12 +77,12 @@ test('removing the last dish returns focus to Add without replacing the cook', a
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByRole('button', { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const id = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!).id);
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Remove Smoked brisket', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Start with a template', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Choose a template', exact: true })).toBeFocused();
   await expect(page.getByRole('heading', { name: 'What do you want to cook?' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start cooking', exact: true })).toHaveCount(0);
   const state = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));

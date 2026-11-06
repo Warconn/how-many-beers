@@ -147,18 +147,18 @@ upcoming plans have explicitly separate backup files; keep both for a full accou
 backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
 See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).
 
-## Recipe-first review experiment (#103)
+## Approved meal planning (#103)
 
-The isolated feature branch exposes `/recipe-first/` for reviewing the proposed
-meal-first chooser and concise method editor. `/` retains accepted behavior. See
-[scope and test path](docs/recipe-first-preview.md). Personal recipe persistence is
-a later slice of #103, not a capability claimed by this prototype. Do not merge or
-release this experiment before owner review.
+The approved recipe-first planner now lives at `/`, including on the ordinary dev
+URL. Older `/recipe-first/` bookmarks redirect to `/`. Feature branches may still
+use isolated review URLs, but reviewed dev work uses the normal entry point. See
+[scope and test path](docs/recipe-first-preview.md). Personal recipe persistence
+remains a later slice; no hosted schema change is required for this flow.
 
-The recipe-first experiment shows short step instructions inline, expands longer
+The approved planner shows short step instructions inline, expands longer
 text on demand, and labels the combined schedule **Review Meal Plan**. Generic
 review guidance and method-reference chrome are omitted; saved recipe/source data
-and the ordinary homepage remain intact.
+and existing cooks remain intact.
 
 Recipe review and prototype meal-planning rows share drag grips, upper-right Edit
 and editor-contained Remove. The reusable action placement standard lives in

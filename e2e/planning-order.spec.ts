@@ -11,7 +11,7 @@ for(const kind of ['brats','recipe'] as const)test(kind+' planning move updates 
  const region=page.getByRole('region',{name:dish.name+' steps'}),rows=region.getByRole('article');
  const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
  const second=cookTimeline(before).filter(t=>t.dishId===dish.id)[1];
- await rows.nth(1).getByRole('button',{name:'Move '+second.title+' up',exact:true}).click();
+ await rows.nth(1).getByRole('button',{name:'Move '+second.title,exact:true}).press('ArrowUp');
  await expect(rows.first()).toHaveAttribute('aria-label',second.title);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
  const tasks=cookTimeline(saved).filter(t=>t.dishId===dish.id);
@@ -23,6 +23,6 @@ for(const kind of ['brats','recipe'] as const)test(kind+' planning move updates 
 });
 test('cooking steps can move before other preparation and their timing follows the chosen order',async({page})=>{
  const dish=createDish('brats'),meal={...newMeal(),dishes:[dish]};await page.goto('/');await page.evaluate(m=>{localStorage.clear();localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m));},meal);await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:`Edit ${dish.name}`,exact:true}).click();
- const region=page.getByRole('region',{name:dish.name+' steps'});await region.getByRole('button',{name:'Move Cover and cook the brat tray up',exact:true}).click();await expect(region.getByRole('article').nth(1)).toHaveAttribute('aria-label','Cover and cook the brat tray');await expect(page.getByText(/Only preparation steps/)).toHaveCount(0);
+ const region=page.getByRole('region',{name:dish.name+' steps'});await region.getByRole('button',{name:'Move Cover and cook the brat tray',exact:true}).press('ArrowUp');await expect(region.getByRole('article').nth(1)).toHaveAttribute('aria-label','Cover and cook the brat tray');await expect(page.getByText(/Only preparation steps/)).toHaveCount(0);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!)),tasks=cookTimeline(saved).filter(t=>t.dishId===dish.id);expect(Date.parse(tasks[2].scheduledAt!)-Date.parse(tasks[1].scheduledAt!)).toBe(120*60000);
 });

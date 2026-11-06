@@ -11,7 +11,7 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   await page.getByRole('button',{name:/Resume planning/}).click();
   await page.getByRole('button',{name:`Edit ${dish.name}`,exact:true}).click();
   const region=page.getByRole('region',{name:dish.name+' steps'}),row=region.getByRole('article').first();
-  await row.getByRole('button',{name:'Edit',exact:true}).click();
+  await row.getByRole('button',{name:/^Edit(?: |$)/}).click();
   const form=page.getByRole('form',{name:'Edit step',exact:true});
   await form.scrollIntoViewIfNeeded();
   await page.screenshot({path:`docs/screenshots/issue-85-62-${process.env.HMB_CAPTURE??'after'}-${kind}-${info.project.name}.png`,fullPage:true});
@@ -25,14 +25,14 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
   expect(cookTimeline(saved).find(t=>t.title==='Edited step')?.durationMinutes).toBeNull();
   const edited=region.getByRole('article',{name:'Edited step',exact:true});
-  await edited.getByRole('button',{name:'Edit',exact:true}).click();
+  await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();
   await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('');
   await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('0');
   await form.getByRole('button',{name:'Save',exact:true}).click();
-  await edited.getByRole('button',{name:'Edit',exact:true}).click();
+  await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();
   await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('0');
   await form.press('Escape');
-  await expect(edited.getByRole('button',{name:'Edit',exact:true})).toBeFocused();
+  await expect(edited.getByRole('button',{name:/^Edit(?: |$)/})).toBeFocused();
 });
 
 test('advanced values survive a closed disclosure; add, move and remove stay aligned and persist',async({page})=>{
@@ -43,21 +43,21 @@ test('advanced values survive a closed disclosure; add, move and remove stay ali
   await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Soup',exact:true}).click();
   const region=page.getByRole('region',{name:'Soup steps'}),row=region.getByRole('article',{name:'Chop',exact:true});
   const read=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
-  await expect(row.getByRole('button',{name:'Move Chop up'})).toBeDisabled();
-  const controls=await row.locator('.task-actions button').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {y:r.y,height:r.height,width:r.width};}));
+  await row.getByRole('button',{name:'Move Chop'}).press('ArrowUp');await expect(region.getByRole('article').first()).toHaveAttribute('aria-label','Chop');
+  const controls=await row.locator('.step-drag-grip,.step-row-edit').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {y:r.y,height:r.height,width:r.width};}));
   expect(new Set(controls.map(c=>c.y)).size).toBe(1);expect(controls.every(c=>c.height>=44&&c.width>=44)).toBe(true);
-  await row.getByRole('button',{name:'Edit',exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
+  await row.getByRole('button',{name:/^Edit(?: |$)/}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
   await expect(form.getByLabel('Custom options set')).toBeVisible();await form.getByLabel('Step name').fill('Chop finely');await form.getByRole('button',{name:'Save',exact:true}).click();
   expect((await read()).taskOverrides[id]).toMatchObject(meal.taskOverrides[id]);
-  await region.getByRole('button',{name:'Move Chop finely down'}).click();
-  await expect(region.getByRole('status').filter({hasText:'Chop finely moved to step 2'})).toBeVisible();
+  await region.getByRole('button',{name:'Move Chop finely'}).press('ArrowDown');
+  await expect(page.getByRole('status').filter({hasText:'position 2'})).toBeVisible();
   await region.getByRole('button',{name:'Add a step to Soup'}).click();await expect(region.getByLabel('Step title',{exact:true})).toBeFocused();
   await region.getByLabel('Step title',{exact:true}).fill('Taste');await region.getByLabel('Step title',{exact:true}).press('Enter');
-  const taste=region.getByRole('article',{name:'Taste',exact:true});await expect(taste).toBeVisible();await expect(taste.getByRole('button',{name:'Move Taste down'})).toBeDisabled();
-  page.once('dialog',d=>d.accept());await taste.getByRole('button',{name:'Remove step: Taste',exact:true}).click();await expect(taste).toHaveCount(0);
+  const taste=region.getByRole('article',{name:'Taste',exact:true});await expect(taste).toBeVisible();await taste.getByRole('button',{name:'Move Taste'}).press('ArrowDown');await expect(region.getByRole('article').last()).toHaveAttribute('aria-label','Taste');
+  await taste.getByRole('button',{name:'Edit Taste',exact:true}).click();page.once('dialog',d=>d.accept());await taste.getByRole('button',{name:'Remove step: Taste',exact:true}).click();await expect(taste).toHaveCount(0);
   await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Soup',exact:true}).click();
   await expect(region.getByRole('article').nth(1)).toHaveAttribute('aria-label','Chop finely');expect((await read()).dishes[1]).toEqual(other);
-  await region.getByRole('article',{name:'Chop finely',exact:true}).getByRole('button',{name:'Edit',exact:true}).click();
+  await region.getByRole('article',{name:'Chop finely',exact:true}).getByRole('button',{name:/^Edit(?: |$)/}).click();
   await form.getByText(/^More options/).click();await expect(form.getByLabel('Equipment for this step',{exact:true})).toHaveValue('Stockpot');
   await form.getByLabel('Planned date and time',{exact:true}).fill('');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('');await form.getByRole('button',{name:'Save',exact:true}).click();
   expect((await read()).taskOverrides[id]).toMatchObject({scheduledAt:null,equipment:'Stockpot',targetTempF:165});

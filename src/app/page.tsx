@@ -450,7 +450,7 @@ function CookExperience() {
   return (
     <main className={"shell " + (cooking ? "cooking-screen"+(!remaining.length?" cooking-screen-complete":"") : "planning-screen")}>
       {showCancel&&<CancelCookDialog name={meal.name} temporary={workspace.kind==='trial'} onDismiss={dismissCancel} onConfirm={confirmCancel}/>}
-      {storageError&&!(workspace.plansEnabled&&(workspace.isSelectedPlan||workspace.pendingOperation==='promote')) && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
+      {storageError&&!(workspace.kind==='account'&&['load-error','conflict','blocked','unsaved'].includes(workspace.cloudPhase))&&!(workspace.plansEnabled&&(workspace.isSelectedPlan||workspace.pendingOperation==='promote')) && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
         <div className="storage-recovery-actions">
           {storageStatus!=='recovery'&&<button type="button" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button>}
           {storageStatus==='recovery' ? <>
@@ -479,8 +479,17 @@ function CookExperience() {
 
       {workspace.kind==='trial'&&<p className="guest-limit">Guest cooks aren’t kept after you leave. Sign in to keep this cook.</p>}
 
-      {workspace.kind==='account'&&workspace.cloudPhase==='load-error'&&!workspace.isSelectedPlan&&<section className="panel"><h2>Reconnect to your account cooks</h2><p>Account cooks could not be loaded safely. Your saved data has not been replaced.</p><button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" onClick={()=>{const blob=new Blob([recoveryExport()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cook-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}}>Download recovery data</button><button type="button" onClick={()=>{if(window.confirm('Load your account version? Download recovery data first to preserve this tab’s pending changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your recovery backup and retry.'));}}>Load account version</button></section>}
-      {workspace.kind==='account'&&['conflict','blocked'].includes(workspace.cloudPhase)&&!workspace.isSelectedPlan&&workspace.pendingOperation!=='promote'&&<section className="panel" aria-label="Account cook recovery"><h2>Keep your cook safe</h2><p>{workspace.cloudPhase==='conflict'?'Another device has a newer version. Download a backup before loading it.':'The last action has not been confirmed. Retry it before continuing.'}</p><button type="button" className="button primary" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button><button type="button" className="button secondary" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button><button type="button" className="button secondary" onClick={()=>{if(window.confirm('Load the latest account cooks and discard this tab’s pending changes? Download a backup first.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not reload your account. Keep your backup and retry.'));}}>Load account version</button></section>}
+      {workspace.kind==='account'&&['load-error','conflict','blocked','unsaved'].includes(workspace.cloudPhase)&&!workspace.isSelectedPlan&&workspace.pendingOperation!=='promote'&&<section className={workspace.cloudPhase==='unsaved'?'account-save-details':'warning'} aria-label="Account cook recovery">
+        {workspace.cloudPhase!=='unsaved'&&<p>{/another tab/i.test(workspace.error)?'This cook is open in another tab. Close that tab, then refresh this page to continue.':workspace.cloudPhase==='conflict'?'A newer saved version of this cook is available. Your changes are still held in this tab.':workspace.cloudPhase==='load-error'?'Your saved cooks could not be loaded. Keep this tab open while the connection is restored.':'Saving this action has not been confirmed yet. Keep this tab open so your progress stays available.'}</p>}
+        <details><summary>Save details</summary>
+          <p className="small">{workspace.error}</p>
+          <div className="storage-recovery-actions">
+            <button type="button" onClick={()=>void retry().catch(()=>{})}>Retry account saving</button>
+            <button type="button" onClick={downloadBackup}>Download backup</button>
+            <button type="button" onClick={()=>{if(window.confirm('Load the latest saved cooks and discard this tab’s pending changes? Download a backup first if you need to keep those changes.'))void workspace.reloadAccount().catch(()=>setStorageError('Could not load saved cooks. Your changes remain in this tab.'));}}>Load account version</button>
+          </div>
+        </details>
+      </section>}
       {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&<nav aria-label="Plan navigation"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button></nav>}
       <div className="cook-content" inert={workspace.locked}>{recipeFirst&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
       {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
@@ -596,7 +605,7 @@ function CookExperience() {
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
           {timeline.length>0 && <BeerEstimator meal={meal} timeline={timeline}/>}
           <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
-          {(!recipeFirst||meal.dishes.length>0)&&<section className="hero panel">
+          {(!recipeFirst||meal.dishes.length>0||timeline.length>0)&&<section className="hero panel">
             <div>
               <p className="eyebrow">PLAN YOUR COOK</p>
               <h2>What time are we eating?</h2>
@@ -775,7 +784,7 @@ function CookExperience() {
             </section>
           )}
 
-          {timeline.length===0 && !recipeFirst && <details className="empty-prep"><summary>Other preparation</summary><AddStepForm onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>}
+          {timeline.length===0 && <details className="empty-prep"><summary>Other preparation</summary><AddStepForm onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>}
           </div>
           {timeline.length>0 && <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>

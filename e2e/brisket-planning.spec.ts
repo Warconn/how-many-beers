@@ -54,8 +54,9 @@ test('brisket weight planning is explicit, updates the schedule and preserves re
 
 test('unknown or unsupported brisket inputs do not manufacture a recommendation',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+  await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
   const planner=page.getByRole('region',{name:'Brisket timing'});
   await expect(planner.getByRole('button',{name:'Use recommended timing',exact:true})).toBeDisabled();
   await planner.getByLabel('Brisket weight (lb)',{exact:true}).fill('15');
