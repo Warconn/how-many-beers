@@ -4,6 +4,7 @@ export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "win
 export type RecipeTemperature = {value:number; unit:"F"|"C"; kind:"equipment"|"food"|"unknown"};
 
 export type RecipeStep = {
+  cookingKind?: 'heating'|'passive'; // Suggested once at recipe review, never inferred from activity.
   recipeTemperatures?: RecipeTemperature[];
   id: string;
   title: string;
@@ -41,6 +42,7 @@ export type Meal = {
   notes: Record<string, string>;
   mode?: "planning" | "cooking"; // optional to preserve existing localStorage meals
   startedAt?: string;
+  phasePlan?: import('./cookingPhases').PhasePlan; // Only new sessions opt into the physical model.
 };
 
 export type TemplateStage={kind:'preparation'|'cook'|'rest'|'activity';minutes:number;after?:string;startLabel?:string};

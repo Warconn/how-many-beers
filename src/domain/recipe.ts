@@ -1,4 +1,5 @@
 import type { Dish, RecipeStep, RecipeTemperature } from "./meal";
+import {recipeCookingKind} from './cookingPhases';
 
 export type RecipeTiming={minutes:number|null;range?:[number,number]};
 const words:Record<string,number>={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12};
@@ -104,7 +105,7 @@ export function parseRecipeText(name:string,text:string):Dish{
   }
   if(steps.length>=100)break;
   const timing=extractRecipeTiming(instruction);
-  steps.push({id:'step-'+(steps.length+1),title:instruction.slice(0,180),instructions:instruction,minutes:timing.minutes,recipeTemperatures:extractRecipeTemperatures(instruction)});
+  steps.push({id:'step-'+(steps.length+1),title:instruction.slice(0,180),instructions:instruction,minutes:timing.minutes,recipeTemperatures:extractRecipeTemperatures(instruction),cookingKind:recipeCookingKind(instruction,timing.minutes)});
  }
  const equipmentSource=[...references,...steps.map(s=>s.instructions??s.title)].join('\n');
  const setting=extractRecipeTemperatures(equipmentSource).find(t=>t.kind==='equipment');

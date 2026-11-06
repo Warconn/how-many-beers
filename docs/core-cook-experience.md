@@ -1,3 +1,15 @@
+## #101 owner-approved live cooking increment (November 5)
+
+See [the implementation contract](live-cooking-phases.md). Fresh sessions separate
+physical starts/ends from checkpoints behind the existing checkbox flow. The
+Beerometer stays beers-first, time beneath, serving estimate at the bottom with an
+inline positive target difference. Elapsed phase context and concurrent activities
+stay inside the current action, advanced tools in Step details. Passive estimate
+expiry is not completion, and heating overruns never stop cooking automatically.
+The requested serving target and unrelated actuals never move silently. Existing
+active sessions retain their old forecast behavior; planning/#109 remains separate.
+This is feature-branch work, not a production release or automatic merge.
+
 ## Current release and next work (November 5, 2026)
 
 The November 5 release adds #21 visual consistency and #97 checklist-first cooking

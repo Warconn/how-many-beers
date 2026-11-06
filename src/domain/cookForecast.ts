@@ -5,6 +5,7 @@ import {buildDishTimeline} from './schedule';
 import {physicalPhase,physicalStartedEvent} from './physicalPhase';
 import {executionTimeline,sessionAnchor,reopenedAt} from './executionTimeline';
 import {templateStepForecasts} from './templateForecast';
+import {phaseProjection} from './phaseForecast';
 
 export type TemplateTiming={
  kind:'checkpoint'|'cook'|'rest'|'preparation'|'activity'|'serve';
@@ -14,6 +15,7 @@ export type TemplateTiming={
 };
 
 export type StepForecast={
+ phaseId?:string;elapsedMinutes?:number;physicalActive?:boolean;overEstimate?:boolean;lowerBound?:boolean;
  retainDuration?:boolean; // A checked loading/rest action is not proof the timed work ended.
  start:string|null;finish:string|null;
  status:'estimated'|'fixed'|'planned'|'unknown'|'blocked'|'condition'|'overdue';
@@ -33,6 +35,7 @@ export function forecastClock(meal:Meal,now:number):number{
  * inferred starts are never events. Unknown/safety barriers require real progress. */
 export function liveStepForecasts(meal:Meal,timeline:PlannedTask[],clock:number):Record<string,StepForecast>{
  if((meal.mode!=='cooking'&&!meal.startedAt)||!Number.isFinite(clock))return {};
+ if(meal.phasePlan)return phaseProjection(meal,timeline,forecastClock(meal,clock)).forecasts;
  const now=forecastClock(meal,clock);timeline=executionTimeline(meal,timeline,now);const anchor=sessionAnchor(meal,now),events=(meal as ExtendedMeal).events??[],result:Record<string,StepForecast>={};
  const byId=new Map(timeline.map(t=>[t.id,t]));
  Object.assign(result,sequenceForecasts(meal,timeline,now));

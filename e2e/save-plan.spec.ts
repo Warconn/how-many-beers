@@ -34,7 +34,7 @@ test('save for later returns Home without starting, survives reopening and start
  reopened.once('dialog',d=>d.dismiss());await reopened.getByRole('button',{name:/Plan a new cook/}).click();expect(await saved(reopened)).toEqual(meal);
  await reopened.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(reopened.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
  const active=await saved(reopened);expect(active.mode).toBe('cooking');expect(active.startedAt).toBeTruthy();
- expect({...active,mode:meal.mode,startedAt:undefined}).toEqual({...meal,startedAt:undefined});
+ const {phasePlan,...originalFields}=active;expect(phasePlan?.version).toBe(1);expect({...originalFields,mode:meal.mode,startedAt:undefined}).toEqual({...meal,startedAt:undefined});
  await reopened.getByRole('button',{name:'Home',exact:true}).click();await expect(reopened.getByRole('button',{name:'Start cooking',exact:true})).toHaveCount(0);
  await reopened.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(reopened)).toEqual(active);expect(await reopened.evaluate(k=>localStorage.getItem(k),HISTORY_KEY)).toBe(oldHistory);
 });

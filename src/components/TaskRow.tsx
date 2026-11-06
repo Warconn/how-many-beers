@@ -13,8 +13,12 @@ import type {StepForecast} from "@/domain/cookForecast";
 import Icon from './Icon';
 import RemoveButton from "./RemoveButton";
 import {estimatedFinish,formatDuration} from "@/domain/stepTiming";
+import type {LivePhase} from '@/domain/phaseForecast';
 
 type Props = {
+  activePhase?:LivePhase;
+  alsoCooking?:string[];
+  onRemainingEstimate?:(minutes:number)=>void;
   task: PlannedTask;
   forecast?: StepForecast;
   index: number;
@@ -52,7 +56,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,forecast,index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange
+  task,forecast,index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,alsoCooking=[],onRemainingEstimate
 }:Props) {
   const [moveNotice,setMoveNotice]=useState("");
   const [detailsOpen,setDetailsOpen]=useState(false);
@@ -67,14 +71,15 @@ export default function TaskRow({
   const [error,setError]=useState("");
   const [moveError,setMoveError]=useState("");
   const [durationError,setDurationError]=useState("");
+  const [remainingEstimate,setRemainingEstimate]=useState('');
 
   // Each new checklist action starts with its optional tools collapsed.
-  useEffect(()=>{setDetailsOpen(false);setLogging(false);setStartFormOpen(false);setStartError("");},[task.id]);
-  useEffect(()=>{onReadingChange?.(logging||startFormOpen);return ()=>onReadingChange?.(false);},[logging,startFormOpen,onReadingChange]);
+  useEffect(()=>{setDetailsOpen(false);setLogging(false);setStartFormOpen(false);setStartError("");setRemainingEstimate('');},[task.id]);
+  useEffect(()=>{onReadingChange?.(logging||startFormOpen||!!remainingEstimate.trim());return ()=>onReadingChange?.(false);},[logging,startFormOpen,remainingEstimate,onReadingChange]);
 
   const done=!!completedAt;
-  const phase=physicalPhase(task);
-  const started=phase?physicalStartedEvent(events,task.id):latestStartedEvent(events,task.id);
+  const phase=activePhase?{label:'Record actual start'}:physicalPhase(task);
+  const started=activePhase?.actualStart?{occurredAt:activePhase.actualStart}:phase?physicalStartedEvent(events,task.id):latestStartedEvent(events,task.id);
   const DetailContainer=mode==="cooking"?"details":"div";
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
@@ -105,11 +110,11 @@ export default function TaskRow({
 
   return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")+(standardPlanning?' standard-planning-step step-list-row '+(planningControls.dragging?'is-dragging ':'')+(planningControls.drop?'drop-'+planningControls.drop:''):'')} data-step-id={standardPlanning?task.id:undefined} data-step-group={standardPlanning?task.dishId:undefined} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
     <div className="task-top">
-      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging||startFormOpen}
+      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging||startFormOpen||!!remainingEstimate.trim()}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {standardPlanning?<StepGrip stepId={task.id} title={task.title} {...planningControls.grip}/>:!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
-        {isCooking?<CookingStepSummary task={task} forecast={forecast}/>:<>
+        {isCooking?<CookingStepSummary task={task} forecast={forecast} activePhase={activePhase}/>:<>
         <div className={standardPlanning?'between step-row-copy':'between'}><strong>{task.title}</strong><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?formatted(task.scheduledAt):"Start time not set"}</time></div>
         {onDurationChange && <div className="inline-step-duration">
           <label htmlFor={editorId+'-duration'}>Estimated duration</label>
@@ -133,6 +138,7 @@ export default function TaskRow({
       </div>
       {standardPlanning&&!editing&&<StepEditButton title={task.title} id={editorId+'-trigger'} disabled={durationDisabled} onClick={()=>onEditingChange(true)}/>}
     </div>
+    {isCooking&&alsoCooking.length>0&&<p className="also-cooking">Also cooking: {alsoCooking.join(' · ')}</p>}
     <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing||logging||startFormOpen,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
     {isCooking&&<><summary>Step details</summary>
       <div className="step-optional-records" aria-label="Optional step records">
@@ -152,6 +158,9 @@ export default function TaskRow({
           {startError&&<p className="form-error" id={editorId+"-start-error"} role="alert">{startError}</p>}
           <button type="button" className="button primary" onClick={saveActualStart}>Save actual start</button>
         </div>}
+        {onRemainingEstimate&&<form className="remaining-estimate" onSubmit={e=>{e.preventDefault();const n=Number(remainingEstimate);if(!remainingEstimate||!Number.isFinite(n)||n<0||n>43200){setError('Enter a valid remaining estimate.');return;}onRemainingEstimate(n);setRemainingEstimate('');setError('');}}>
+          <label htmlFor={editorId+'-remaining'}>Remaining estimate (minutes, optional)</label><input id={editorId+'-remaining'} type="number" min="0" max="43200" step="any" inputMode="decimal" value={remainingEstimate} onChange={e=>setRemainingEstimate(e.target.value)}/><div className="step-editor-actions"><button className="button primary" type="submit" disabled={!remainingEstimate.trim()}>Update estimate</button>{remainingEstimate.trim()&&<button className="button secondary" type="button" onClick={()=>{setRemainingEstimate('');setError('');}}>Cancel estimate</button>}</div>
+        </form>}
       </div>{cookingTitle(task.title)!==task.title&&task.instructions!==task.title&&<p className="small">{task.title}</p>}<p className="small muted">{task.instructions}</p><p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}{estimatedFinish(task)?" · Planned finish "+formatted(estimatedFinish(task)!):""}</p>{forecast?.reason&&<p className="small muted">{forecast.reason}</p>}{forecast?.template?.at&&forecast.template.kind==='checkpoint'&&<p className="small muted"><StepForecastTime forecast={forecast} part="start"/></p>}<p className="small muted">{task.equipment}{task.targetTempF!=null?" · Target "+task.targetTempF+"°F (planned)":""}</p>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
     {!standardPlanning&&<div className="task-actions" aria-label={"Manage "+task.title}>
       {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}

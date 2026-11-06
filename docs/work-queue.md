@@ -1,19 +1,12 @@
 # Current owner-approved queue
 
-Production #100 (`190bf61`) is deployed. #21 and #97 are completed; dev and
-production had the same source tree at this sequence's kickoff.
-
-1. **#61:** Retained cancellation, authoritative account transition, local/trial
-   support and terminal-state protection. Separate reviewed PR to dev.
-2. **#83:** Multiple independent upcoming account plans plus one active cook,
-   using the tested #61 lifecycle design. Preserve all active/history data.
-3. **In parallel, #71:** Measured CI feedback improvements without losing coverage.
-
-The owner approved implementation, not merges or deployment. Feature branches and
-focused PRs to dev, database security/upgrade/race checks, desktop/mobile/iPhone
-browser tests and actual screenshots. Capability-gate until migrations are available.
-Fresh guest trials remain temporary. #101 timing discovery stays separate; no new
-execution model, advanced sync, URL import, paid or social-login work.
+**NOW: #101 implementation, authorized November 5 after mobile design review.**
+Build the agreed beers-first/inline serving estimate, checkbox-first physical
+starts/transitions, concurrent remaining-work forecast and optional corrections.
+See [the contract](live-cooking-phases.md) and latest issue. PR targets dev; no
+merges, hosted changes or production release. #61/#83/#71 are delivered in dev.
+#103's accepted prototype in PR108 remains unmerged. #109 planning stays separate.
+Preserve legacy sessions, history, timestamps, account ownership and guest policy.
 
 The following older queue is historical and superseded by this section.
 

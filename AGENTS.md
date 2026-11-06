@@ -14,32 +14,29 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 **This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
 
-### NOW: #103 isolated recipe-first review experiment
+### NOW: #101 implementation, approved November 5
 
-The owner approved trying meal-first for this iteration while retaining a preference
-for time-first long term. New methods get a concise review; familiar recipes should
-not need repeated mandatory review. Cook Again is a whole meal; a saved recipe is
-one dish. Keep the work self-contained for possible rejection/replacement.
+The owner accepted the mobile design and worked timing examples, then explicitly
+instructed implementation. Work on feat/101-live-cooking, integrated with dev a514a77. Preserve
+the approved beers-first meter, time beneath and serving estimate with an inline
+positive target difference. Current action remains checkbox-first; physical elapsed
+and quiet concurrent context belong inside it, optional corrections in Step details.
+See docs/design/101/README.md for governing requirements and reviewed concepts.
+New sessions opt into explicit physical relationships. Preserve legacy active cooks,
+actual timestamps, completed history, guest/account saving and planning behavior.
+No automatic merge of #101, hosted migration or production release. #109 planning remains
+separate. The owner authorized dev integration of accepted PR108; it is merged
+and its shared planning grips and recipe-first review are preserved here.
+#61/#83/#71 are merged in dev. Production remains #100 at190bf61.
 
-The chooser/review slice uses `/recipe-first/` on its isolated feature branch.
-The ordinary homepage remains accepted behavior. This slice does not add recipe
-library persistence, hosted schema changes or #101 phase semantics. Review the flow
-with the owner before widening scope or merging. See docs/recipe-first-preview.md.
-No automatic dev/main merges or production releases are authorized.
-The review shows smaller instructions inline, expands only long text, and omits
-the generic guidance/method-reference footer. Review Meal Plan names the combined
-meal preview; collapsed grips keep moving steps separate from editing.
-Recipe review and prototype meal-planning rows share StepListControls/useStepReorder:
-grip left, Edit upper right, Save/Cancel together and Remove inside the editor.
-Reuse the documented row/action pattern in docs/design-system.md; do not reintroduce
-per-row move-arrow footers or alter Cooking Mode as part of this experiment.
+### Accepted recipe-first review
 
-#61/#104, #83/#107 and #71/#102 are merged into dev at `4b4b31f` with full CI and
-Cloudflare preview confirmed. Production remains #100 at `190bf61`. Hosted schema
-verification/migration application is separate; do not claim it happened here.
-Do not duplicate delivered #21/#97/#92/#84/#62/#85/#77/#86 work.
+PR108 provides the isolated /recipe-first/ flow and shared planning step rows.
+Preserve its left grip, upper-right Edit, grouped Save/Cancel and separated Remove.
+Reuse docs/design-system.md; do not restore per-row move-arrow footers.
+Recipe-library persistence remains separate; #103 is not fully complete.
 
-### Existing lifecycle safeguards to preserve
+### Existing lifecycle safeguards
 
 #61 retains canceled records, excludes them from active/completed views, permits a
 new cook only after acknowledged cancellation, and protects against stale-device

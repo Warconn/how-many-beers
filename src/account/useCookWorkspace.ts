@@ -10,7 +10,8 @@ import {
   type HistoryLibrary,
 } from "@/domain/cookHistory";
 import { newMeal, type Meal } from "@/domain/meal";
-import { migrateMeal } from "@/domain/cookState";
+import { migrateMeal,cookTimeline,startCookSession } from "@/domain/cookState";
+import {buildPhasePlan} from '../domain/cookingPhases';
 import { useAccountCook } from "./useAccountCook";
 import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
 import { meaningful, mergeHistory } from "./workspace";
@@ -212,6 +213,9 @@ export function useCookWorkspace() {
       throw Error('Finish or cancel your current cook before starting another. Your upcoming plan is still saved.');
     }
     if(selected){
+      // The existing atomic promotion preserves this reviewed plan payload and
+      // supplies the authoritative session start. No schema/RPC change required.
+      selected.edit(m=>({...m,phasePlan:buildPhasePlan(m,cookTimeline(m))}));
       await selected.flush(true);
       const plan=selected.state().plan;
       if(!plan)throw Error('Save the upcoming plan before starting it.');
@@ -219,7 +223,7 @@ export function useCookWorkspace() {
       await upcoming.forgetSelected().catch(()=>{});upcoming.releaseSelection();selectLegacy(null);
       await upcoming.refresh().catch(()=>{});
     }else if(legacyRef.current?.owner===account.ownerId&&legacyRef.current.id===current?.id){
-      await cloud.store.current.save({active:{...current,mode:'cooking',startedAt:new Date().toISOString()}});
+      await cloud.store.current.save({active:startCookSession(current!,new Date().toISOString())});
       selectLegacy(null);
     }else throw Error('Select an upcoming plan before starting.');
     setTransitionError('');

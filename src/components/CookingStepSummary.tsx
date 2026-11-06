@@ -3,6 +3,7 @@ import type {StepForecast} from '@/domain/cookForecast';
 import {physicalPhase} from '@/domain/physicalPhase';
 import {formatDuration} from '@/domain/stepTiming';
 import StepForecastTime from './StepForecastTime';
+import type {LivePhase} from '@/domain/phaseForecast';
 /** Display-only shortening; the full authored title/instructions remain in details. */
 export function cookingTitle(title:string):string{
  const first=title.match(/^.*?[.!?](?:\s|$)/)?.[0].trim()??title;
@@ -21,13 +22,13 @@ function brief(task:PlannedTask,rest:boolean):string{
  const concise=excerpt.length>200?excerpt.slice(0,197).replace(/\s+\S*$/,'')+'…':excerpt;
  return safety&&!concise.includes(safety)?concise+' '+safety:concise;
 }
-export default function CookingStepSummary({task,forecast}:{task:PlannedTask;forecast?:StepForecast}){
+export default function CookingStepSummary({task,forecast,activePhase}:{task:PlannedTask;forecast?:StepForecast;activePhase?:LivePhase}){
  const phase=forecast?.template?.kind,rest=phase==='rest',condition=task.isCondition&&!physicalPhase(task);
  const minutes=forecast?.template?.minutes??task.durationMinutes;
  const instruction=brief(task,rest);
  return <>
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
-  <p className="task-dish">{task.dishName}</p>
+  <p className="task-dish">{task.dishName}{activePhase?.active&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>
   {instruction&&<p className="muted small">{instruction}</p>}
   <p className="cooking-step-timing">
    {condition?'Check when ready':<>

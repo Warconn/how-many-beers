@@ -1,6 +1,7 @@
 import {test,expect,type Page} from '@playwright/test';
 import {createDish,newMeal} from '../../src/domain/meal';
-import {migrateMeal,cookTimeline,recordEvent} from '../../src/domain/cookState';
+import {migrateMeal,cookTimeline,recordEvent,startCookSession} from '../../src/domain/cookState';
+import {parseRecipeText} from '../../src/domain/recipe';
 import {ACTIVE_KEY,HISTORY_KEY} from '../../src/domain/cookHistory';
 
 test.use({timezoneId:'America/New_York'});
@@ -12,6 +13,20 @@ async function ready(page:Page){
 }
 
 test.beforeEach(async({request})=>{await request.post('/__test__/worker-mode?mode=original');});
+
+test('physical roast/cool observations resume and finish offline without inventing Serve',async({page,context},info)=>{
+ await page.clock.install({time:new Date('2026-11-08T16:05:00Z')});await page.goto('/');await ready(page);
+ const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nRemove seeds and leave to cool (10 minutes)');
+ let meal=startCookSession({...newMeal(),name:'Offline seeds',serveAt:'2026-11-08T12:00',dishes:[dish]},'2026-11-08T15:55:00Z');
+ meal=recordEvent(meal,dish.id+':step-1','completed','2026-11-08T16:00:00Z');meal=recordEvent(meal,dish.id+':step-2','completed','2026-11-08T16:00:00Z');
+ await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await ready(page);await context.setOffline(true);
+ await page.getByRole('button',{name:/Continue cooking/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});await expect(meter).toContainText('0h 20m');
+ await page.clock.fastForward(5*60000);await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox',{name:/Complete Remove seeds/}).click({noWaitAfter:true});await expect(meter).toContainText('0h 10m');
+ const observed=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),ACTIVE_KEY);expect(observed.events.slice(0,meal.events!.length)).toEqual(JSON.parse(JSON.stringify(meal.events)));expect(observed.completed[dish.id+':serve']).toBeUndefined();
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(meter).toContainText('0h 10m');await page.clock.fastForward(10*60000);await expect(meter).toContainText('0.0');await page.getByRole('button',{name:'Finish cook',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY);expect(saved.cooks[0].meal.events).toEqual(observed.events);expect(saved.cooks[0].meal.serveAt).toBe(meal.serveAt);
+ await page.screenshot({path:info.outputPath('physical-offline-finished.png'),fullPage:true});await context.setOffline(false);
+});
 
 test('installed shell resumes an overnight cook offline, including notes, readings and archive',async({page,context},info)=>{
  await page.clock.install({time:new Date('2026-11-01T00:30:00-04:00')});

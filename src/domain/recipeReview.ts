@@ -1,5 +1,5 @@
 import {newMeal,type Dish,type Meal,type PlannedTask} from './meal';
-import {cookTimeline,type ExtendedMeal} from './cookState';
+import {cookTimeline,addDishToMeal,type ExtendedMeal} from './cookState';
 
 /** A recipe review is an uncommitted planning document, never the live cook. */
 export function recipeReview(dish:Dish,serveAt:string):ExtendedMeal{
@@ -27,10 +27,20 @@ export function addReviewedDish(current:Meal,review:ExtendedMeal,replaceUnstarte
  if(!dish.name.trim()||!tasks.length)throw Error('Give the recipe a name and keep at least one step.');
  // Preserve every live event, completion, timestamp and other dish verbatim.
  // Review removals are planning choices, not fabricated cooking activity.
- return {...current,dishes:[...current.dishes,current.mode==='cooking'?{...dish,executionAddedAt:dish.executionAddedAt??new Date().toISOString()}:dish],
+ const combined:ExtendedMeal={...current,dishes:[...current.dishes,current.mode==='cooking'?{...dish,executionAddedAt:dish.executionAddedAt??new Date().toISOString()}:dish],
   taskOverrides:{...m.taskOverrides,...review.taskOverrides},hiddenTaskIds:[...(m.hiddenTaskIds??[]),...(review.hiddenTaskIds??[])],
   customTasks:[...(m.customTasks??[]),...(review.customTasks??[]).map(t=>({...t,...(current.mode==='cooking'?{executionAddedAt:t.executionAddedAt??new Date().toISOString()}:{})}))],
   taskOrder:[...(m.taskOrder?.length?m.taskOrder:cookTimeline(current).map(t=>t.id)),...tasks.map(t=>t.id)]};
+ if(!current.phasePlan)return combined;
+ // Compile the reviewed configuration after its overrides/removals are applied.
+ // Retries replace only this untouched dish's relationships, never live actuals.
+ const plan=current.phasePlan;
+ const base={...combined,dishes:combined.dishes.filter(d=>d.id!==dish.id),phasePlan:{...plan,
+  phases:plan.phases.filter(p=>p.dishId!==dish.id),
+  actions:Object.fromEntries(Object.entries(plan.actions).filter(([id])=>!owns(id))),
+  order:Object.fromEntries(Object.entries(plan.order).filter(([id])=>id!==dish.id)),
+  suppressed:plan.suppressed.filter(id=>!owns(id))}};
+ return addDishToMeal(base,combined.dishes[combined.dishes.length-1],combined.dishes[combined.dishes.length-1].executionAddedAt??new Date().toISOString());
 }
 
 /** Template intervals remain estimates; an explicit unknown override stays unknown. */

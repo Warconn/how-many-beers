@@ -93,10 +93,12 @@ See [release notes and validation](docs/releases/2026-11-05.md); check the relea
 and Cloudflare status for deployment confirmation. Authentication, cloud saving and
 cross-device history remain supported without schema changes.
 
-Next is a separate discussion of the owner's cooking/timing concept, then the
-prepared **#61 retained cancellation → #83 multiple upcoming account plans**
-sequence. No new capabilities are included in this stabilization release. See
-[design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
+The current work is **#101 live cooking**, implementing the accepted checkbox-first
+physical timing design on an isolated feature branch. See [the implementation
+contract](docs/live-cooking-phases.md). #61/#83/#71 are already merged in dev;
+#103's accepted prototype remains PR #108, and #109 planning is separate.
+New timing relationships apply only to fresh sessions. Existing actuals, history,
+accounts and guests remain protected. No merge or production promotion is implied.
 
 ## Account foundation work
 

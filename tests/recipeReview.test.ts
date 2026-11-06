@@ -1,6 +1,7 @@
 import {describe,it,expect} from 'vitest';
+import {cookProjection} from '../src/domain/cookProjection';
 import {newMeal,createDish} from '../src/domain/meal';
-import {cookTimeline,editStep,recordEvent,removeStep,setStepDuration} from '../src/domain/cookState';
+import {cookTimeline,startCookSession,editStep,recordEvent,removeStep,setStepDuration} from '../src/domain/cookState';
 import {recipeReview,addReviewedDish} from '../src/domain/recipeReview';
 describe('uncommitted recipe review',()=>{
  it('keeps actual progress and serving target while adding independent planning choices',()=>{
@@ -50,4 +51,18 @@ it('drops steps before and after targets while reflowing known durations',()=>{
  expect(Date.parse(order[1].scheduledAt!)-Date.parse(order[0].scheduledAt!)).toBe(15*60000);
  expect(moved.serveAt).toBe(draft.serveAt);expect(moved.events??[]).toEqual(draft.events??[]);expect(draft).toEqual(before);
  const back=reorderReviewedStep(moved,tasks[0].id,tasks[1].id,false);expect(cookTimeline(back).slice(0,3).map(t=>t.id)).toEqual(tasks.slice(0,3).map(t=>t.id));
+});
+
+it('compiles reviewed new-dish phases without starting them or disturbing a live dish',()=>{
+ const live=startCookSession({...newMeal(),dishes:[createDish('side')]},'2026-11-05T12:00:00Z');
+ const before=structuredClone(live),draft=recipeReview(createDish('brats'),live.serveAt);
+ const heat=cookTimeline(draft).find(t=>t.id.endsWith(':start'))!;
+ const next=addReviewedDish(live,setStepDuration(draft,heat.id,90));
+ expect(next.phasePlan!.phases.some(p=>p.dishId===draft.dishes[0].id)).toBe(true);
+ expect(cookProjection(next,cookTimeline(next),Date.parse('2026-11-05T12:00:00Z')).phases!.find(p=>p.startTaskId===heat.id)?.minutes).toBe(90);
+ expect(next.events).toEqual(before.events);expect(next.completed).toEqual(before.completed);
+ expect(next.phasePlan!.phases.filter(p=>p.dishId===before.dishes[0].id)).toEqual(before.phasePlan!.phases);
+ const retry=addReviewedDish(next,draft,true);
+ expect(new Set(retry.phasePlan!.phases.map(p=>p.id)).size).toBe(retry.phasePlan!.phases.length);
+ expect(retry.events).toEqual(before.events);
 });

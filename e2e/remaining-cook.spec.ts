@@ -15,7 +15,8 @@ test('Beerometer decreases with remaining work and reaches zero before Finish co
  await expect(meter).toContainText('15h 40m');
  await expect.poll(async()=>Number(await meter.locator('strong').innerText())).toBeLessThan(before);
  for(let i=1;i<await checks.count();i++)await checks.nth(i).check();
- await expect(meter.locator('strong')).toHaveText('0.0');await expect(meter).toContainText('All steps checked');await expect(meter).not.toContainText('Projected cook');
+ await expect(meter.locator('strong')).toHaveText('0.0');await expect(meter).toContainText('0h 00m');await expect(meter).not.toContainText('Projected cook');
+ const observed=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(observed.events.some((e:any)=>e.phaseObservations?.some((o:any)=>o.phaseId===meal.dishes[0].id+':rest'&&o.boundary==='end'))).toBe(true);
  await page.getByRole('button',{name:'Back to step',exact:true}).click();await meter.scrollIntoViewIfNeeded();await page.screenshot({path:info.outputPath('remaining-zero.png'),fullPage:false});
  await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(meter.locator('strong')).toHaveText('0.0');
 });
