@@ -6,6 +6,7 @@ import {turkeyPreparation} from './turkeyPrep';
 export type PlanningReadiness = {
   tasks: PlannedTask[];
   readyAt: string | null;
+  startAt: string | null;
   lateMinutes: number;
   suggestedServeAt: string | null;
   partial: boolean;
@@ -30,6 +31,7 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
   const clockValid = Number.isFinite(now) && iso(now) !== null;
   let partial = !clockValid;
   let end: number | null = null;
+  let begin: number | null = null;
   const independent = new Set((m.customTasks ?? [])
     .filter(t => !timeline.find(p => p.id === t.id)?.userSequence).map(t => t.id));
   for (const task of timeline) {
@@ -87,6 +89,7 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
         scheduleAdjustmentMinutes: (task.scheduleAdjustmentMinutes ?? 0) +
           (fixed ? 0 : (earliest - planned) / 60000),
       });
+      begin = Math.min(begin ?? Infinity, earliest);
       cursor = finish;
       shift = earliest - planned;
       end = Math.max(end ?? -Infinity, finish);
@@ -98,6 +101,7 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
   return {
     tasks: timeline.map(t => result.get(t.id) ?? t),
     readyAt,
+    startAt: !partial && begin !== null ? iso(begin) : null,
     lateMinutes,
     suggestedServeAt: lateMinutes && end !== null ? iso(Math.ceil(end / 60000) * 60000) : null,
     partial,

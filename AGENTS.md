@@ -34,7 +34,11 @@ Do not replace #101's live model or expand into #3's dependency/resource optimiz
 
 #109 is the final planned feature before a separate validated production release.
 All current PRs target dev and require owner approval before merging. No automatic
-dev merges, production promotion or hosted migrations are authorized.
+dev merges, production promotion or hosted migrations are authorized. The owner
+follow-up makes Start preparing the normal planning summary; show meal-ready time
+when the target cannot be met. Real brisket/ribs serving/rest tests are required.
+Track the uncovered manual-template-start/checkpoint bug as #117 before production
+readiness; shared-smoker optimization remains #3 and notifications remain #11.
 
 ### Delivered UI and deferred capabilities
 

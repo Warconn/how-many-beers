@@ -7,7 +7,11 @@
    calculate pre-cook readiness without silently changing the target or actuals.
    See [the planning contract](planning-readiness.md). Fixed-clock domain/browser
    tests cover the issue's concrete scheduling examples.
-3. **Owner review, dev integration and separate production validation.** No PR merges
+3. **#117 production-readiness bug.** Real-template investigation exposed an
+   existing fixed cooking-start/checkpoint reflow error. Resolve separately before
+   production validation of manual template edits. Shared-smoker coordination stays
+   #3; do not silently remove preheats or invent resource capacity.
+4. **Owner review, dev integration and separate production validation.** No PR merges
    or production deployments are authorized during this implementation session.
 
 ## Already delivered in dev

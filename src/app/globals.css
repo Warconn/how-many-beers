@@ -650,3 +650,6 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .planning-readiness small {color:var(--muted,#6b655c);white-space:nowrap;}
 .planning-readiness .button {min-height:44px;margin:0;}
 @media(max-width:600px){.serving-plan {padding:16px;}.serving-plan-fields {grid-template-columns:minmax(0,1fr);gap:10px;}.serving-plan h2 {font-size:1.2rem;margin-bottom:12px;}}
+
+.planning-timing p {margin:0;line-height:1.5;}
+.planning-timing p+p {margin-top:4px;}
