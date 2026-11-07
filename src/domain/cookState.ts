@@ -49,7 +49,7 @@ export type TaskOverride = {
 export type StepPlanEdit = {
   timingMode: "plan" | "fixed" | "unscheduled";
   scheduledAt: string | null;
-  durationMinutes?: number | null; // Omitted when editing time/title without changing duration.
+  durationMinutes?: number | null; // Omitted for a planned-time-only edit.
   equipment: string;
   targetTempF: number | null;
 };
@@ -92,7 +92,7 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
     // authored instructions or safety notes.
     if(m.dishes.some(d=>d.id===t.dishId&&d.preset==='custom')&&override.instructions==='Timing needed: edit the recipe before relying on this timeline.')override.instructions=t.instructions;
     const timingMode=override.scheduledAt===undefined?'plan':override.scheduledAt===null?'unscheduled':'fixed';
-    return {...base,...override,explicitDurationUnknown:!!t.templateStage&&override.durationMinutes===null,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
+    return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
   };
   const tasks=m.dishes.flatMap(d=>{
     const sequence=buildDishTimeline(d.planningSequence?{...d,planningStepOrder:undefined}:d,m.serveAt,{overrides:m.taskOverrides,recorded,hidden}).filter(t=>!hidden.has(t.id)).map(project);
