@@ -58,6 +58,7 @@ export type PlannedTask = {
   scheduledAt: string | null;
   isCondition: boolean;
   durationMinutes?: number | null;
+  explicitDurationUnknown?: boolean; // Editor-only distinction between untouched template duration and a deliberate Unknown override.
   equipment?: string;
   targetTempF?: number | null;
   timingMode?: "plan" | "fixed" | "unscheduled";
