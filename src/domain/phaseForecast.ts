@@ -119,17 +119,25 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
    const dish=meal.dishes[0];
    if(dish.preset!=='brisket'||dish.planningSequence)return undefined;
    const heat=states.get(dish.id+':heat'),load=byId.get(dish.id+':start');
-   if(!heat||!load||heat.actualEnd||heat.minutes===null)return undefined;
-   const actualStart=stamp(heat.actualStart);
+   if(!heat||!load||heat.actualEnd)return undefined;
+   // This is a response to *editing a fixed planned load*, not an attempt to
+   // rework the duration. Keep the existing, previously applied brisket estimate
+   // as a provisional basis even if an older clock-only edit accidentally stored
+   // a null duration on the task. The saved duration and actuals stay untouched.
    const plannedStart=load.timingMode==='fixed'?stamp(load.scheduledAt):null;
-   if(actualStart===null&&(plannedStart===null||plannedStart<now))return undefined;
-   const offSmoker=(actualStart??plannedStart!)+heat.minutes*minute;
+   if(plannedStart===null)return undefined;
+   const actualStart=stamp(heat.actualStart);
+   if(actualStart===null&&plannedStart<now)return undefined;
+   const nominalMinutes=heat.minutes??(dish.brisketPlan?.applied?dish.cookMinutes:null);
+   if(nominalMinutes===null||!Number.isFinite(nominalMinutes)||nominalMinutes<=0)return undefined;
+   const offSmoker=(actualStart??plannedStart)+nominalMinutes*minute;
    // An active cook beyond its allowance cannot be promised finished just
    // because the elapsed timer ran out. Return to the conservative lower bound.
    if(offSmoker<=now)return undefined;
    const rest=states.get(dish.id+':rest'),restTask=byId.get(dish.id+':rest');
-   if(restTask?.timingMode==='fixed'||(rest&&rest.minutes===null))return undefined;
-   const readyAfterRest=offSmoker+(rest?.minutes??0)*minute;
+   if(restTask?.timingMode==='fixed')return undefined;
+   const restMinutes=rest?.minutes??Math.max(0,dish.restMinutes)+(dish.brisketPlan?.applied?.inputs.holdBufferMinutes??0);
+   const readyAfterRest=offSmoker+restMinutes*minute;
    return {offSmoker:iso(offSmoker),readyAfterRest:iso(readyAfterRest),basedOn:actualStart===null?'planned' as const:'actual' as const};
  })();
  const minimumRemaining=Math.max(0,(end-now)/minute),remaining=uncertain?null:minimumRemaining,elapsed=Math.max(0,(now-anchor)/minute);
