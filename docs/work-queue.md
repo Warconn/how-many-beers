@@ -1,20 +1,29 @@
 # Current owner-approved queue · November 7, 2026
 
-1. **Repair CI after #113.** PR #115 updates obsolete browser expectations while
-   retaining protected recovery, failed-write rollback and cook/history coverage.
-2. **#109: serving-time-first planning.** The final planned feature before production.
-   Keep the requested target visible before dish selection and through recipe review;
-   calculate pre-cook readiness without silently changing the target or actuals.
-   See [the planning contract](planning-readiness.md). Fixed-clock domain/browser
-   tests cover the issue's concrete scheduling examples.
-3. **#117 production-readiness bug.** Real-template investigation exposed an
-   existing fixed cooking-start/checkpoint reflow error. Resolve separately before
-   production validation of manual template edits. Shared-smoker coordination stays
-   #3; do not silently remove preheats or invent resource capacity.
-4. **Owner review, dev integration and separate production validation.** No PR merges
-   or production deployments are authorized during this implementation session.
+The owner approved dev integration of #115/#116 and documentation alignment on
+November 7. This approval does not authorize production promotion, hosted database
+changes, future PR merges or starting another feature cycle.
+
+1. **#117: next production-readiness bug.** Fix the existing manual-template cooking
+   start/checkpoint reflow error in a focused PR. Default serving alignment works;
+   explicit cooking-start/duration edits still need this correction. Preserve
+   #101 actuals, completed history and unrelated dishes. Do not promote production
+   while this known correctness issue remains unresolved.
+2. **Separate production-readiness validation.** After the reviewed #117 fix, verify
+   the integrated dev candidate and obtain owner approval for production promotion.
+   Current dev checks/deployment evidence belongs in the integration PRs.
+
+#109 serving-time-first planning is delivered through #116, not new development.
+The flow is serving target → dishes → recipe review → combined meal → cook.
+Start preparing is the normal summary; estimated readiness appears when the target
+cannot be met. See [the planning contract](planning-readiness.md) and
+[dev delivery notes](releases/2026-11-07-dev.md).
 
 ## Already delivered in dev
+
+- #115: CI baseline repair preserving exceptional recovery and data-integrity tests.
+- #109/#116: serving-first planning, recommended preparation start, deterministic
+  whole-meal estimates and real brisket/ribs serving/rest coverage.
 
 - #101: physical starts/transitions, concurrent forecasts and checkbox-first cooking.
 - #61: retained cancellation, with acknowledged transitions and history preservation.

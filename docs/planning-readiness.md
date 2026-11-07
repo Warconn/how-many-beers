@@ -1,5 +1,9 @@
 # #109: serving target and pre-cook readiness
 
+Delivered to dev through #116 after owner approval on November 7. See
+[dev delivery notes](releases/2026-11-07-dev.md). #117 remains a separate correctness
+follow-up before production; this document does not claim a production release.
+
 The meal's requested serving date/time is the first planning control, before any
 dish. It stays editable while choosing/reviewing recipes and after combining dishes.
 Recipe review and drag/edit actions retain the accepted #103 design. The primary planning summary is **Start preparing**, the earliest relevant meal
@@ -54,8 +58,8 @@ is the user's order; the app does not infer that it is a safe dependency graph.
 Unknown durations remain unknown. Actual food checks are still required.
 
 No new Supabase migration. Both November 5 migrations are owner-confirmed verified
-in dev. PR #106's older queue is superseded, not merged. No automatic merges or
-production promotion are authorized.
+in dev. PR #106's older queue is superseded, not merged. The owner approved #115/#116 dev integration and documentation alignment on
+November 7. Production promotion and future PR merges remain separately authorized.
 
 ## Reviewed application screenshots
 

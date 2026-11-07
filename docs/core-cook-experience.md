@@ -2,10 +2,10 @@
 
 #101's physical cooking, #61 cancellation and #83 upcoming plans are delivered in
 dev, along with #103's recipe review and shared step controls. Preserve them.
-#109 is the last planned feature before separate production validation:
+#109 is delivered in dev via #116, following #115's CI repair:
 **set serving time → choose dishes → review recipes → combined meal → cook**.
-The requested target stays visible/editable and distinct from estimated meal-ready
-time. See [the planning contract](planning-readiness.md).
+The requested target stays visible/editable. Start preparing, with day/date, is
+the normal summary; estimated readiness appears when the target cannot be met. See [the planning contract](planning-readiness.md).
 
 Cooking remains checkbox-first: do the action, check it off, see what is next.
 Physical transitions/checkpoints, concurrent work, passive rest/cooling and actual
@@ -14,7 +14,10 @@ never proves a cooking interval elapsed or food is safe. Keep the Beerometer's
 beers-first design and live calculation path intact.
 
 Both November 5 account migrations are owner-confirmed applied/verified in dev.
-Do not reapply them. No merges or production changes are authorized in this work.
+Do not reapply them. The owner approved #115/#116 dev integration and documentation
+alignment on November 7; production and future merges remain separate approvals.
+#117 is the remaining manual-template-start/checkpoint correctness bug to resolve
+before production validation. This is a dev delivery, not a production release.
 #3 advanced scheduling, notifications, recipe URL import, reusable recipes and
 social login remain deferred. The owner tests through actual cooking; do not create
 manual QA tickets. See [the current queue](work-queue.md).

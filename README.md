@@ -93,16 +93,24 @@ See [release notes and validation](docs/releases/2026-11-05.md); check the relea
 and Cloudflare status for deployment confirmation. Authentication, cloud saving and
 cross-device history remain supported without schema changes.
 
-The current work is **#109 serving-time-first planning**, the last planned feature
-before a separately validated production release. #101 physical cooking, #61
-retained cancellation, #83 multiple upcoming plans, #71 CI improvements and #103's
-recipe review/shared controls are delivered in dev. Personal recipe saving remains
-deferred. The owner confirms both November 5 Supabase migrations are applied and
-verified in dev. Do not reapply them. PR #115 repairs the #113 browser baseline;
-new feature PRs remain unmerged until owner approval.
-See [the current queue](docs/work-queue.md) and
-[planning rules and limits](docs/planning-readiness.md). Advanced scheduling (#3),
-notifications, URL import and social login remain deferred.
+Dev now includes **#109 serving-time-first planning** via #116, alongside the
+#115 browser baseline repair. Choose when to eat first, then choose/review dishes.
+**Start preparing** shows the day/date to begin; a later estimated-ready time is
+shown when the target cannot be met. The target never moves automatically.
+#101 physical cooking, #61 cancellation, #83 upcoming plans, #71 CI improvements
+and #103's reviewed recipe controls remain delivered in dev. Personal reusable
+recipe saving stays deferred.
+
+**#117 is the next production-readiness bug:** manually fixing a template cooking
+start/duration can over-delay checkpoints and serving. Default brisket/ribs serving
+alignment works; shared-smoker coordination remains #3. This dev delivery is not a
+production release. The owner approved #115/#116 integration and documentation;
+future merges, production and hosted changes still need their own authorization.
+Both November 5 dev migrations are confirmed applied/verified; do not reapply them.
+See [dev delivery notes](docs/releases/2026-11-07-dev.md),
+[the current queue](docs/work-queue.md) and
+[planning rules and screenshots](docs/planning-readiness.md).
+Notifications, URL import, social login and advanced synchronization stay deferred.
 
 ## Account foundation work
 

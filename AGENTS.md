@@ -15,30 +15,33 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 Use the live repository and issue acceptance criteria together with this approved
 queue. Do not repeat delivered work or infer priority from issue numbers.
 
-### NOW: #109 serving-time-first planning and release stabilization
+### NOW: dev stabilization before a separate production release
 
-#101 physical cooking is accepted and delivered in dev. #61 retained cancellation,
-#83 multiple upcoming account plans/one active cook, #71 CI improvements and #103's
-recipe review/shared step UI are also delivered in dev. PR #113 removed routine
-backup controls and redundant success banners. Preserve those decisions.
-The owner confirms both November 5 Supabase migrations are applied and verified in
-dev. Do not reapply them or modify hosted database state in this work.
+Dev delivery includes #101 physical cooking, #61 retained cancellation, #83
+multiple upcoming account plans/one active cook, #71 CI improvements, #103's recipe
+review/shared controls and #113's removal of routine backup/success clutter.
+#115 repairs the browser baseline; #116 delivers #109 serving-time-first planning.
+The owner approved integrating #115/#116 and their documentation into dev on
+November 7. That approval does not authorize future PR merges, production promotion
+or hosted database changes.
 
-Repair the #113 browser baseline independently (#115), then deliver #109:
+Preserve the delivered flow:
 **set serving time → choose dishes → review recipes → combined meal → cook**.
-Keep the target compact, visible and editable; distinguish requested serving time
-from estimated readiness. Never silently move the target or fabricate actuals.
-Use the existing scheduling helpers and a read-only planning feasibility projection.
-Cover the concrete #109 examples with fixed-clock domain and browser tests.
-Do not replace #101's live model or expand into #3's dependency/resource optimizer.
+The normal planning summary is **Start preparing**, with day/date. Show estimated
+meal readiness when the requested target cannot be met. Never silently move the
+target or fabricate actual activity. Keep the accepted Beerometer and #101 live
+execution model. The read-only planning projection is not #3's resource optimizer.
 
-#109 is the final planned feature before a separate validated production release.
-All current PRs target dev and require owner approval before merging. No automatic
-dev merges, production promotion or hosted migrations are authorized. The owner
-follow-up makes Start preparing the normal planning summary; show meal-ready time
-when the target cannot be met. Real brisket/ribs serving/rest tests are required.
-Track the uncovered manual-template-start/checkpoint bug as #117 before production
-readiness; shared-smoker optimization remains #3 and notifications remain #11.
+**Next production-readiness bug: #117.** Manual fixed starts/durations on template
+cooking intervals can incorrectly serialize checkpoints and over-delay serving.
+Default brisket/ribs serving alignment is covered and works. Resolve #117 in a
+focused, separately reviewed fix before production validation of manual template
+phase edits. Do not repeat #109 or start new capabilities as incidental cleanup.
+Shared-smoker preheat/capacity/temperature coordination remains #3; alarms and
+notifications remain #11. See docs/releases/2026-11-07-dev.md.
+
+Both November 5 Supabase migrations are owner-confirmed applied and verified in
+dev. Do not reapply them or modify hosted database state in this work.
 
 ### Delivered UI and deferred capabilities
 
@@ -49,7 +52,7 @@ separated Remove and Review Meal Plan. Reuse docs/design-system.md.
 Advanced scheduling (#3), timers/notifications, recipe URL import (#2), social
 login, paid features and advanced synchronization (#69/#70) remain deferred.
 Do not create manual QA or acceptance-testing tickets. Real data-loss/security bugs
-still take precedence. Review and supersede stale docs PR #106 without merging it.
+still take precedence. Stale docs PR #106 was closed as superseded without merging its old queue.
 
 ### Existing lifecycle safeguards
 
