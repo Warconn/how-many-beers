@@ -182,6 +182,16 @@ describe('physical phases behind the checklist',()=>{
   edit('brisket:start','2026-11-08T05:00:00Z');
   expect(cookProjection(m,cookTimeline(m),now).provisionalTiming?.offSmoker).toBe('2026-11-08T13:00:00.000Z');
 
+  // Previously saved time-only edits sometimes wrote a null duration.
+  // Do not make the cook re-enter a duration just to see the fixed-time ETA.
+  const legacy={...m,taskOverrides:{...m.taskOverrides,'brisket:start':{...m.taskOverrides?.['brisket:start'],durationMinutes:null}}};
+  expect(cookProjection(legacy,cookTimeline(legacy),now).provisionalTiming).toEqual({
+   offSmoker:'2026-11-08T13:00:00.000Z',
+   readyAfterRest:'2026-11-08T16:00:00.000Z',
+   basedOn:'planned'
+  });
+  expect(legacy.taskOverrides?.['brisket:start']?.durationMinutes).toBeNull();
+
   m=recordEvent(m,'brisket:start','completed','2026-11-08T05:00:00Z');
   expect(cookProjection(m,cookTimeline(m),Date.parse('2026-11-08T05:01:00Z')).provisionalTiming).toMatchObject({
    offSmoker:'2026-11-08T13:00:00.000Z',readyAfterRest:'2026-11-08T16:00:00.000Z',basedOn:'actual'
