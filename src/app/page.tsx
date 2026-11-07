@@ -525,13 +525,13 @@ function CookExperience() {
               {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
           </section>}
-          {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} onExport={workspace.exportUpcomingPlans} onImport={workspace.importUpcomingPlans} loading={workspace.plansLoading||!!workspace.plansError} onCreate={beginNewCook}/>}
+          {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} loading={workspace.plansLoading||!!workspace.plansError} onCreate={beginNewCook}/>}
           {!workspace.plansEnabled&&<section className="panel home-new">
             <h3>{workspace.plansEnabled?"Plan another cook":hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
             <p className="muted">{workspace.plansEnabled?"Save a future meal without changing your current cook.":hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
             <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
           </section>}
-          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks and backups <Icon name="arrow-right"/></button>
+          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks <Icon name="arrow-right"/></button>
           </div>
           <aside className="home-guide" aria-label="How it works">
             <p className="eyebrow">THE GAME PLAN</p>
@@ -546,7 +546,7 @@ function CookExperience() {
       ) : view === "history" ? (
         <section className="home-history">
           <button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>
-          <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook} onExport={downloadBackup} onImport={importBackup} separatePlans={workspace.plansEnabled}/>
+          <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook}/>
         </section>
       ) : cooking ? (
         <>
