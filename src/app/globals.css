@@ -656,3 +656,8 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 
 /* #119: the planner is a scrolling checklist, not a live sticky cooking dashboard. */
 @media(max-width:650px){.planning-screen .beerometer{position:static;top:auto}}
+
+/* #121: a fixed brisket load can yield a provisional nominal finish while
+   condition checks still prevent an exact serving guarantee. */
+.beerometer-provisional-note{grid-column:1/-1;margin:0;color:#d1c2af;font-size:11px;line-height:1.5}
+.beerometer-provisional-note time{font-weight:700;color:#faf4e8;white-space:nowrap}

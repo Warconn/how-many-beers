@@ -2,6 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import {newMeal,createDish,type Dish} from '../src/domain/meal';
 import {startCookSession,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 import {parseRecipeText} from '../src/domain/recipe';
+import {applyBrisketTiming,brisketDefaults} from '../src/domain/brisketEstimate';
 test.use({timezoneId:'UTC'});
 const at=(t:string)=>`2026-11-08T${t}:00Z`;
 function concurrent(recorded='16:00'){
@@ -84,4 +85,34 @@ test('optional remaining estimate can be canceled, saved and reloaded without ex
  await input.fill('8');await step.getByRole('button',{name:'Update estimate',exact:true}).click();await expect(meter(page)).toContainText('0h 18m');await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime',at('17:04').replace('Z','.000Z'));
  await page.reload();await page.getByRole('button',{name:/Continue cooking/}).first().click();await expect(meter(page)).toContainText('0h 18m');await page.clock.fastForward(8*60000);await expect(meter(page)).toContainText('Earliest serving');
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.events.filter((e:any)=>e.phaseEstimate)).toHaveLength(1);expect(saved.events.some((e:any)=>e.phaseObservations?.some((o:any)=>o.phaseId==='brats:heat'&&o.boundary==='end'))).toBe(false);
+});
+
+test('editing only a future brisket load time keeps the template allowance and gives a provisional completion',async({page},info)=>{
+ const serve=at('17:00'),dish=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7}}},serve);
+ const m=startCookSession({...newMeal(),name:'Browns Brisket',serveAt:serve,dishes:[dish]},at('15:45'));
+ await open(page,m,'16:20');
+ await page.getByRole('button',{name:'Edit plan',exact:true}).click();
+ await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+ const region=page.getByRole('region',{name:'Smoked brisket steps',exact:true});
+ await region.getByRole('button',{name:'Edit Put brisket on smoker',exact:true}).click();
+ const editor=region.locator('form.step-editor');
+ // The user changes only the planned clock. No cook-duration edit is needed.
+ await editor.locator('summary').filter({hasText:'More options'}).click();
+ await editor.getByLabel('Planned date and time',{exact:true}).fill('2026-11-08T20:00');
+ await editor.getByRole('button',{name:'Save',exact:true}).click();
+ const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
+ expect(after.taskOverrides['brisket:start'].durationMinutes).toBeUndefined();
+ expect(after.taskOverrides['brisket:start'].scheduledAt).toBe(at('20:00').replace('Z','.000Z'));
+ expect(after.serveAt).toBe(serve);
+ await page.getByRole('button',{name:'Continue cooking',exact:true}).click();
+ const beer=meter(page);
+ await expect(beer).toContainText('Est. ready after rest/hold');
+ await expect(beer).toContainText('Provisional estimate');
+ await expect(beer).toContainText('Est. off smoker');
+ await expect(beer).not.toContainText('Earliest serving');
+ await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime','2026-11-09T07:00:00.000Z');
+ await expect(page.getByLabel('Estimated off smoker',{exact:true})).toHaveAttribute('datetime','2026-11-09T04:00:00.000Z');
+ await page.setViewportSize({width:375,height:812});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
+ await page.screenshot({path:info.outputPath('brisket-fixed-load-eta.png'),style:'nextjs-portal{display:none}'});
 });

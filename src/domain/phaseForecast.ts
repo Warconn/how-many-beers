@@ -7,7 +7,7 @@ const minute=60000;
 const stamp=(s:string|null|undefined)=>s&&Number.isFinite(Date.parse(s))?Date.parse(s):null;
 const iso=(n:number)=>new Date(n).toISOString();
 export type LivePhase={id:string;dishId:string;kind:CookingPhase['kind'];startTaskId:string;actualStart:string|null;actualEnd:string|null;start:string;finish:string;minutes:number|null;elapsed:number;active:boolean;overrun:boolean;uncertain:boolean};
-export type PhaseProjection={forecasts:Record<string,StepForecast>;phases:LivePhase[];finish:string|null;earliestFinish:string;remaining:number|null;minimumRemaining:number;projected:number|null;elapsed:number;provisional:boolean;reason:string};
+export type PhaseProjection={forecasts:Record<string,StepForecast>;phases:LivePhase[];finish:string|null;earliestFinish:string;remaining:number|null;minimumRemaining:number;projected:number|null;elapsed:number;provisional:boolean;reason:string;provisionalTiming?:{offSmoker:string;readyAfterRest:string;basedOn:'planned'|'actual'}};
 
 /** A single read-only projection feeds the meter, current action and upcoming
  * times. Only tagged actual observations anchor physical intervals. */
@@ -109,6 +109,37 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
   const actual=phaseObservations(meal,p.id);
   if(actual.start&&!actual.end){uncertain=true;end=Math.max(end,now);}
  }
+ // A manually chosen smoker-loading time is still useful even when unfinished
+ // condition checks prevent a reliable live serving bound. Offer a deliberately
+ // provisional, separate *plan* estimate, never a statement of doneness.
+ // Keep this narrow to one built-in brisket: other dishes/indeterminate phases
+ // cannot be omitted from a whole-meal completion forecast.
+ const provisionalTiming=(()=>{
+   if(meal.dishes.length!==1)return undefined;
+   const dish=meal.dishes[0];
+   if(dish.preset!=='brisket'||dish.planningSequence)return undefined;
+   const heat=states.get(dish.id+':heat'),load=byId.get(dish.id+':start');
+   if(!heat||!load||heat.actualEnd)return undefined;
+   // This is a response to *editing a fixed planned load*, not an attempt to
+   // rework the duration. Keep the existing, previously applied brisket estimate
+   // as a provisional basis even if an older clock-only edit accidentally stored
+   // a null duration on the task. The saved duration and actuals stay untouched.
+   const plannedStart=load.timingMode==='fixed'?stamp(load.scheduledAt):null;
+   if(plannedStart===null)return undefined;
+   const actualStart=stamp(heat.actualStart);
+   if(actualStart===null&&plannedStart<now)return undefined;
+   const nominalMinutes=heat.minutes??(dish.brisketPlan?.applied?dish.cookMinutes:null);
+   if(nominalMinutes===null||!Number.isFinite(nominalMinutes)||nominalMinutes<=0)return undefined;
+   const offSmoker=(actualStart??plannedStart)+nominalMinutes*minute;
+   // An active cook beyond its allowance cannot be promised finished just
+   // because the elapsed timer ran out. Return to the conservative lower bound.
+   if(offSmoker<=now)return undefined;
+   const rest=states.get(dish.id+':rest'),restTask=byId.get(dish.id+':rest');
+   if(restTask?.timingMode==='fixed')return undefined;
+   const restMinutes=rest?.minutes??Math.max(0,dish.restMinutes)+(dish.brisketPlan?.applied?.inputs.holdBufferMinutes??0);
+   const readyAfterRest=offSmoker+restMinutes*minute;
+   return {offSmoker:iso(offSmoker),readyAfterRest:iso(readyAfterRest),basedOn:actualStart===null?'planned' as const:'actual' as const};
+ })();
  const minimumRemaining=Math.max(0,(end-now)/minute),remaining=uncertain?null:minimumRemaining,elapsed=Math.max(0,(now-anchor)/minute);
- return {forecasts,phases:[...states.values()],finish:uncertain?null:iso(end),earliestFinish:iso(end),remaining,minimumRemaining,projected:remaining===null?null:elapsed+remaining,elapsed,provisional:true,reason:uncertain?'Earliest estimate':'Estimated remaining'};
+ return {forecasts,phases:[...states.values()],finish:uncertain?null:iso(end),earliestFinish:iso(end),remaining,minimumRemaining,projected:remaining===null?null:elapsed+remaining,elapsed,provisional:true,reason:uncertain?'Earliest estimate':'Estimated remaining',...(provisionalTiming?{provisionalTiming}:{})};
 }
