@@ -17,12 +17,9 @@ export default function StepEditor({ task, onSave, onCancel,onRemove }: Props) {
   const [instructions, setInstructions] = useState(task.instructions);
   const [timingMode, setTimingMode] = useState<StepPlanEdit['timingMode']>(task.timingMode ?? 'plan');
   const [localTime, setLocalTime] = useState(formatLocalDateTime(task.scheduledAt, zone));
-  // The recipe's physical duration is known even without a user override.
-  // Changing only a planned date must not replace it with an unknown duration.
-  const shownDuration=task.explicitDurationUnknown?null:task.durationMinutes??task.templateStage?.minutes??null;
-  const initialUnit=shownDuration!=null && shownDuration>=120 && shownDuration%60===0?'hours':'minutes';
+  const initialUnit=task.durationMinutes!=null && task.durationMinutes>=120 && task.durationMinutes%60===0?'hours':'minutes';
   const [durationUnit,setDurationUnit]=useState<'minutes'|'hours'>(initialUnit);
-  const [duration, setDuration] = useState(shownDuration===null?'':String(shownDuration/(initialUnit==='hours'?60:1)));
+  const [duration, setDuration] = useState(task.durationMinutes == null ? '' : String(task.durationMinutes/(initialUnit==='hours'?60:1)));
   const [durationEdited,setDurationEdited] = useState(false);
   const durationMinutes=duration===''?null:Math.round(Number(duration)*(durationUnit==='hours'?60:1)*1000000)/1000000;
   const [equipment, setEquipment] = useState(task.equipment ?? '');
@@ -37,7 +34,7 @@ export default function StepEditor({ task, onSave, onCancel,onRemove }: Props) {
   const advancedSet = timingMode !== 'plan' || equipment !== (task.baseEquipment ?? '') || target !== '';
   const resetTiming = () => {
     setTimingEdited(true);setTimingMode('plan');setLocalTime(formatLocalDateTime(task.baseScheduledAt, zone));
-    setDurationUnit('minutes');setDuration(String(task.baseDurationMinutes??task.templateStage?.minutes??''));setDurationEdited(true);setOffsetChoice('');setError('');
+    setDurationUnit('minutes');setDuration(task.baseDurationMinutes == null ? '' : String(task.baseDurationMinutes));setDurationEdited(true);setOffsetChoice('');setError('');
   };
   return <form ref={form} tabIndex={-1} className="task-editor step-editor" aria-label="Edit step" noValidate
     onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation();onCancel(); } }}
