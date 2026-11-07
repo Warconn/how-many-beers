@@ -61,7 +61,7 @@ describe('#109 whole-meal planning',()=>{
   const d=createDish('brats'),m=meal(d),id=d.id+':start';m.hiddenTaskIds=cookTimeline(m).filter(t=>!t.id.endsWith(':prep')&&!t.id.endsWith(':preheat')&&t.id!==id).map(t=>t.id);
   const p=project(m,'10:00'),from=Math.min(...p.tasks.map(t=>Date.parse(t.scheduledAt!)));
   expect(cookDuration(m,p.tasks,Date.parse(at('10:00'))).minutes).toBe((Date.parse(p.readyAt!)-from)/60000);
-  const unknown=project({...m,taskOverrides:{[id]:{durationMinutes:null}}},'10:00');expect(unknown.readyAt).toBeNull();expect(unknown.tasks.find(t=>t.id===id)?.durationMinutes).toBeNull();
+  const savedUnknown:ExtendedMeal={...m,taskOverrides:{[id]:{durationMinutes:null}}};const unknown=project(savedUnknown,'10:00');expect(unknown.readyAt).toBeNull();expect(unknown.tasks.find(t=>t.id===id)?.durationMinutes).toBeNull();
  });
  it('does not reinterpret actuals, active phases or recorded history',()=>{
   const {m}=sequence(),active=startCookSession(m,at('16:00')),t=cookTimeline(active)[0],observed=recordEvent(active,t.id,'completed',at('16:01')),before=structuredClone(observed);expect(planningReadiness(observed,cookTimeline(observed),Date.parse(at('17:00')))).toBeNull();expect(observed).toEqual(before);
