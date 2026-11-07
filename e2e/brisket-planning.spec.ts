@@ -64,7 +64,7 @@ test('unknown or unsupported brisket inputs do not manufacture a recommendation'
   await planner.getByLabel('Brisket weight (lb)',{exact:true}).fill('15');
   await planner.getByText('Timing details',{exact:true}).click();
   await planner.getByLabel('Cooking profile', {exact:true}).selectOption('traeger-225-v1');
-  await expect(planner.getByText('Estimated cook time: 7.5–15 hours',{exact:true})).toBeVisible();
+  await expect(planner.getByText('Estimated cook time: 7.5–15 hours on smoker',{exact:true})).toBeVisible();
   await planner.getByLabel('Weight measured',{exact:true}).selectOption('untrimmed');
   await expect(planner.getByText(/Enter trimmed weight/)).toBeVisible();
   await expect(planner.getByRole('button',{name:'Use recommended timing',exact:true})).toBeDisabled();
