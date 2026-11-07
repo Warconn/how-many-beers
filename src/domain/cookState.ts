@@ -49,7 +49,7 @@ export type TaskOverride = {
 export type StepPlanEdit = {
   timingMode: "plan" | "fixed" | "unscheduled";
   scheduledAt: string | null;
-  durationMinutes: number | null;
+  durationMinutes?: number | null; // Omitted when editing time/title without changing duration.
   equipment: string;
   targetTempF: number | null;
 };
@@ -92,7 +92,7 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
     // authored instructions or safety notes.
     if(m.dishes.some(d=>d.id===t.dishId&&d.preset==='custom')&&override.instructions==='Timing needed: edit the recipe before relying on this timeline.')override.instructions=t.instructions;
     const timingMode=override.scheduledAt===undefined?'plan':override.scheduledAt===null?'unscheduled':'fixed';
-    return {...base,...override,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
+    return {...base,...override,explicitDurationUnknown:!!t.templateStage&&override.durationMinutes===null,...(recorded.has(t.id) && override.scheduledAt===undefined && override.recordedPlanAt!==undefined?{scheduledAt:override.recordedPlanAt}:{}),baseScheduledAt:t.baseScheduledAt===undefined?base.scheduledAt:t.baseScheduledAt,baseDurationMinutes:t.baseDurationMinutes===undefined?base.durationMinutes:t.baseDurationMinutes,baseEquipment:base.equipment,timingMode};
   };
   const tasks=m.dishes.flatMap(d=>{
     const sequence=buildDishTimeline(d.planningSequence?{...d,planningStepOrder:undefined}:d,m.serveAt,{overrides:m.taskOverrides,recorded,hidden}).filter(t=>!hidden.has(t.id)).map(project);
@@ -169,13 +169,15 @@ export function editStep(meal: Meal, taskId: string, title: string, instructions
   if(details){
     if(!["plan","fixed","unscheduled"].includes(details.timingMode))throw new Error("Choose a valid timing mode.");
     if(details.timingMode==="fixed" && (!details.scheduledAt || !Number.isFinite(Date.parse(details.scheduledAt))))throw new Error("Choose a valid planned date and time.");
-    if(details.durationMinutes!==null && (!Number.isFinite(details.durationMinutes) || details.durationMinutes<0 || details.durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
+    if(details.durationMinutes!==undefined && details.durationMinutes!==null && (!Number.isFinite(details.durationMinutes) || details.durationMinutes<0 || details.durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
     if(details.targetTempF!==null && (!Number.isFinite(details.targetTempF) || details.targetTempF<=0 || details.targetTempF>600))throw new Error("Target food temperature must be between 1 and 600°F, or blank.");
     if(details.equipment.trim().length>80)throw new Error("Keep equipment names under 80 characters.");
     if(details.timingMode==="plan")delete override.scheduledAt;
     else override.scheduledAt=details.timingMode==="unscheduled"?null:new Date(details.scheduledAt!).toISOString();
-    if(details.durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
-    else override.durationMinutes=details.durationMinutes;
+    if(details.durationMinutes!==undefined){
+      if(details.durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
+      else override.durationMinutes=details.durationMinutes;
+    }
     if(details.equipment.trim()===task.baseEquipment)delete override.equipment;
     else override.equipment=details.equipment.trim();
     if(details.targetTempF===null)delete override.targetTempF;
