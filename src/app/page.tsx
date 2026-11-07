@@ -281,7 +281,7 @@ function CookExperience() {
   const dismissCancel = () => {setShowCancel(false);requestAnimationFrame(()=>cancelTrigger.current?.focus());};
   const confirmCancel = async () => {
     await workspace.cancel(meal.id);
-    setShowCancel(false);returnHome();setMessage("Cook canceled.");
+    setShowCancel(false);setPlanSaveResult(null);setMessage("");returnHome();
   };
   const finishCook = async () => {
     if(workspace.kind==='trial'){window.dispatchEvent(new Event('hmb-open-account'));return;}
@@ -449,7 +449,7 @@ function CookExperience() {
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen"+(!remaining.length?" cooking-screen-complete":"") : "planning-screen")}>
-      {showCancel&&<CancelCookDialog name={meal.name} temporary={workspace.kind==='trial'} onDismiss={dismissCancel} onConfirm={confirmCancel}/>}
+      {showCancel&&<CancelCookDialog name={meal.name} onDismiss={dismissCancel} onConfirm={confirmCancel}/>}
       {storageError&&!(workspace.kind==='account'&&['load-error','conflict','blocked','unsaved'].includes(workspace.cloudPhase))&&!(workspace.plansEnabled&&(workspace.isSelectedPlan||workspace.pendingOperation==='promote')) && <div id="storage-warning" tabIndex={-1} className={`warning ${storageStatus==='unsaved'||storageStatus==='conflict'?'storage-alert':''}`} role="alert">{storageError}
         <div className="storage-recovery-actions">
           {storageStatus!=='recovery'&&<button type="button" onClick={downloadBackup}>{workspace.plansEnabled&&workspace.isSelectedPlan?"Download plan draft":"Download backup"}</button>}
@@ -505,8 +505,6 @@ function CookExperience() {
             <p className="home-product-line">Plan every dish. Time your dinner. Enjoy the cook.</p>
             <p className="muted">Set your serving time, bring your dishes into one plan, and follow a guided checklist when it’s time to cook.</p>
           </>}</div>
-          {message==='Cook canceled.'&&<p className="notice" role="status">Cook canceled.</p>}
-          {planSaveResult==="saved" && <p className="notice" role="status">Plan saved. Come back here to start when you’re ready.</p>}
           {hasActiveWork&&(!workspace.plansEnabled||cookInProgress||workspace.currentCookInProgress)&&<section className="panel home-current">
             <div className="between"><p className="eyebrow">YOUR CURRENT COOK</p><span className="home-status">{cookInProgress ? "In progress" : "Planning"}</span></div>
             <h3>{meal.name || "Your cook"}</h3>
