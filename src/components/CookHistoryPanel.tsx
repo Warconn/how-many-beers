@@ -4,16 +4,12 @@ import Icon from './Icon';
 import Beerometer from './Beerometer';
 import {useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
-import {useRef} from "react";
 import type {CookEvent} from "@/domain/cookState";
 
 type Props = {
   history:HistoryLibrary;
   onRepeat:(entry:ArchivedCook)=>void;
   onDelete:(entry:ArchivedCook)=>void;
-  separatePlans?:boolean;
-  onExport:()=>void;
-  onImport:(file:File)=>Promise<void>;
 };
 
 function fmt(date:string):string {
@@ -26,18 +22,16 @@ function eventDetail(e:CookEvent):string{
   return names[e.kind]+(e.value===undefined?"":" "+e.value+(e.unit??""))+(e.note?" · "+e.note:"");
 }
 
-export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onImport,separatePlans=false}:Props){
-  const importInput=useRef<HTMLInputElement>(null);
+export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
   const [search,setSearch]=useState("");
   const [selected,setSelected]=useState<string|null>(null);
-  const [busy,setBusy]=useState(false);
   const shown=history.cooks.filter(c=>(c.meal.name+" "+c.meal.dishes.map(d=>d.name).join(" ")).toLowerCase().includes(search.trim().toLowerCase()));
   const detailed=history.cooks.find(c=>c.id===selected);
   const events=(detailed?.meal.events??[]).slice().sort((a,b)=>a.occurredAt.localeCompare(b.occurredAt));
   return <section className="panel cook-history" id="cook-history">
     <div className="section-title">
       <span className="section-icon" aria-hidden="true"><Icon name="history"/></span>
-      <div><p className="eyebrow">PAST SESSIONS</p><h2>Cook History</h2></div>
+      <div><p className="eyebrow">PAST SESSIONS</p><h2>Past cooks</h2></div>
     </div>
     <p className="muted small">Your finished cooks, notes and actual times.</p>
     {history.cooks.length===0
@@ -63,17 +57,6 @@ export default function CookHistoryPanel({history,onRepeat,onDelete,onExport,onI
             {!shown.length && <p className="muted small">No matching cooks.</p>}
           </div>
         </>}
-    <section className="history-backups" aria-label="Cook backups"><h3>{separatePlans?"Current cook and history backups":"Backups"}</h3>{separatePlans&&<p className="muted small">Upcoming plans have a separate backup on Home. Restoring this cook backup keeps your upcoming plans.</p>}<div className="history-toolbar">
-      <button type="button" className="button secondary" onClick={onExport}>{separatePlans?"Download cook and history":"Download backup"}</button>
-      <button type="button" className="button secondary" disabled={busy} onClick={()=>importInput.current?.click()}>Restore a backup</button>
-        <input ref={importInput} className="sr-only" aria-label="Restore a backup" type="file" accept=".json,application/json" disabled={busy} onChange={async e=>{
-          const file=e.target.files?.[0];
-          if(!file)return;
-          setBusy(true);
-          try{await onImport(file);}finally{setBusy(false);e.target.value="";}
-        }}/>
-
-    </div></section>
     {detailed && <section className="history-detail" aria-label="Saved cook details">
       <h3>{detailed.meal.name}</h3>
       <Beerometer meal={detailed.meal} timeline={detailed.plannedTimeline} finishedAt={detailed.archivedAt}/>

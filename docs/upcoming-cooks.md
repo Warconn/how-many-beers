@@ -46,24 +46,14 @@ legacy-local behavior stays unchanged. New account controls require the server's
   cook when a future-plan cloud save fails; no cloud-saved success is fabricated.
   Cross-account changes and old tabs cannot replay another owner's pending request.
 
-## Explicit backup compatibility
+## Internal backup compatibility
 
-There are two clearly labeled backup scopes:
+Routine Home and Past cooks views intentionally omit backup export/import controls during alpha testing. The underlying recovery and backup formats remain supported, with no database cleanup or data deletion.
 
-1. **Current cook and history backup:** existing version-one JSON continues to
-   preserve current/completed cooks, including legacy local cancellation envelopes.
-   Importing it leaves separately stored upcoming plans untouched by omission.
-2. **Upcoming plans backup:** under Home → Upcoming plan backups. Versioned
-   `how-many-beers-upcoming-plans` JSON includes all saved future plan IDs, full meal
-   documents, canonical serving instants and time zones, plus a meaningful legacy
-   future plan if present. Import atomically merges absent plans, treats identical
-   plans as no-ops, and aborts the whole batch on divergent existing records. It
-   never changes the active cook or completed history. It does not overwrite newer
-   future plans. Protected pending drafts are included in future-plan exports. A divergent existing ID still aborts restore safely; an unprotected or unreadable draft stops export rather than disappearing silently.
+- **Current cook and history:** The existing version-one JSON format preserves current and completed cooks, including legacy local cancellation records. Import does not remove separately stored upcoming plans.
+- **Upcoming plans:** The versioned `how-many-beers-upcoming-plans` JSON format preserves saved future plan IDs, full meal documents, serving instants, time zones and any meaningful legacy future plan. Import only adds absent plans, treats identical entries as no-ops and rejects divergent IDs atomically without modifying the active cook or history.
 
-Keep both files when backing up all account cooking data. Pending plan edits are
-preserved internally without a separate recovery workflow. Existing guest backups
-remain supported.
+Recovery procedures can still use the underlying export/import services. Normal cooking remains focused on planning, current progress and Past cooks, without backup utility controls. Account saving and protected pending edits continue automatically.
 
 ## Migration and rollout
 
