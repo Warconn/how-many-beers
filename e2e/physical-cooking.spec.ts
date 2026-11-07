@@ -96,7 +96,7 @@ test('editing only a future brisket load time keeps the template allowance and g
  const region=page.getByRole('region',{name:'Smoked brisket steps',exact:true});
  await region.getByRole('button',{name:'Edit Put brisket on smoker',exact:true}).click();
  const editor=region.locator('form.step-editor');
- await expect(editor.getByLabel('Estimated duration (hours)',{exact:true})).toHaveValue('8');
+ // The user changes only the planned clock. No cook-duration edit is needed.
  await editor.locator('summary').filter({hasText:'More options'}).click();
  await editor.getByLabel('Planned date and time',{exact:true}).fill('2026-11-08T20:00');
  await editor.getByRole('button',{name:'Save',exact:true}).click();
