@@ -259,9 +259,10 @@ memory, preserving their existing temporary policy. No canceled-history/restore 
 ## Fixed future brisket load and provisional completion (#121)
 
 Changing only the planned `Put brisket on smoker` time preserves the template's
-existing smoke duration. StepEditor displays the derived duration but does not
-persist a new duration override unless the user edits that field. An explicitly
-unknown duration stays unknown; the changed date never fabricates a physical start.
+existing smoke duration. The user need only edit the planned start; no change to
+the duration field is necessary. Older fixed-time edits that saved a missing
+duration can still show a qualified projection from the previously applied
+brisket estimate without rewriting the saved task or manufacturing an actual start.
 
 For one built-in brisket with a known heating allowance and a **future fixed load**
 (or an actually recorded load), Cooking Mode can show a qualified estimate for
