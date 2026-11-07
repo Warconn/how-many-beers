@@ -585,8 +585,8 @@ test("account menu stays clean while earlier records remain untouched", async ({
 
 test('signed-in meal-first planning preserves serving time through cancel and reload',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
- await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toBeVisible();
+ await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toBeVisible();
  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-12-25T18:00');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');await expect(page.getByRole('heading',{name:'1 dish in this cook'})).toBeVisible();

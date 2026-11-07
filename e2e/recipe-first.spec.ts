@@ -14,9 +14,9 @@ test('meal planning uses the same grip and header actions with timing reflow',as
 
 test('review a template before adding it, then set time and keep another dish independent',async({page},info)=>{
  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
- await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ await expect(page.getByLabel('Serve date and time')).toBeVisible();
  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();
- const review=page.getByRole('region',{name:'Review your method',exact:true});await expect(review).toBeVisible();await expect(review.getByText('Time unknown',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ const review=page.getByRole('region',{name:'Review your method',exact:true});await expect(review).toBeVisible();await expect(review.getByText('Time unknown',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Serve date and time')).toBeVisible();
  await expect(review.getByText('Stabilize the grill around 250°F. This personal method cooks in a covered tray before searing.',{exact:true})).toBeVisible();
  await expect(review.locator('summary').filter({hasText:/^(Instructions|Method reference)$/})).toHaveCount(0);
  await expect(review.getByText('Times are estimates. Use a thermometer and follow the recipe’s doneness guidance.',{exact:true})).toHaveCount(0);
@@ -27,8 +27,8 @@ test('review a template before adding it, then set time and keep another dish in
  await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();await expect(page.getByRole('region',{name:'Meal plan preview'})).toBeVisible();await page.getByRole('button',{name:'Hide Meal Plan',exact:true}).click();await page.screenshot({path:info.outputPath('reviewed-meal.png'),fullPage:false,style:'nextjs-portal{display:none}'});
 });
 test('canceling review leaves the default planner empty',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Back to choices',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Back to choices',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toBeVisible();
+ await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByLabel('Serve date and time')).toBeVisible();
 });
 
 test('imported times enter method review and changing the new recipe leaves the meal target intact',async({page},info)=>{
