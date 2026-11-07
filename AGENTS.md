@@ -10,32 +10,49 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priorities and decision rules (November 5, 2026)
+## Current priorities and decision rules (November 7, 2026)
 
-**This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
+Use the live repository and issue acceptance criteria together with this approved
+queue. Do not repeat delivered work or infer priority from issue numbers.
 
-### NOW: default dev entry and save-notice cleanup
+### NOW: dev stabilization before a separate production release
 
-#101 is accepted and merged into dev at ab81a00, alongside PR108. Do not repeat
-that implementation. The owner requested the approved planner at `/` rather than
-a side URL for dev pushes. Implement and validate that integration on an isolated
-feature branch, then merge into dev as explicitly requested. Production remains
-#100 at190bf61; no production release or hosted migration is authorized.
+Dev delivery includes #101 physical cooking, #61 retained cancellation, #83
+multiple upcoming account plans/one active cook, #71 CI improvements, #103's recipe
+review/shared controls and #113's removal of routine backup/success clutter.
+#115 repairs the browser baseline; #116 delivers #109 serving-time-first planning.
+The owner approved integrating #115/#116 and their documentation into dev on
+November 7. That approval does not authorize future PR merges, production promotion
+or hosted database changes.
 
-Preserve the beers-first meter, inline serving difference, checkbox-first physical
-cooking, legacy active sessions, completed history and account/guest saving. Collapse
-duplicate account-error presentations into one accurate notice. Optional exceptional
-save tools belong behind details; never silently discard pending changes or retry a
-conflict as an overwrite. #109 and recipe-library persistence remain separate.
+Preserve the delivered flow:
+**set serving time → choose dishes → review recipes → combined meal → cook**.
+The normal planning summary is **Start preparing**, with day/date. Show estimated
+meal readiness when the requested target cannot be met. Never silently move the
+target or fabricate actual activity. Keep the accepted Beerometer and #101 live
+execution model. The read-only planning projection is not #3's resource optimizer.
 
-### Accepted recipe-first review
+**Next production-readiness bug: #117.** Manual fixed starts/durations on template
+cooking intervals can incorrectly serialize checkpoints and over-delay serving.
+Default brisket/ribs serving alignment is covered and works. Resolve #117 in a
+focused, separately reviewed fix before production validation of manual template
+phase edits. Do not repeat #109 or start new capabilities as incidental cleanup.
+Shared-smoker preheat/capacity/temperature coordination remains #3; alarms and
+notifications remain #11. See docs/releases/2026-11-07-dev.md.
 
-The owner requested approved planning at the normal dev URL. PR108
-provides the default recipe-first flow and shared planning step rows; old
-/recipe-first/ bookmarks redirect to /. Feature review routes remain optional.
-Preserve its left grip, upper-right Edit, grouped Save/Cancel and separated Remove.
-Reuse docs/design-system.md; do not restore per-row move-arrow footers.
-Recipe-library persistence remains separate; #103 is not fully complete.
+Both November 5 Supabase migrations are owner-confirmed applied and verified in
+dev. Do not reapply them or modify hosted database state in this work.
+
+### Delivered UI and deferred capabilities
+
+The default planner is `/`; old `/recipe-first/` bookmarks redirect there. Preserve
+inline instructions, left drag grips, upper-right Edit, grouped Save/Cancel,
+separated Remove and Review Meal Plan. Reuse docs/design-system.md.
+#103's recipe UI is delivered; reusable personal recipe saving remains deferred.
+Advanced scheduling (#3), timers/notifications, recipe URL import (#2), social
+login, paid features and advanced synchronization (#69/#70) remain deferred.
+Do not create manual QA or acceptance-testing tickets. Real data-loss/security bugs
+still take precedence. Stale docs PR #106 was closed as superseded without merging its old queue.
 
 ### Existing lifecycle safeguards
 
@@ -57,8 +74,7 @@ offline and security coverage, required aggregate gates and actual screenshot re
 Measure wall-clock and runner cost rather than claiming unmeasured speedups.
 
 Cooking keeps the accepted checklist-first flow and Beerometer display/calculations.
-The separate timing-concept discovery (#101) must not alter this implementation's
-execution model. #69/#70 sync, URL import, paid/social and unrelated methods remain
+#101's accepted physical timing is delivered; preserve its execution model. #69/#70 sync, URL import, paid/social and unrelated methods remain
 out of scope. Do not create manual QA/acceptance tickets.
 
 ### Approved free-tier product boundary
@@ -120,10 +136,10 @@ This file is the durable working summary of the October 2026 product discussion,
 
 Save plan for later explicitly acknowledges the current browser-storage write and
 returns Home in planning. Home shows edited start times and supports starting the
-same cook later. Keep one active/planning cook per browser, existing autosave,
+same cook later. Legacy browser mode keeps one active/planning cook, existing autosave,
 archive/history, IDs and actual timestamps. Failed writes must not claim success.
-Suggested times do not automatically start a session. Cloud sync, background reminders
-and a library of multiple future plans remain separate work.
+Suggested times do not automatically start a session. Account cloud saving and multiple upcoming plans are delivered in dev (#83).
+Background reminders remain separate work.
 
 ## Cooking Mode review iteration (#26)
 

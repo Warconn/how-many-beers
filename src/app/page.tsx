@@ -1,5 +1,8 @@
 "use client";
 
+import ServingPlan from '@/components/ServingPlan';
+import {planningReadiness} from '@/domain/planningReadiness';
+import {formatLocalDateTime} from '@/domain/stepTiming';
 import {useRecipeFirst} from '@/components/RecipeFirstContext';
 import RecipeMethodReview from '@/components/RecipeMethodReview';
 import {useStepReorder} from '@/components/useStepReorder';
@@ -177,11 +180,20 @@ function CookExperience() {
     window.addEventListener('beforeunload',leave);const signout=(event:Event)=>event.preventDefault();if(methodReview)window.addEventListener('hmb-before-signout',signout);return ()=>{window.removeEventListener('beforeunload',leave);window.removeEventListener('hmb-before-signout',signout);};
   },[methodReview,editingStep,newStepDishId,cookReadingOpen,addStepDraftOpen,showFinish,outcome,showDishSetup,addMethod,recipeText]);
 
-  const timeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
+  useEffect(()=>{
+    if(view!=='planning')return;
+    const update=()=>{if(!document.activeElement?.matches('input,textarea,select'))setClockNow(Date.now());};
+    update();const timer=window.setInterval(update,30000);window.addEventListener('focus',update);document.addEventListener('visibilitychange',update);
+    return ()=>{window.clearInterval(timer);window.removeEventListener('focus',update);document.removeEventListener('visibilitychange',update);};
+  },[view]);
+
+  const rawTimeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
+  const plan=useMemo(()=>meal&&view==='planning'?planningReadiness(meal,rawTimeline,clockNow):null,[meal,rawTimeline,clockNow,view]);
+  const timeline=plan?.tasks??rawTimeline;
   const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
   const forecasts=useMemo(()=>projection?.forecasts??(meal?liveStepForecasts(meal,timeline,clockNow):{}),[meal,timeline,clockNow,projection]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
-  const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal)] : [], [meal]);
+  const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal),...(plan?.conflicts??[])] : [], [meal,plan]);
   const cookingTasks=meal?.phasePlan?timeline.filter(t=>!meal.phasePlan!.suppressed.includes(t.id)):timeline;
   const progressTasks=view==='cooking'?cookingTasks:timeline;
   const complete = meal ? progressTasks.filter(task => !!meal.completed[task.id]).length : 0;
@@ -601,21 +613,12 @@ function CookExperience() {
         <>
           {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&<button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>}
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
-          {timeline.length>0 && <BeerEstimator meal={meal} timeline={timeline}/>}
           <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
-          {(!recipeFirst||meal.dishes.length>0||timeline.length>0)&&<section className="hero panel">
-            <div>
-              <p className="eyebrow">PLAN YOUR COOK</p>
-              <h2>What time are we eating?</h2>
-              <p>Set your serving time, add dishes, and we'll build your checklist.</p>
-            </div>
-            <div className="hero-fields">
-              <label htmlFor="meal-name">Meal name</label>
-              <input id="meal-name" value={meal.name} onChange={e => patch(m => ({...m, name: e.target.value}))} maxLength={80}/>
-              <label htmlFor="serve-at">Serve date and time</label>
-              <input id="serve-at" type="datetime-local" value={meal.serveAt} onChange={e => patch(m => ({...m, serveAt: e.target.value}))}/>
-            </div>
-          </section>}
+          <ServingPlan meal={meal} hasSteps={timeline.length>0} startAt={plan?.startAt??null} now={clockNow} readyAt={plan?.readyAt??projection?.finish??null} lateMinutes={plan?.lateMinutes??0} suggestion={plan?.suggestedServeAt??null}
+            onName={name=>patch(m=>({...m,name}))}
+            onServe={serveAt=>{patch(m=>({...m,serveAt}));setClockNow(Date.now());}}
+            onSuggestion={()=>{if(plan?.suggestedServeAt)safelyPatch(m=>({...m,serveAt:formatLocalDateTime(plan.suggestedServeAt!,Intl.DateTimeFormat().resolvedOptions().timeZone)}));}}/>
+          {timeline.length>0 && <BeerEstimator meal={meal} timeline={timeline} projection={projection}/>}
           <section className={"workspace-overview"+(recipeFirst&&methodReview?" reviewing-method":"")} aria-label="Cook overview">
             <div className="workspace-heading">
               {!(recipeFirst&&methodReview)&&<div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length ? `${meal.dishes.length} ${meal.dishes.length===1?"dish":"dishes"} in this cook` : "What do you want to cook?"}</h2></div>}
@@ -634,7 +637,7 @@ function CookExperience() {
                 <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>{recipeFirst?"Add your own recipe":"Import a recipe"}</button>
               </div>
               }
-              {recipeFirst&&methodReview?<RecipeMethodReview meal={methodReview} onChange={setMethodReview} onBack={()=>setMethodReview(null)} onAdd={async()=>{if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,methodReview,true)});setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>document.getElementById('serve-at')?.focus());}}/>:addMethod==="template" ? <>
+              {recipeFirst&&methodReview?<RecipeMethodReview meal={methodReview} onChange={setMethodReview} onBack={()=>setMethodReview(null)} onAdd={async()=>{if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,methodReview,true)});setClockNow(Date.now());setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>document.getElementById('serve-at')?.focus());}}/>:addMethod==="template" ? <>
               <h3>Choose a template</h3>
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
               <div className="template-picker">

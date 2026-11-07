@@ -638,3 +638,18 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 .remaining-estimate{margin-top:16px;display:grid;gap:8px}.remaining-estimate .button{justify-self:start}
 @media(max-width:650px){.beerometer-live .beerometer-figure strong{font-size:36px}.beerometer-live .beerometer-figure span{font-size:11px}.beerometer-live .beerometer-emblem{width:32px;height:32px}.beerometer-live h2{font-size:17px}.beerometer-live .eyebrow{font-size:8px}.beerometer-serving{font-size:11px}.beerometer-serving time{font-size:14px}}
 @media(max-width:350px){.beerometer-live .beerometer-figure strong{font-size:30px}.beerometer-live .beerometer-figure span{font-size:9px}.beerometer-live .beerometer-main{gap:5px}.beerometer-live h2{font-size:13px}.beerometer-live .beerometer-emblem{width:25px;height:25px}}
+
+/* #109: the target stays compact and editable before and after recipe review. */
+.serving-plan {padding:20px;margin-bottom:20px;}
+.serving-plan h2 {font-size:1.35rem;margin:0 0 16px;line-height:1.25;}
+.serving-plan-fields {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;}
+.serving-plan-fields label {color:var(--ink,#292720);margin:0 0 6px;}
+.serving-plan-fields input {width:100%;min-width:0;min-height:44px;}
+.planning-readiness {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line,#e4dfd5);margin-top:16px;padding-top:12px;font-size:.9rem;}
+.planning-readiness time {font-weight:700;white-space:nowrap;}
+.planning-readiness small {color:var(--muted,#6b655c);white-space:nowrap;}
+.planning-readiness .button {min-height:44px;margin:0;}
+@media(max-width:600px){.serving-plan {padding:16px;}.serving-plan-fields {grid-template-columns:minmax(0,1fr);gap:10px;}.serving-plan h2 {font-size:1.2rem;margin-bottom:12px;}}
+
+.planning-timing p {margin:0;line-height:1.5;}
+.planning-timing p+p {margin-top:4px;}

@@ -1,29 +1,26 @@
-## #101 owner-approved live cooking increment (November 5)
+## Current approved experience · November 7, 2026
 
-See [the implementation contract](live-cooking-phases.md). Fresh sessions separate
-physical starts/ends from checkpoints behind the existing checkbox flow. The
-Beerometer stays beers-first, time beneath, serving estimate at the bottom with an
-inline positive target difference. Elapsed phase context and concurrent activities
-stay inside the current action, advanced tools in Step details. Passive estimate
-expiry is not completion, and heating overruns never stop cooking automatically.
-The requested serving target and unrelated actuals never move silently. Existing
-active sessions retain their old forecast behavior; planning/#109 remains separate.
-This is feature-branch work, not a production release or automatic merge.
+#101's physical cooking, #61 cancellation and #83 upcoming plans are delivered in
+dev, along with #103's recipe review and shared step controls. Preserve them.
+#109 is delivered in dev via #116, following #115's CI repair:
+**set serving time → choose dishes → review recipes → combined meal → cook**.
+The requested target stays visible/editable. Start preparing, with day/date, is
+the normal summary; estimated readiness appears when the target cannot be met. See [the planning contract](planning-readiness.md).
 
-## Current release and next work (November 5, 2026)
+Cooking remains checkbox-first: do the action, check it off, see what is next.
+Physical transitions/checkpoints, concurrent work, passive rest/cooling and actual
+corrections use the accepted [#101 contract](live-cooking-phases.md). A checkbox
+never proves a cooking interval elapsed or food is safe. Keep the Beerometer's
+beers-first design and live calculation path intact.
 
-The November 5 release adds #21 visual consistency and #97 checklist-first cooking
-to #96's completed #92/#84/#62/#85/#77/#86 delivery. See
-[release notes](releases/2026-11-05.md) and verify deployment status in the release PR.
-
-Cooking shows one action, a relevant duration or manual checkpoint and a checkbox.
-Optional physical-start corrections and logging live in Step details; check-offs
-never prove a physical interval elapsed. The accepted compact mobile layout and
-Beerometer cleanup remain. Preserve actual events, accounts, guests and history.
-
-The owner's new timing concept needs separate discovery. #61 retained cancellation
-and then #83 multiple upcoming plans remain the prepared next capability sequence,
-not part of this release. See cook-lifecycle-plan.md. No manual QA tickets.
+Both November 5 account migrations are owner-confirmed applied/verified in dev.
+Do not reapply them. The owner approved #115/#116 dev integration and documentation
+alignment on November 7; production and future merges remain separate approvals.
+#117 is the remaining manual-template-start/checkpoint correctness bug to resolve
+before production validation. This is a dev delivery, not a production release.
+#3 advanced scheduling, notifications, recipe URL import, reusable recipes and
+social login remain deferred. The owner tests through actual cooking; do not create
+manual QA tickets. See [the current queue](work-queue.md).
 
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.

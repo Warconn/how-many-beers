@@ -2,12 +2,14 @@ import type {Meal, PlannedTask} from './meal';
 import {cookProjection} from './cookProjection';
 import {sequenceCheckpoint} from './stepSequence';
 import type {ExtendedMeal} from './cookState';
+import {stepMinutes} from './executionTimeline';
 const stamp=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
 function eligibleTasks(meal:Meal,timeline:PlannedTask[]){
   return timeline.filter(t=>t.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
     (t.id===d.id+':thaw' || (t.id===d.id+':brine' && d.turkeyPrep?.brineHours===0))));
 }
 function unknownDuration(meal:Meal,t:PlannedTask){
+  if(t.templateStage&&(meal as ExtendedMeal).taskOverrides?.[t.id]?.durationMinutes===null)return true;
   return t.durationMinutes==null && (t.userSequence?!sequenceCheckpoint(t)&&!t.id.endsWith(':serve'):(t.dishId==='custom'||meal.dishes.some(d=>d.id===t.dishId&&d.preset==='custom'&&t.id!==d.id+':serve')));
 }
 /** Estimated window of unfinished work, not a percentage of checklist items.
@@ -20,7 +22,7 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
   if(tasks.length && !remaining.length)return {minutes:0,label:'All steps checked'};
   if(!remaining.length || !Number.isFinite(now) || remaining.some(t=>stamp(t.scheduledAt)===null||unknownDuration(meal,t)))return {minutes:null,label:'Remaining timing needed'};
   const from=Math.max(now,Math.min(...remaining.map(t=>stamp(t.scheduledAt)!)));
-  const to=Math.max(...remaining.map(t=>stamp(t.scheduledAt)!+Math.max(0,t.durationMinutes??0)*60000));
+  const to=Math.max(...remaining.map(t=>stamp(t.scheduledAt)!+Math.max(0,stepMinutes(meal,t)??0)*60000));
   if(to<=from)return now<to?{minutes:(to-now)/60000,label:'Estimated remaining'}:{minutes:null,label:'Review overdue steps'};
   return {minutes:(to-from)/60000,label:'Estimated remaining'};
 }
@@ -31,7 +33,7 @@ export function cookDuration(meal:Meal,timeline:PlannedTask[],now:number,finishe
     (id===d.id+':thaw' || (id===d.id+':brine' && d.turkeyPrep?.brineHours===0)));
   const tasks=timeline.filter(t=>eligible(t.id));
   const starts=tasks.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
-  const ends=tasks.map(t=>{const at=stamp(t.scheduledAt);return at===null?null:at+Math.max(0,t.durationMinutes??0)*60000;}).filter((n):n is number=>n!==null);
+  const ends=tasks.map(t=>{const at=stamp(t.scheduledAt);return at===null?null:at+Math.max(0,stepMinutes(meal,t)??0)*60000;}).filter((n):n is number=>n!==null);
   const partial=tasks.some(t=>stamp(t.scheduledAt)===null || unknownDuration(meal,t));
   const window=starts.length && ends.length?Math.max(0,(Math.max(...ends)-Math.min(...starts))/60000):null;
   const planned=partial&&window===0?null:window;
