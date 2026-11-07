@@ -239,7 +239,7 @@ test("account access works in cooking and history without changing cook progress
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Cook History", exact: true }),
+    page.getByRole("heading", { name: "Past cooks", exact: true }),
   ).toBeVisible();
 });
 
