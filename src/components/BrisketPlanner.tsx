@@ -17,10 +17,8 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
     <h3>Plan brisket timing</h3>
     <div><label htmlFor={id('weight')}>Brisket weight (lb)</label><input id={id('weight')} type="number" inputMode="decimal" min="1" max="40" step="0.5" placeholder="Unknown" value={inputs.weightLb??''} onChange={e=>set({weightLb:e.target.value===''?undefined:Number(e.target.value)})}/></div>
     {estimate.smokeMin===null ? <div className="notice"><strong>{!inputs.weightLb?'Weight unknown':'Timing needed'}</strong><ul>{estimate.unknowns.map(t=><li key={t}>{t}</li>)}</ul></div> : <div className="brisket-window" aria-live="polite">
-      <p><strong>Recommended start</strong><br/><time dateTime={estimate.recommendedStart!}>{time(estimate.recommendedStart)}</time></p>
-      <p>Estimated cook time: {hours(estimate.smokeMin)}–{hours(estimate.smokeMax!)} hours</p>
-      <p className="muted small">Brisket timing varies. Starting early gives you room to rest and hold.</p>
-      {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The recommended start has passed. Serving time may be at risk; review your plan.</p>}
+      <p><strong>Estimated cook time:</strong> {hours(estimate.smokeMin)}–{hours(estimate.smokeMax!)} hours on smoker</p>
+      <p className="muted small">Start preparing above is when your full checklist begins. The smoker start is already scheduled as a checklist step.</p>
     </div>}
     <div className={"timing-choice"+(current?" is-applied":"")}>
       <p role="status"><strong>{current?'Timing applied':estimated?'Using estimated timing':'Using manual timing'}</strong>{!current&&<span>{estimated?'Recommendation changed; apply to update.':'Recommendation not applied.'}</span>}</p>
@@ -40,6 +38,7 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <p className="muted small">{inputs.method==='meatchurch-staged-v1'?'Unvalidated app weight comparison; recipe stages are source-inspired.':'Broad source-guide comparison; not calibrated to your cooker.'}</p>
       {estimate.smokeMin!==null && <><strong>Estimated smoke: {hours(estimate.smokeMin)}–{hours(estimate.smokeMax!)} hours</strong>
       <p>Recommended on-smoker start <time dateTime={estimate.recommendedStart!}>{time(estimate.recommendedStart)}</time></p>
+      {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The estimated on-smoker start has passed. Serving time may be at risk; review your checklist.</p>}
       <p>Latest plausible start <time dateTime={estimate.latestStart!}>{time(estimate.latestStart)}</time><span className="muted small"> Shortest estimate, no extra hold buffer; higher risk of missing dinner.</span></p>
       <p className="small">Begin prep {time(estimate.prepStart)} · Serve {time(new Date(serveAt).toISOString())}</p>
       <p className="muted small">The plan uses the longer smoke estimate plus rest and a separate hold buffer. Neither start guarantees dinner on time.</p>
