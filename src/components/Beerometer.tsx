@@ -14,7 +14,7 @@ export default function Beerometer({meal,timeline,finishedAt,projection}:{meal:M
   const result=live?{minutes:live.remaining,label:live.reason}:cookDuration(meal,timeline,now,finishedAt);
   // A fixed future smoker start can still yield a provisional nominal ETA
   // even when unfinished conditions make the conservative serving bound open-ended.
-  const tentative=live?.remaining===null?live.provisionalTiming:null;
+  const tentative=live?.provisionalTiming??null;
   const lowerBound=!!live&&live.remaining===null&&live.minimumRemaining!==undefined&&!tentative;
   const minutes=tentative?Math.max(0,(Date.parse(tentative.readyAfterRest)-now)/60000):lowerBound?live!.minimumRemaining!:result.minutes;
   const finish=tentative?.readyAfterRest??live?.finish??live?.earliestFinish;
