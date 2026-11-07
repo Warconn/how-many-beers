@@ -178,9 +178,9 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
     .getByRole("button", { name: "Save finished cook", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: /Past cooks and backups/ }),
+    page.getByRole("button", { name: /Past cooks/ }),
   ).toBeVisible();
-  await page.getByRole("button", { name: /Past cooks and backups/ }).click();
+  await page.getByRole("button", { name: /Past cooks/ }).click();
   await page.getByLabel("Find a past cook").fill("Friday");
   await page.getByRole("button", { name: "View cook", exact: true }).click();
   await expect(
@@ -195,7 +195,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   await recalled.goto("/");
   await recalled.evaluate(value => localStorage.setItem("how-many-beers:auth:v1", JSON.stringify(value)), {...session(), expires_at:Math.floor(Date.now()/1000)+3600});
   await recalled.reload();
-  await recalled.getByRole("button", {name:/Past cooks and backups/}).click();
+  await recalled.getByRole("button", {name:/Past cooks/}).click();
   await recalled.getByRole("button", {name:"View cook", exact:true}).click();
   await expect(recalled.getByText("Tender with good bark", {exact:true})).toBeVisible();
   await reader.close();
@@ -319,7 +319,7 @@ test("earlier records stay untouched without migration prompts across account sw
   await expect(
     page.getByText("Earlier family brisket", { exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: /Past cooks and backups/ }).click();
+  await page.getByRole("button", { name: /Past cooks/ }).click();
   await expect(
     page.getByText("Earlier family brisket", { exact: true }),
   ).toHaveCount(0);
@@ -432,11 +432,11 @@ await page
     page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: /Past cooks and backups/ }),
+    page.getByRole("button", { name: /Past cooks/ }),
   ).toBeVisible();
   expect(remote.state.revision).toBe(committedRevision);
   expect(remote.state.history).toHaveLength(1);
-  await page.getByRole("button", { name: /Past cooks and backups/ }).click();
+  await page.getByRole("button", { name: /Past cooks/ }).click();
   await page.getByRole("button", { name: "View cook", exact: true }).click();
   await expect(
     page.getByText("Preserve this outcome", { exact: true }),
