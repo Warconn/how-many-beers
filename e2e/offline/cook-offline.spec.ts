@@ -137,7 +137,7 @@ test('Home has no install or offline help while preparation stays functional',as
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
  await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
- await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Past cooks and backups/}).click();
+ await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Past cooks/}).click();
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
 });

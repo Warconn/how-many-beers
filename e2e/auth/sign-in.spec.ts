@@ -233,7 +233,7 @@ test("account access works in cooking and history without changing cook progress
     fullPage: true,
   });
   await page.getByRole("button", { name: /Home/ }).first().click();
-  await page.getByRole("button", { name: /Past cooks and backups/ }).click();
+  await page.getByRole("button", { name: /Past cooks/ }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");

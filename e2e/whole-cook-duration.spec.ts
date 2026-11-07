@@ -11,7 +11,7 @@ test('whole-cook brining, live progress and frozen history readings',async({page
  // Start Cook did not start refrigerator thawing. This physical action does.
  await page.getByRole('button',{name:'Full checklist',exact:true}).click();await page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{name:'Complete Start refrigerator thawing for '+t.name,exact:true}).click({noWaitAfter:true});await page.getByRole('button',{name:'Back to step',exact:true}).click();await page.clock.fastForward(60000);await expect(meter).toContainText('155h 29m · Estimated remaining');
  await page.screenshot({path:info.outputPath('whole-cook-active.png')});
- await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();await page.getByRole('button',{name:/Past cooks and backups/}).click();await page.getByRole('button',{name:'View cook',exact:true}).click();
+ await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();await page.getByRole('button',{name:/Past cooks/}).click();await page.getByRole('button',{name:'View cook',exact:true}).click();
  const saved=page.getByRole('region',{name:'Saved cook details'}).getByRole('region',{name:'Cook duration in beers'});await expect(saved).toContainText('Actual cook');await expect(saved).toContainText('0h 02m');await page.clock.fastForward(60000);await expect(saved).toContainText('0h 02m');
  await page.screenshot({path:info.outputPath('whole-cook-history.png')});
 });
