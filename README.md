@@ -33,8 +33,8 @@ These desktop and mobile screenshots show the current dev workspace, including t
 - **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Estimated durations remain editable directly on imported steps.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
-- **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
-- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, zero once all steps are checked, and distinct projected/elapsed/actual readings when useful; duplicate initial totals and zero elapsed are hidden.
+- **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or Cook Again. Exceptional recovery retains JSON backup/restore.
+- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, passive countdowns and uncertainty for overrunning heat; actual physical work governs remaining time, while duplicate projected/elapsed totals stay out of the main display.
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 
@@ -46,7 +46,7 @@ and cooking without persistent saves. Existing legacy browser records and recove
 mechanisms remain intact. Sign-in opens account cooks directly; the pre-1.0 Earlier
 cooks migration UI has been removed.
 
-Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
+Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, and exceptional recovery preserves backup tools. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 
 Empty plans ask **What do you want to cook?** with template and recipe-upload choices. Serving time stays editable; the schedule and cooking controls appear once there are steps.
 
@@ -93,12 +93,16 @@ See [release notes and validation](docs/releases/2026-11-05.md); check the relea
 and Cloudflare status for deployment confirmation. Authentication, cloud saving and
 cross-device history remain supported without schema changes.
 
-The current work is **#101 live cooking**, implementing the accepted checkbox-first
-physical timing design on an isolated feature branch. See [the implementation
-contract](docs/live-cooking-phases.md). #61/#83/#71 are already merged in dev;
-#103's accepted prototype remains PR #108, and #109 planning is separate.
-New timing relationships apply only to fresh sessions. Existing actuals, history,
-accounts and guests remain protected. No merge or production promotion is implied.
+The current work is **#109 serving-time-first planning**, the last planned feature
+before a separately validated production release. #101 physical cooking, #61
+retained cancellation, #83 multiple upcoming plans, #71 CI improvements and #103's
+recipe review/shared controls are delivered in dev. Personal recipe saving remains
+deferred. The owner confirms both November 5 Supabase migrations are applied and
+verified in dev. Do not reapply them. PR #115 repairs the #113 browser baseline;
+new feature PRs remain unmerged until owner approval.
+See [the current queue](docs/work-queue.md) and
+[planning rules and limits](docs/planning-readiness.md). Advanced scheduling (#3),
+notifications, URL import and social login remain deferred.
 
 ## Account foundation work
 

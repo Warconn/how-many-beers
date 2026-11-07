@@ -1,10 +1,9 @@
 # #101: physical cooking behind the checklist
 
-Implementation follows the owner-approved November 5 design in
-[the mobile review](design/101/README.md). This feature branch targets dev; it is
-not merged or released. Planning changes in #109 remain separate. The owner authorized merging the
-accepted #103 prototype PR #108 into dev and integrating that baseline here.
-Its recipe-first route and shared drag controls are preserved.
+Delivered and accepted in dev through PR #111, following the November 5 design in
+[the mobile review](design/101/README.md). The default planner and shared controls
+are integrated. #109 adds pre-cook serving-time planning separately; it does not
+replace this live model. Dev delivery does not imply a production release.
 
 ## Cooking interaction
 
