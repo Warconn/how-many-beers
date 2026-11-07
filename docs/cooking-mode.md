@@ -254,3 +254,29 @@ cancellation capability. Apply the additive migration to dev before enabling it.
 Legacy browser cooks retain canceled envelopes atomically alongside active/history
 storage and include them in backups. New guest trials retain the envelope only in
 memory, preserving their existing temporary policy. No canceled-history/restore UI.
+
+
+## Fixed future brisket load and provisional completion (#121)
+
+Changing only the planned `Put brisket on smoker` time preserves the template's
+existing smoke duration. StepEditor displays the derived duration but does not
+persist a new duration override unless the user edits that field. An explicitly
+unknown duration stays unknown; the changed date never fabricates a physical start.
+
+For one built-in brisket with a known heating allowance and a **future fixed load**
+(or an actually recorded load), Cooking Mode can show a qualified estimate for
+when the meat might come off the smoker and when its planned rest/hold interval
+would end. For example, a 7 lb brisket with an 8-hour allowance loaded at 1 AM,
+2-hour rest, and 1-hour holding buffer shows approximately **9 AM off smoker**
+and **noon ready after planned rest/hold**, against an unchanged 1 PM serving
+target. These are provisional assumptions, not proof of doneness or safe holding.
+The live card no longer replaces this useful estimate with only an unexplained
+lower-bound `+` when unrelated unresolved preparatory conditions remain.
+
+The conservative forecast remains intact underneath. When an actual heating
+phase runs past its estimated completion without a recorded end, do not display
+a fresh fictitious definite completion. The conservative earliest/unknown bound
+and condition review take precedence. Fixed/manual rest anchors, multi-dish
+meals, unsupported/custom phases and unknown durations do not gain invented
+whole-meal estimates from one brisket's start. #117 separately addresses raw
+checkpoint scheduling when editing manual physical starts/durations.
