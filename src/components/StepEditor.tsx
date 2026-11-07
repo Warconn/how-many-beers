@@ -37,7 +37,7 @@ export default function StepEditor({ task, onSave, onCancel,onRemove }: Props) {
   const advancedSet = timingMode !== 'plan' || equipment !== (task.baseEquipment ?? '') || target !== '';
   const resetTiming = () => {
     setTimingEdited(true);setTimingMode('plan');setLocalTime(formatLocalDateTime(task.baseScheduledAt, zone));
-    setDurationUnit('minutes');setDuration(task.baseDurationMinutes??task.templateStage?.minutes??'');setDurationEdited(true);setOffsetChoice('');setError('');
+    setDurationUnit('minutes');setDuration(String(task.baseDurationMinutes??task.templateStage?.minutes??''));setDurationEdited(true);setOffsetChoice('');setError('');
   };
   return <form ref={form} tabIndex={-1} className="task-editor step-editor" aria-label="Edit step" noValidate
     onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation();onCancel(); } }}
