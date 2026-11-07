@@ -84,9 +84,6 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
       result.set(task.id, {
         ...task,
         scheduledAt: fixed ? task.scheduledAt : start,
-        // Expose the same known allowance to cards and the existing Beerometer.
-        // Explicit unknown overrides already took the partial branch above.
-        durationMinutes: task.durationMinutes ?? (task.templateStage ? length : task.durationMinutes),
         scheduleAdjustmentMinutes: (task.scheduleAdjustmentMinutes ?? 0) +
           (fixed ? 0 : (earliest - planned) / 60000),
       });

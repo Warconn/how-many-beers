@@ -54,7 +54,7 @@ describe('#109 whole-meal planning',()=>{
  });
  it('retains authored template overlaps and treats thaw/skipped brine as reminders',()=>{
   const brats=createDish('brats'),m=meal(brats),raw=cookTimeline(m),p=project(m,'10:00');
-  expect(p.readyAt).toBe(at('18:00'));expect(p.partial).toBe(false);expect(p.tasks.map(t=>t.scheduledAt)).toEqual(raw.map(t=>t.scheduledAt));
+  expect(p.readyAt).toBe(at('18:00'));expect(p.partial).toBe(false);expect(p.tasks.map(t=>t.scheduledAt)).toEqual(raw.map(t=>t.scheduledAt));expect(p.tasks.map(t=>t.durationMinutes)).toEqual(raw.map(t=>t.durationMinutes));
   const turkey={...createDish('turkey'),turkeyPrep:{state:'thawed' as const,thawDays:0,brineHours:0,dryHours:0}},t=project(meal(turkey),'10:00');expect(t.readyAt).toBe(at('18:00'));expect(t.partial).toBe(false);
  });
  it('keeps the Beerometer coherent when a template ends at a known interval, and retains explicit unknowns',()=>{

@@ -18,7 +18,10 @@ checkpoint. Unknown required durations/unscheduled work do not produce a guarant
 finish. No calculation writes an inferred start, completion or target to storage.
 
 The planning task display, combined preview, live schedule and planned Beerometer
-consume the same projection. The Beerometer component and its live calculation are
+consume the same projection. Planned duration uses the shared `stepMinutes` helper
+to include known template intervals even when later rows have been removed. Those
+inherited allowances are never copied into an explicit editable override by the
+projection. The Beerometer component and its live calculation are
 unchanged. Existing active sessions/recorded activity bypass the projection entirely;
 #101 continues owning physical starts/ends and running forecasts. Existing storage,
 accounts, upcoming-plan promotion and completed snapshots are unchanged.
