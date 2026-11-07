@@ -6,7 +6,7 @@ import {sessionAnchor,stamp,iso,stepMinutes,actualStart} from './executionTimeli
 import {phaseProjection,type LivePhase} from './phaseForecast';
 /** Shared live finish, remaining and projected total. Calendar targets are
  * comparison data, never implicit cooking/holding appointments. */
-export type CookProjection={forecasts:Record<string,StepForecast>;finish:string|null;remaining:number|null;projected:number|null;elapsed:number;provisional:boolean;reason:string;phases?:LivePhase[];minimumRemaining?:number;earliestFinish?:string};
+export type CookProjection={forecasts:Record<string,StepForecast>;finish:string|null;remaining:number|null;projected:number|null;elapsed:number;provisional:boolean;reason:string;phases?:LivePhase[];minimumRemaining?:number;earliestFinish?:string;provisionalTiming?:{offSmoker:string;readyAfterRest:string;basedOn:'planned'|'actual'}};
 export function cookProjection(meal:Meal,timeline:PlannedTask[],clock:number):CookProjection{
  if(!Number.isFinite(clock))return {forecasts:{},finish:null,remaining:null,projected:null,elapsed:0,provisional:true,reason:'Timing unavailable'};
  if(meal.phasePlan)return phaseProjection(meal,timeline,forecastClock(meal,clock));
