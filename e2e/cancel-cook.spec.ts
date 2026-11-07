@@ -15,10 +15,10 @@ test('cancel keeps records outside completed history, survives reload and allows
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(meal);
  await page.getByRole('button',{name:/Continue cooking/}).click();await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Cancel cook',exact:true}).click();
  await confirm.getByRole('button',{name:'Cancel cook',exact:true}).click();await expect(confirm).not.toBeVisible();
- await expect(page.getByText('Cook canceled.',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:/Continue cooking/})).toHaveCount(0);
+ await expect(page.getByText('Cook canceled.',{exact:true})).toHaveCount(0);await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:/Continue cooking/})).toHaveCount(0);
  const saved=await page.evaluate(()=>({active:JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!),canceled:JSON.parse(localStorage.getItem('how-many-beers:canceled:v1')!),history:JSON.parse(localStorage.getItem('how-many-beers:history:v1')!)}));
  expect(saved.active.id).not.toBe(meal.id);expect(saved.canceled.cooks).toHaveLength(1);expect(saved.canceled.cooks[0]).toMatchObject({state:'canceled',meal:JSON.parse(JSON.stringify(meal))});expect(saved.history).toEqual(history);
- await page.reload();await expect(page.getByRole('button',{name:/Continue cooking/})).toHaveCount(0);await page.getByRole('button',{name:/Past cooks and backups/}).click();await expect(page.getByText('Previous dinner',{exact:true})).toBeVisible();await expect(page.getByText('Abandoned brats',{exact:true})).toHaveCount(0);
+ await page.reload();await expect(page.getByRole('button',{name:/Continue cooking/})).toHaveCount(0);await page.getByRole('button',{name:/Past cooks/}).click();await expect(page.getByText('Previous dinner',{exact:true})).toBeVisible();await expect(page.getByText('Abandoned brats',{exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?',exact:true})).toBeVisible();
  await page.screenshot({path:info.outputPath('after-cancel.png'),scale:'css',style:'nextjs-portal{display:none}'});
 });
