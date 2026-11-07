@@ -1,8 +1,9 @@
 import {describe,it,expect} from 'vitest';
 import {newMeal,createDish,type Dish} from '../src/domain/meal';
-import {cookTimeline,recordEvent,startCookSession,setStepDuration,moveStep,addDishToMeal,type ExtendedMeal} from '../src/domain/cookState';
+import {cookTimeline,recordEvent,startCookSession,setStepDuration,moveStep,addDishToMeal,editStep,type ExtendedMeal} from '../src/domain/cookState';
 import {cookProjection} from '../src/domain/cookProjection';
 import {recordRemainingEstimate} from '../src/domain/cookingPhases';
+import {applyBrisketTiming,brisketDefaults} from '../src/domain/brisketEstimate';
 import {parseRecipeText} from '../src/domain/recipe';
 import {guidedCookingSteps} from '../src/domain/cookingFocus';
 import {exportBackup,validateBackup,archiveCook,emptyHistory,repeatArchivedCook} from '../src/domain/cookHistory';
@@ -155,4 +156,50 @@ describe('physical phases behind the checklist',()=>{
   const m=setup(),again=recordEvent(m,'brats:start','completed',at('16:15'));expect(again.events).toEqual(m.events);
   const reopened=recordEvent(m,'brats:start','reopened',at('16:20'));expect(project(reopened,'16:20').phases?.find(p=>p.id==='brats:heat')?.actualStart).toBe(at('16:00'));
  });
+ it('a fixed future brisket load gives a provisional nominal finish without falsifying actuals or target',()=>{
+  const serve='2026-11-08T18:00:00Z'; // Sunday 1 PM EST
+  const d=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7}}},serve);
+  let m=startCookSession({...newMeal(),serveAt:serve,dishes:[d]},'2026-11-07T22:00:00Z');
+  const edit=(id:string,scheduledAt:string,durationMinutes?:number)=> {
+    const task=cookTimeline(m).find(t=>t.id===id)!;
+    m=editStep(m,id,task.title,task.instructions,{timingMode:'fixed',scheduledAt,durationMinutes,equipment:task.equipment??'Pellet smoker',targetTempF:null});
+  };
+  // A real stale preparatory checkpoint prevents an exact upper bound.
+  edit('brisket:prep','2026-11-07T21:00:00Z',75);
+  // The user edits only the loading clock; the 8h template allowance survives.
+  edit('brisket:start','2026-11-08T06:00:00Z');
+  expect(m.taskOverrides?.['brisket:start']?.durationMinutes).toBeUndefined();
+  const original=JSON.stringify(m),now=Date.parse('2026-11-07T22:20:00Z');
+  const p=cookProjection(m,cookTimeline(m),now);
+  expect(p.remaining).toBeNull();
+  expect(p.provisionalTiming).toEqual({
+   offSmoker:'2026-11-08T14:00:00.000Z', // 1 AM load + 8h
+   readyAfterRest:'2026-11-08T17:00:00.000Z', // + 2h rest, 1h hold
+   basedOn:'planned'
+  });
+  expect(JSON.stringify(m)).toBe(original);
+  expect(m.serveAt).toBe(serve);
+  edit('brisket:start','2026-11-08T05:00:00Z');
+  expect(cookProjection(m,cookTimeline(m),now).provisionalTiming?.offSmoker).toBe('2026-11-08T13:00:00.000Z');
+
+  m=recordEvent(m,'brisket:start','completed','2026-11-08T05:00:00Z');
+  expect(cookProjection(m,cookTimeline(m),Date.parse('2026-11-08T05:01:00Z')).provisionalTiming).toMatchObject({
+   offSmoker:'2026-11-08T13:00:00.000Z',readyAfterRest:'2026-11-08T16:00:00.000Z',basedOn:'actual'
+  });
+  // If the brisket has not actually come off the smoker when the estimated
+  // time passes, an open-ended warning is preferable to a made-up new finish.
+  const overdue=cookProjection(m,cookTimeline(m),Date.parse('2026-11-08T13:01:00Z'));
+  expect(overdue.provisionalTiming).toBeUndefined();
+  expect(overdue.remaining).toBeNull();
+ });
+
+ it('provisional single-brisket projection does not omit work from a multi-dish meal',()=>{
+  const serve='2026-11-08T18:00:00Z';
+  const b=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7}}},serve);
+  let m=startCookSession({...newMeal(),serveAt:serve,dishes:[b,{...createDish('side'),id:'side'}]},'2026-11-07T22:00:00Z');
+  const t=cookTimeline(m).find(t=>t.id==='brisket:start')!;
+  m=editStep(m,t.id,t.title,t.instructions,{timingMode:'fixed',scheduledAt:'2026-11-08T06:00:00Z',equipment:t.equipment??'Pellet smoker',targetTempF:null});
+  expect(cookProjection(m,cookTimeline(m),Date.parse('2026-11-07T22:20:00Z')).provisionalTiming).toBeUndefined();
+ });
+
 });
