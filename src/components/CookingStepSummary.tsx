@@ -4,14 +4,17 @@ import {physicalPhase} from '@/domain/physicalPhase';
 import {formatDuration} from '@/domain/stepTiming';
 import StepForecastTime from './StepForecastTime';
 import type {LivePhase} from '@/domain/phaseForecast';
-/** Display-only shortening; the full authored title/instructions remain in details. */
+/** Display-only shortening; remaining authored instructions stay available in Step details. */
 export function cookingTitle(title:string):string{
  const first=title.match(/^.*?[.!?](?:\s|$)/)?.[0].trim()??title;
  return first.replace(/\s*\([^)]*\b(?:minutes?|mins?|hours?|hrs?)\)\.?/ig,'').replace(/\.$/,'');
 }
-function brief(task:PlannedTask,rest:boolean):string{
+export function cookingInstructions(task:PlannedTask):string{
  const first=task.title.match(/^.*?[.!?](?:\s|$)/)?.[0].trim()??task.title;
- const instructions=task.instructions===task.title?task.title.slice(first.length).trim():task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
+ return task.instructions===task.title?task.title.slice(first.length).trim():task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
+}
+export function cookingInstruction(task:PlannedTask,rest:boolean):string{
+ const instructions=cookingInstructions(task);
  if(!instructions||instructions==='Imported recipe step. Confirm instructions and timing.')return '';
  if(rest){
   const safety=instructions.match(/[^.!?]*(?:140°F|safe holding)[^.!?]*[.!?]?/i)?.[0].trim();
@@ -25,7 +28,7 @@ function brief(task:PlannedTask,rest:boolean):string{
 export default function CookingStepSummary({task,forecast,activePhase}:{task:PlannedTask;forecast?:StepForecast;activePhase?:LivePhase}){
  const phase=forecast?.template?.kind,rest=phase==='rest',condition=task.isCondition&&!physicalPhase(task);
  const minutes=forecast?.template?.minutes??task.durationMinutes;
- const instruction=brief(task,rest);
+ const instruction=cookingInstruction(task,rest);
  return <>
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
   <p className="task-dish">{task.dishName}{activePhase?.active&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>

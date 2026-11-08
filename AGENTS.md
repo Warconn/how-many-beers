@@ -10,7 +10,18 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priorities and decision rules (November 7, 2026)
+## Current owner direction (November 8, 2026)
+
+The owner tested #117 successfully in PR #128 and approved starting #123 only.
+Follow #123's interaction/copy scope; preserve forecast calculations and Hold → Finish.
+Next issues (#124, #125, #127, #126) require separate owner approval. No automatic
+merges or production release. See docs/work-queue.md for the current queue.
+
+Handoffs include the exact feature testing URL reported by Cloudflare's successful
+check/comment and a short owner test plan. Never infer the hostname from a branch
+name: aliases may be shortened.
+
+## Prior priorities and decision rules (November 7, 2026)
 
 Use the live repository and issue acceptance criteria together with this approved
 queue. Do not repeat delivered work or infer priority from issue numbers.

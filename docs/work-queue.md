@@ -1,3 +1,17 @@
+# Post-brisket queue · November 8, 2026
+
+Owner-tested #117 is in PR #128 with green CI; merging remains separate.
+The owner approved starting **#123 only**. Its focused PR simplifies Cooking Mode
+controls and optional tools without changing forecasts or Hold → Finish.
+
+Remaining order, each requiring approval before starting: #124 timing visibility,
+#125 direct planned-time editing, #127 brisket template, #126 Upcoming Cooks cue.
+Do not combine stories, merge automatically or release production.
+
+Every handoff must include the exact feature URL from Cloudflare's successful
+check/comment plus a short owner test plan. Do not construct the URL from the
+branch name: Cloudflare can shorten the alias.
+
 # Current owner-approved queue · November 7, 2026
 
 The owner approved dev integration of #115/#116 and documentation alignment on

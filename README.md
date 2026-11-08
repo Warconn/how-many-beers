@@ -175,3 +175,7 @@ and existing cooks remain intact.
 Recipe review and prototype meal-planning rows share drag grips, upper-right Edit
 and editor-contained Remove. The reusable action placement standard lives in
 [the design system](docs/design-system.md#reusable-step-rows-and-actions-103-review).
+
+Cooking Mode keeps notes, readings, actual-time correction, activity and supported
+estimate adjustments optional within Step details. The checkbox and existing
+Hold/Finish flow remain unchanged.

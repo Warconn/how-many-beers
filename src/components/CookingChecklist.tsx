@@ -1,4 +1,5 @@
 import Icon from './Icon';
+import {cookingTitle} from './CookingStepSummary';
 import type {PlannedTask} from '@/domain/meal';
 import type {StepForecast} from '@/domain/cookForecast';
 import StepForecastTime from './StepForecastTime';
@@ -9,7 +10,7 @@ export default function CookingChecklist({tasks,completed,onSelect,onComplete,fo
   <ol className="flat-cook-list">{tasks.map(task=><li key={task.id} className={completed[task.id]?'is-complete':''}>
    <label className="flat-step-check"><input type="checkbox" aria-label={'Complete '+task.title+' for '+task.dishName} checked={!!completed[task.id]} onChange={e=>onComplete(task.id,e.target.checked)}/></label>
    <button type="button" aria-label={'Open step: '+task.title+' for '+task.dishName} onClick={()=>onSelect(task.id)}>
-    <span className="flat-step-copy"><strong>{task.title}</strong><span>{task.dishName}{task.isCondition?' · Verify conditions':''}</span>{completed[task.id] && <span className="flat-step-actual">Completed {time(completed[task.id])}</span>}</span>
+    <span className="flat-step-copy"><strong>{cookingTitle(task.title)}</strong><span>{task.dishName}{task.isCondition?' · Verify conditions':''}</span>{completed[task.id] && <span className="flat-step-actual">Completed {time(completed[task.id])}</span>}</span>
     <span className="flat-step-time">{forecasts[task.id]?<><StepForecastTime forecast={forecasts[task.id]} part="start" simple/>{forecasts[task.id].finish&&<><br/><StepForecastTime forecast={forecasts[task.id]} part="finish" simple/></>}</>:task.scheduledAt && Number.isFinite(Date.parse(task.scheduledAt))?<time dateTime={task.scheduledAt}>{time(task.scheduledAt)}</time>:<span>Untimed</span>}</span><Icon className="flat-step-chevron" name="chevron-right"/>
    </button>
   </li>)}</ol>
