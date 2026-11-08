@@ -107,6 +107,7 @@ test('step tools are opt-in, flat and preserve drafts while details close',async
  await guide.getByRole('button',{name:/^Activity \(/}).click();
  await expect(guide.getByText(/Food temp.*165/)).toBeVisible();
  await guide.screenshot({path:info.outputPath('details-history.png'),scale:'css'});
+ await guide.locator('.task-activity').evaluate(el=>el.scrollIntoView({block:'center'}));
  await guide.locator('.task-activity').screenshot({path:info.outputPath('activity.png'),scale:'css'});
 });
 
