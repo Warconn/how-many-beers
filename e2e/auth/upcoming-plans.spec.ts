@@ -53,8 +53,14 @@ async function createPlan(page:Page,name:string,serveAt?:string){
  await added;
  await expect(page.locator('.account-save-indicator')).toHaveAttribute('data-state','saved');
  const named=page.waitForResponse(response=>savedPlan(response)&&response.request().postDataJSON().document.meal.name===name);
- await page.getByLabel('Meal name',{exact:true}).fill(name);
- await expect(page.getByLabel('Meal name',{exact:true})).toHaveValue(name);
+ const nameField=page.getByLabel('Meal name',{exact:true});
+ // Use real key events: WebKit's synthetic fill can be reset without an input
+ // update during this controlled-field setup. Keep the exact value/save checks.
+ await nameField.click();
+ await nameField.press('ControlOrMeta+A');
+ await nameField.press('Backspace');
+ await nameField.pressSequentially(name);
+ await expect(nameField).toHaveValue(name);
  await named;
  if(serveAt)await page.getByLabel('Serve date and time',{exact:true}).fill(serveAt);
  await page.getByRole('button',{name:'Save plan for later',exact:true}).click();
