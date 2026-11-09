@@ -2,7 +2,8 @@ import {changeStepDuration} from '../helpers/stepEditing';
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { backend, user, session } from "./fixtures";
 import { newMeal, createDish } from "../../src/domain/meal";
-import { migrateMeal } from "../../src/domain/cookState";
+import { migrateMeal, type ExtendedMeal } from "../../src/domain/cookState";
+import {holdAppFrames,releaseAppFrames} from '../helpers/appFrames';
 import { archiveCook, emptyHistory } from "../../src/domain/cookHistory";
 const rpc = "https://auth.example.test/rest/v1/rpc/";
 type Workspace = {
@@ -137,6 +138,44 @@ test("a signed-in cook is acknowledged and recovered in a fresh browser context"
     next.getByRole("button", { name: "Edit Smoked brisket", exact: true }),
   ).toBeVisible();
   await other.close();
+});
+
+test('post-add frame preserves an immediate meal-name edit through start, history and Cook Again (#118)',async({page,context},info)=>{
+ const remote=server(),oldDish=createDish('side');
+ const previous=archiveCook({...newMeal(),name:'Earlier dinner',serveAt:'2026-11-01T18:00:00Z',dishes:[oldDish],events:[{id:'previous-actual',taskId:oldDish.id+':start',kind:'started' as const,occurredAt:'2026-11-01T17:00:00Z'}]} as ExtendedMeal,emptyHistory(),'Keep this history','2026-11-01T19:00:00Z').cooks.map(c=>({...c,serveInstant:new Date(c.meal.serveAt).toISOString()}));
+ remote.state.history=structuredClone(previous);await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-13T18:00');
+ await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await holdAppFrames(page);
+ await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await expect(page.getByRole('region',{name:'Review your method',exact:true})).toHaveCount(0);
+ const name=page.getByLabel('Meal name',{exact:true});await name.click();await name.press('ControlOrMeta+A');
+ const frames=await releaseAppFrames(page);
+ // Type through the real keyboard target, without re-focusing the locator.
+ await page.keyboard.type('Friday brisket');
+ const focusEvidence=await page.evaluate(frames=>({frames,focused:document.activeElement?.id,name:(document.getElementById('meal-name') as HTMLInputElement)?.value}),frames);
+ await info.attach('post-add-focus',{body:JSON.stringify(focusEvidence),contentType:'application/json'});
+ await expect(name).toHaveValue('Friday brisket');await expect(name).toBeFocused();
+ // Serving edits use the same save path; this does not assert they were lost in
+ // the original incident. Start immediately, without waiting for the save icon.
+ await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-13T18:30');
+ await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Friday brisket',exact:true})).toBeVisible();
+ const active=()=>remote.state.active as {meal:ExtendedMeal};
+ expect(active().meal.name).toBe('Friday brisket');expect(active().meal.serveAt).toBe('2026-11-13T18:30');
+ const mealId=active().meal.id;await page.getByRole('checkbox',{name:'Complete Trim brisket',exact:true}).click();
+ await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ const actuals=structuredClone(active().meal.events);expect(actuals?.length).toBeGreaterThan(0);expect(remote.state.history).toEqual(previous);
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();
+ expect(active().meal.id).toBe(mealId);expect(active().meal.events).toEqual(actuals);expect(active().meal.name).toBe('Friday brisket');
+ await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ await page.getByRole('button',{name:/Past cooks/}).click();await page.getByLabel('Find a past cook').fill('Friday');await page.getByRole('button',{name:'View cook',exact:true}).click();
+ const archived=remote.state.history.find(c=>(c as {meal:ExtendedMeal}).meal.id===mealId) as {meal:ExtendedMeal};
+ expect(archived.meal.events).toEqual(actuals);expect(archived.meal.serveAt).toBe('2026-11-13T18:30');expect(remote.state.history).toEqual(expect.arrayContaining(previous));
+ await page.screenshot({path:info.outputPath('118-preserved-history.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ await page.getByRole('button',{name:'Cook again',exact:true}).click();
+ expect(active().meal.name).toBe('Friday brisket');expect(active().meal.events).toEqual([]);expect(active().meal.completed).toEqual({});expect(remote.state.history).toEqual(expect.arrayContaining([archived,...previous]));
 });
 
 test("finishing recalls immutable history and Cook Again resets recorded events", async ({
