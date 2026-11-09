@@ -124,3 +124,29 @@ test('date editor rejects missing DST times and requires an explicit ambiguous o
   await form.getByRole('button', { name: 'Save', exact: true }).click();
   expect((await saved(page)).taskOverrides![taskId].scheduledAt).toBe('2026-11-01T06:30:00.000Z');
 });
+
+test('fixed ribs cooking allowance keeps checkpoints inside the cook and readiness at 2 PM', async ({page},info)=>{
+ await page.clock.setFixedTime(new Date('2026-11-07T12:00:00Z'));
+ const dish=createDish('ribs'),meal={...newMeal(),serveAt:'2026-11-08T18:00:00Z',dishes:[dish]};
+ await load(page,meal);
+ const schedule=page.getByRole('complementary',{name:'Live schedule'});
+ await schedule.getByRole('button',{name:/Show full schedule/}).click();
+ const start=cookTimeline(meal).find(t=>t.id===dish.id+':start')!;
+ await schedule.getByRole('button',{name:`Edit ${start.title} for ${dish.name}`,exact:true}).click();
+ const form=page.getByRole('form',{name:'Edit step',exact:true});
+ await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('330');
+ await form.getByText(/^More options/).click();
+ await form.getByLabel('Planned date and time',{exact:true}).fill('2026-11-08T08:10');
+ await form.getByRole('button',{name:'Save',exact:true}).click();
+ const serve=()=>schedule.locator('li').filter({has:page.getByRole('button',{name:`Edit Serve for ${dish.name}`,exact:true})});
+ await expect(serve().locator('time[datetime]').first()).toHaveAttribute('datetime','2026-11-08T19:00:00.000Z');
+ await expect(schedule.locator('time[datetime="2026-11-08T18:40:00.000Z"]').first()).toBeVisible();
+ await schedule.screenshot({path:info.outputPath('ribs-corrected-timeline.png')});
+ await serve().scrollIntoViewIfNeeded();
+ await schedule.screenshot({path:info.outputPath('ribs-corrected-readiness.png')});
+ expect((await saved(page)).serveAt).toBe(meal.serveAt);
+ await page.reload();
+ await page.getByRole('button',{name:/Resume planning/}).click();
+ await schedule.getByRole('button',{name:/Show full schedule/}).click();
+ await expect(serve().locator('time[datetime]').first()).toHaveAttribute('datetime','2026-11-08T19:00:00.000Z');
+});
