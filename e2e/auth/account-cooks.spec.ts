@@ -193,7 +193,10 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+  await expect(page.getByRole('region', {name: 'Review your method', exact: true})).toHaveCount(0);
+  await expect(page.locator('.cook-content')).not.toHaveAttribute('inert', '');
   await page.getByLabel("Meal name").fill("Friday brisket");
+  await expect.poll(() => (remote.state.active as {meal:ExtendedMeal})?.meal.name).toBe("Friday brisket");
   await expect(
     page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
@@ -638,7 +641,13 @@ test('signed-in meal-first planning preserves serving time through cancel and re
 test('imported duration edits save and reload without changing another dish or history',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
  await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
- await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ // Add is an acknowledged critical save. fill() can bypass inert in WebKit;
+ // a real user cannot edit this field until the review closes and unlocks.
+ await expect(page.getByRole('region',{name:'Review your method',exact:true})).toHaveCount(0);
+ await expect(page.locator('.cook-content')).not.toHaveAttribute('inert','');
+ await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');
+ await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-11-26T00:05');
+ await expect.poll(()=>(remote.state.active as {meal:ExtendedMeal})?.meal.serveAt).toBe('2026-11-26T00:05');
  const original=JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0]),history=JSON.stringify(remote.state.history);
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Pumpkin seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds\nCool completely');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();
  await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});

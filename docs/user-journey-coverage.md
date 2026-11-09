@@ -83,6 +83,12 @@ pass report.
 
 ## Keep coverage current
 
+Playwright `fill()` can write into an `inert` subtree even while real keyboard/
+pointer interaction is locked. Observe critical-save acknowledgement and editor
+unlocking before synthetic setup fills; assert the exact value/server document,
+not a previously saved icon. Keep controlled unlocked-interaction race tests such
+as #118 separate from that setup boundary.
+
 For a bug, preserve the real user trigger and assert the saved outcome/history,
 not just visible success text. For an experience change, update this map and the
 relevant journey alongside focused assertions. Never replace a failing scenario

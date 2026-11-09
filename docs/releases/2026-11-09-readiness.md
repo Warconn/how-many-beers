@@ -63,6 +63,19 @@ the same cause.
 The PR handoff records the final SHA, suite totals, inspected screenshots and exact
 Cloudflare-reported feature URL. A successful preview is not a production release.
 
+### Account test input boundary found during the expanded run
+
+Run `42704839870` passed its gates with one iPhone retry in the existing imported-
+duration test. Its trace shows datetime `fill()` during the Add transaction while
+`.cook-content` was `inert`; the existing application save guard rejected the
+synthetic edit. Every RPC retained the old target. This is distinct from deferred
+focus stealing a real unlocked edit in #118. The duration test now waits for method
+review dismissal and removal of `inert`, then asserts both the entered target and
+its exact account acknowledgement before testing durations. The original name/
+history scenario also observes this real interaction boundary. No input assertion,
+timeout, retry policy or application save protection was weakened. The final PR
+checks must pass again after this test correction.
+
 ## User-journey coverage
 
 The [coverage map](../user-journey-coverage.md) links implemented entry points,
