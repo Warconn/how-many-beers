@@ -160,7 +160,7 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
     .getByRole("button", { name: "Start cooking", exact: true })
     .click();
   await page
-    .getByRole("checkbox", { name: "Complete Trim the brisket", exact: true })
+    .getByRole("checkbox", { name: "Complete Trim brisket", exact: true })
     .click();
   await expect(page.getByText('Your latest changes are not saved. Keep this tab open and download a backup.',{exact:true})).toHaveCount(0);
   await expect(
