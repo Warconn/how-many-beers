@@ -754,3 +754,29 @@ test('another tab shows one accurate save notice without duplicate recovery pane
  await notice.getByText('Save details',{exact:true}).click();await expect(notice.getByRole('button',{name:'Download backup',exact:true})).toBeVisible();
  expect(JSON.stringify(remote.state)).toBe(before);await other.close();
 });
+
+test('leaving a temporary guest cook returns to an empty trial without creating account history', async ({page, context}) => {
+  const remote = server();
+  const before = structuredClone(remote.state), requests: string[] = [];
+  page.on('request', request => {if (request.url().startsWith(rpc)) requests.push(request.url());});
+  await remote.attach(context);
+  await backend(page);
+  await page.goto('/');
+  await expect(page.getByText(/Guest cooks aren’t kept after you leave/)).toBeVisible();
+  await page.getByRole('button', {name: /Plan a new cook/}).click();
+  await page.getByRole('button', {name: 'Choose a template', exact: true}).click();
+  await page.getByRole('button', {name: 'Add grilled beer-bath brats', exact: true}).click();
+  await page.getByRole('button', {name: 'Add to meal', exact: true}).click();
+  await page.getByRole('button', {name: 'Start cooking', exact: true}).click();
+  await page.getByRole('checkbox', {name: 'Complete Build the brat and vegetable tray', exact: true}).click();
+  await expect(page.getByRole('checkbox', {name: 'Complete Preheat grill to 250°F', exact: true})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', {name: /Plan a new cook/})).toBeVisible();
+  await expect(page.getByRole('button', {name: /Continue cooking/})).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('how-many-beers:history:v1'))).toBeNull();
+  expect(remote.state).toEqual(before);
+  expect(requests).toEqual([]);
+  await page.getByRole('button', {name: /Past cooks/}).click();
+  await expect(page.getByRole('button', {name: 'View cook', exact: true})).toHaveCount(0);
+});

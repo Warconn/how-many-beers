@@ -130,6 +130,15 @@ Steps conceptually belong to dishes. The overall schedule is derived from all di
 
 Use accessible labels, keyboard-friendly buttons and mobile tap targets. Expose unscheduled/estimated/condition-driven items truthfully. Never portray timing estimates as food safety guarantees.
 
+## User-journey regression coverage
+
+See [the coverage map](docs/user-journey-coverage.md) for implemented pathways,
+known cook regressions, whole-UI journeys and manual/hosted boundaries. Preserve
+its guest/account/legacy/offline distinctions. Update the map when changing an
+experience or adding a concrete regression; do not imply exhaustive device or
+hosted-service coverage from mocks. New overnight/mixed-meal journeys run on
+desktop/mobile Chromium and iPhone WebKit.
+
 ## Test-first feature delivery
 
 1. Read the issue, current UX spec, source and existing Playwright flows. Summarize the desired journey and concrete acceptance criteria before editing.

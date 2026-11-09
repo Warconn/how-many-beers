@@ -1,0 +1,90 @@
+# User journey regression map
+
+November 9, 2026 release review. These are Playwright tests that interact with the
+real rendered app, using its buttons, inputs, navigation and saving paths. Unit
+coverage supplements them; passing unit tests alone is not user-journey evidence.
+
+## Whole journeys added for this review
+
+`e2e/cook-journeys.spec.ts` creates plans from an empty Home through the UI,
+without preloading cook state or calling domain helpers to complete actions:
+
+- **Overnight brisket:** Sunday serving target → new template → optional trimmed
+  weight → edit planned smoker time without changing duration → save/reload →
+  prepare → actual Saturday 11:34 PM load → estimate expires without completing
+  meat → condition checks → Sunday 8:19 AM hold → reload → stay on unchecked Hold
+  through 1 PM → existing Finish → searchable history. Assert planned target,
+  durations and append-only actuals remain intact. The 8-hour estimate is guidance,
+  and the rest/hold reserve does not become a required countdown.
+- **Mixed meal:** template brats plus uploaded Markdown seeds → save/reload → one
+  combined checklist → explicit finish → one archived meal with both dishes and
+  actuals → Cook Again with independent IDs and cleared progress → reload.
+
+Both run on desktop Chromium, narrow mobile Chromium and iPhone WebKit. Their
+60-second per-journey budget accommodates many separate UI actions; ordinary
+assertion timeouts stay unchanged. Clocks advance deterministically, without
+sleeping through a cook. Screenshots join the existing review artifact.
+
+## Implemented paths and their browser evidence
+
+| User experience / scenario | Browser tests | Setup and scope |
+| --- | --- | --- |
+| First visit, Home, start/resume and responsive navigation | `cook-flow`, `home-cleanup`, `branding`, `empty-planner`, `cook-action` | Real Home/template flows plus retained-state resume |
+| Serving first, cancel Add, multiple independent dishes | `serving-first`, `recipe-first`, `flat-menu`, `dish-editor` | UI creation/review; complex timing cases also seed exact inputs |
+| Templates for brisket, brats, turkey, wings, ribs, chicken, sides | `template-estimates`, `personal-templates` | All seven legacy templates in real cooking UI; new brisket additionally has full UI journey and `post-brisket` |
+| Paste recipe text, upload `.txt`/`.md`, extracted/unknown durations | `cook-flow`, `recipe-extraction`, `recipe-first`, `imported-duration-ux`, `imported-timing` | Real chooser/import/review, correction and reload |
+| Reorder/add/remove a step or dish, notes and optional settings | `recipe-first`, `step-editing-ux`, `remove-dish`, `focused-cooking`, `flexible-order`, `planning-order` | Actual controls, keyboard/touch interactions, cancellation, actual-data preservation |
+| Planned date/time differs from duration | `post-brisket`, `step-timing-cues`, `step-timing`, `auth/account-cooks`, `offline/cook-offline` | Direct focused editor, cancel/reset, account saves, actuals and offline reload |
+| Fixed ribs 8:10 AM → 1:40 PM heat finish → 2 PM ready (#117) | `step-timing`, `serving-first` | Literal template fixture, actual UI edits and target preservation |
+| Late target, fixed/manual anchors, overnight/DST edits | `serving-first`, `step-timing`, `duration-reflow` | Deterministic exact clocks, invalid/ambiguous date validation |
+| Prominent collapsed current/Up Next cues and optional tools | `step-timing-cues`, `cooking-simplicity`, `post-brisket`, `cooking-layout` | Guided cards, flat checklist, cues without opening details |
+| Actual cook starts, parallel dishes, overruns and changed estimates | `physical-cooking`, `live-cook-start`, `live-step-estimates`, `remaining-cook` | Seeded physical boundaries plus real actions/corrections/ticks/reload; never auto-doneness |
+| New 6-hour / optional 8-hour brisket reserve; saved methods unchanged | `post-brisket`, `cook-journeys`; units `postBrisket`, `brisketEstimate` | UI reserve controls, full new cook; unit snapshot/default compatibility |
+| Hold until serving → existing Finish; early/cancelled/complete finish | `cook-journeys`, `cooking-simplicity`, `cooking-layout`, `focused-cooking`, `auth/account-cooks` | New full journey plus targeted hold and finish confirmations, immutable history |
+| Name/serving edit immediately after Add → Start → reload/history/repeat (#118) | `auth/account-cooks` | Controlled deferred frame and real keyboard input; existing history/actuals checked |
+| Account sign-in, callbacks, sign-out, ownership and account switching | `auth/sign-in`, `auth/preview-origins`, `auth/account-cooks` | Mocked auth HTTP, real forms/session handling, preserved cook/drafts and scoped recovery |
+| Account save, fresh-device retrieval, finish and Cook Again | `auth/account-cooks` | Real UI, deterministic RPC backend; acknowledged state and immutable history asserted |
+| Future plans while another cook is active; promotion and legacy-plan transfer | `auth/upcoming-plans` | Multiple independent plans, active progress, separate contexts, conflicts/failures and explicit promotion |
+| Upcoming Home preparation and serving times (#126) | `auth/upcoming-plans` | Derived preparing time/date compared with the saved plan; active cook/history unchanged |
+| Cancel cook, lost response/retry, new cook after acknowledgement | `cancel-cook`, `auth/cancel-account`, `auth/upcoming-plans` | Retained legacy/account records, capabilities, trial non-retention; PostgreSQL validates terminal protection |
+| Fresh temporary guest trial, candid limits, import and finish without saving | `auth/account-cooks`, `auth/cancel-account` | Actual guest UI; assert no persistent cook/cancel tracking, account entry points and a clean trial after leaving/reload without any account RPC |
+| Legacy browser cooks/history, corrupt/unavailable storage and backup restore | `reliability`, `save-plan`, `history-actions`, `auth/account-cooks` | Real storage failure injection; exact retained bytes/history, explicit recovery and no false success |
+| Account disconnection, pending edits, stale device, account isolation | `auth/account-cooks`, `auth/upcoming-plans` | Controlled RPC failures/conflicts, IndexedDB recovery across reload, no cross-owner overwrite |
+| Offline installed shell, overnight resume, notes/readings/archive | `offline/cook-offline` | Built static app and real service worker; browser network goes offline |
+| App updates never reload an open cook/editor automatically | `offline/cook-offline` | Real worker update, failure and draft protection, retained old shell |
+
+Names in this table refer to `e2e/<name>.spec.ts` unless a subdirectory or unit test
+is explicit. Each row can involve several tests; counts are browser-project
+executions, not a count of distinct user personas. See the release PR's final SHA
+and Actions artifacts for actual results rather than treating this inventory as a
+pass report.
+
+## Verification boundaries
+
+- General journeys run on desktop/narrow Chromium. iPhone WebKit explicitly covers
+  cooking/timing/recipe/hold flows and the new whole journeys. Auth and account
+  suites run on desktop Chromium and iPhone WebKit; offline uses Android Chromium
+  and iPhone WebKit against the production build. Do not claim every individual
+  legacy desktop test runs in every browser project.
+- Browser account tests use mocked authentication and RPC responses for repeatable
+  success, stale/retry/failure scenarios. Separate disposable PostgreSQL tests run
+  real migrations, ownership/lifecycle checks, seeded upgrades and concurrent races.
+  They do not send emails or prove hosted Supabase/production configuration.
+- Desktop screenshots and emulated iPhone WebKit are not physical iPhone Safari.
+  Before production approval, manually check real iPhone keyboard/date controls,
+  immediate rename/start/reload, installed app background/resume and sign-in.
+  After an approved release verify production history/saves, cancellation and future
+  plans before closing #61/#83/#103.
+- No finite suite proves every combination of recipe, clock, browser and network
+  failure. This map covers implemented entry points and known cook regressions;
+  new concrete bugs should receive deterministic coverage at their failure boundary.
+- Personal recipe-library saving (#114), URL/photo/PDF import, notifications and
+  other deferred features are not implemented and are not claimed as tested paths.
+
+## Keep coverage current
+
+For a bug, preserve the real user trigger and assert the saved outcome/history,
+not just visible success text. For an experience change, update this map and the
+relevant journey alongside focused assertions. Never replace a failing scenario
+with sleeps, forgiving retries, weaker assertions or deletion of browser coverage.
+Keep real screenshots/traces and review them before declaring release readiness.

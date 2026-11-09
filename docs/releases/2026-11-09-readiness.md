@@ -63,6 +63,15 @@ the same cause.
 The PR handoff records the final SHA, suite totals, inspected screenshots and exact
 Cloudflare-reported feature URL. A successful preview is not a production release.
 
+## User-journey coverage
+
+The [coverage map](../user-journey-coverage.md) links implemented entry points,
+known real-cook regressions, account/guest/offline scenarios and their browser
+specs. Additional continuous UI journeys cover new overnight brisket through Hold
+and a template plus uploaded recipe through history/Cook Again. They supplement
+the existing targeted tests; hosted accounts and physical iPhone acceptance remain
+explicit boundaries. #114 is excluded.
+
 ## Production prerequisites and approval gate
 
 - Obtain explicit owner approval before merging #132. Cloudflare deploys main

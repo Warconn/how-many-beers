@@ -61,7 +61,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-For focused iteration, run `npm run test:fast -- e2e/home-cleanup.spec.ts` (typecheck, unit tests and desktop/mobile browsers). Use the affected spec or account config. Before integration/release, run `npm run test:full` to include auth, account recovery, full regression and production-built offline checks. See [CI testing and timing evidence](docs/ci-testing.md).
+For focused iteration, run `npm run test:fast -- e2e/home-cleanup.spec.ts` (typecheck, unit tests and desktop/mobile browsers). Use the affected spec or account config. Before integration/release, run `npm run test:full` to include auth, account recovery, full regression and production-built offline checks. See [CI testing and timing evidence](docs/ci-testing.md) and the [user-journey coverage map](docs/user-journey-coverage.md).
 
 To validate a change:
 

@@ -13,6 +13,14 @@ GitHub runs types/units and four browser suites (regression split over two shard
 
 Npm downloads use setup-node caching keyed by package-lock. Browser caching is intentionally deferred: OS dependencies must still install and the measured browser installation is small compared to suite time. Each suite installs only its needed browsers. New commits cancel obsolete PR runs; dev push runs remain intact. PR validation and post-merge dev validation are retained because the integrated commit can differ from the feature commit. Existing main build verification remains a separate release check.
 
+## User journeys
+
+See [user-journey coverage](user-journey-coverage.md) for implemented paths and
+known cook regressions, with explicit mock/hosted and physical-device boundaries.
+`cook-journeys.spec.ts` walks through complete overnight brisket and mixed-meal
+flows from empty Home, rather than preloading mid-cook state. It runs on desktop,
+mobile Chromium and iPhone WebKit, with screenshots in the normal review artifact.
+
 ## Review evidence
 
 Download `playwright-auth-report`, `playwright-accounts-report`,
