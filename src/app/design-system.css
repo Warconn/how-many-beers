@@ -181,3 +181,9 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .standard-planning-step:first-child { border-top: 0; }
 .standard-planning-step .task-main > .step-row-timing { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .step-row-timing time { white-space: nowrap; font: inherit; color: inherit; }
+
+/* When to act leads the collapsed card; durations remain supporting metadata. */
+.guided-step .task-main>.cooking-step-when { font-size:16px; font-weight:650; line-height:1.5; color:var(--ink); margin:10px 0; }
+.guided-step .cooking-step-when time { font:inherit; color:inherit; white-space:normal; }
+.step-condition-cue { font-weight:400; }
+.guide-next-time { white-space:normal; }

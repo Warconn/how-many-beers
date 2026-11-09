@@ -16,6 +16,7 @@ import {estimatedFinish,formatDuration} from "@/domain/stepTiming";
 import type {LivePhase} from '@/domain/phaseForecast';
 
 type Props = {
+  now?:number;
   activePhase?:LivePhase;
   alsoCooking?:string[];
   onRemainingEstimate?:(minutes:number)=>void;
@@ -56,7 +57,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,forecast,index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,alsoCooking=[],onRemainingEstimate
+  task,forecast,now=Date.now(),index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,alsoCooking=[],onRemainingEstimate
 }:Props) {
   const [moveNotice,setMoveNotice]=useState("");
   const [detailsOpen,setDetailsOpen]=useState(false);
@@ -114,7 +115,7 @@ export default function TaskRow({
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {standardPlanning?<StepGrip stepId={task.id} title={task.title} {...planningControls.grip}/>:!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
-        {isCooking?<CookingStepSummary task={task} forecast={forecast} activePhase={activePhase}/>:<>
+        {isCooking?<CookingStepSummary now={now} task={task} forecast={forecast} activePhase={activePhase}/>:<>
         <div className={standardPlanning?'between step-row-copy':'between'}><strong>{task.title}</strong><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?formatted(task.scheduledAt):"Start time not set"}</time></div>
         {onDurationChange && <div className="inline-step-duration">
           <label htmlFor={editorId+'-duration'}>Estimated duration</label>

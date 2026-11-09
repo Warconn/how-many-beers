@@ -401,6 +401,7 @@ function CookExperience() {
     const concurrent=projection?.phases?.filter(p=>p.dishId!==task.dishId&&p.active&&(p.kind==='heating'||Date.parse(p.finish)>clockNow))??[];
     const context = compact ? "dish" : mode === "cooking" ? "cooking" : "checklist";
     return <TaskRow
+      now={clockNow}
       key={task.id}
       task={task}
       forecast={mode==="cooking"?forecasts[task.id]:undefined}
@@ -580,7 +581,7 @@ function CookExperience() {
                 <h3>{phaseWaiting?projection?.phases?.some(p=>p.active&&p.kind==='heating')?'Cooking underway':'Resting or cooling underway':'All steps checked'}</h3>
                 <div className="cook-completion-actions">{!phaseWaiting&&<button id="finish-cook-trigger" type="button" className="button primary" disabled={cookingDraftOpen} onClick={openFinishCook}>Finish cook</button>}<button type="button" className="button secondary" disabled={cookingDraftOpen} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button></div>
               </section>}
-              {cookPanel==="checklist" ? <CookingChecklist forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep}/> : (guidance.current||!timeline.length)?<section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
+              {cookPanel==="checklist" ? <CookingChecklist now={clockNow} forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep}/> : (guidance.current||!timeline.length)?<section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
                 {guidance.current ? <>
                   {meal.completed[guidance.current.id]&&<p className="small muted">Completed step</p>}
                   {taskCard(guidance.current,"cooking")}
@@ -605,7 +606,7 @@ function CookExperience() {
             <button type="button" className="guide-checklist-button" aria-label={cookPanel==="step"?"Full checklist":"Back to step"} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button>
             {guidance.next ? <button type="button" className="guide-next-button" aria-label={"Preview next step: "+guidance.next.title} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={()=>{
               openGuidedStep(guidance.next!.id);if(guidance.current && !meal.completed[guidance.current.id])setNavigationNote("Previous step remains unchecked. It is still in Full checklist.");
-            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime forecast={forecasts[guidance.next.id]} part="start" simple/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span><Icon name="arrow-right" className="guide-next-icon"/></button>
+            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time">{forecasts[guidance.next.id]?<StepForecastTime task={guidance.next} now={clockNow} forecast={forecasts[guidance.next.id]} part="start" simple/>:guidance.next.scheduledAt?new Date(guidance.next.scheduledAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Untimed · choose when"}</span><Icon name="arrow-right" className="guide-next-icon"/></button>
             : <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>}
           </nav>}
         </>
