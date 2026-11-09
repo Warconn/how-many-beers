@@ -12,8 +12,8 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 
 ## Current owner direction (November 8, 2026)
 
-The owner tested #117/#123 successfully and approved merging PRs #128/#129 into
-dev, then starting #124 only. Preserve the accepted simplification, forecast
+Owner-approved PRs #128 (#117) and #129 (#123) are merged into dev.
+The current authorized issue is #124 only. Preserve the accepted simplification, forecast
 calculations and Hold → Finish. Next issues (#125, #127, #126) require separate owner approval. No automatic
 merges or production release. See docs/work-queue.md for the current queue.
 

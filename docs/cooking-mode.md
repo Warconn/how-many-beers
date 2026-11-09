@@ -297,3 +297,22 @@ are removed. Remaining authored instructions and concise safety cues stay availa
 Closing/reopening details retains typed time/reading/estimate drafts and navigation
 protection. Existing actuals, forecasts, Beerometer, saves and Hold → Finish semantics
 are unchanged. Timing-cue improvements and template rewrites remain separate issues.
+
+
+## Collapsed step timing (#124)
+
+The collapsed card leads with Planned start for scheduled actions, or Actual start
+for a recorded physical phase. Original plan metadata stays in Step details when
+it differs from the primary cue. Duration remains supporting information. The card,
+full checklist and Up Next use the same read-only timing selector and clock.
+Supported checkpoints show Check around plus a short observable condition; missing
+or uncertain timing shows the condition without an invented date. Expired check
+estimates say Review now, never a renewed deadline or automatic completion. Fixed
+constraints and actual observations retain their existing meanings. Corrected
+actual starts update derived future cues without overwriting the original plan,
+serving target, events or archived cooks. Rest/hold remains its existing interval
+and Finish flow; no timers, steps or forecasting algorithms were added.
+
+The brisket raise-225 instruction no longer claims a separate two-hour point:
+its existing 18% checkpoint is approximate and requires reviewing bark, temperature
+and progress. Direct planned-time editing remains the separate #125 issue.

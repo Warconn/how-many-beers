@@ -182,3 +182,7 @@ Hold/Finish flow remain unchanged.
 Built-in cooking-start edits keep estimated checkpoints within their cooking
 allowance, with rest/readiness following the estimated finish. Requested serving
 time and recorded actuals stay intact. See [step timing](docs/step-timing.md).
+
+Cooking Mode shows planned starts and useful approximate check/condition cues on
+the collapsed card and Up Next. Actual starts stay distinct; estimates never
+check food done automatically.

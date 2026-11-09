@@ -1,7 +1,8 @@
 # Post-brisket queue · November 8, 2026
 
 The owner approved merging #128 (#117) and #129 (#123) into dev and starting
-**#124 only**. #128 is merged; #129 is integrating the approved changes. Preserve
+**#124 only**. Both reviewed PRs are merged with green integration CI. #124 is in progress on
+`feat/124-step-timing-cues`. Preserve
 the accepted Cooking Mode simplification, timing semantics and Hold → Finish.
 
 Current: #124 timing visibility, including planned start on the collapsed card.

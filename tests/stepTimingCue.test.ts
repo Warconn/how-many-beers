@@ -20,3 +20,20 @@ it('keeps fixed blockers, unknown work and imported live estimates honest withou
  const before=JSON.stringify([fixed,f]);expect(stepTimingCue(fixed,f,now)).toMatchObject({label:'Planned start',detail:'Review timing: Unfinished preparation.'});expect(JSON.stringify([fixed,f])).toBe(before);
  expect(stepTimingCue({...task,recipeOrder:0},{start:'2026-11-08T05:00Z',finish:null,status:'estimated'},now)).toMatchObject({label:'Estimated start',at:'2026-11-08T05:00Z'});
 });
+
+it.each(['2026-11-08T04:24:00Z','2026-11-08T04:44:00Z'])('labels early/late actual starts without rewriting the planned instant (%s)',at=>{
+ const before=JSON.stringify(task);
+ expect(stepTimingCue(task,{start:at,finish:null,status:'estimated',template:{kind:'cook',basis:'actual',at}},now)).toMatchObject({label:'Actual start',at});
+ expect(JSON.stringify(task)).toBe(before);
+});
+it('labels rest as its own actual interval and keeps expired estimates actionable',()=>{
+ const rest={...task,id:'dish:rest',title:'Hold until serving',isCondition:true,templateStage:{kind:'rest' as const,minutes:180,startLabel:'Begin rest now'}};
+ expect(stepTimingCue(rest,{start:'2026-11-08T12:30Z',finish:'2026-11-08T15:30Z',status:'estimated',template:{kind:'rest',basis:'actual',at:'2026-11-08T12:30Z'}},now)).toMatchObject({label:'Actual start',at:'2026-11-08T12:30Z'});
+ expect(stepTimingCue(task,{start:task.scheduledAt,finish:null,status:'overdue'},now)).toMatchObject({label:'Review now'});
+});
+
+it('preserves earliest bounds for constrained rest while keeping manual plans anchored',()=>{
+ const forecast={start:'2026-11-08T12:30Z',finish:null,status:'unknown' as const,lowerBound:true,reason:'Cooking still active.'};
+ expect(stepTimingCue(task,forecast,now)).toMatchObject({label:'Earliest start',at:forecast.start,lowerBound:true});
+ expect(stepTimingCue({...task,timingMode:'fixed'},forecast,now)).toMatchObject({label:'Planned start',at:task.scheduledAt,detail:'Review timing: Cooking still active.'});
+});

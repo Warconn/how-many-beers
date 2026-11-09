@@ -35,11 +35,9 @@ export default function CookingStepSummary({task,forecast,activePhase,now=Date.n
   <p className="task-dish">{task.dishName}{activePhase?.active&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>
   <p className="cooking-step-when"><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/></p>
   {!condition&&instruction&&<p className="muted small">{instruction}</p>}
-  <p className="cooking-step-timing">
-   {!condition&&<>
+  {!condition&&<p className="cooking-step-timing">
     {minutes!=null&&<span>Estimated {formatDuration(minutes)}</span>}
     {forecast?.finish&&forecast.status!=='overdue'?<StepForecastTime forecast={forecast} part="finish" simple/>:forecast?.status==='overdue'?<span>Estimate elapsed. Check progress.</span>:forecast?.status==='blocked'?<span>Waiting for the previous action</span>:minutes==null?<span>{task.id.endsWith(':serve')?'Serve when ready':'Time not estimated'}</span>:<span>Finish time not available</span>}
-   </>}
-  </p>
+  </p>}
  </>;
 }

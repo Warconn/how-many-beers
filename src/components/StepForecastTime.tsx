@@ -5,7 +5,7 @@ const format=(iso:string,simple=false)=>new Date(iso).toLocaleString([],simple&&
 export default function StepForecastTime({forecast,part,simple=false,task,now=Date.now()}:{task?:PlannedTask;now?:number;forecast?:StepForecast;part:'start'|'finish';simple?:boolean}){
  if(task&&part==='start'){
   const cue=stepTimingCue(task,forecast,now);
-  return <span>{cue.label}{cue.at&&<> <time aria-label={cue.label} dateTime={cue.at}>{format(cue.at,simple)}</time></>}{cue.detail&&<span className="step-condition-cue"> · {cue.detail}</span>}</span>;
+  return <span>{cue.label}{cue.at&&<> <time aria-label={cue.label} dateTime={cue.at}>{format(cue.at,simple)}</time>{cue.lowerBound?'+':''}</>}{cue.detail&&<span className="step-condition-cue"> · {cue.detail}</span>}</span>;
  }
  if(!forecast)return <span>Timing not set</span>;
  if(simple&&(forecast.status==='condition'||forecast.template?.kind==='checkpoint'))return <span>Check when ready</span>;

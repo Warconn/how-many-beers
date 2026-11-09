@@ -588,3 +588,22 @@ rest gives 1:40 PM estimated doneness and 2 PM readiness, retaining the requeste
 1 PM serving target. Fixed/recorded anchors remain constraints. No actual event,
 archived snapshot or active-session projection is rewritten; explicit planning
 sequences retain their separate scheduling rules. Estimates never confirm doneness.
+
+
+## Collapsed step timing (#124)
+
+The collapsed card leads with Planned start for scheduled actions, or Actual start
+for a recorded physical phase. Original plan metadata stays in Step details when
+it differs from the primary cue. Duration remains supporting information. The card,
+full checklist and Up Next use the same read-only timing selector and clock.
+Supported checkpoints show Check around plus a short observable condition; missing
+or uncertain timing shows the condition without an invented date. Expired check
+estimates say Review now, never a renewed deadline or automatic completion. Fixed
+constraints and actual observations retain their existing meanings. Corrected
+actual starts update derived future cues without overwriting the original plan,
+serving target, events or archived cooks. Rest/hold remains its existing interval
+and Finish flow; no timers, steps or forecasting algorithms were added.
+
+The brisket raise-225 instruction no longer claims a separate two-hour point:
+its existing 18% checkpoint is approximate and requires reviewing bark, temperature
+and progress. Direct planned-time editing remains the separate #125 issue.

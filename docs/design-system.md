@@ -137,3 +137,12 @@ open its time editor directly; the full step editor should expose planned time
 without More options. Keep actual starts and live estimates distinctly labelled,
 and never change duration when editing a planned timestamp. These timing/editor
 changes are direction for those separate issues, not implemented by #123.
+
+
+### Collapsed when/condition cue (#124)
+
+Place the shared planned/actual/check cue below the action heading/dish, before
+supporting instructions and duration. Use readable 16px semibold timing, a normal
+weight condition, and wrapping date text. Keep the sticky next-step cue readable
+on a phone. All views use the same selector/formatter and execution clock. The
+Beerometer and its hierarchy remain unchanged. Direct editing remains #125.
