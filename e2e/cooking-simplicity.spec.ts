@@ -86,6 +86,9 @@ test('step tools are opt-in, flat and preserve drafts while details close',async
  let m=brisket();for(const t of cookTimeline(m).slice(0,3))m=recordEvent(m,t.id,'completed',now);
  await load(page,m);const guide=page.getByRole('region',{name:'Current step',exact:true});
  await guide.getByText('Step details',{exact:true}).click();
+ const editBounds=await guide.getByRole('button',{name:'Edit',exact:true}).boundingBox();
+ const notesBounds=await guide.getByRole('button',{name:'Notes',exact:true}).boundingBox();
+ expect(Math.abs(editBounds!.y-notesBounds!.y)).toBeLessThan(1);
  await guide.screenshot({path:info.outputPath('details-before-tools.png'),scale:'css'});
  await expect(guide.getByLabel('Remaining estimate (minutes, optional)',{exact:true})).not.toBeVisible();
  await expect(guide.getByLabel('Quick notes',{exact:true})).not.toBeVisible();

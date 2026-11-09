@@ -126,3 +126,14 @@ are removed. Remaining authored instructions and concise safety cues stay availa
 Closing/reopening details retains typed time/reading/estimate drafts and navigation
 protection. Existing actuals, forecasts, Beerometer, saves and Hold → Finish semantics
 are unchanged. Timing-cue improvements and template rewrites remain separate issues.
+
+### Owner review: time and action hierarchy (November 9)
+
+Keep Edit and Notes in one compact row with equal visual weight within Cooking
+Mode details (#123 review). For the separately queued #124/#125 work, use a
+consistent visible Edit position across planning/cooking. Planned start leads
+before an action begins, with duration secondary. Tapping the planned time should
+open its time editor directly; the full step editor should expose planned time
+without More options. Keep actual starts and live estimates distinctly labelled,
+and never change duration when editing a planned timestamp. These timing/editor
+changes are direction for those separate issues, not implemented by #123.

@@ -174,8 +174,10 @@ export default function TaskRow({
       {!activityOpen&&<>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
     </>}
 
-    {!standardPlanning&&<div className="task-actions" aria-label={"Manage "+task.title}>
-      {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
+    {!standardPlanning&&<div className={"task-actions"+(isCooking?" cooking-step-tool-row":"")} aria-label={"Manage "+task.title}>
+      {!editing && <button type="button" id={editorId+"-trigger"} className={isCooking?"button secondary":undefined} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
+
+      {isCooking&&<button type="button" className="button secondary" aria-expanded={notesOpen} onClick={()=>setNotesOpen(v=>!v)}>Notes</button>}
 
       {!isCooking && <div className="step-move-controls" role="group" aria-label="Step order"><span aria-hidden="true">Move</span>
         <button type="button" onClick={()=>{const error=onMove("up");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index} of ${count}.`);}} disabled={editing||durationDisabled||index===0} aria-label={"Move "+task.title+" up"} title="Move up"><Icon name="arrow-up"/></button>
@@ -208,7 +210,6 @@ export default function TaskRow({
         <input id={"reading-note-"+task.id} maxLength={500} value={readingNote} onChange={e=>setReadingNote(e.target.value)} placeholder={readingType==="temperature"?"Flat, thickest part...":"Pit set to 250, switched to Smoke mode..."}/>
         <button type="button" className="button primary" onClick={handleReading}>Save timestamped reading</button>
       </div>}
-      <button type="button" className="button secondary" aria-expanded={notesOpen} onClick={()=>setNotesOpen(v=>!v)}>Notes</button>
       {notesOpen&&<><label className="note-label" htmlFor={"note-"+task.id}>Quick notes</label>
       <input id={"note-"+task.id} className="task-note" maxLength={500} placeholder="Bark looks good, wrapped in paper..." value={note} onChange={e=>onNote(e.target.value)}/></>}
       {activity.length>0 && <div className="task-activity"><button type="button" className="button secondary" aria-expanded={activityOpen} onClick={()=>setActivityOpen(v=>!v)}>Activity ({activity.length}{events.filter(e=>e.taskId===task.id&&e.kind!=="removed").length>8?"+":""})</button>{activityOpen&&
