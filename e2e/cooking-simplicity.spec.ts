@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
-import {newMeal,createDish} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {cookTimeline,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 import {parseRecipeText} from '../src/domain/recipe';
 import {physicalStartedEvent} from '../src/domain/physicalPhase';
@@ -13,13 +14,13 @@ const brisket=():ExtendedMeal=>({...newMeal(),name:'Sunday brisket',mode:'cookin
 test('rapid Sunday brisket check-offs leave a calm condition check and preserve physical cooking time',async({page},info)=>{
  const m=brisket();await load(page,m);const guide=page.getByRole('region',{name:'Current step',exact:true}),bar=page.getByRole('navigation',{name:'Cooking guide'});
  for(const t of cookTimeline(m).slice(0,7))await guide.getByRole('checkbox',{name:'Complete '+t.title,exact:true}).click();
- await expect(guide.getByRole('article')).toHaveAccessibleName('Decide whether to wrap');await expect(guide.getByText('Check when ready',{exact:true})).toBeVisible();
+ await expect(guide.getByRole('article')).toHaveAccessibleName('Decide whether to wrap');await expect(guide.locator('.cooking-step-when')).toContainText(/Check around|Review now/);
  await expect(guide.getByLabel('Estimated checkpoint',{exact:true})).not.toBeVisible();await expect(guide.getByText(/Planned start/)).not.toBeVisible();await expect(guide.getByText('Verify actual conditions',{exact:true})).not.toBeVisible();
- await expect(guide.getByRole('button',{name:/^Edit(?: |$)/})).not.toBeVisible();await expect(guide.getByLabel('Quick notes',{exact:true})).not.toBeVisible();await expect(bar).toContainText('Check when ready');
+ await expect(guide.getByRole('button',{name:/^Edit(?: |$)/})).not.toBeVisible();await expect(guide.getByLabel('Quick notes',{exact:true})).not.toBeVisible();await expect(bar).toContainText(/Check around|Review now/);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.events.filter((e:{kind:string;taskId:string})=>e.kind==='started'&&e.taskId===m.dishes[0].id+':start')).toHaveLength(0);
  await guide.getByRole('article').evaluate(el=>window.scrollBy(0,el.getBoundingClientRect().top-210));await page.screenshot({path:info.outputPath('simple-brisket.png'),scale:'css',style:'nextjs-portal{display:none}'});
- await guide.getByText('Step details',{exact:true}).click();await expect(guide.getByText(/The 2021 cook wrapped/)).toBeVisible();await expect(guide.getByLabel('Planned start',{exact:true})).toBeVisible();await guide.locator('.cooking-step-details').screenshot({path:info.outputPath('step-details.png'),scale:'css'});await guide.getByText('Step details',{exact:true}).click();
- await page.clock.fastForward(14*3600000);await expect(guide.getByRole('checkbox')).not.toBeChecked();await expect(guide.getByText('Check when ready',{exact:true})).toBeVisible();
+ await guide.getByText('Step details',{exact:true}).click();await expect(guide.getByText(/The 2021 cook wrapped/)).toBeVisible();await expect(guide.getByLabel('Original planned start',{exact:true})).toBeVisible();await guide.locator('.cooking-step-details').screenshot({path:info.outputPath('step-details.png'),scale:'css'});await guide.getByText('Step details',{exact:true}).click();
+ await page.clock.fastForward(14*3600000);await expect(guide.getByRole('checkbox')).not.toBeChecked();await expect(guide.locator('.cooking-step-when')).toContainText(/Check around|Review now/);
 });
 test('record physical smoker and rest starts once; notes and readings do not start phases',async({page},info)=>{
  let m=brisket();for(const t of cookTimeline(m).slice(0,3))m=recordEvent(m,t.id,'completed',now);await load(page,m);const guide=page.getByRole('region',{name:'Current step',exact:true});

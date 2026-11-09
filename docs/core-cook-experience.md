@@ -203,7 +203,7 @@ accordion within the menu instead, with a single dish heading and no return navi
    keyboard focus moves to its header.
 3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
    header collapses it. Only one dish is expanded at a time.
-4. Use Dish settings for name, equipment, template durations and optional reference settings. Imported step durations are edited directly on their step rows.
+4. Use Dish settings for name, equipment, template durations and optional reference settings. All step rows expose planned time directly. Duration editing stays optional under Edit → More options.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
    Remove dish is a compact trash icon beside the heading, not hidden in settings;
    it retains a descriptive accessible label/tooltip and a 44px touch target;
@@ -588,3 +588,33 @@ rest gives 1:40 PM estimated doneness and 2 PM readiness, retaining the requeste
 1 PM serving target. Fixed/recorded anchors remain constraints. No actual event,
 archived snapshot or active-session projection is rewritten; explicit planning
 sequences retain their separate scheduling rules. Estimates never confirm doneness.
+
+
+## Collapsed step timing (#124)
+
+The collapsed card leads with Planned start for scheduled actions, or Actual start
+for a recorded physical phase. Original plan metadata stays in Step details when
+it differs from the primary cue. Duration remains supporting information. The card,
+full checklist and Up Next use the same read-only timing selector and clock.
+Supported checkpoints show Check around plus a short observable condition; missing
+or uncertain timing shows the condition without an invented date. Expired check
+estimates say Review now, never a renewed deadline or automatic completion. Fixed
+constraints and actual observations retain their existing meanings. Corrected
+actual starts update derived future cues without overwriting the original plan,
+serving target, events or archived cooks. Rest/hold remains its existing interval
+and Finish flow; no timers, steps or forecasting algorithms were added.
+
+The brisket raise-225 instruction no longer claims a separate two-hour point:
+its existing 18% checkpoint is approximate and requires reviewing bark, temperature
+and progress. Direct planned-time editing remains the separate #125 issue.
+
+## Consolidated post-brisket review
+
+The owner superseded separate issue previews with one feature review for
+#124/#125/#127/#126 and the agreed planning cleanup. Planned time is the direct
+editing target in planning and cooking; full editors expose it without a nested
+menu. Duration and advanced inputs stay optional. Dish settings follow the steps
+and remain collapsed. New brisket dishes use concise steps and a 6-hour total
+rest/hold reserve (8 hours via the existing optional inputs); old recipes remain
+unchanged. Home upcoming plans show derived Start preparing and Serve times.
+See [the consolidated contract and cook evidence](post-brisket-experience.md).

@@ -182,6 +182,11 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .standard-planning-step .task-main > .step-row-timing { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .step-row-timing time { white-space: nowrap; font: inherit; color: inherit; }
 
+/* When to act leads the collapsed card; durations remain supporting metadata. */
+.guided-step .task-main>.cooking-step-when { font-size:16px; font-weight:650; line-height:1.5; color:var(--ink); margin:10px 0; }
+.guided-step .cooking-step-when time { font:inherit; color:inherit; white-space:normal; }
+.step-condition-cue { font-weight:400; }
+.guide-next-time { white-space:normal; }
 /* Cooking utility actions share one compact row and the same visual weight. */
 .guided-step .task-actions.cooking-step-tool-row {
   display:flex;
@@ -190,3 +195,12 @@ label { font-size:var(--text-sm); line-height:1.5; }
   gap:8px;
 }
 .guided-step .cooking-step-tool-row>.button { margin:0; }
+
+/* Planned time is the first editing target; configuration stays optional. */
+.planned-time-button {font-size:16px;font-weight:600;text-align:left;white-space:normal;line-height:1.5;min-height:44px;padding:4px 0;}
+.edit-planned-time {display:block;font-size:14px;min-height:44px;}
+.dish-inline-editor > .dish-advanced {margin-top:24px;}
+.step-editor > label:has(input[type="datetime-local"]) {margin-top:12px;}
+
+.cook-task .task-main .planned-time-button time {font:inherit;color:inherit;}
+.step-editor input[type="datetime-local"] {font-size:16px;min-width:0;max-width:100%;}

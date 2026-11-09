@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
-import {newMeal,createDish} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {parseRecipeText} from '../src/domain/recipe';
 import {recordEvent,editStep,type ExtendedMeal} from '../src/domain/cookState';
 test.use({timezoneId:'UTC'});
@@ -28,13 +29,13 @@ test('an actual overrun requires review until completion, then cooling reforecas
 });
 
 test('fixed future cooling remains fixed and a late forecast exposes its constraint',async({page})=>{
- let m=fixture();for(const s of m.dishes[0].steps!.slice(0,5))m=recordEvent(m,m.dishes[0].id+':'+s.id,'completed','2026-10-29T21:03Z');const cool=m.dishes[0].id+':step-7';m=editStep(m,cool,coolTitle,coolTitle,{timingMode:'fixed',scheduledAt:'2026-10-29T21:50Z',durationMinutes:10,equipment:'Kitchen',targetTempF:null});await load(page,m);const bar=page.getByRole('navigation',{name:'Cooking guide'});await expect(bar.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:50:00.000Z');await page.clock.fastForward(35*60000);await expect(bar.getByLabel('Fixed start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:50:00.000Z');await expect(bar).toContainText('Review timing');
+ let m=fixture();for(const s of m.dishes[0].steps!.slice(0,5))m=recordEvent(m,m.dishes[0].id+':'+s.id,'completed','2026-10-29T21:03Z');const cool=m.dishes[0].id+':step-7';m=editStep(m,cool,coolTitle,coolTitle,{timingMode:'fixed',scheduledAt:'2026-10-29T21:50Z',durationMinutes:10,equipment:'Kitchen',targetTempF:null});await load(page,m);const bar=page.getByRole('navigation',{name:'Cooking guide'});await expect(bar.getByLabel('Planned start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:50:00.000Z');await page.clock.fastForward(35*60000);await expect(bar.getByLabel('Planned start',{exact:true})).toHaveAttribute('datetime','2026-10-29T21:50:00.000Z');await expect(bar).toContainText('Review timing');
 });
 
 test('brisket wrapping shows checkpoint timing and timed phases use template estimates',async({page},info)=>{
  const dish=createDish('brisket');let m:ExtendedMeal={...newMeal(),name:'Template brisket',mode:'cooking',startedAt:'2026-10-29T21:00Z',serveAt:'2026-11-01T18:00Z',dishes:[dish]};
  for(const key of ['prep','season','preheat','start','raise225','spritz','check'])m=recordEvent(m,dish.id+':'+key,'completed','2026-10-29T21:04Z');await load(page,m);const guide=page.getByRole('region',{name:'Current step',exact:true}),bar=page.getByRole('navigation',{name:'Cooking guide'});
- await expect(guide.getByRole('article')).toHaveAccessibleName('Decide whether to wrap');await expect(guide).not.toContainText('Duration unknown');await expect(guide.getByText('Check when ready',{exact:true})).toBeVisible();await expect(bar).toContainText('Check when ready');await expect(guide.getByLabel('Estimated checkpoint',{exact:true})).not.toBeVisible();
+ await expect(guide.getByRole('article')).toHaveAccessibleName('Decide whether to wrap');await expect(guide).not.toContainText('Duration unknown');await expect(guide.getByLabel('Check around',{exact:true})).toBeVisible();await expect(bar).toContainText('Check around');await expect(guide.getByLabel('Estimated checkpoint',{exact:true})).not.toBeVisible();
  await bar.getByRole('button',{name:'Full checklist',exact:true}).click();await page.getByRole('region',{name:'Full cook checklist'}).getByRole('button',{name:'Open step: Begin safe, monitored rest or hold for Smoked brisket',exact:true}).click();await expect(guide).toContainText('Estimated 2 hr 40 min');await expect(guide).not.toContainText('Duration unknown');
 });
 

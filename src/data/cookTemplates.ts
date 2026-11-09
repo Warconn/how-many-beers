@@ -11,6 +11,7 @@ export type TemplateStep = {
   beforeStartMin?: number;
   progress?: number;
   conditional?: boolean;
+  optionalDetails?: string;
 };
 export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
   brisket: [
@@ -18,7 +19,7 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"season",title:"Season with SPG and Cow Cover",anchor:"prep",beforeStartMin:325,instructions:"Apply SPG to both sides and Cow Cover on top. Refrigerate uncovered until cooking; add a little more rub before loading if needed."},
     {id:"preheat",title:"Preheat pellet smoker",anchor:"preheat",beforeStartMin:35,instructions:"Stabilize near {pitTempF}°F for the initial smoke phase. Personal Easter 2021 method: about 180 → 225 → 250°F. These are editable planning checkpoints."},
     {id:"start",title:"Put brisket on smoker",anchor:"start",instructions:"Load the brisket in smoke mode and record the actual time. Fat side up and injecting the flat were ideas for a future cook, not confirmed steps from the logged cook."},
-    {id:"raise225",title:"Raise smoker to 225°F",anchor:"progress",progress:0.18,conditional:true,instructions:"The logged cook raised the smoker to 225°F about two hours after loading. Review smoke, bark and progress before changing heat; this is a planning reminder."},
+    {id:"raise225",title:"Raise smoker to 225°F",anchor:"progress",progress:0.18,conditional:true,instructions:"Review bark, temperature and progress before raising the smoker to 225°F. The checkpoint is approximate."},
     {id:"spritz",title:"Inspect and spritz if needed",anchor:"progress",progress:0.25,conditional:true,instructions:"Inspect bark and moisture; spritz if needed. Repeat checks as appropriate without keeping the lid open. Record actual temperatures and changes."},
     {id:"check",title:"Check bark and brisket temperature",anchor:"progress",progress:0.55,conditional:true,instructions:"Check the flat in multiple spots. The 2021 cook stalled around 145–147°F; moving the probe later gave 169°F. Record observations without treating one reading as proof of doneness."},
     {id:"wrap",title:"Decide whether to wrap",anchor:"progress",progress:0.8,conditional:true,instructions:"When bark and your method call for it, wrap in butcher paper. The 2021 cook wrapped during the stall and returned to the hot side. The scheduled checkpoint is approximate."},
@@ -62,3 +63,19 @@ export const templateSteps: Partial<Record<string,TemplateStep[]>> = {
     {id:"serve",title:"Carve and serve turkey",anchor:"serve",instructions:"Carve after resting and verifying safe doneness. Use drippings for gravy as desired."}
   ]
 };
+
+/** New dishes opt in; old documents continue to use the original method. */
+export const brisketStepsV2:TemplateStep[]=[
+ {id:'prep',title:'Trim brisket',anchor:'prep',beforeStartMin:75,instructions:'Remove hard fat; retain a protective cap. Keep refrigerated.'},
+ {id:'season',title:'Season brisket',anchor:'prep',beforeStartMin:45,instructions:'Use your preferred rub, such as Holy Cow.'},
+ {id:'preheat',title:'Preheat smoker',anchor:'preheat',beforeStartMin:35,instructions:'Stabilize near {pitTempF}°F for the initial smoke.'},
+ {id:'start',title:'Put brisket on smoker',anchor:'start',instructions:'Begin the initial smoke near {pitTempF}°F.'},
+ {id:'check',title:'Check bark and temperature',anchor:'progress',progress:0.55,conditional:true,instructions:'Check bark and the stall; consider raising the pit toward 230°F.'},
+ {id:'wrap',title:'Wrap when bark is ready',anchor:'progress',progress:0.8,conditional:true,instructions:'When bark is set, wrap in butcher paper; consider raising the pit to 250°F.'},
+ {id:'finish',title:'Probe for tenderness',anchor:'finish',conditional:true,instructions:'Probe the flat in several spots; it should slide in easily.'},
+ {id:'rest',title:'Hold until serving',anchor:'finish',conditional:true,instructions:'',optionalDetails:'Use temperature-controlled hot holding at 140°F or above and monitor the food. An insulated cooler alone does not guarantee safe holding. The reserve includes initial rest; serve when ready.'},
+ {id:'serve',title:'Slice and serve',anchor:'serve',instructions:'Slice across the grain.',optionalDetails:'Optional: finish slices with leftover tallow.'}
+];
+export function stepsForDish(dish:{preset:string;brisketTemplateVersion?:2}){
+ return dish.preset==='brisket'&&dish.brisketTemplateVersion===2?brisketStepsV2:templateSteps[dish.preset];
+}

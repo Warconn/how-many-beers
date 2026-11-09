@@ -15,7 +15,7 @@ test('personal methods appear in one cook and turkey prep responds to thawing st
  await page.getByRole('button',{name:'Edit Grilled beer-bath brats',exact:true}).click();const brats=page.getByRole('article',{name:'Grilled beer-bath brats',exact:true});
  await expect(brats).toContainText('Cover and cook the brat tray');await expect(brats).toContainText('Drain and sear on the Blackstone');await expect(brats).toContainText('2 hours');
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
- await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();const brisket=page.getByRole('article',{name:'Smoked brisket',exact:true});await expect(brisket).toContainText('Cow Cover');await expect(brisket).toContainText('180');
+ await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();const brisket=page.getByRole('article',{name:'Smoked brisket',exact:true});await expect(brisket).toContainText('Holy Cow');await expect(brisket).toContainText('200');
  await page.screenshot({path:info.outputPath('personal-brisket.png'),fullPage:true});
  await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();await prep.screenshot({path:info.outputPath('turkey-preparation.png')});
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Turkey (oven)',exact:true}).click();await expect(prep.getByLabel('Turkey thawing status')).toHaveValue('thawed');

@@ -1,3 +1,4 @@
+import {changeStepDuration} from './helpers/stepEditing';
 import {test,expect} from '@playwright/test';
 test.use({timezoneId:'UTC'});
 test('serving target is the first planning decision and survives recipe review',async({page},info)=>{
@@ -32,7 +33,7 @@ async function combined(page:Page){await page.getByRole('button',{name:'Review M
 async function starts(row:Locator,time:string){await expect(row.locator('time').first()).toHaveAttribute('datetime',at(time));}
 async function edit(page:Page,name:string,minutes?:string,fixed?:string){
  await row(page,name).getByRole('button',{name:`Edit ${name}`,exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
- if(minutes!==undefined){await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);}
+ if(minutes!==undefined){if(!await form.locator('details').evaluate(el=>(el as HTMLDetailsElement).open))await form.getByText(/^More options/).click();await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);}
  if(fixed!==undefined){await form.locator('summary').click();await form.getByLabel('Planned date and time',{exact:true}).fill(`2026-11-08T${fixed}`);}
  await form.getByRole('button',{name:'Save',exact:true}).click();
 }
@@ -82,7 +83,7 @@ test('planning target edits preserve recorded activity and active session identi
 
 test('new unknown work needs an estimate; adding and removing its duration recalculates readiness',async({page})=>{
  await open(page,grill(),'17:00');await page.getByRole('button',{name:'Edit Brats',exact:true}).click();await page.getByRole('button',{name:'Add a step to Brats',exact:true}).click();const adding=page.getByRole('form',{name:'Add dish step'});await adding.getByLabel('Step title',{exact:true}).fill('Make glaze');await adding.getByRole('button',{name:'Save step',exact:true}).click();
- await expect(page.getByRole('region',{name:'Serving plan'})).toContainText('Timing needed');const steps=page.getByRole('region',{name:'Brats steps',exact:true});await steps.getByRole('article',{name:'Make glaze',exact:true}).getByLabel('Estimated duration (minutes)',{exact:true}).fill('15');await ready(page,'18:15');
+ await expect(page.getByRole('region',{name:'Serving plan'})).toContainText('Timing needed');const steps=page.getByRole('region',{name:'Brats steps',exact:true});await changeStepDuration(steps.getByRole('article',{name:'Make glaze',exact:true}),'15');await ready(page,'18:15');
  const grip=steps.getByRole('button',{name:'Move Make glaze',exact:true});await grip.focus();await page.keyboard.press('ArrowUp');await ready(page,'18:15');await combined(page);await starts(row(page,'Make glaze'),'18:00');await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 15m');
  await row(page,'Make glaze').getByRole('button',{name:'Edit Make glaze',exact:true}).click();page.once('dialog',dialog=>dialog.accept());await page.getByRole('form',{name:'Edit step'}).getByRole('button',{name:'Remove step: Make glaze',exact:true}).click();await ready(page,'18:00');await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-11-08T18:00');await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 00m');
 });
@@ -92,13 +93,13 @@ test.describe('actual brisket and ribs templates',()=>{
  test('start preparing is primary and both dishes serve Sunday at 1 PM after their own rests',async({page},info)=>{
   await page.clock.install({time:new Date('2026-11-07T14:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-07T14:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-08T13:00');
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
-  await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-11-07T16:55:00.000Z');await expect(page.getByLabel('Estimated meal ready',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Estimated start',{exact:true})).toContainText(/Sat.*Nov 7.*11:55/);
+  await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-11-07T21:45:00.000Z');await expect(page.getByLabel('Estimated meal ready',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Estimated start',{exact:true})).toContainText(/Sat.*Nov 7.*4:45/);
   await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add smoked ribs',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await combined(page);
   const time=async(name:string,iso:string)=>expect(row(page,name).locator('time').first()).toHaveAttribute('datetime',iso);
-  await time('Put brisket on smoker','2026-11-08T02:20:00.000Z');await time('Begin safe, monitored rest or hold','2026-11-08T15:20:00.000Z');await time('Start cooking','2026-11-08T12:10:00.000Z');await time('Begin monitored rest/hold','2026-11-08T17:40:00.000Z');await time('Slice and serve','2026-11-08T18:00:00.000Z');await time('Serve','2026-11-08T18:00:00.000Z');await time('Preheat Smoker','2026-11-08T11:40:00.000Z');
-  await expect(page.getByLabel('Serve date and time',{exact:true})).toHaveValue('2026-11-08T13:00');await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-11-07T16:55:00.000Z');await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('25h 05m');
+  await time('Put brisket on smoker','2026-11-07T23:00:00.000Z');await time('Hold until serving','2026-11-08T12:00:00.000Z');await time('Start cooking','2026-11-08T12:10:00.000Z');await time('Begin monitored rest/hold','2026-11-08T17:40:00.000Z');await time('Slice and serve','2026-11-08T18:00:00.000Z');await time('Serve','2026-11-08T18:00:00.000Z');await time('Preheat Smoker','2026-11-08T11:40:00.000Z');
+  await expect(page.getByLabel('Serve date and time',{exact:true})).toHaveValue('2026-11-08T13:00');await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-11-07T21:45:00.000Z');await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('20h 15m');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:info.outputPath('brisket-ribs-planning.png'),fullPage:false,scale:'css',style:'nextjs-portal{display:none}'});
   await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();const editor=page.getByRole('region',{name:'Dish editor',exact:true});await editor.locator('summary').filter({hasText:'Dish settings'}).click();await editor.getByLabel('Rest/hold (hours)',{exact:true}).fill('3.6666666666666665');await editor.getByLabel('Rest/hold (hours)',{exact:true}).press('Tab');
-  await time('Begin safe, monitored rest or hold','2026-11-08T14:20:00.000Z');await time('Begin monitored rest/hold','2026-11-08T17:40:00.000Z');await time('Slice and serve','2026-11-08T18:00:00.000Z');await time('Serve','2026-11-08T18:00:00.000Z');expect((await stored(page)).events).toEqual([]);
+  await time('Hold until serving','2026-11-08T14:20:00.000Z');await time('Begin monitored rest/hold','2026-11-08T17:40:00.000Z');await time('Slice and serve','2026-11-08T18:00:00.000Z');await time('Serve','2026-11-08T18:00:00.000Z');expect((await stored(page)).events).toEqual([]);
  });
 });

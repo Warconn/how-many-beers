@@ -144,7 +144,7 @@ fixed/recorded anchors, overnight/DST elapsed time, archive/backup/repeat and sc
 
 
 ### Imported duration controls
-In planning, edit Estimated duration directly on an imported step (minutes).
+In planning, tap the visible planned time for a focused time-only edit. Estimated duration is optional under the step’s Edit → More options controls.
 Changes apply immediately, including clearing to unknown or setting a zero-minute
 milestone, and save through the existing guest/account rules. The full Edit form
 shows the same effective duration; it remains the place for fixed starts and reset.

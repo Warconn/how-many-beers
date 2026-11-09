@@ -29,8 +29,8 @@ These desktop and mobile screenshots show the current dev workspace, including t
 ## What works today
 
 - **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
-- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
-- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Estimated durations remain editable directly on imported steps.
+- **Personal cooking templates.** Concise overnight brisket with flexible rest/holding reserve, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
+- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Planned times open a focused editor; duration and advanced settings remain optional.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
 - **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or Cook Again. Exceptional recovery retains JSON backup/restore.
@@ -182,3 +182,11 @@ Hold/Finish flow remain unchanged.
 Built-in cooking-start edits keep estimated checkpoints within their cooking
 allowance, with rest/readiness following the estimated finish. Requested serving
 time and recorded actuals stay intact. See [step timing](docs/step-timing.md).
+
+Cooking Mode shows planned starts and useful approximate check/condition cues on
+the collapsed card and Up Next. Actual starts stay distinct; estimates never
+check food done automatically.
+
+The consolidated post-brisket feature review covers direct planned-time editing,
+quiet planning settings, cooking cues, new brisket defaults and upcoming start
+times. See [behavior and real-cook evidence](docs/post-brisket-experience.md).

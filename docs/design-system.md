@@ -137,3 +137,21 @@ open its time editor directly; the full step editor should expose planned time
 without More options. Keep actual starts and live estimates distinctly labelled,
 and never change duration when editing a planned timestamp. These timing/editor
 changes are direction for those separate issues, not implemented by #123.
+
+
+### Collapsed when/condition cue (#124)
+
+Place the shared planned/actual/check cue below the action heading/dish, before
+supporting instructions and duration. Use readable 16px semibold timing, a normal
+weight condition, and wrapping date text. Keep the sticky next-step cue readable
+on a phone. All views use the same selector/formatter and execution clock. The
+Beerometer and its hierarchy remain unchanged. Direct editing remains #125.
+
+### Consolidated owner review
+
+Planned date/time is an actionable, semibold 16px cue with a 44px tap target.
+Its focused editor has date/time, Use plan timing and Save/Cancel, without duration
+or equipment fields. In the full editor, duration/equipment/temperature are under
+More options; planned time remains outside. Dish settings follow the step list
+and contain brisket configuration in one layer, collapsed by default. These rules
+supersede the earlier separate delivery boundaries for #124/#125.

@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
-import {newMeal,createDish,type Dish} from '../src/domain/meal';
+import {newMeal,type Dish} from '../src/domain/meal';
 import {startCookSession,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 import {parseRecipeText} from '../src/domain/recipe';
 import {applyBrisketTiming,brisketDefaults} from '../src/domain/brisketEstimate';
@@ -88,7 +89,7 @@ test('optional remaining estimate can be canceled, saved and reloaded without ex
 });
 
 test('editing only a future brisket load time keeps the template allowance and gives a provisional completion',async({page},info)=>{
- const serve=at('17:00'),dish=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7}}},serve);
+ const serve=at('17:00'),dish=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,holdBufferMinutes:60,weightLb:7}}},serve);
  const m=startCookSession({...newMeal(),name:'Browns Brisket',serveAt:serve,dishes:[dish]},at('15:45'));
  await open(page,m,'16:20');
  await page.getByRole('button',{name:'Edit plan',exact:true}).click();

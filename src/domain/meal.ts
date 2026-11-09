@@ -1,3 +1,4 @@
+import {brisketDefaults} from './brisketEstimate';
 import type { BrisketPlan } from "./brisketEstimate";
 export type PresetId = "brisket" | "turkey" | "ribs" | "chicken" | "side" | "wings" | "brats" | "custom";
 
@@ -29,6 +30,7 @@ export type Dish = {
   recipeReference?: string;
   recipeSource?: string; // Original uploaded/pasted text, retained as reference.
   brisketPlan?: BrisketPlan;
+  brisketTemplateVersion?: 2; // New template only; absent preserves existing saved cooks.
   turkeyPrep?: {state:"frozen"|"thawing"|"thawed";thawDays:number;brineHours:number;dryHours:number};
 };
 
@@ -57,6 +59,7 @@ export type PlannedTask = {
   instructions: string;
   scheduledAt: string | null;
   isCondition: boolean;
+  optionalDetails?: string;
   durationMinutes?: number | null;
   equipment?: string;
   targetTempF?: number | null;
@@ -79,7 +82,7 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
     cookRangeMinutes: [600,1080],
     referenceWeightLb: 16,
     sources: [{title:"Meat Church · Pellet Grill Brisket",url:"https://www.meatchurch.com/blogs/recipes/pellet-grill-brisket"},{title:"USDA · Food safety",url:"https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/steps-keep-food-safe"}],
-    notice: "Personal Easter 2021 method: 180 → 225 → 250°F, SPG + Cow Cover and butcher paper. 13 h is a planning allowance; ~18 lb untrimmed is a historical guess, not a measured input. Weight comparisons use separate researched profiles."
+    notice: "Overnight smoke, bark-driven wrapping and probe tenderness. Includes a flexible 6-hour rest/hold reserve. Enter trimmed weight in optional dish settings to adjust the planning estimate."
   },
   turkey: {
     label: "Turkey (oven)",
@@ -137,7 +140,7 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
 
 export function createDish(preset: Exclude<PresetId, "custom">): Dish {
   const p = presets[preset];
-  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: preset === "brisket" ? undefined : p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: p.restMinutes };
+  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: preset === "brisket" ? undefined : p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: preset === "brisket" ? 360 : p.restMinutes, ...(preset === "brisket" ? {brisketTemplateVersion:2 as const,pitTempF:200,brisketPlan:{mode:"manual" as const,inputs:{...brisketDefaults}}}: {}) };
 }
 
 export function localDateTime(date: Date): string {

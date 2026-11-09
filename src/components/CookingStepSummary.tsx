@@ -2,6 +2,7 @@ import type {PlannedTask} from '@/domain/meal';
 import type {StepForecast} from '@/domain/cookForecast';
 import {physicalPhase} from '@/domain/physicalPhase';
 import {formatDuration} from '@/domain/stepTiming';
+import {stepTimingCue} from '@/domain/stepTimingCue';
 import StepForecastTime from './StepForecastTime';
 import type {LivePhase} from '@/domain/phaseForecast';
 /** Display-only shortening; remaining authored instructions stay available in Step details. */
@@ -25,19 +26,19 @@ export function cookingInstruction(task:PlannedTask,rest:boolean):string{
  const concise=excerpt.length>200?excerpt.slice(0,197).replace(/\s+\S*$/,'')+'…':excerpt;
  return safety&&!concise.includes(safety)?concise+' '+safety:concise;
 }
-export default function CookingStepSummary({task,forecast,activePhase}:{task:PlannedTask;forecast?:StepForecast;activePhase?:LivePhase}){
+export default function CookingStepSummary({task,forecast,activePhase,now=Date.now(),onEditTime}:{onEditTime?:()=>void;now?:number;task:PlannedTask;forecast?:StepForecast;activePhase?:LivePhase}){
  const phase=forecast?.template?.kind,rest=phase==='rest',condition=task.isCondition&&!physicalPhase(task);
  const minutes=forecast?.template?.minutes??task.durationMinutes;
  const instruction=cookingInstruction(task,rest);
+ const timing:StepForecast=forecast??{start:task.scheduledAt,finish:null,status:"planned"};
  return <>
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
-  <p className="task-dish">{task.dishName}{activePhase?.active&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>
-  {instruction&&<p className="muted small">{instruction}</p>}
-  <p className="cooking-step-timing">
-   {condition?'Check when ready':<>
+  <p className="task-dish">{task.dishName}{activePhase?.active&&task.title!=='Hold until serving'&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>
+  <p className="cooking-step-when">{onEditTime&&stepTimingCue(task,forecast,now).label==='Planned start'?<button type="button" className="link planned-time-button" aria-label={'Change planned time: '+task.title} onClick={onEditTime}><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/></button>:<><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/>{onEditTime&&<button type="button" className="link edit-planned-time" onClick={onEditTime}>Change planned time</button>}</>}</p>
+  {!condition&&instruction&&<p className="muted small">{instruction}</p>}
+  {!condition&&task.title!=='Hold until serving'&&<p className="cooking-step-timing">
     {minutes!=null&&<span>Estimated {formatDuration(minutes)}</span>}
     {forecast?.finish&&forecast.status!=='overdue'?<StepForecastTime forecast={forecast} part="finish" simple/>:forecast?.status==='overdue'?<span>Estimate elapsed. Check progress.</span>:forecast?.status==='blocked'?<span>Waiting for the previous action</span>:minutes==null?<span>{task.id.endsWith(':serve')?'Serve when ready':'Time not estimated'}</span>:<span>Finish time not available</span>}
-   </>}
-  </p>
+  </p>}
  </>;
 }

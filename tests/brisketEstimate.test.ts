@@ -12,7 +12,7 @@ describe('versioned brisket planning policy',()=>{
   for(const e of [staged,steady]){
    expect(e.smokeMin).toBeGreaterThan(0);expect(e.smokeMax).toBeGreaterThan(e.smokeMin!);
    expect(Date.parse(e.recommendedStart!)).toBeLessThan(Date.parse(e.latestStart!));
-   expect(Date.parse(serve)-Date.parse(e.recommendedStart!)).toBe((e.smokeMax!+120+60)*60000);
+   expect(Date.parse(serve)-Date.parse(e.recommendedStart!)).toBe((e.smokeMax!+120+240)*60000);
    expect(e.version).toBe('brisket-window-v1');
   }
  });

@@ -1,6 +1,6 @@
 import {presets,type Meal,type PlannedTask,type Dish} from './meal';
 import type {CookEvent,ExtendedMeal} from './cookState';
-import {templateSteps} from '../data/cookTemplates';
+import {stepsForDish} from '../data/cookTemplates';
 import {turkeyPreparation} from './turkeyPrep';
 
 export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string;leadMinutes?:number};
@@ -71,7 +71,7 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
   // A condition check is never a heat-end observation. The actual removal/rest
   // instruction is the physical boundary, even if all checks were ticked early.
   if(heat){
-   const source=templateSteps[d.preset];
+   const source=stepsForDish(d);
    for(const t of own){
     const key=t.id.slice(d.id.length+1),entry=source?.find(s=>s.id===key);
     if(!plan.actions[t.id]&&!t.templateStage&&(entry?.anchor==='progress'||key==='check'||key==='wrap'||key==='finish'||t.isCondition))action(t.id).checkpoint={phaseId:heat.id,fraction:entry?.anchor==='progress'?(entry.progress??0.5)*nominal/(nominal-stages):key==='finish'||key==='hold'?1:0.5};

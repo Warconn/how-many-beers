@@ -25,7 +25,7 @@ export type BrisketPlan = {
   mode: 'manual' | 'estimate';
   applied?: BrisketEstimate;
 };
-export const brisketDefaults:BrisketInputs={weightMeasured:'trimmed',cut:'packer',method:'meatchurch-staged-v1',pitTempF:200,wrap:'paper',prepMinutes:75,preheatMinutes:35,restMinutes:120,holdBufferMinutes:60,comparePersonal:false};
+export const brisketDefaults:BrisketInputs={weightMeasured:'trimmed',cut:'packer',method:'meatchurch-staged-v1',pitTempF:200,wrap:'paper',prepMinutes:75,preheatMinutes:35,restMinutes:120,holdBufferMinutes:240,comparePersonal:false};
 const source={title:'Meat Church · Pellet Grill Brisket',url:'https://www.meatchurch.com/blogs/recipes/pellet-grill-brisket'};
 const guide={title:'Traeger · Brisket planning guide',url:'https://www.traeger.com/learn/how-to-smoked-brisket'};
 export const safetySource={title:'USDA · Keep food safe',url:'https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/steps-keep-food-safe'};
