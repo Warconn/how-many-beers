@@ -1,72 +1,65 @@
-# Post-brisket queue · November 8, 2026
+# Current queue · November 9, 2026
 
-The owner now authorizes one consolidated post-brisket feature PR covering
-#124, #125, #127 and #126 plus the agreed planning configuration cleanup.
-This supersedes the earlier one-issue-at-a-time queue. Use
-`feat/post-brisket-experience`, consolidate the unmerged #130 work, and provide
-one feature URL for owner feedback. Do not merge to dev or release production
-before owner review. Preserve existing saved cooks, actuals and Hold → Finish.
+## Now: release readiness, not feature development
 
-Every handoff must include the exact feature URL from Cloudflare's successful
-check/comment plus a short owner test plan. Do not construct the URL from the
-branch name: Cloudflare can shorten the alias.
+The owner approved and merged the post-brisket work through **PR #131** into dev
+at `62f4673` on November 9. The active release candidate is
+`feat/118-release-readiness`, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
+targeting **main**. This explicit release target supersedes the ordinary feature
+PR target of dev. Do not merge into main or deploy production without owner approval.
 
-# Current owner-approved queue · November 7, 2026
+1. **#118:** investigate the intermittent iPhone/WebKit meal-name miss. A controlled
+   delayed application frame reproduces focus moving from Meal name to serving
+   time and leaves the saved name as Next cook. Verify the narrow fix in WebKit,
+   including immediate Start, serving edits, history, reload and Cook Again.
+2. Compare dev/main and retain all production fixes; run full unit, browser,
+   authentication, account, offline and database-security checks. Review actual
+   desktop/mobile/iPhone screenshots and provide the confirmed feature URL.
+3. Complete release acceptance and verify production schema readiness before the
+   separately approved production promotion. No hosted database changes are
+   authorized in this session.
 
-The owner approved dev integration of #115/#116 and documentation alignment on
-November 7. This approval does not authorize production promotion, hosted database
-changes, future PR merges or starting another feature cycle.
+## Completed implementations in dev
 
-1. **#117: next production-readiness bug.** Fix the existing manual-template cooking
-   start/checkpoint reflow error in a focused PR. Default serving alignment works;
-   explicit cooking-start/duration edits still need this correction. Preserve
-   #101 actuals, completed history and unrelated dishes. Do not promote production
-   while this known correctness issue remains unresolved.
-2. **Separate production-readiness validation.** After the reviewed #117 fix, verify
-   the integrated dev candidate and obtain owner approval for production promotion.
-   Current dev checks/deployment evidence belongs in the integration PRs.
+| Issue | Delivery | Status |
+| --- | --- | --- |
+| #117 fixed-template checkpoint scheduling | PR #128 / `4a3e891` | Implemented in dev |
+| #119 preparation-start hierarchy and mobile planner | PR #120 / `960abc9` | Implemented in dev |
+| #121 provisional brisket forecast | PR #122 / `ea2873a` | Implemented in dev |
+| #123 optional Cooking Mode tools | PR #129 / `ed0a165` | Implemented in dev |
+| #124 current/next timing cues | PR #131 / `62f4673` | Implemented in dev |
+| #125 direct planned-time edits | PR #131 / `62f4673` | Implemented in dev |
+| #126 upcoming preparation time | PR #131 / `62f4673` | Implemented in dev |
+| #127 concise new brisket template / 6–8h reserve | PR #131 / `62f4673` | Implemented in dev |
 
-#109 serving-time-first planning is delivered through #116, not new development.
-The flow is serving target → dishes → recipe review → combined meal → cook.
-Start preparing is the normal summary; estimated readiness appears when the target
-cannot be met. See [the planning contract](planning-readiness.md) and
-[dev delivery notes](releases/2026-11-07-dev.md).
+Do not repeat these stories. Their implementation issues are closed with explicit
+dev-delivery evidence; closure does not claim production deployment. #130 is
+superseded by #131. Preserve the physical cooking model, checkbox-first controls,
+Beerometer, fixed/actual distinctions, guest/account boundaries and Hold → Finish.
 
-## Already delivered in dev
+## Keep open through production verification
 
-- #115: CI baseline repair preserving exceptional recovery and data-integrity tests.
-- #109/#116: serving-first planning, recommended preparation start, deterministic
-  whole-meal estimates and real brisket/ribs serving/rest coverage.
+- **#61:** retained cancellation, delivered through PR #104.
+- **#83:** independent upcoming plans / one active cook, delivered through PR #107.
+- **#103:** accepted recipe review/planning UI, delivered through #108/#111/#112.
+  The separate personal recipe library belongs to #114.
 
-- #101: physical starts/transitions, concurrent forecasts and checkbox-first cooking.
-- #61: retained cancellation, with acknowledged transitions and history preservation.
-- #83: multiple saved account plans and one active session, independently editable.
-- #71: CI improvements with browser/account/offline/security gates retained.
-- #103: recipe review and consistent drag/edit controls at the normal root planner.
-  Personal reusable recipe saving remains deferred.
-- #113: routine backup UI and redundant success notices removed. Exceptional
-  protected recovery remains available; saving uses the existing mechanism.
+Both November 5 migrations are owner-confirmed applied/verified in **dev**.
+The owner confirmed both are **not yet applied in production** and will apply
+them manually before merge. Verify success through the release checklist; do not reapply dev
+migrations or run bootstrap/test SQL on hosted Supabase.
 
-The owner confirms the two November 5 Supabase migrations are applied and verified
-in dev. No reapplication or hosted schema/data changes are part of this queue.
-Production remains a separate release; dev delivery does not imply production.
+## Next feature, after release
+
+**#114: personal saved recipes** is the next candidate for separate owner review.
+It is not part of this release and must not be started in this session.
 
 ## Deferred
 
-#3 advanced prerequisites/equipment scheduling; timers/notifications; #2 recipe URL
-import; reusable recipe library; social login; paid features; #69/#70 advanced sync.
-Do not begin these as incidental improvements or create duplicate/manual-QA tickets.
-Stale docs PR #106 is superseded by this queue, not a new implementation backlog.
+#3 equipment/resource optimization, #11 notifications, #2 URL import, photo/PDF
+import, social login, paid features and #69/#70 advanced synchronization remain
+outside this release. Do not add incidental UX changes or manual-QA tickets.
 
-Preserve saved plans, guest behavior, accounts, completed history, actual event
-history and backwards compatibility. Work on isolated feature branches targeting
-`dev`; report exact test results and verify feature preview deployment.
-
-## Consolidated review status
-
-The consolidated feature includes #124 timing cues, #125 direct time editing,
-#127 new brisket template/reserve and #126 upcoming preparation time, along with
-the owner's agreed hidden-configuration hierarchy. PR #130's unmerged work is
-included in this branch; the combined PR supersedes that preview. #117/#123 remain
-integrated. Owner feedback on one feature preview is the next gate; no dev merge,
-production release, hosted database changes or new predictive algorithm.
+See [roadmap](roadmap.md), [release candidate / approval checklist](releases/2026-11-09-readiness.md)
+and [core experience](core-cook-experience.md). Handoffs distinguish tested feature
+preview, merged dev, production approval and verified production deployment.

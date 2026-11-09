@@ -18,7 +18,7 @@ investigate/fix #118 with deterministic WebKit regression coverage; preserve
 production fixes while comparing dev/main; run all regression suites; reconcile
 delivered issues and documentation; prepare one release PR targeting main.
 This explicit release instruction supersedes the usual feature-PR target of dev.
-Do not merge main or deploy production without further approval. Do not apply
+Do not merge into main or deploy production without further approval. Do not apply
 hosted Supabase migrations. Keep #61/#83/#103 open until production verification.
 #114 is the next feature candidate, outside this session; do not implement it.
 
@@ -55,7 +55,9 @@ physical model and Hold → Finish, all actuals, sessions, guest/account boundar
 and saving/history. See docs/work-queue.md and the current release notes.
 
 Both November 5 Supabase migrations are owner-confirmed applied and verified in
-dev. Do not reapply them or modify hosted database state in this work.
+dev. Do not reapply them or modify hosted database state in this work. The owner
+confirmed production is missing both and will apply the two files manually before
+release merge; keep that gate pending until success/verification is confirmed.
 
 ### Delivered UI and deferred capabilities
 

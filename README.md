@@ -85,32 +85,19 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The November 5 release combines [#98](https://github.com/Warconn/how-many-beers/pull/98)
-(#21 visual consistency) with [#99](https://github.com/Warconn/how-many-beers/pull/99)
-(#97 checklist-first cooking and the approved compact layout/Beerometer cleanup).
-It extends release #96: #92, #84, #62/#85, #77 and #86 are completed work.
-See [release notes and validation](docs/releases/2026-11-05.md); check the release PR
-and Cloudflare status for deployment confirmation. Authentication, cloud saving and
-cross-device history remain supported without schema changes.
+The post-brisket changes are approved and merged into **dev** through
+[PR #131](https://github.com/Warconn/how-many-beers/pull/131), alongside the delivered
+#117/#119/#121 fixes. Current work is **#118 meal-name persistence investigation
+and release readiness**, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
+targeting main for explicit owner approval. No production deployment is authorized.
 
-Dev now includes **#109 serving-time-first planning** via #116, alongside the
-#115 browser baseline repair. Choose when to eat first, then choose/review dishes.
-**Start preparing** shows the day/date to begin; a later estimated-ready time is
-shown when the target cannot be met. The target never moves automatically.
-#101 physical cooking, #61 cancellation, #83 upcoming plans, #71 CI improvements
-and #103's reviewed recipe controls remain delivered in dev. Personal reusable
-recipe saving stays deferred.
+Keep #61/#83/#103 open until production is verified. The next feature candidate is
+#114 personal saved recipes, separate from this release and not started here.
+Both November 5 migrations are confirmed in dev; production schema readiness must
+be verified separately, with no automatic hosted migration or data changes.
 
-**#117 is the next production-readiness bug:** manually fixing a template cooking
-start/duration can over-delay checkpoints and serving. Default brisket/ribs serving
-alignment works; shared-smoker coordination remains #3. This dev delivery is not a
-production release. The owner approved #115/#116 integration and documentation;
-future merges, production and hosted changes still need their own authorization.
-Both November 5 dev migrations are confirmed applied/verified; do not reapply them.
-See [dev delivery notes](docs/releases/2026-11-07-dev.md),
-[the current queue](docs/work-queue.md) and
-[planning rules and screenshots](docs/planning-readiness.md).
-Notifications, URL import, social login and advanced synchronization stay deferred.
+See [work queue](docs/work-queue.md), [roadmap](docs/roadmap.md) and
+[release readiness / acceptance](docs/releases/2026-11-09-readiness.md).
 
 ## Account foundation work
 

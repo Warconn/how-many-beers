@@ -174,7 +174,9 @@ test('post-add frame preserves an immediate meal-name edit through start, histor
  const archived=remote.state.history.find(c=>(c as {meal:ExtendedMeal}).meal.id===mealId) as {meal:ExtendedMeal};
  expect(archived.meal.events).toEqual(actuals);expect(archived.meal.serveAt).toBe('2026-11-13T18:30');expect(remote.state.history).toEqual(expect.arrayContaining(previous));
  await page.screenshot({path:info.outputPath('118-preserved-history.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.on('dialog',dialog=>dialog.accept());
  await page.getByRole('button',{name:'Cook again',exact:true}).click();
+ await expect(page.getByRole('button',{name:/Resume planning/})).toBeVisible();
  expect(active().meal.name).toBe('Friday brisket');expect(active().meal.events).toEqual([]);expect(active().meal.completed).toEqual({});expect(remote.state.history).toEqual(expect.arrayContaining([archived,...previous]));
 });
 

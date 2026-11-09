@@ -638,7 +638,7 @@ function CookExperience() {
                 <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>{recipeFirst?"Add your own recipe":"Import a recipe"}</button>
               </div>
               }
-              {recipeFirst&&methodReview?<RecipeMethodReview meal={methodReview} onChange={setMethodReview} onBack={()=>setMethodReview(null)} onAdd={async()=>{if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,methodReview,true)});setClockNow(Date.now());setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>document.getElementById('serve-at')?.focus());}}/>:addMethod==="template" ? <>
+              {recipeFirst&&methodReview?<RecipeMethodReview meal={methodReview} onChange={setMethodReview} onBack={()=>setMethodReview(null)} onAdd={async()=>{if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,methodReview,true)});setClockNow(Date.now());setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>{if(!document.activeElement||document.activeElement===document.body)document.getElementById('serve-at')?.focus();});}}/>:addMethod==="template" ? <>
               <h3>Choose a template</h3>
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
               <div className="template-picker">

@@ -1,5 +1,7 @@
 # Upcoming cooks validation (#83)
 
+> **Current status, November 9:** Upcoming cooks are implemented in dev through PR #107. Keep #83 open for production verification. Both November 5 migrations are owner-confirmed verified in dev. Production schema readiness remains a separate release gate; no hosted changes are authorized here. Earlier implementation/rollout notes below are historical.
+
 Depends on the reviewed #61 implementation in PR #104. This is a separate feature
 branch/PR to dev; while #104 is unmerged its commits remain visible in this PR's
 ancestry. No hosted migrations, dev merges or production deployments were performed.
