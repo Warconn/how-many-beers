@@ -179,3 +179,6 @@ and editor-contained Remove. The reusable action placement standard lives in
 Cooking Mode keeps notes, readings, actual-time correction, activity and supported
 estimate adjustments optional within Step details. The checkbox and existing
 Hold/Finish flow remain unchanged.
+Built-in cooking-start edits keep estimated checkpoints within their cooking
+allowance, with rest/readiness following the estimated finish. Requested serving
+time and recorded actuals stay intact. See [step timing](docs/step-timing.md).

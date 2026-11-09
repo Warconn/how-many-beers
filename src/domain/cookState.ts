@@ -110,7 +110,7 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
       const added=(m.customTasks??[]).filter(t=>t.dishId===d.id&&!hidden.has(t.id)).map(project);
       const planned=planStepSequence([...source,...added],keys,m.serveAt,recorded,m.taskOverrides);warnings.push(...planned.warnings,...servingConflict(planned.tasks,m.serveAt));return planned.tasks;
     }
-    const adjusted=adjustDishSequence(sequence,recorded);warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
+    const adjusted=adjustDishSequence(sequence,recorded,m.mode!=="cooking");warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
   });
   const general=(m.customTasks??[]).filter(t=>!hidden.has(t.id)&&!m.dishes.some(d=>d.id===t.dishId&&d.planningSequence));
   const independent=general.filter(t=>!m.planningGeneralSequence||t.dishId!=='custom');

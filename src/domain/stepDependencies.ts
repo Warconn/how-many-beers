@@ -6,13 +6,33 @@ const duration=(task:PlannedTask)=>task.durationMinutes!=null && Number.isFinite
 /** Preserve original spacing, extending it only where an explicit duration needs
  * more room. Input order is the recipe/template sequence, never checklist order.
  * Fixed and recorded starts are anchors; untimed stages break automatic links. */
-export function adjustDishSequence(sequence:PlannedTask[],recorded:ReadonlySet<string>):{tasks:PlannedTask[];warnings:string[]}{
+export function adjustDishSequence(sequence:PlannedTask[],recorded:ReadonlySet<string>,adjustTemplateIntervals=false):{tasks:PlannedTask[];warnings:string[]}{
  const tasks:PlannedTask[]=[],warnings:string[]=[];
+ const intervalStarts=new Set<string>();
+ if(adjustTemplateIntervals){
+  const cook=sequence.find(t=>t.templateStage?.kind==='cook');
+  const base=cook?instant(cook.baseScheduledAt):null,start=cook?instant(cook.scheduledAt):null;
+  const original=cook?.templateStage?.minutes;
+  if(cook && base!==null && start!==null && original && !recorded.has(cook.id) && (cook.timingMode==='fixed'||cook.durationMinutes!=null)){
+   const minutes=cook.durationMinutes??original,end=base+original*60000;
+   // Checkpoints are positions within the authored cook interval, not work
+   // queued after it. Later stages keep their spacing from its new end.
+   const cookIndex=sequence.indexOf(cook);
+   sequence=sequence.map((t,index)=>{
+    const time=instant(t.baseScheduledAt);
+    if(index<=cookIndex||time===null||time<base)return t;
+    const next=time<=end?start+(time-base)*minutes/original:time+(start-base)+(minutes-original)*60000;
+    if(!Number.isFinite(next)||Math.abs(next)>8640000000000000)return t;
+    return {...t,baseScheduledAt:new Date(next).toISOString(),...(t.timingMode!=='fixed'&&!recorded.has(t.id)?{scheduledAt:new Date(next).toISOString()}: {})};
+   });
+   intervalStarts.add(cook.id);
+  }
+ }
  let shift=0,previous:PlannedTask|undefined;
  for(const task of sequence){
   const base=instant(task.baseScheduledAt===undefined?task.scheduledAt:task.baseScheduledAt),current=instant(task.scheduledAt);
   if(current===null){tasks.push({...task});shift=0;previous=undefined;continue;}
-  const previousStart=previous?instant(previous.scheduledAt):null,previousDuration=previous?duration(previous):null;
+  const previousStart=previous?instant(previous.scheduledAt):null,previousDuration=previous&&!intervalStarts.has(previous.id)?duration(previous):null;
   const previousEnd=previousStart!==null && previousDuration!==null?previousStart+previousDuration:null;
   if(base===null){
    // An explicitly scheduled formerly-untimed stage is now an anchor. Its known

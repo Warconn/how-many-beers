@@ -1,11 +1,11 @@
 # Post-brisket queue · November 8, 2026
 
-Owner-tested #117 is in PR #128 with green CI; merging remains separate.
-The owner approved starting **#123 only**. Its focused PR simplifies Cooking Mode
-controls and optional tools without changing forecasts or Hold → Finish.
+The owner approved merging #128 (#117) and #129 (#123) into dev and starting
+**#124 only**. #128 is merged; #129 is integrating the approved changes. Preserve
+the accepted Cooking Mode simplification, timing semantics and Hold → Finish.
 
-Remaining order, each requiring approval before starting: #124 timing visibility,
-#125 direct planned-time editing, #127 brisket template, #126 Upcoming Cooks cue.
+Current: #124 timing visibility, including planned start on the collapsed card.
+Remaining order, each requiring approval before starting: #125 direct planned-time editing, #127 brisket template, #126 Upcoming Cooks cue.
 Do not combine stories, merge automatically or release production.
 
 Every handoff must include the exact feature URL from Cloudflare's successful
