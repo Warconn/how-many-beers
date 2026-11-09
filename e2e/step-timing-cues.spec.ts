@@ -29,6 +29,15 @@ test('actual load anchors approximate cues across current and Up next; elapsed c
  await open(page,m,'2026-11-08T04:35:00Z');
  const current=page.getByRole('region',{name:'Current step',exact:true}),bar=page.getByRole('navigation',{name:'Cooking guide'});
  await expect(current.getByLabel('Check around',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Full checklist',exact:true}).click();
+ const loading=page.getByRole('button',{name:'Open step: Put brisket on smoker for Smoked brisket',exact:true});
+ await expect(loading.getByLabel('Actual start',{exact:true})).toHaveAttribute('datetime','2026-11-08T04:34:00.000Z');
+ await loading.click();await expect(current.getByLabel('Actual start',{exact:true})).toHaveAttribute('datetime','2026-11-08T04:34:00.000Z');
+ await current.getByText('Step details',{exact:true}).click();
+ await expect(current.getByLabel('Original planned start',{exact:true})).toHaveAttribute('datetime','2026-11-08T04:30:00Z');
+ await current.screenshot({path:info.outputPath('actual-load.png'),scale:'css'});
+ await page.getByRole('button',{name:'Full checklist',exact:true}).click();
+ await page.getByRole('button',{name:'Open step: Raise smoker to 225°F for Smoked brisket',exact:true}).click();
  await expect(current).toContainText('bark');
  await expect(bar.getByLabel('Check around',{exact:true})).toBeVisible();
  const originalCheck=await current.getByLabel('Check around',{exact:true}).getAttribute('datetime');
