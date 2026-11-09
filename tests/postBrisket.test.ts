@@ -16,6 +16,13 @@ it('new 7lb brisket reserves 6h including rest, or 8h, with no duplicate checkli
   expect(Date.parse(find('serve').scheduledAt!)-Date.parse(find('rest').scheduledAt!)).toBe((120+holdBufferMinutes)*60000);
   expect(tasks.map(t=>t.title)).toEqual(['Trim brisket','Season brisket','Preheat smoker','Put brisket on smoker','Check bark and temperature','Wrap when bark is ready','Probe for tenderness','Hold until serving','Slice and serve']);
   expect(m.serveAt).toBe(serve);
+  let active=startCookSession({...m,dishes:[m.dishes[0]]},'2026-11-07T20:00Z');
+  for(const task of cookTimeline(active).filter(t=>t.templateStage?.kind==='preparation'))active=recordEvent(active,task.id,'completed','2026-11-07T21:00Z');
+  active=recordEvent(active,m.dishes[0].id+':start','completed',start);
+  const projection=cookProjection(active,cookTimeline(active),Date.parse(start));
+  expect(projection.phases?.filter(p=>p.kind==='passive').map(p=>p.minutes)).toEqual([120+holdBufferMinutes]);
+  expect(projection.remaining).toBe(480+120+holdBufferMinutes);
+
  }
 });
 it('new defaults and template content do not migrate saved legacy recipes or completed snapshots',()=>{

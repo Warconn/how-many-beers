@@ -58,7 +58,6 @@ export default function StepEditor({ task, onSave, onCancel,onRemove,timeOnly=fa
     <label>Step name<input value={title} maxLength={160} onChange={e => setTitle(e.target.value)}/></label>
     <label>Instructions<textarea aria-label="Instructions" value={instructions} maxLength={500} rows={2} onChange={e => setInstructions(e.target.value)}/></label>
     </>}
-    {timeOnly&&<h4>Planned start</h4>}
       <label>Planned date and time<input type="datetime-local" value={localTime} onChange={e => {
         setTimingEdited(true);setLocalTime(e.target.value);setTimingMode(e.target.value ? 'fixed' : 'unscheduled');setOffsetChoice('');setError('');
       }}/></label>

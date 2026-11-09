@@ -201,3 +201,5 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .edit-planned-time {display:block;font-size:14px;min-height:44px;}
 .dish-inline-editor > .dish-advanced {margin-top:24px;}
 .step-editor > label:has(input[type="datetime-local"]) {margin-top:12px;}
+
+.planned-time-button time {font:inherit;color:inherit;}

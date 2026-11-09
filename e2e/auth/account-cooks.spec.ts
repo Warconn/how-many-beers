@@ -657,6 +657,12 @@ test('compact step edits and order survive account saves with advanced options c
  await expect.poll(()=>(remote.state.active as {meal:typeof original}).meal.taskOrder?.[1]).toBe(id);
  const saved=(remote.state.active as {meal:typeof original}).meal;expect(saved.taskOverrides[id]).toMatchObject({...original.taskOverrides[id],title:'Build the tray carefully',instructions:'Keep the vegetables covered.'});expect(saved.events).toEqual(original.events);expect(saved.completed).toEqual(original.completed);
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Grilled beer-bath brats',exact:true}).click();const edited=steps.getByRole('article',{name:'Build the tray carefully',exact:true});await expect(steps.getByRole('article').nth(1)).toHaveAttribute('aria-label','Build the tray carefully');await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();await form.getByText(/^More options/).click();await expect(form.getByLabel('Equipment for this step',{exact:true})).toHaveValue('Patio grill');await expect(form.getByLabel('Planned date and time',{exact:true})).toHaveValue('2026-01-01T12:30');await expect(form.getByLabel('Target food temperature (°F)',{exact:true})).toHaveValue('165');
+ await form.getByRole('button',{name:'Cancel',exact:true}).click();
+ await edited.getByRole('button',{name:'Change planned time: Build the tray carefully',exact:true}).click();
+ const timeForm=edited.getByRole('form',{name:'Edit planned time',exact:true});await timeForm.getByLabel('Planned date and time',{exact:true}).fill('2026-01-01T23:30');await timeForm.getByRole('button',{name:'Save',exact:true}).click();
+ await expect.poll(()=>(remote.state.active as {meal:typeof original}).meal.taskOverrides[id].scheduledAt).toBe('2026-01-01T23:30:00.000Z');
+ const final=(remote.state.active as {meal:typeof original}).meal;
+ expect(final.taskOverrides[id]).toEqual({...saved.taskOverrides[id],scheduledAt:'2026-01-01T23:30:00.000Z'});expect(final.events).toEqual(saved.events);expect(final.dishes).toEqual(saved.dishes);expect(final.serveAt).toBe(saved.serveAt);
 });
 
 
