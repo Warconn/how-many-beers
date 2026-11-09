@@ -1,6 +1,7 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect} from '@playwright/test';
 import {cookTimeline} from '../src/domain/cookState';
-import {newMeal,createDish} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 test('Beerometer decreases with remaining work and reaches zero before Finish cook',async({page},info)=>{
  await page.clock.install({time:new Date('2026-11-25T10:00Z')});
  const meal={...newMeal(),serveAt:'2026-11-26T18:00Z',dishes:[createDish('brisket'),createDish('brats')]};

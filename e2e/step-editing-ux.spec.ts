@@ -18,7 +18,7 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   const editorCapture=await form.screenshot({path:`docs/screenshots/issue-85-62-editor-${kind}-${info.project.name}.png`});
   await info.attach('compact-step-editor',{body:editorCapture,contentType:'image/png'});
   await expect(form.getByText(/^More options/)).toBeVisible();
-  await expect(form.getByLabel('Planned date and time',{exact:true})).toBeHidden();
+  await expect(form.getByLabel('Planned date and time',{exact:true})).toBeVisible();
   await expect(form.locator('p')).toHaveCount(0);
   await form.getByLabel('Step name').fill('Edited step');
   await form.getByRole('button',{name:'Save',exact:true}).click();
@@ -27,6 +27,7 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   const edited=region.getByRole('article',{name:'Edited step',exact:true});
   await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();
   await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('');
+  await form.getByText(/^More options/).click();
   await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('0');
   await form.getByRole('button',{name:'Save',exact:true}).click();
   await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();

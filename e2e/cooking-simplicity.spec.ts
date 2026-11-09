@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
-import {newMeal,createDish} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {cookTimeline,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 import {parseRecipeText} from '../src/domain/recipe';
 import {physicalStartedEvent} from '../src/domain/physicalPhase';

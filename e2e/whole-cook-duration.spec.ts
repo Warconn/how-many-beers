@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect} from '@playwright/test';
-import {createDish,newMeal} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 test('whole-cook brining, live progress and frozen history readings',async({page},info)=>{
  const b=createDish('brisket'),t={...createDish('turkey'),turkeyPrep:{state:'frozen' as const,thawDays:5,brineHours:22,dryHours:8}};
  const meal={...newMeal(),serveAt:'2026-11-25T18:00Z',dishes:[b,t]};

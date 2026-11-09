@@ -13,9 +13,12 @@ Visual direction: calm, polished cooking utility with warm neutrals, restrained 
 ## Current owner direction (November 8, 2026)
 
 Owner-approved PRs #128 (#117) and #129 (#123) are merged into dev.
-The current authorized issue is #124 only. Preserve the accepted simplification, forecast
-calculations and Hold → Finish. Next issues (#125, #127, #126) require separate owner approval. No automatic
-merges or production release. See docs/work-queue.md for the current queue.
+The owner now authorizes one consolidated post-brisket feature PR covering
+#124, #125, #127 and #126 plus the agreed planning configuration cleanup.
+This supersedes the earlier one-issue-at-a-time queue. Use
+`feat/post-brisket-experience`, consolidate the unmerged #130 work, and provide
+one feature URL for owner feedback. Do not merge to dev or release production
+before owner review. Preserve existing saved cooks, actuals and Hold → Finish.
 
 Handoffs include the exact feature testing URL reported by Cloudflare's successful
 check/comment and a short owner test plan. Never infer the hostname from a branch

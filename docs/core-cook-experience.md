@@ -607,3 +607,14 @@ and Finish flow; no timers, steps or forecasting algorithms were added.
 The brisket raise-225 instruction no longer claims a separate two-hour point:
 its existing 18% checkpoint is approximate and requires reviewing bark, temperature
 and progress. Direct planned-time editing remains the separate #125 issue.
+
+## Consolidated post-brisket review
+
+The owner superseded separate issue previews with one feature review for
+#124/#125/#127/#126 and the agreed planning cleanup. Planned time is the direct
+editing target in planning and cooking; full editors expose it without a nested
+menu. Duration and advanced inputs stay optional. Dish settings follow the steps
+and remain collapsed. New brisket dishes use concise steps and a 6-hour total
+rest/hold reserve (8 hours via the existing optional inputs); old recipes remain
+unchanged. Home upcoming plans show derived Start preparing and Serve times.
+See [the consolidated contract and cook evidence](post-brisket-experience.md).

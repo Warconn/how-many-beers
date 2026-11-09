@@ -79,7 +79,7 @@ test('imported and general prep steps support dates, unknown durations, cancella
   await expect(form.getByLabel('Planned date and time', { exact: true })).toHaveValue('2026-11-26T00:15');
   if (!await form.locator('details').evaluate(el => (el as HTMLDetailsElement).open)) await form.getByText(/^More options/).click();
   await form.getByRole('button', { name: 'Use plan timing', exact: true }).click();
-  await expect(form.getByLabel('Estimated duration (minutes)', { exact: true })).toHaveValue('10');
+  await expect(form.getByLabel('Estimated duration (minutes)', { exact: true })).toHaveValue('25');
   await form.getByRole('button', { name: 'Save', exact: true }).click();
   const importedId = meal.dishes[0].id + ':' + meal.dishes[0].steps![0].id;
   expect((await saved(page)).taskOverrides?.[importedId]?.scheduledAt).toBeUndefined();
@@ -134,8 +134,8 @@ test('fixed ribs cooking allowance keeps checkpoints inside the cook and readine
  const start=cookTimeline(meal).find(t=>t.id===dish.id+':start')!;
  await schedule.getByRole('button',{name:`Edit ${start.title} for ${dish.name}`,exact:true}).click();
  const form=page.getByRole('form',{name:'Edit step',exact:true});
- await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('330');
- await form.getByText(/^More options/).click();
+ await form.getByText(/^More options/).click();await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('330');
+ if(!await form.locator('details').evaluate(el=>(el as HTMLDetailsElement).open))await form.getByText(/^More options/).click();
  await form.getByLabel('Planned date and time',{exact:true}).fill('2026-11-08T08:10');
  await form.getByRole('button',{name:'Save',exact:true}).click();
  const serve=()=>schedule.locator('li').filter({has:page.getByRole('button',{name:`Edit Serve for ${dish.name}`,exact:true})});

@@ -680,9 +680,20 @@ function CookExperience() {
                 </div>
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
-                  {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   {d.preset==="turkey" && <TurkeyPreparation dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
+                  {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Tap a planned time to change it.</p>}
+                  <section className="inline-dish-steps" data-step-list={"dish-"+d.id} role="region" aria-label={d.name+" steps"}>
+                  {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
+                  {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
+                    <label htmlFor={"new-step-"+d.id}>Step title</label>
+                    <input id={"new-step-"+d.id} autoFocus value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
+                    <button type="submit" className="button primary" disabled={!newStepTitle.trim()}>Save step</button>
+                    <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}>Cancel</button>
+                  </form> : <button id={"add-step-"+d.id} type="button" className="button secondary dish-add-step" disabled={!!editingStep} onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
+                </section>
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
+                  {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
+
                   <label htmlFor={"name-"+d.id}>Dish name</label>
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
 
@@ -739,16 +750,7 @@ function CookExperience() {
                   {d.recipeSource&&<RecipeDetails dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
                   </details>
-                  {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Use Edit for a fixed start or other step details.</p>}
-                  <section className="inline-dish-steps" data-step-list={"dish-"+d.id} role="region" aria-label={d.name+" steps"}>
-                  {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
-                  {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
-                    <label htmlFor={"new-step-"+d.id}>Step title</label>
-                    <input id={"new-step-"+d.id} autoFocus value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
-                    <button type="submit" className="button primary" disabled={!newStepTitle.trim()}>Save step</button>
-                    <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}>Cancel</button>
-                  </form> : <button id={"add-step-"+d.id} type="button" className="button secondary dish-add-step" disabled={!!editingStep} onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
-                </section>
+
                 </div>}
               </article>)}
             </div> : null}

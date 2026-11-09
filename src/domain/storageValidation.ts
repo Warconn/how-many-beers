@@ -18,7 +18,7 @@ function phasePlan(v:unknown):boolean{
 
 export function isStoredTask(v:unknown):boolean{
   return object(v)&&['id','dishId','dishName','title','instructions'].every(k=>text(v[k]))
-    &&nullableText(v.scheduledAt)&&typeof v.isCondition==='boolean'
+    &&optional(v.optionalDetails,text)&&nullableText(v.scheduledAt)&&typeof v.isCondition==='boolean'
     &&optional(v.durationMinutes,duration)&&optional(v.equipment,text)
     &&optional(v.targetTempF,x=>x===null||number(x));
 }
@@ -57,7 +57,7 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&optional(d.turkeyPrep,t=>object(t)&&['frozen','thawing','thawed'].includes(String(t.state))
       &&number(t.thawDays)&&(t.thawDays as number)>=0&&(t.thawDays as number)<=14
       &&['brineHours','dryHours'].every(k=>number(t[k])&&(t[k] as number)>=0&&(t[k] as number)<=48))
-    &&optional(d.brisketPlan,brisket)))return false;
+    &&optional(d.brisketTemplateVersion,x=>x===2)&&optional(d.brisketPlan,brisket)))return false;
   return new Set(v.dishes.map(d=>(d as {id:string}).id)).size===v.dishes.length
     &&optional(v.mode,m=>m==='planning'||m==='cooking')&&optional(v.startedAt,text)&&optional(v.phasePlan,phasePlan)
     &&optional(v.customTasks,t=>Array.isArray(t)&&t.every(isStoredTask))

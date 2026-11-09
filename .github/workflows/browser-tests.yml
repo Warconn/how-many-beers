@@ -133,6 +133,7 @@ jobs:
             test-results/recipe-first-*/*.png
             test-results/cooking-simplicity-*/*.png
             test-results/step-timing-cues-*/*.png
+            test-results/post-brisket-*/*.png
             test-results/physical-cooking-*/*.png
             test-results/design-system-*/*.png
             test-results/live-cook-start-*/*.png

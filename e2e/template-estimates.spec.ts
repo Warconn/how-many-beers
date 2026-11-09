@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect} from '@playwright/test';
-import {newMeal,createDish} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {cookTimeline,recordEvent,type ExtendedMeal} from '../src/domain/cookState';
 test.use({timezoneId:'UTC'});
 const now='2026-10-30T21:00:00Z';

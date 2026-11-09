@@ -158,7 +158,7 @@ describe('physical phases behind the checklist',()=>{
  });
  it('a fixed future brisket load gives a provisional nominal finish without falsifying actuals or target',()=>{
   const serve='2026-11-08T18:00:00Z'; // Sunday 1 PM EST
-  const d=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7}}},serve);
+  const d=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,holdBufferMinutes:60,weightLb:7}}},serve);
   let m=startCookSession({...newMeal(),serveAt:serve,dishes:[d]},'2026-11-07T22:00:00Z');
   const edit=(id:string,scheduledAt:string,durationMinutes?:number)=> {
     const task=cookTimeline(m).find(t=>t.id===id)!;
@@ -205,7 +205,7 @@ describe('physical phases behind the checklist',()=>{
 
  it('provisional single-brisket projection does not omit work from a multi-dish meal',()=>{
   const serve='2026-11-08T18:00:00Z';
-  const b=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7}}},serve);
+  const b=applyBrisketTiming({...createDish('brisket'),id:'brisket',brisketPlan:{mode:'manual',inputs:{...brisketDefaults,holdBufferMinutes:60,weightLb:7}}},serve);
   let m=startCookSession({...newMeal(),serveAt:serve,dishes:[b,{...createDish('side'),id:'side'}]},'2026-11-07T22:00:00Z');
   const t=cookTimeline(m).find(t=>t.id==='brisket:start')!;
   m=editStep(m,t.id,t.title,t.instructions,{timingMode:'fixed',scheduledAt:'2026-11-08T06:00:00Z',equipment:t.equipment??'Pellet smoker',targetTempF:null});

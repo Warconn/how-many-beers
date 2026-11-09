@@ -15,10 +15,10 @@ describe('personal cooking templates',()=>{
   expect(steps.find(t=>t.id.endsWith(':hold'))!.instructions).toContain('140°F');
  });
  it('preserves estimated brisket provenance without seeding a guessed weight or modifying the source estimator',()=>{
-  const {d,steps}=plan('brisket');expect(d.weightLb).toBeUndefined();expect(d.pitTempF).toBe(180);expect(steps.find(t=>t.id.endsWith(':prep'))!.instructions).toContain('not a measured weight');
-  expect(at(steps,'season')).toBeLessThan(at(steps,'start'));expect(at(steps,'raise225')).toBeLessThan(at(steps,'wrap'));expect(at(steps,'wrap')).toBeLessThan(at(steps,'raise250'));
+  const {d,steps}=plan('brisket');expect(d.weightLb).toBeUndefined();expect(d.pitTempF).toBe(200);expect(steps.find(t=>t.id.endsWith(':prep'))!.instructions).toContain('protective cap');
+  expect(at(steps,'season')).toBeLessThan(at(steps,'start'));expect(at(steps,'check')).toBeLessThan(at(steps,'wrap'));expect(steps).toHaveLength(9);
   const applied=applyBrisketTiming({...d,brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:15}}},serve);
-  const updated=buildDishTimeline(applied,serve);expect(updated.find(t=>t.id.endsWith(':preheat'))!.instructions).toContain('200°F');expect(updated.find(t=>t.id.endsWith(':raise225'))!.instructions).toContain('165°F');
+  const updated=buildDishTimeline(applied,serve);expect(updated.find(t=>t.id.endsWith(':preheat'))!.instructions).toContain('200°F');expect(updated.find(t=>t.id.endsWith(':check'))!.instructions).toContain('stall');
  });
  it('plans thawing, brining and drying ahead of oven roasting, with an entire hour before serving',()=>{
   const {d,steps}=plan('turkey');expect(d.weightLb).toBe(22);expect(d.pitTempF).toBe(350);

@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
-import {newMeal,createDish} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {parseRecipeText} from '../src/domain/recipe';
 const now='2026-10-29T22:43:00Z';
 async function load(page:Page,meal= {...newMeal(),name:'Sunday brisket',serveAt:'2026-11-01T13:00Z',dishes:[createDish('brisket')]}){

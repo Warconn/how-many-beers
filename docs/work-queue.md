@@ -1,13 +1,11 @@
 # Post-brisket queue · November 8, 2026
 
-The owner approved merging #128 (#117) and #129 (#123) into dev and starting
-**#124 only**. Both reviewed PRs are merged with green integration CI. #124 is in progress on
-`feat/124-step-timing-cues`. Preserve
-the accepted Cooking Mode simplification, timing semantics and Hold → Finish.
-
-Current: #124 timing visibility, including planned start on the collapsed card.
-Remaining order, each requiring approval before starting: #125 direct planned-time editing, #127 brisket template, #126 Upcoming Cooks cue.
-Do not combine stories, merge automatically or release production.
+The owner now authorizes one consolidated post-brisket feature PR covering
+#124, #125, #127 and #126 plus the agreed planning configuration cleanup.
+This supersedes the earlier one-issue-at-a-time queue. Use
+`feat/post-brisket-experience`, consolidate the unmerged #130 work, and provide
+one feature URL for owner feedback. Do not merge to dev or release production
+before owner review. Preserve existing saved cooks, actuals and Hold → Finish.
 
 Every handoff must include the exact feature URL from Cloudflare's successful
 check/comment plus a short owner test plan. Do not construct the URL from the
@@ -63,3 +61,12 @@ Stale docs PR #106 is superseded by this queue, not a new implementation backlog
 Preserve saved plans, guest behavior, accounts, completed history, actual event
 history and backwards compatibility. Work on isolated feature branches targeting
 `dev`; report exact test results and verify feature preview deployment.
+
+## Consolidated review status
+
+The consolidated feature includes #124 timing cues, #125 direct time editing,
+#127 new brisket template/reserve and #126 upcoming preparation time, along with
+the owner's agreed hidden-configuration hierarchy. PR #130's unmerged work is
+included in this branch; the combined PR supersedes that preview. #117/#123 remain
+integrated. Owner feedback on one feature preview is the next gate; no dev merge,
+production release, hosted database changes or new predictive algorithm.

@@ -195,3 +195,9 @@ label { font-size:var(--text-sm); line-height:1.5; }
   gap:8px;
 }
 .guided-step .cooking-step-tool-row>.button { margin:0; }
+
+/* Planned time is the first editing target; configuration stays optional. */
+.planned-time-button {font-size:16px;font-weight:600;text-align:left;white-space:normal;line-height:1.5;min-height:44px;padding:4px 0;}
+.edit-planned-time {display:block;font-size:14px;min-height:44px;}
+.dish-inline-editor > .dish-advanced {margin-top:24px;}
+.step-editor > label:has(input[type="datetime-local"]) {margin-top:12px;}

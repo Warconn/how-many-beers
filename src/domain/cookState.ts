@@ -47,6 +47,7 @@ export type TaskOverride = {
   durationMinutes?: number | null; equipment?: string; targetTempF?: number | null;
 };
 export type StepPlanEdit = {
+  plannedTimeOnly?: boolean;
   timingMode: "plan" | "fixed" | "unscheduled";
   scheduledAt: string | null;
   durationMinutes?: number | null; // Omitted for a planned-time-only edit.
@@ -182,6 +183,12 @@ export function editStep(meal: Meal, taskId: string, title: string, instructions
     else override.equipment=details.equipment.trim();
     if(details.targetTempF===null)delete override.targetTempF;
     else override.targetTempF=details.targetTempF;
+  }
+  if(details?.plannedTimeOnly){
+    const timeOverride={...m.taskOverrides?.[taskId]};
+    if(details.timingMode==='plan')delete timeOverride.scheduledAt;
+    else timeOverride.scheduledAt=details.timingMode==='unscheduled'?null:new Date(details.scheduledAt!).toISOString();
+    return {...m,taskOverrides:{...m.taskOverrides,[taskId]:timeOverride}};
   }
   return {...m, taskOverrides: {...m.taskOverrides, [taskId]:override}};
 }

@@ -146,3 +146,12 @@ supporting instructions and duration. Use readable 16px semibold timing, a norma
 weight condition, and wrapping date text. Keep the sticky next-step cue readable
 on a phone. All views use the same selector/formatter and execution clock. The
 Beerometer and its hierarchy remain unchanged. Direct editing remains #125.
+
+### Consolidated owner review
+
+Planned date/time is an actionable, semibold 16px cue with a 44px tap target.
+Its focused editor has date/time, Use plan timing and Save/Cancel, without duration
+or equipment fields. In the full editor, duration/equipment/temperature are under
+More options; planned time remains outside. Dish settings follow the step list
+and contain brisket configuration in one layer, collapsed by default. These rules
+supersede the earlier separate delivery boundaries for #124/#125.

@@ -141,3 +141,14 @@ test('Home has no install or offline help while preparation stays functional',as
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
 });
+
+test('planned-time-only edits of a new brisket persist offline without changing duration or actuals',async({page,context})=>{
+ await page.clock.install({time:new Date('2026-11-07T20:00:00Z')});await page.goto('/');await ready(page);
+ const dish={...createDish('brisket'),id:'offline-brisket'},meal={...newMeal(),name:'Offline brisket',serveAt:'2026-11-08T18:00:00Z',dishes:[dish]};
+ await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await ready(page);await context.setOffline(true);
+ await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+ const steps=page.getByRole('region',{name:'Smoked brisket steps',exact:true});await steps.getByRole('button',{name:'Change planned time: Put brisket on smoker',exact:true}).click();
+ const form=steps.getByRole('form',{name:'Edit planned time',exact:true});await form.getByLabel('Planned date and time',{exact:true}).fill('2026-11-07T23:30');await form.getByRole('button',{name:'Save',exact:true}).click();
+ const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(before.dishes).toEqual(meal.dishes);expect(before.taskOverrides['offline-brisket:start']).toEqual({scheduledAt:'2026-11-08T04:30:00.000Z'});expect(before.serveAt).toBe(meal.serveAt);expect(before.events).toEqual([]);
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(before);await context.setOffline(false);
+});
