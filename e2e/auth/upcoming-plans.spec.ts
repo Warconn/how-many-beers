@@ -68,6 +68,7 @@ async function createPlan(page:Page,name:string,serveAt?:string){
  await expect(page.getByRole('region',{name:'Upcoming cooks'}).getByRole('listitem',{name,exact:true})).toBeVisible();
 }
 test('future plans stay independent from an active 5-of-8 cook and reload on another device',async({page,context,browser},info)=>{
+ await page.clock.install({time:new Date(now)});
  const remote=server(),before=structuredClone(remote.state.active),history=structuredClone(remote.state.history);await remote.attach(context);await signIn(page);
  await createPlan(page,'Sunday Brats');await createPlan(page,'Next Friday','2026-11-06T18:00');expect(remote.plans.size).toBe(2);expect(remote.state.active).toEqual(before);expect(remote.state.history).toEqual(history);
  const upcoming=page.getByRole('region',{name:'Upcoming cooks'});await upcoming.getByRole('listitem',{name:'Sunday Brats',exact:true}).getByRole('button',{name:'Edit plan',exact:true}).click();await page.getByLabel('Meal name',{exact:true}).fill('Sunday Family Brats');await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-08T18:00');await expect(page.getByRole('button',{name:'Start cooking',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Continue current cook',exact:true})).toBeVisible();await page.getByRole('button',{name:'Save plan for later',exact:true}).click();

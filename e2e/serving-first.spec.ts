@@ -1,3 +1,4 @@
+import {changeStepDuration} from './helpers/stepEditing';
 import {test,expect} from '@playwright/test';
 test.use({timezoneId:'UTC'});
 test('serving target is the first planning decision and survives recipe review',async({page},info)=>{
@@ -82,7 +83,7 @@ test('planning target edits preserve recorded activity and active session identi
 
 test('new unknown work needs an estimate; adding and removing its duration recalculates readiness',async({page})=>{
  await open(page,grill(),'17:00');await page.getByRole('button',{name:'Edit Brats',exact:true}).click();await page.getByRole('button',{name:'Add a step to Brats',exact:true}).click();const adding=page.getByRole('form',{name:'Add dish step'});await adding.getByLabel('Step title',{exact:true}).fill('Make glaze');await adding.getByRole('button',{name:'Save step',exact:true}).click();
- await expect(page.getByRole('region',{name:'Serving plan'})).toContainText('Timing needed');const steps=page.getByRole('region',{name:'Brats steps',exact:true});await steps.getByRole('article',{name:'Make glaze',exact:true}).getByLabel('Estimated duration (minutes)',{exact:true}).fill('15');await ready(page,'18:15');
+ await expect(page.getByRole('region',{name:'Serving plan'})).toContainText('Timing needed');const steps=page.getByRole('region',{name:'Brats steps',exact:true});await changeStepDuration(steps.getByRole('article',{name:'Make glaze',exact:true}),'15');await ready(page,'18:15');
  const grip=steps.getByRole('button',{name:'Move Make glaze',exact:true});await grip.focus();await page.keyboard.press('ArrowUp');await ready(page,'18:15');await combined(page);await starts(row(page,'Make glaze'),'18:00');await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 15m');
  await row(page,'Make glaze').getByRole('button',{name:'Edit Make glaze',exact:true}).click();page.once('dialog',dialog=>dialog.accept());await page.getByRole('form',{name:'Edit step'}).getByRole('button',{name:'Remove step: Make glaze',exact:true}).click();await ready(page,'18:00');await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-11-08T18:00');await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 00m');
 });

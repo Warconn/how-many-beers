@@ -681,7 +681,6 @@ function CookExperience() {
                 {editingDishId===d.id && <div id={"dish-"+d.id} className="dish-inline-editor" role="region" aria-label="Dish editor">
 
                   {d.preset==="turkey" && <TurkeyPreparation dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
-                  {d.preset==='custom' && <p className="import-timing-help muted small">Set estimated durations below; start times and the Beerometer update automatically. Leave a duration blank if unknown. Tap a planned time to change it.</p>}
                   <section className="inline-dish-steps" data-step-list={"dish-"+d.id} role="region" aria-label={d.name+" steps"}>
                   {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
                   {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
@@ -716,7 +715,7 @@ function CookExperience() {
                         onChange={value=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,restMinutes:value,brisketPlan:item.brisketPlan?{...item.brisketPlan,mode:"manual"}:undefined}:item)}))}
                       />
                     </div>
-                  </div> : <p className="muted small">Set estimated durations directly on the steps below.</p>}
+                  </div> : <p className="muted small">Estimated duration is available in each step’s Edit options.</p>}
                   {d.preset!=="custom" && d.preset!=="brisket" && presets[d.preset].referenceWeightLb!==undefined && (
                     <div className="template-settings">
                       <label htmlFor={"weight-"+d.id}>Weight (lb), for reference</label>

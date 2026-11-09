@@ -203,7 +203,7 @@ accordion within the menu instead, with a single dish heading and no return navi
    keyboard focus moves to its header.
 3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
    header collapses it. Only one dish is expanded at a time.
-4. Use Dish settings for name, equipment, template durations and optional reference settings. Imported step durations are edited directly on their step rows.
+4. Use Dish settings for name, equipment, template durations and optional reference settings. All step rows expose planned time directly. Duration editing stays optional under Edit → More options.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
    Remove dish is a compact trash icon beside the heading, not hidden in settings;
    it retains a descriptive accessible label/tooltip and a 44px touch target;

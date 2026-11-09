@@ -7,7 +7,7 @@ one-issue-per-PR delivery rule. #117 and #123 are already integrated into dev.
 Planning puts steps first. Each step exposes its planned date/time as the direct
 editing target. One tap opens a focused date/time form with Save, Cancel and Use
 plan timing. The full editor also exposes planned time without More options.
-Duration, equipment and temperature targets remain optional. Dish settings sit
+Duration, equipment and temperature targets remain optional, including imported recipes. Collapsed rows show duration as supporting text instead of an input. Dish settings sit
 collapsed below the checklist; brisket timing has no second nested disclosure.
 Changing only a planned time writes only the timestamp override, including when
 reverting to plan timing. It never resets a duration override or corrects an actual.
