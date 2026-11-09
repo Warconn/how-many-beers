@@ -40,7 +40,7 @@ test('installed shell resumes an overnight cook offline, including notes, readin
  await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox').click();
  const current=page.getByRole('region',{name:'Current step',exact:true});
  await current.getByText('Step details',{exact:true}).click();await current.getByRole('button',{name:'+ Log temperature',exact:true}).click();await current.getByLabel('Food temperature',{exact:true}).fill('173');await current.getByRole('button',{name:'Save timestamped reading',exact:true}).click();
- await current.getByLabel('Quick notes',{exact:true}).fill('Keep heat steady');
+ await current.getByRole('button',{name:'Notes',exact:true}).click();await current.getByLabel('Quick notes',{exact:true}).fill('Keep heat steady');
  const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),ACTIVE_KEY);
  expect(saved.startedAt).toBe(active.startedAt);expect(saved.notes[id]).toBe('Bark set');expect(saved.events).toEqual(expect.arrayContaining(active.events!));
  expect(saved.events.some((event:{kind:string;value?:number})=>event.kind==='temperature'&&event.value===173)).toBe(true);expect(Object.values(saved.notes)).toContain('Keep heat steady');

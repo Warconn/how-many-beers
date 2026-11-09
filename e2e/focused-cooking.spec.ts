@@ -37,10 +37,10 @@ test('editing and readings stay protected; completing advances guidance and reta
  await page.clock.fastForward(11*60*1000);await expect(row.getByLabel('Instructions',{exact:true})).toHaveValue('Unsaved draft stays here');await row.getByRole('button',{name:'Cancel',exact:true}).click();
  await row.getByRole('button',{name:/^Edit(?: |$)/}).click();await row.getByText(/^More options/).click();await row.getByLabel('Planned date and time',{exact:true}).fill('2026-11-25T23:00');await row.getByRole('button',{name:'Save',exact:true}).click();await expect(row).toBeVisible();expect((await saved(page)).taskOverrides!.due.scheduledAt).toBe('2026-11-26T04:00:00.000Z');expect((await saved(page)).events).toEqual(original.events);
  await row.getByRole('button',{name:'+ Log temperature',exact:true}).click();await row.getByLabel('Food temperature',{exact:true}).fill('165');await expect(bar.getByRole('button',{name:/Preview next step/})).toBeDisabled();
- await row.getByRole('button',{name:'Save timestamped reading',exact:true}).click();await row.getByLabel('Quick notes',{exact:true}).fill('Bark still soft');await row.getByRole('checkbox',{name:'Complete Check the bark',exact:true}).click();
+ await row.getByRole('button',{name:'Save timestamped reading',exact:true}).click();await row.getByRole('button',{name:'Notes',exact:true}).click();await row.getByLabel('Quick notes',{exact:true}).fill('Bark still soft');await row.getByRole('checkbox',{name:'Complete Check the bark',exact:true}).click();
  await expect(guide.getByRole('article',{name:'Warm the sauce',exact:true})).toBeVisible();const after=await saved(page);expect(after.completed.due).toBeTruthy();expect(after.notes.due).toBe('Bark still soft');expect(after.startedAt).toBe(original.startedAt);expect(after.events!.filter(e=>e.taskId==='due').some(e=>e.kind==='temperature'&&e.value===165)).toBe(true);
- await bar.getByRole('button',{name:'Full checklist',exact:true}).click();const checklist=page.getByRole('region',{name:'Full cook checklist',exact:true});await expect(checklist.getByRole('checkbox',{name:'Complete Check the bark for General prep',exact:true})).toBeChecked();await checklist.getByRole('button',{name:'Open step: Check the bark for General prep',exact:true}).click();await row.getByText('Step details',{exact:true}).click();await row.locator('.task-activity summary').click();await expect(row.getByRole('listitem').filter({hasText:'165°F'})).toBeVisible();
- await expect(row.getByRole('button',{name:'Remove step: Check the bark',exact:true})).toBeVisible();await expect(row.getByText('Step options',{exact:true})).toHaveCount(0);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(page)).toEqual(after);
+ await bar.getByRole('button',{name:'Full checklist',exact:true}).click();const checklist=page.getByRole('region',{name:'Full cook checklist',exact:true});await expect(checklist.getByRole('checkbox',{name:'Complete Check the bark for General prep',exact:true})).toBeChecked();await checklist.getByRole('button',{name:'Open step: Check the bark for General prep',exact:true}).click();await row.getByText('Step details',{exact:true}).click();await row.getByRole('button',{name:/^Activity \(/}).click();await expect(row.getByRole('listitem').filter({hasText:'165°F'})).toBeVisible();
+ await expect(row.getByRole('button',{name:'Remove step: Check the bark',exact:true})).toHaveCount(0);await expect(row.getByText('Step options',{exact:true})).toHaveCount(0);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();expect(await saved(page)).toEqual(after);
 });
 
 test('finish is separate from navigation and archives only after explicit confirmation',async({page})=>{
@@ -68,16 +68,16 @@ test('Cancel adding is a compact quiet action with a phone-sized hit area',async
 test('current step keeps utility controls in details with accessible tap areas',async({page},info)=>{
  const original=await load(page);const row=page.getByRole('region',{name:'Current step',exact:true}).getByRole('article');
  await expect(row.getByRole('button',{name:/^Edit(?: |$)/})).not.toBeVisible();await expect(row.getByLabel('Quick notes',{exact:true})).not.toBeVisible();
- await row.getByText('Step details',{exact:true}).click();const buttons=[row.getByRole('button',{name:/^Edit(?: |$)/}),row.getByRole('button',{name:'+ Log temperature',exact:true}),row.getByRole('button',{name:'Remove step: Check the bark',exact:true})];
+ await row.getByText('Step details',{exact:true}).click();const buttons=[row.getByRole('button',{name:/^Edit(?: |$)/}),row.getByRole('button',{name:'+ Log temperature',exact:true}),row.getByRole('button',{name:'Notes',exact:true})];
  for(const button of buttons){expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);}
- await expect(row.getByLabel('Quick notes',{exact:true})).toBeVisible();expect(await buttons[2].evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');await expect(buttons[2].locator('svg')).toBeVisible();
+ await row.getByRole('button',{name:'Notes',exact:true}).click();await expect(row.getByLabel('Quick notes',{exact:true})).toBeVisible();await expect(row.getByRole('button',{name:'Remove step: Check the bark',exact:true})).toHaveCount(0);
  for(const width of [375,390,768,1280]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
  await row.getByText('Step details',{exact:true}).click();await row.screenshot({path:info.outputPath('standard-step-card.png')});expect(await saved(page)).toEqual(original);
 });
 
 
 test('step trash action confirms removal and retains recorded activity',async({page})=>{
- const meal=fixture();await load(page,meal);await page.getByText('Step details',{exact:true}).click();const remove=page.getByRole('button',{name:'Remove step: Check the bark',exact:true});
+ const meal=fixture();await load(page,meal);await page.getByText('Step details',{exact:true}).click();await page.getByRole('region',{name:'Current step',exact:true}).getByRole('button',{name:'Edit',exact:true}).click();const remove=page.getByRole('button',{name:'Remove step: Check the bark',exact:true});
  page.once('dialog',d=>d.dismiss());await remove.click();expect(await saved(page)).toEqual(meal);
  page.once('dialog',d=>d.accept());await remove.click();const after=await saved(page);expect(after.hiddenTaskIds).toContain('due');expect(after.events!.filter(e=>e.kind!=='removed')).toEqual(meal.events);expect(after.startedAt).toEqual(meal.startedAt);await expect(page.getByRole('article',{name:'Warm the sauce',exact:true})).toBeVisible();
 });

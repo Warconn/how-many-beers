@@ -6,9 +6,8 @@ import type {PlannedTask} from "@/domain/meal";
 import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
 import {physicalPhase,physicalStartedEvent} from "@/domain/physicalPhase";
-import CookingStepSummary,{cookingTitle} from "./CookingStepSummary";
+import CookingStepSummary,{cookingInstruction,cookingInstructions} from "./CookingStepSummary";
 import StepEditor from "./StepEditor";
-import StepForecastTime from "./StepForecastTime";
 import type {StepForecast} from "@/domain/cookForecast";
 import Icon from './Icon';
 import RemoveButton from "./RemoveButton";
@@ -72,9 +71,12 @@ export default function TaskRow({
   const [moveError,setMoveError]=useState("");
   const [durationError,setDurationError]=useState("");
   const [remainingEstimate,setRemainingEstimate]=useState('');
+  const [estimateOpen,setEstimateOpen]=useState(false);
+  const [notesOpen,setNotesOpen]=useState(false);
+  const [activityOpen,setActivityOpen]=useState(false);
 
   // Each new checklist action starts with its optional tools collapsed.
-  useEffect(()=>{setDetailsOpen(false);setLogging(false);setStartFormOpen(false);setStartError("");setRemainingEstimate('');},[task.id]);
+  useEffect(()=>{setDetailsOpen(false);setLogging(false);setStartFormOpen(false);setStartError("");setRemainingEstimate('');setEstimateOpen(false);setNotesOpen(false);setActivityOpen(false);},[task.id]);
   useEffect(()=>{onReadingChange?.(logging||startFormOpen||!!remainingEstimate.trim());return ()=>onReadingChange?.(false);},[logging,startFormOpen,remainingEstimate,onReadingChange]);
 
   const done=!!completedAt;
@@ -84,6 +86,9 @@ export default function TaskRow({
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
   const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
+  const summaryInstruction=cookingInstruction(task,forecast?.template?.kind==='rest');
+  const fullInstructions=task.instructions==='Imported recipe step. Confirm instructions and timing.'?'':cookingInstructions(task);
+  const detailInstructions=fullInstructions.split(/(?<=[.!?])\s+/).filter(sentence=>!summaryInstruction.includes(sentence)).join(' ');
   const standardPlanning=!!planningControls&&!isCooking;
   const remove=()=>{if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();};
 
@@ -93,7 +98,7 @@ export default function TaskRow({
       setStartError("Choose a valid actual time that is not in the future.");return;
     }
     onEvent("started",undefined,undefined,started?"Corrected actual phase start":"Recorded actual phase start",when.toISOString());
-    setStartFormOpen(false);setStartError("");
+    setStartFormOpen(false);setStartTime("");setStartError("");
   };
 
   const handleReading=()=>{
@@ -139,17 +144,15 @@ export default function TaskRow({
       {standardPlanning&&!editing&&<StepEditButton title={task.title} id={editorId+'-trigger'} disabled={durationDisabled} onClick={()=>onEditingChange(true)}/>}
     </div>
     {isCooking&&alsoCooking.length>0&&<p className="also-cooking">Also cooking: {alsoCooking.join(' · ')}</p>}
-    <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing||logging||startFormOpen,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
+    <DetailContainer className={isCooking?"cooking-step-details":undefined} {...(isCooking?{open:detailsOpen||editing,onToggle:(e:React.SyntheticEvent<HTMLElement>)=>setDetailsOpen((e.currentTarget as HTMLDetailsElement).open)}:{})}>
     {isCooking&&<><summary>Step details</summary>
       <div className="step-optional-records" aria-label="Optional step records">
-        <p className="muted small">Optional timing and readings. Checking this step does not mean a cooking or resting interval has elapsed.</p>
         <div className="cooking-step-actions">
-          {phase&&!started&&<button type="button" className="button secondary" disabled={editing||logging||startFormOpen} onClick={()=>onEvent("started")}>Record actual start now</button>}
           {phase&&<button type="button" className="button secondary" disabled={editing||logging} onClick={()=>{
             setStartFormOpen(v=>!v);
-            setStartTime(localDateTimeInput(started?.occurredAt??new Date().toISOString()));
+            if(!startFormOpen&&!startTime)setStartTime(localDateTimeInput(started?.occurredAt??new Date().toISOString()));
             setStartError("");
-          }} aria-expanded={startFormOpen}>{startFormOpen?"Cancel start time edit":started?"Correct actual start time":"Enter actual start time"}</button>}
+          }} aria-expanded={startFormOpen}>{startFormOpen?"Cancel start time edit":started?"Correct actual start time":"Record actual start"}</button>}
           <button type="button" className="button secondary" disabled={editing||startFormOpen} onClick={()=>{setLogging(v=>!v);setDetailsOpen(true);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>
         </div>
         {startFormOpen&&<div className="reading-form">
@@ -158,25 +161,36 @@ export default function TaskRow({
           {startError&&<p className="form-error" id={editorId+"-start-error"} role="alert">{startError}</p>}
           <button type="button" className="button primary" onClick={saveActualStart}>Save actual start</button>
         </div>}
-        {onRemainingEstimate&&<form className="remaining-estimate" onSubmit={e=>{e.preventDefault();const n=Number(remainingEstimate);if(!remainingEstimate||!Number.isFinite(n)||n<0||n>43200){setError('Enter a valid remaining estimate.');return;}onRemainingEstimate(n);setRemainingEstimate('');setError('');}}>
-          <label htmlFor={editorId+'-remaining'}>Remaining estimate (minutes, optional)</label><input id={editorId+'-remaining'} type="number" min="0" max="43200" step="any" inputMode="decimal" value={remainingEstimate} onChange={e=>setRemainingEstimate(e.target.value)}/><div className="step-editor-actions"><button className="button primary" type="submit" disabled={!remainingEstimate.trim()}>Update estimate</button>{remainingEstimate.trim()&&<button className="button secondary" type="button" onClick={()=>{setRemainingEstimate('');setError('');}}>Cancel estimate</button>}</div>
+        {onRemainingEstimate&&<button type="button" className="button secondary" aria-expanded={estimateOpen} disabled={editing||logging||startFormOpen} onClick={()=>setEstimateOpen(v=>!v)}>Adjust remaining estimate</button>}
+        {onRemainingEstimate&&estimateOpen&&<form className="remaining-estimate" onSubmit={e=>{e.preventDefault();const n=Number(remainingEstimate);if(!remainingEstimate||!Number.isFinite(n)||n<0||n>43200){setError('Enter a valid remaining estimate.');return;}onRemainingEstimate(n);setRemainingEstimate('');setEstimateOpen(false);setError('');}}>
+          <label htmlFor={editorId+'-remaining'}>Remaining estimate (minutes, optional)</label><input id={editorId+'-remaining'} type="number" min="0" max="43200" step="any" inputMode="decimal" value={remainingEstimate} onChange={e=>setRemainingEstimate(e.target.value)}/><div className="step-editor-actions"><button className="button primary" type="submit" disabled={!remainingEstimate.trim()}>Update estimate</button><button className="button secondary" type="button" onClick={()=>{setRemainingEstimate('');setEstimateOpen(false);setError('');}}>Cancel estimate</button></div>
         </form>}
-      </div>{cookingTitle(task.title)!==task.title&&task.instructions!==task.title&&<p className="small">{task.title}</p>}<p className="small muted">{task.instructions}</p><p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}{estimatedFinish(task)?" · Planned finish "+formatted(estimatedFinish(task)!):""}</p>{forecast?.reason&&<p className="small muted">{forecast.reason}</p>}{forecast?.template?.at&&forecast.template.kind==='checkpoint'&&<p className="small muted"><StepForecastTime forecast={forecast} part="start"/></p>}<p className="small muted">{task.equipment}{task.targetTempF!=null?" · Target "+task.targetTempF+"°F (planned)":""}</p>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
-    {!standardPlanning&&<div className="task-actions" aria-label={"Manage "+task.title}>
-      {!editing && <button type="button" id={editorId+"-trigger"} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
+      </div>
+      {detailInstructions&&<p className="small muted">{detailInstructions}</p>}
+      <p className="planned-step-details">{task.scheduledAt?<>Planned start <time aria-label="Planned start" dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"No planned start"}</p>
+      {forecast?.status==='blocked'&&forecast.reason&&<p className="small muted">{forecast.reason}</p>}
+      {task.equipment&&task.equipment!==task.baseEquipment&&<p className="small muted">{task.equipment}</p>}
+      {task.targetTempF!=null&&<p className="small muted">Target {task.targetTempF}°F (planned)</p>}
+      {!activityOpen&&<>{started&&<p className="step-event">Started {formatted(started.occurredAt)}</p>}{completedAt&&<p className="completed-time">Completed {formatted(completedAt)}</p>}</>}
+    </>}
+
+    {!standardPlanning&&<div className={"task-actions"+(isCooking?" cooking-step-tool-row":"")} aria-label={"Manage "+task.title}>
+      {!editing && <button type="button" id={editorId+"-trigger"} className={isCooking?"button secondary":undefined} disabled={logging||durationDisabled} onClick={() => onEditingChange(true)} aria-expanded={false}>Edit</button>}
+
+      {isCooking&&<button type="button" className="button secondary" aria-expanded={notesOpen} onClick={()=>setNotesOpen(v=>!v)}>Notes</button>}
 
       {!isCooking && <div className="step-move-controls" role="group" aria-label="Step order"><span aria-hidden="true">Move</span>
         <button type="button" onClick={()=>{const error=onMove("up");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index} of ${count}.`);}} disabled={editing||durationDisabled||index===0} aria-label={"Move "+task.title+" up"} title="Move up"><Icon name="arrow-up"/></button>
         <button type="button" onClick={()=>{const error=onMove("down");setMoveError(error||"");if(error)return;setMoveNotice(`${task.title} moved to step ${index+2} of ${count}.`);}} disabled={editing||durationDisabled||index===count-1} aria-label={"Move "+task.title+" down"} title="Move down"><Icon name="arrow-down"/></button>
       </div>}
-      <RemoveButton className="step-remove" label={"Remove step: "+task.title} disabled={editing||logging||durationDisabled} onClick={()=>{
+      {!isCooking&&<RemoveButton className="step-remove" label={"Remove step: "+task.title} disabled={editing||logging||durationDisabled} onClick={()=>{
         if(window.confirm("Remove this step from the checklist? Any recorded activity will be retained in the cook history."))onRemove();
-      }}/>
+      }}/> }
 
     </div>}
     {!isCooking && !standardPlanning && <span className="sr-only" role="status">{moveNotice}</span>}
     {moveError&&<p className="small" role="alert">{moveError}</p>}
-    {editing && <StepEditor task={task} onRemove={standardPlanning?remove:undefined} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
+    {editing && <StepEditor task={task} onRemove={standardPlanning||isCooking?remove:undefined} onSave={(title,instructions,details)=>{onEdit(title,instructions,details);onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus({preventScroll:true}));}} onCancel={()=>{onEditingChange(false);requestAnimationFrame(()=>document.getElementById(editorId+"-trigger")?.focus());}}/>}
     {isCooking && <>
       {logging && <div className="reading-form">
         <div>
@@ -196,14 +210,14 @@ export default function TaskRow({
         <input id={"reading-note-"+task.id} maxLength={500} value={readingNote} onChange={e=>setReadingNote(e.target.value)} placeholder={readingType==="temperature"?"Flat, thickest part...":"Pit set to 250, switched to Smoke mode..."}/>
         <button type="button" className="button primary" onClick={handleReading}>Save timestamped reading</button>
       </div>}
-      <label className="note-label" htmlFor={"note-"+task.id}>Quick notes</label>
-      <input id={"note-"+task.id} className="task-note" maxLength={500} placeholder="Bark looks good, wrapped in paper..." value={note} onChange={e=>onNote(e.target.value)}/>
-      {activity.length>0 && <details className="task-activity"><summary>Activity ({activity.length}{events.filter(e=>e.taskId===task.id&&e.kind!=="removed").length>8?"+":""})</summary>
+      {notesOpen&&<><label className="note-label" htmlFor={"note-"+task.id}>Quick notes</label>
+      <input id={"note-"+task.id} className="task-note" maxLength={500} placeholder="Bark looks good, wrapped in paper..." value={note} onChange={e=>onNote(e.target.value)}/></>}
+      {activity.length>0 && <div className="task-activity"><button type="button" className="button secondary" aria-expanded={activityOpen} onClick={()=>setActivityOpen(v=>!v)}>Activity ({activity.length}{events.filter(e=>e.taskId===task.id&&e.kind!=="removed").length>8?"+":""})</button>{activityOpen&&
         <ul>{activity.map(e=><li key={e.id}>
           <time>{formatted(e.occurredAt)}</time> · {e.kind==="temperature"?"Food temp":e.kind==="equipment"?"Equipment setting":e.kind==="reopened"?"Reopened":e.kind==="completed"?"Completed":"Started"}
           {e.value!==undefined?" "+e.value+(e.unit||""):""}{e.note?" · "+e.note:""}
-        </li>)}</ul>
-      </details>}
+        </li>)}</ul>}
+      </div>}
     </>}
     </DetailContainer>
     {error && <p className="form-error" role="alert">{error}</p>}

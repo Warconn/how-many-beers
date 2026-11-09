@@ -110,3 +110,30 @@ Call the existing planning reflow through `reorderPlannedStep`; do not derive a
 second schedule in the UI. Keep the serving target, independent dishes, physical
 events and existing save mechanism intact. Reordering is an edit, never proof that
 a cooking interval elapsed or that a condition is safe.
+
+
+## Step tools stay optional (#123)
+
+The default cooking card retains its checkbox, short action/instruction and timing
+cue. Step details is the single optional layer for contextual tools. Record actual
+start opens one timestamp form (prefilled with now); recorded phases offer correction
+instead. Notes, activity and supported remaining-estimate adjustments appear only
+when selected, with no blank fields or disabled estimate action on opening details.
+Activity expands inline rather than behind another nested disclosure. Full checklist
+uses the same shortened action titles. Repeated instructions, generic forecast
+explanations, duplicate checkpoint/finish timestamps and irrelevant equipment labels
+are removed. Remaining authored instructions and concise safety cues stay available.
+Closing/reopening details retains typed time/reading/estimate drafts and navigation
+protection. Existing actuals, forecasts, Beerometer, saves and Hold → Finish semantics
+are unchanged. Timing-cue improvements and template rewrites remain separate issues.
+
+### Owner review: time and action hierarchy (November 9)
+
+Keep Edit and Notes in one compact row with equal visual weight within Cooking
+Mode details (#123 review). For the separately queued #124/#125 work, use a
+consistent visible Edit position across planning/cooking. Planned start leads
+before an action begins, with duration secondary. Tapping the planned time should
+open its time editor directly; the full step editor should expose planned time
+without More options. Keep actual starts and live estimates distinctly labelled,
+and never change duration when editing a planned timestamp. These timing/editor
+changes are direction for those separate issues, not implemented by #123.

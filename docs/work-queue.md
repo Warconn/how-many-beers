@@ -1,14 +1,16 @@
-# Post-brisket implementation queue · November 8, 2026
+# Post-brisket queue · November 8, 2026
 
-Owner-approved order: #117 scheduling correctness, #123 Cooking Mode simplicity,
-#124 timing visibility, #125 direct planned-time editing, #127 brisket template,
-then #126 Upcoming Cooks start-preparing cue. One focused PR per issue; approval
-is required before starting the next issue. No merge or production authorization.
+The owner approved merging #128 (#117) and #129 (#123) into dev and starting
+**#124 only**. #128 is merged; #129 is integrating the approved changes. Preserve
+the accepted Cooking Mode simplification, timing semantics and Hold → Finish.
 
-#117 is implemented on `feat/117-template-checkpoints`, pending review and browser
-validation. Fixed template cooking intervals now contain their checkpoints; the
-literal ribs case estimates 1:40 PM doneness and 2 PM readiness. Active sessions
-retain their existing projection. See step-timing.md for the boundary.
+Current: #124 timing visibility, including planned start on the collapsed card.
+Remaining order, each requiring approval before starting: #125 direct planned-time editing, #127 brisket template, #126 Upcoming Cooks cue.
+Do not combine stories, merge automatically or release production.
+
+Every handoff must include the exact feature URL from Cloudflare's successful
+check/comment plus a short owner test plan. Do not construct the URL from the
+branch name: Cloudflare can shorten the alias.
 
 # Current owner-approved queue · November 7, 2026
 

@@ -181,3 +181,12 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .standard-planning-step:first-child { border-top: 0; }
 .standard-planning-step .task-main > .step-row-timing { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .step-row-timing time { white-space: nowrap; font: inherit; color: inherit; }
+
+/* Cooking utility actions share one compact row and the same visual weight. */
+.guided-step .task-actions.cooking-step-tool-row {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+.guided-step .cooking-step-tool-row>.button { margin:0; }
