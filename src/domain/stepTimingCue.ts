@@ -23,9 +23,9 @@ export function stepTimingCue(task:PlannedTask,forecast:StepForecast|undefined,n
   if(supported)return {label:task.timingMode==='fixed'?'Planned check':'Check around',at,detail};
   return {label:detail};
  }
- if(forecast?.template?.basis==='actual'&&valid(forecast.start))return {label:'Actual start',at:forecast.start,...(forecast.overEstimate||forecast.status==='overdue'?{detail:'Estimate elapsed; review progress.'}:{})};
- if(task.timingMode!=='unscheduled'&&valid(task.scheduledAt)&&(!forecast||task.timingMode==='fixed'||task.recipeOrder===undefined))return {label:'Planned start',at:task.scheduledAt,...(forecast?.status==='blocked'?{detail:'Review timing: '+(forecast.reason??'waiting for previous work.')}: {})};
+ if(forecast?.template?.basis==='actual'&&valid(forecast.start))return {label:'Actual start',at:forecast.start,...(forecast.overEstimate||forecast.status==='overdue'?{detail:'Review now; estimate elapsed.'}:{})};
  if(forecast?.status==='overdue')return {label:'Review now',detail:'Estimate elapsed; check progress.'};
+ if(task.timingMode!=='unscheduled'&&valid(task.scheduledAt)&&(!forecast||task.timingMode==='fixed'||task.recipeOrder===undefined))return {label:'Planned start',at:task.scheduledAt,...(forecast?.status==='blocked'?{detail:'Review timing: '+(forecast.reason??'waiting for previous work.')}: {})};
  if(forecast?.status==='blocked')return {label:'Waiting for previous action',detail:forecast.reason};
  if(valid(forecast?.start))return {label:forecast?.status==='planned'?'Planned start':'Estimated start',at:forecast.start};
  return {label:task.id.endsWith(':serve')?'Serve when ready':'Start time not set'};
