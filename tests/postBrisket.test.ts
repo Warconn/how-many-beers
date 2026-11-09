@@ -54,3 +54,10 @@ it('an early actual load and Hold keep append-only events and allow finishing be
  const history=archiveCook(active,emptyHistory(),'Served early','2026-11-08T14:01Z');
  expect(history.cooks[0].meal.events).toEqual(active.events);expect(history.cooks[0].meal.serveAt).toBe(serve);
 });
+
+it('time-only editing accepts an existing long imported title without truncating or revalidating unrelated fields',()=>{
+ const title='Long imported recipe instructions '.repeat(6).slice(0,180);
+ const original={...newMeal(),serveAt:serve,customTasks:[{id:'long',dishId:'custom',dishName:'Recipe',title,instructions:'Keep all authored text.',scheduledAt:null,isCondition:true}]};
+ const next=editStep(original,'long',title,'Keep all authored text.',{plannedTimeOnly:true,timingMode:'fixed',scheduledAt:'2026-11-08T04:30Z',equipment:'',targetTempF:null});
+ expect(next.customTasks).toEqual(original.customTasks);expect(next.taskOverrides?.long).toEqual({scheduledAt:'2026-11-08T04:30:00.000Z'});
+});

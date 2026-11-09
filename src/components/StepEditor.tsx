@@ -43,13 +43,13 @@ export default function StepEditor({ task, onSave, onCancel,onRemove,timeOnly=fa
     onSubmit={e => {
       e.preventDefault();
       try {
-        if (!title.trim()) throw new Error('Please enter a task title.');
-        if (title.trim().length > 160) throw new Error('Keep titles under 160 characters.');
+        if (!timeOnly && !title.trim()) throw new Error('Please enter a task title.');
+        if (!timeOnly && title.trim().length > 160) throw new Error('Keep titles under 160 characters.');
         const minutes = durationMinutes;
-        if (minutes !== null && (!Number.isFinite(minutes) || minutes < 0 || minutes > 43200)) throw new Error('Duration must be between 0 and 720 hours (43200 minutes), or blank for unknown.');
+        if (!timeOnly && minutes !== null && (!Number.isFinite(minutes) || minutes < 0 || minutes > 43200)) throw new Error('Duration must be between 0 and 720 hours (43200 minutes), or blank for unknown.');
         const temp = target === '' ? null : Number(target);
-        if (temp !== null && (!Number.isFinite(temp) || temp <= 0 || temp > 600)) throw new Error('Target food temperature must be between 1 and 600°F, or blank.');
-        if (equipment.trim().length > 80) throw new Error('Keep equipment names under 80 characters.');
+        if (!timeOnly && temp !== null && (!Number.isFinite(temp) || temp <= 0 || temp > 600)) throw new Error('Target food temperature must be between 1 and 600°F, or blank.');
+        if (!timeOnly && equipment.trim().length > 80) throw new Error('Keep equipment names under 80 characters.');
         const scheduledAt = timingMode === 'fixed' ? !timingEdited ? task.scheduledAt : resolvePlannedTime(localTime, zone, offsetChoice, task.scheduledAt) : null;
         onSave(title, instructions, { ...(timeOnly?{plannedTimeOnly:true}:{}), timingMode, scheduledAt, ...(durationEdited?{durationMinutes:minutes}:{}), equipment, targetTempF: temp });
       } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not save the step.'); }

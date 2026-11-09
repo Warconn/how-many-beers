@@ -161,6 +161,16 @@ export function addStep(meal: Meal, title: string, instructions = "", scheduledA
 }
 
 export function editStep(meal: Meal, taskId: string, title: string, instructions: string, details?: StepPlanEdit): ExtendedMeal {
+  if(details?.plannedTimeOnly){
+    if(!['plan','fixed','unscheduled'].includes(details.timingMode))throw new Error('Choose a valid timing mode.');
+    if(details.timingMode==='fixed'&&(!details.scheduledAt||!Number.isFinite(Date.parse(details.scheduledAt))))throw new Error('Choose a valid planned date and time.');
+    if(!cookTimeline(meal).some(t=>t.id===taskId))throw new Error('Task not found.');
+    const m=migrateMeal(meal);
+    const timeOverride={...m.taskOverrides?.[taskId]};
+    if(details.timingMode==='plan')delete timeOverride.scheduledAt;
+    else timeOverride.scheduledAt=details.timingMode==='unscheduled'?null:new Date(details.scheduledAt!).toISOString();
+    return {...m,taskOverrides:{...m.taskOverrides,[taskId]:timeOverride}};
+  }
   const trimmed = title.trim();
   if (!trimmed || trimmed.length > 160) throw new Error("Give the task a title (up to 160 characters).");
   const task=cookTimeline(meal).find(t=>t.id===taskId);
@@ -184,12 +194,7 @@ export function editStep(meal: Meal, taskId: string, title: string, instructions
     if(details.targetTempF===null)delete override.targetTempF;
     else override.targetTempF=details.targetTempF;
   }
-  if(details?.plannedTimeOnly){
-    const timeOverride={...m.taskOverrides?.[taskId]};
-    if(details.timingMode==='plan')delete timeOverride.scheduledAt;
-    else timeOverride.scheduledAt=details.timingMode==='unscheduled'?null:new Date(details.scheduledAt!).toISOString();
-    return {...m,taskOverrides:{...m.taskOverrides,[taskId]:timeOverride}};
-  }
+
   return {...m, taskOverrides: {...m.taskOverrides, [taskId]:override}};
 }
 
