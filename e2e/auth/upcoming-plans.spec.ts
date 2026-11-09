@@ -41,7 +41,31 @@ function server(legacy=false){
  })};
 }
 async function signIn(page:Page){await backend(page);await page.goto('/');await page.getByRole('button',{name:'Sign in',exact:true}).click();const d=page.getByRole('dialog',{name:'Your account'});await d.getByLabel('Email address').fill(user.email);await d.getByRole('button',{name:'Send sign-in code',exact:true}).click();await d.getByLabel('Email code').fill('123456');await d.getByRole('button',{name:'Verify code',exact:true}).click();await expect(d.getByText('Signed in as '+user.email,{exact:true})).toBeVisible();await d.getByRole('button',{name:'Close account',exact:true}).click();}
-async function createPlan(page:Page,name:string,serveAt?:string){await page.getByRole('button',{name:'Plan another cook',exact:true}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Meal name',{exact:true}).fill(name);if(serveAt)await page.getByLabel('Serve date and time',{exact:true}).fill(serveAt);await page.getByRole('button',{name:'Save plan for later',exact:true}).click();await expect(page.getByRole('region',{name:'Upcoming cooks'}).getByRole('listitem',{name,exact:true})).toBeVisible();}
+async function createPlan(page:Page,name:string,serveAt?:string){
+ await page.getByRole('button',{name:'Plan another cook',exact:true}).click();
+ await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+ await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();
+ const savedPlan=(response:import('@playwright/test').Response)=>response.url().endsWith('save_saved_cook_plan')&&response.ok();
+ // Set up a saved plan before testing conflicts/promotion. Wait for the dish
+ // save's acknowledgment so WebKit does not fill during the initial re-render.
+ const added=page.waitForResponse(response=>savedPlan(response)&&response.request().postDataJSON().document.meal.dishes.length>0);
+ await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await added;
+ await expect(page.locator('.account-save-indicator')).toHaveAttribute('data-state','saved');
+ const named=page.waitForResponse(response=>savedPlan(response)&&response.request().postDataJSON().document.meal.name===name);
+ const nameField=page.getByLabel('Meal name',{exact:true});
+ // Use real key events: WebKit's synthetic fill can be reset without an input
+ // update during this controlled-field setup. Keep the exact value/save checks.
+ await nameField.click();
+ await nameField.press('ControlOrMeta+A');
+ await nameField.press('Backspace');
+ await nameField.pressSequentially(name);
+ await expect(nameField).toHaveValue(name);
+ await named;
+ if(serveAt)await page.getByLabel('Serve date and time',{exact:true}).fill(serveAt);
+ await page.getByRole('button',{name:'Save plan for later',exact:true}).click();
+ await expect(page.getByRole('region',{name:'Upcoming cooks'}).getByRole('listitem',{name,exact:true})).toBeVisible();
+}
 test('future plans stay independent from an active 5-of-8 cook and reload on another device',async({page,context,browser},info)=>{
  const remote=server(),before=structuredClone(remote.state.active),history=structuredClone(remote.state.history);await remote.attach(context);await signIn(page);
  await createPlan(page,'Sunday Brats');await createPlan(page,'Next Friday','2026-11-06T18:00');expect(remote.plans.size).toBe(2);expect(remote.state.active).toEqual(before);expect(remote.state.history).toEqual(history);

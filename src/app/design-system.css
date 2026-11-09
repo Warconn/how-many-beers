@@ -187,3 +187,11 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .guided-step .cooking-step-when time { font:inherit; color:inherit; white-space:normal; }
 .step-condition-cue { font-weight:400; }
 .guide-next-time { white-space:normal; }
+/* Cooking utility actions share one compact row and the same visual weight. */
+.guided-step .task-actions.cooking-step-tool-row {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+.guided-step .cooking-step-tool-row>.button { margin:0; }
