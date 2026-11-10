@@ -9,7 +9,7 @@ type Plan={id:string;meal:Meal;revision:number;legacy?:boolean;pending?:boolean}
 export default function UpcomingCooks({plans,active,busy,onOpen,onStart,onDiscard,loading,onCreate}:{onDiscard:(id:string)=>Promise<void>;onCreate:()=>Promise<void>;loading:boolean;plans:Plan[];active:boolean;busy:boolean;onOpen:(id:string)=>Promise<void>;onStart:(id:string)=>Promise<void>}){
  const [failedPlan,setFailedPlan]=useState<string|null>(null),[error,setError]=useState(''),[working,setWorking]=useState(false);
  const act=async(fn:()=>Promise<void>,id:string|null=null)=>{setFailedPlan(id);setWorking(true);setError('');try{await fn();}catch{setError('Could not update this plan. Please try again.');}finally{setWorking(false);}};
- const create=<button type="button" className={plans.length?'button secondary':'button primary'} disabled={busy||working} onClick={()=>void act(onCreate)}>Plan a cook</button>;
+ const create=<button type="button" className={plans.length||active?'button secondary':'button primary'} disabled={busy||working} onClick={()=>void act(onCreate)}>Plan a cook</button>;
  if(!loading&&!plans.length)return <section className="home-new" aria-label="Plan a cook">{create}{error&&!failedPlan&&<p className="form-error" role="alert">{error}</p>}</section>;
  return <section className="panel upcoming-cooks" aria-label="Upcoming cooks">
   <div className="between"><h3>Upcoming cooks</h3>{create}</div>

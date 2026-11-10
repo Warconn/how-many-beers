@@ -166,6 +166,7 @@ test('discard an accidentally created empty upcoming plan from its editor withou
  page.on('dialog',()=>{throw Error('An empty plan should not require confirmation');});
  await page.getByRole('button',{name:'Discard plan',exact:true}).click();
  await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Plan a cook',exact:true})).toHaveClass(/secondary/);
  await expect(page.getByRole('listitem',{name:'Next cook',exact:true})).toHaveCount(0);
  expect(remote.discarded.has(id)).toBe(true);expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
  await page.reload();await expect(page.getByRole('listitem',{name:'Next cook',exact:true})).toHaveCount(0);
@@ -240,6 +241,7 @@ test('discarding a stale Home card never silently discards a newer-device plan',
 test('fresh Home leads with Plan a cook and an empty planner keeps discard inside the serving card',async({page,context},info)=>{
  const remote=server();remote.state.active=null;await remote.attach(context);await signIn(page);
  await expect(page.getByRole('button',{name:'Plan a cook',exact:true})).toBeInViewport();
+ await expect(page.getByRole('button',{name:'Plan a cook',exact:true})).toHaveClass(/primary/);
  await expect(page.getByRole('region',{name:'Upcoming cooks',exact:true})).toHaveCount(0);
  await expect(page.getByText('Your saved future meals will appear here.',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Plan another cook',exact:true})).toHaveCount(0);
