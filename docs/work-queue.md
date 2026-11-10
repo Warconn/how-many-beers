@@ -12,12 +12,16 @@ PR target of dev. Do not merge into main or deploy production without owner appr
    delayed application frame reproduces focus moving from Meal name to serving
    time and leaves the saved name as Next cook. Verify the narrow fix in WebKit,
    including immediate Start, serving edits, history, reload and Cook Again.
-2. Compare dev/main and retain all production fixes; run full unit, browser,
+2. **Preview blocker: upcoming-plan discard.** An accidental empty plan had no
+   removal action. Expose the existing retained discard RPC from Home and the
+   planner, preserving active cooks/history and immutable retry receipts. No new
+   migration. Regress empty/populated, failure, stale and reload paths.
+3. Compare dev/main and retain all production fixes; run full unit, browser,
    authentication, account, offline and database-security checks. The owner also
    requested a [user-journey audit](user-journey-coverage.md) and continuous
    whole-cook regression scenarios. Review actual
    desktop/mobile/iPhone screenshots and provide the confirmed feature URL.
-3. Complete release acceptance and verify production schema readiness before the
+4. Complete release acceptance and verify production schema readiness before the
    separately approved production promotion. No hosted database changes are
    authorized in this session.
 

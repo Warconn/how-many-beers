@@ -12,8 +12,9 @@ function server(legacy=false){
  const dish=parseRecipeText('Pumpkin seeds','Preheat (10 minutes)\nClean (5 minutes)\nDry (10 minutes)\nSeason (2 minutes)\nCoat (2 minutes)\nRoast (15 minutes)\nCool (10 minutes)');
  let original:ExtendedMeal=migrateMeal({...newMeal(),name:legacy?'Legacy dinner':'Pumpkin Seeds',serveAt:'2026-11-05T13:00',dishes:[dish],...(!legacy?{mode:'cooking' as const,startedAt:now}:{})});if(!legacy)for(const task of cookTimeline(original).slice(0,5))original=recordEvent(original,task.id,'completed',now);
  const state={revision:1,writeId:null as string|null,active:{meal:original,serveInstant:new Date(original.serveAt).toISOString()} as {meal:ExtendedMeal;serveInstant:string}|null,history:archiveCook({...newMeal(),name:'Saved dinner',dishes:[createDish('side')]},emptyHistory(),'Keep saved history','2026-11-03T18:00Z').cooks.map(c=>({...c,serveInstant:c.meal.serveAt})),capabilities:{cancelCook:true,savedPlans:true}};
- const plans=new Map<string,SavedPlan>(),receipts=new Map<string,unknown>(),promotionRequests:string[]=[];let failSave=false,losePromotion=false;
- return {state,original,plans,promotionRequests,failSaving:(v:boolean)=>{failSave=v;},loseNextPromotion:()=>{losePromotion=true;},attach:async(context:BrowserContext)=>context.route(rpc+'**',async route=>{
+ const discarded=new Map<string,SavedPlan>(),discardRequests:string[]=[];
+ const plans=new Map<string,SavedPlan>(),receipts=new Map<string,unknown>(),promotionRequests:string[]=[];let failSave=false,losePromotion=false,failDiscard=false,holdDiscardReplies=false;
+ return {state,original,plans,discarded,discardRequests,promotionRequests,failDiscarding:(v:boolean)=>{failDiscard=v;},holdDiscardReplies:(v:boolean)=>{holdDiscardReplies=v;},failSaving:(v:boolean)=>{failSave=v;},loseNextPromotion:()=>{losePromotion=true;},attach:async(context:BrowserContext)=>context.route(rpc+'**',async route=>{
   const b=route.request().postDataJSON(),name=route.request().url().slice(rpc.length);if(b.expected_owner!==user.id)return route.fulfill({status:403,json:{code:'42501'}});
   const conflict=()=>route.fulfill({status:409,json:{code:'40001',message:'Changed on another device'}});
   if(name==='list_saved_cook_plans')return route.fulfill({json:{plans:[...plans.values()]}});
@@ -29,6 +30,14 @@ function server(legacy=false){
    const plan=plans.get(b.target_plan_id);if(!plan||state.revision!==b.expected_workspace_revision||plan.revision!==b.expected_plan_revision||state.active?.meal.mode==='cooking'||state.active?.meal.startedAt)return conflict();
    if(state.active&&state.active.meal.dishes.length){const m=state.active.meal;plans.set(m.id,{id:m.id,meal:m,serveInstant:state.active.serveInstant,timeZone:'UTC',revision:1,createdAt:now,updatedAt:now,writeId:null});}
    state.active={meal:{...plan.meal,mode:'cooking',startedAt:now},serveInstant:plan.serveInstant!};plans.delete(plan.id);state.revision++;state.writeId=b.write_id;const receipt={operationId:b.write_id,planId:plan.id,cookId:plan.id};receipts.set(b.write_id,receipt);if(losePromotion){losePromotion=false;return route.abort('failed');}return route.fulfill({json:{...state,promotion:receipt}});
+  }
+  if(name==='discard_saved_cook_plan'){
+   discardRequests.push(b.write_id);if(failDiscard)return route.fulfill({status:503,json:{code:'unavailable'}});
+   const receipt=receipts.get(b.write_id);if(receipt)return holdDiscardReplies?route.abort('failed'):route.fulfill({json:receipt});
+   const plan=plans.get(b.target_plan_id);if(!plan||plan.revision!==b.expected_revision)return conflict();
+   discarded.set(plan.id,structuredClone(plan));plans.delete(plan.id);
+   const result={operationId:b.write_id,planId:plan.id,discarded:true};receipts.set(b.write_id,result);
+   return holdDiscardReplies?route.abort('failed'):route.fulfill({json:result});
   }
   if(name==='cancel_cook'){if(state.active?.meal.id!==b.target_cook_id||b.expected_revision!==state.revision)return conflict();state.active=null;state.revision++;state.writeId=b.write_id;return route.fulfill({json:{...state,cancellation:{operationId:b.write_id,cookId:b.target_cook_id,canceledAt:now}}});}
   if(name==='save_cook_workspace'){
@@ -141,4 +150,87 @@ test('recipe-first Cook again keeps the entire previous meal independent from ac
 
 test('recipe-first review retains edits across a failed add and resubmits without duplicate dishes',async({page,context})=>{
  const remote=server(),before=structuredClone(remote.state.active);await remote.attach(context);await signIn(page);await page.goto('/');await page.getByRole('button',{name:'Plan another cook',exact:true}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();const review=page.getByRole('region',{name:'Review your method',exact:true});remote.failSaving(true);await review.getByRole('button',{name:'Add to meal',exact:true}).click();await expect(review.getByRole('alert')).toContainText('Your edits are still here');await review.getByLabel('Recipe name',{exact:true}).fill('Latest edited brats');remote.failSaving(false);await review.getByRole('button',{name:'Add to meal',exact:true}).click();await expect(review).toHaveCount(0);expect([...remote.plans.values()][0].meal.dishes).toHaveLength(1);expect([...remote.plans.values()][0].meal.dishes[0].name).toBe('Latest edited brats');expect(remote.state.active).toEqual(before);
+});
+
+
+test('discard an accidentally created empty upcoming plan from its editor without touching the active cook',async({page,context},info)=>{
+ const remote=server(),active=structuredClone(remote.state.active),history=structuredClone(remote.state.history);
+ await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:'Plan another cook',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'What do you want to cook?',exact:true})).toBeVisible();
+ await expect(page.getByLabel('Meal name',{exact:true})).toHaveValue('Next cook');
+ const id=[...remote.plans.keys()][0];expect(id).toBeTruthy();
+ const discard=page.getByRole('button',{name:'Discard plan',exact:true});
+ expect((await discard.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+ await page.screenshot({path:info.outputPath('empty-plan-discard-control.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.on('dialog',()=>{throw Error('An empty plan should not require confirmation');});
+ await page.getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect(page.getByRole('region',{name:'Home',exact:true})).toBeVisible();
+ await expect(page.getByRole('listitem',{name:'Next cook',exact:true})).toHaveCount(0);
+ expect(remote.discarded.has(id)).toBe(true);expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
+ await page.reload();await expect(page.getByRole('listitem',{name:'Next cook',exact:true})).toHaveCount(0);
+ expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
+ await page.screenshot({path:info.outputPath('discard-empty-plan.png'),fullPage:true,scale:'css'});
+});
+
+test('an upcoming plan with dishes can be kept or discarded from Home while preserving other meals',async({page,context})=>{
+ const remote=server(),active=structuredClone(remote.state.active),history=structuredClone(remote.state.history);
+ await remote.attach(context);await signIn(page);await createPlan(page,'Keep this dinner');await createPlan(page,'Accidental dinner');
+ const other=structuredClone([...remote.plans.values()].find(p=>p.meal.name==='Keep this dinner'));
+ const card=page.getByRole('listitem',{name:'Accidental dinner',exact:true});
+ page.once('dialog',dialog=>dialog.dismiss());await card.getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect(card).toBeVisible();expect(remote.discarded.size).toBe(0);
+ page.once('dialog',dialog=>dialog.accept());await card.getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect(card).toHaveCount(0);expect(remote.discarded.size).toBe(1);
+ expect(remote.plans.get(other!.id)).toEqual(other);expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
+ await page.reload();await expect(card).toHaveCount(0);await expect(page.getByRole('listitem',{name:'Keep this dinner',exact:true})).toBeVisible();
+});
+
+
+test('a lost discard response is acknowledged after reload without resurrecting the plan or changing active progress',async({page,context})=>{
+ const remote=server(),active=structuredClone(remote.state.active),history=structuredClone(remote.state.history);
+ await remote.attach(context);await signIn(page);await createPlan(page,'Discard once');
+ remote.holdDiscardReplies(true);page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('listitem',{name:'Discard once',exact:true}).getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect.poll(()=>remote.discarded.size).toBe(1);expect(remote.plans.size).toBe(0);
+ remote.holdDiscardReplies(false);await page.reload();
+ await expect(page.getByRole('region',{name:'Upcoming cooks',exact:true})).not.toContainText('Discard once');
+ await expect.poll(()=>remote.discardRequests.length).toBeGreaterThanOrEqual(2);
+ expect(new Set(remote.discardRequests).size).toBe(1);
+ await page.reload();await expect(page.getByRole('listitem',{name:'Discard once',exact:true})).toHaveCount(0);
+ expect(remote.discarded.size).toBe(1);expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
+});
+
+test('a failed discard keeps the saved plan and reports failure without changing another cook',async({page,context})=>{
+ const remote=server(),active=structuredClone(remote.state.active),history=structuredClone(remote.state.history);
+ await remote.attach(context);await signIn(page);await createPlan(page,'Still saved');const saved=structuredClone([...remote.plans.values()][0]);
+ remote.failDiscarding(true);page.once('dialog',dialog=>dialog.accept());
+ const card=page.getByRole('listitem',{name:'Still saved',exact:true});await card.getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect(page.getByRole('alert').filter({hasText:'Could not update this plan.'})).toBeVisible();
+ expect(remote.plans.get(saved.id)).toEqual(saved);expect(remote.discarded.size).toBe(0);
+ expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
+ await page.reload();await expect(card).toBeVisible();expect(remote.plans.get(saved.id)).toEqual(saved);
+});
+
+
+test('a legacy upcoming planning record can be discarded without adding completed history',async({page,context},info)=>{
+ const remote=server(true),history=structuredClone(remote.state.history);await remote.attach(context);await signIn(page);
+ await page.screenshot({path:info.outputPath('upcoming-plan-discard-card.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('listitem',{name:'Legacy dinner',exact:true}).getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect(page.getByRole('listitem',{name:'Legacy dinner',exact:true})).toHaveCount(0);
+ expect(remote.state.active).toBeNull();expect(remote.state.history).toEqual(history);
+ await page.reload();await expect(page.getByRole('listitem',{name:'Legacy dinner',exact:true})).toHaveCount(0);
+});
+
+
+test('discarding a stale Home card never silently discards a newer-device plan',async({page,context})=>{
+ const remote=server(),active=structuredClone(remote.state.active),history=structuredClone(remote.state.history);
+ await remote.attach(context);await signIn(page);await createPlan(page,'Original dinner');
+ const old=[...remote.plans.values()][0],newer={...old,revision:old.revision+1,meal:{...old.meal,name:'Changed on another device'}};remote.plans.set(old.id,newer);
+ page.once('dialog',dialog=>dialog.accept());await page.getByRole('listitem',{name:'Original dinner',exact:true}).getByRole('button',{name:'Discard plan',exact:true}).click();
+ await expect(page.getByRole('alert').filter({hasText:'Could not update this plan.'})).toBeVisible();
+ await expect(page.getByRole('listitem',{name:'Changed on another device',exact:true})).toBeVisible();
+ expect(remote.plans.get(old.id)).toEqual(newer);expect(remote.discardRequests).toEqual([]);
+ expect(remote.state.active).toEqual(active);expect(remote.state.history).toEqual(history);
 });

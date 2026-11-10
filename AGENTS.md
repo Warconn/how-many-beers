@@ -21,6 +21,10 @@ This explicit release instruction supersedes the usual feature-PR target of dev.
 Do not merge into main or deploy production without further approval. Do not apply
 hosted Supabase migrations. Keep #61/#83/#103 open until production verification.
 #114 is the next feature candidate, outside this session; do not implement it.
+The owner also found accidental empty upcoming plans could not be removed. Add
+a direct retained Discard plan action using the existing #83 RPC, with empty,
+populated, failure/retry/reload and active/history-isolation regressions. Keep this
+in release PR #132; no new migration or production merge is authorized.
 
 Handoffs include the exact feature testing URL reported by Cloudflare's successful
 check/comment and a short owner test plan. Never infer the hostname from a branch

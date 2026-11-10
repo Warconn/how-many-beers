@@ -196,6 +196,20 @@ export function useCookWorkspace() {
     }
     selectLegacy(null);await upcoming.open(id);
   };
+  const discardPlan=async(id:string)=>{
+    const owner=account.ownerId;
+    if(!plansEnabled||!owner||!cloud.store.current)throw Error('Upcoming plans are not available for this account yet.');
+    const current=currentMeal();
+    if(current?.id===id){
+      if(currentHasActuals(current))throw Error('Use Cancel cook for an active cook.');
+      await upcoming.close();await cloud.store.current.cancel(id);assertOwner(owner);selectLegacy(null);
+    }else{
+      const selected=upcoming.selectedId===id;
+      try{await upcoming.discard(id);}catch(error){if(!selected)await upcoming.close().catch(()=>{});throw error;}
+      assertOwner(owner);
+    }
+    setTransitionError('');setSelection(v=>v+1);
+  };
   const returnToCurrent=async()=>{
     await flushCurrent();await upcoming.close();selectLegacy(null);
   };
@@ -472,7 +486,7 @@ export function useCookWorkspace() {
     plansLoading:upcoming.listPhase==='loading',
     reloadPlans:upcoming.refresh,
     reloadSelectedPlan,
-    createPlan,openPlan,returnToCurrent,startSelectedPlan,
+    createPlan,openPlan,discardPlan,returnToCurrent,startSelectedPlan,
     refreshUpcomingPlans:upcoming.refresh,
     exportUpcomingPlans,importUpcomingPlans,
     history: data?.history ?? emptyHistory(),

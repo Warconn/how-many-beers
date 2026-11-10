@@ -1,4 +1,5 @@
 "use client";
+import {hasUpcomingContent} from '@/account/useUpcomingPlans';
 
 import ServingPlan from '@/components/ServingPlan';
 import {planningReadiness} from '@/domain/planningReadiness';
@@ -223,6 +224,13 @@ function CookExperience() {
     patch(current=>reorderPlannedStep(current,id,target,after));setClockNow(Date.now());setMessage('');
   });
 
+  const [discardingPlan,setDiscardingPlan]=useState(false);
+  const discardTarget=useRef<string|null>(null);
+  useEffect(()=>{
+    if(discardTarget.current&&!workspace.isSelectedPlan&&!workspace.upcomingPlans.some(plan=>plan.id===discardTarget.current)){
+      discardTarget.current=null;setMethodReview(null);setShowDishSetup(false);setDraft(null);setEditingStep(null);setView('home');
+    }
+  },[workspace.isSelectedPlan,workspace.upcomingPlans]);
   if (!meal) return <main className="shell"><header className="site-header"><h1>How Many Beers?</h1><AccountControl view={view} cookId={workspace.selectedPlanId??''} canReload={false} savePhase={workspace.kind==='account'?workspace.savePhase:undefined}/></header><div className="panel"><p role="status">Loading your cook...</p>{workspace.isSelectedPlan&&<button type="button" className="button secondary" onClick={()=>void workspace.returnToCurrent().then(()=>setView('home')).catch(()=>{})}>Home</button>}{workspace.authUnavailable&&<AccountPanel/>}</div></main>;
 
 
@@ -284,6 +292,14 @@ function CookExperience() {
     setOutcome("");
     setView("home");
     window.scrollTo({top:0,behavior:"instant"});
+  };
+  const discardPlan=async(id:string)=>{
+    const plan=workspace.upcomingPlans.find(p=>p.id===id);
+    if(!plan)throw Error('This plan is no longer upcoming. Return Home to refresh your plans.');
+    if((hasUpcomingContent(plan.meal)||!!methodReview)&&!window.confirm('Discard this upcoming plan? It will be removed from Upcoming cooks.'))return;
+    discardTarget.current=id;setDiscardingPlan(true);
+    try{await workspace.discardPlan(id);setMethodReview(null);setShowDishSetup(false);setDraft(null);setEditingStep(null);setView('home');}
+    finally{setDiscardingPlan(false);}
   };
   const goHome = async () => {if(methodReview&&!window.confirm('Discard this recipe review and return Home?'))return;setMethodReview(null);try{if(workspace.plansEnabled)await workspace.returnToCurrent();returnHome();}catch{/* The existing save indicator reflects changes still being saved. */}};
   const continueCurrentCook = async () => {try{await workspace.returnToCurrent();setView('cooking');}catch{/* Keep both documents intact until saving can continue. */}};
@@ -504,7 +520,7 @@ function CookExperience() {
         </details>
       </section>}
       {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&<nav aria-label="Plan navigation"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button></nav>}
-      <div className="cook-content" inert={workspace.locked}>{recipeFirst&&view==='planning'&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
+      <div className="cook-content" inert={workspace.locked||discardingPlan}>{recipeFirst&&view==='planning'&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
       {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
         <p>Your existing saved data is protected. Download recovery data above before resetting anything. It preserves the original data for recovery; it is not a normal cook backup.</p>
@@ -536,7 +552,7 @@ function CookExperience() {
               {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
           </section>}
-          {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} loading={workspace.plansLoading||!!workspace.plansError} onCreate={beginNewCook}/>}
+          {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked||discardingPlan} onDiscard={discardPlan} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} loading={workspace.plansLoading||!!workspace.plansError} onCreate={beginNewCook}/>}
           {!workspace.plansEnabled&&<section className="panel home-new">
             <h3>{workspace.plansEnabled?"Plan another cook":hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
             <p className="muted">{workspace.plansEnabled?"Save a future meal without changing your current cook.":hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
@@ -612,7 +628,7 @@ function CookExperience() {
         </>
       ) : (
         <>
-          {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&<button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>}
+          {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&<div className="between"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>{workspace.plansEnabled&&workspace.isSelectedPlan&&<button type="button" className="link discard-plan" disabled={discardingPlan||workspace.locked} onClick={()=>void discardPlan(meal.id).catch(()=>{/* Existing plan/account save state retains the error and retry. */})}>Discard plan</button>}</div>}
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
           <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
           <ServingPlan meal={meal} hasSteps={timeline.length>0} startAt={plan?.startAt??null} now={clockNow} readyAt={plan?.readyAt??projection?.finish??null} lateMinutes={plan?.lateMinutes??0} suggestion={plan?.suggestedServeAt??null}

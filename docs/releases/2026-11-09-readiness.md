@@ -85,6 +85,26 @@ and a template plus uploaded recipe through history/Cook Again. They supplement
 the existing targeted tests; hosted accounts and physical iPhone acceptance remain
 explicit boundaries. #114 is excluded.
 
+## Preview follow-up: discard an upcoming plan before cook day
+
+The owner found that accidentally creating an empty meal left an undeletable
+Upcoming card. The existing saved-plan migration already supports retained
+`discarded` records; the app did not expose it. The release now adds a direct
+**Discard plan** action in the selected planner and on Home's upcoming cards.
+Empty plans need no routine confirmation; populated plans receive one brief
+confirmation. Discarding a plan never archives it as a completed cook or changes
+another active cook, upcoming plan or existing history. Legacy planning records
+use the existing retained cancellation operation, guarded against actual activity.
+
+The plan store journals an immutable discard request before sending it. It removes
+the plan only after acknowledgement, keeps failures recoverable, reuses the same
+receipt after lost responses/reload, rejects stale revisions and prevents later
+local edits from resurrecting a discarded plan. Existing migrations/hosted schema
+are unchanged. Browser regressions cover empty editor discard, populated Home
+keep/discard, failed requests, lost-response reload and legacy planning records;
+unit tests cover terminal/retry/storage/ownership-readiness safeguards. Full checks
+must pass on the new candidate rather than relying on the previous release run.
+
 ## Production prerequisites and approval gate
 
 - Obtain explicit owner approval before merging #132. Cloudflare deploys main
@@ -122,6 +142,10 @@ explicit boundaries. #114 is excluded.
    Planned-time edits must preserve duration and actuals; Hold → Finish stays intact.
 5. Briefly go offline/reconnect during a disposable cook. Resume/check progress
    and confirm honest save status. Use the Account menu for any update action.
+
+6. Create an accidental empty upcoming meal. Discard it from the editor or Home,
+   reload and verify it stays gone while the active cook/history remain. For a
+   plan with dishes, verify dismissing the confirmation keeps the plan.
 
 After separately approved deployment, repeat account sign-in, history, saving,
 cancellation and upcoming-plan checks on https://howmanybeers.app before closing
