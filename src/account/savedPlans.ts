@@ -10,6 +10,7 @@ export type SavedPlan={
   createdAt:string;updatedAt:string;writeId:string|null;writeReceipt?:PlanWriteReceipt;
 };
 export type SavedPlanAPI={
+  discard?:(planId:string,revision:number,writeId:string)=>Promise<void>;
   list:()=>Promise<SavedPlan[]>;
   read:(planId:string)=>Promise<SavedPlan|null>;
   write:(planId:string,revision:number,writeId:string,document:RawCook,timeZone:string)=>Promise<SavedPlan>;
@@ -61,6 +62,11 @@ export function savedPlanAPI(client:SupabaseClient,owner:string):SavedPlanAPI{
     }finally{clearTimeout(timer);}
   };
   return {
+    discard:async(planId,revision,writeId)=>{
+      const receipt=await call('discard_saved_cook_plan',{target_plan_id:planId,expected_revision:revision,write_id:writeId});
+      if(receipt?.operationId!==writeId||receipt?.planId!==planId||receipt?.discarded!==true)
+        throw Error('Discarding this plan has not been confirmed. Keep it open and retry.');
+    },
     import:async(writeId,documents)=>{
       const valid=validatePlanDocuments(documents);
       const value=await call('import_saved_cook_plans',{write_id:writeId,documents:valid});

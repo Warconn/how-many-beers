@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 test('empty planner invites template or upload, preserves serving time and adds dishes',async({page},info)=>{
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
  await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();
  await expect(page.getByRole('region',{name:'Cook duration in beers'})).toHaveCount(0);await expect(page.getByRole('complementary',{name:'Live schedule'})).toHaveCount(0);await expect(page.getByRole('button',{name:'Start cooking',exact:true})).toHaveCount(0);
  await expect(page.getByLabel('Serve date and time')).toBeVisible();

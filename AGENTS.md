@@ -10,15 +10,24 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current owner direction (November 8, 2026)
+## Current owner direction (November 9, 2026)
 
-Owner-approved PRs #128 (#117) and #129 (#123) are merged into dev.
-The owner now authorizes one consolidated post-brisket feature PR covering
-#124, #125, #127 and #126 plus the agreed planning configuration cleanup.
-This supersedes the earlier one-issue-at-a-time queue. Use
-`feat/post-brisket-experience`, consolidate the unmerged #130 work, and provide
-one feature URL for owner feedback. Do not merge to dev or release production
-before owner review. Preserve existing saved cooks, actuals and Hold → Finish.
+PR #131 is owner-approved and merged into dev at `62f4673`. Do not repeat the
+post-brisket implementation. The authorized work is now release readiness:
+investigate/fix #118 with deterministic WebKit regression coverage; preserve
+production fixes while comparing dev/main; run all regression suites; reconcile
+delivered issues and documentation; prepare one release PR targeting main.
+This explicit release instruction supersedes the usual feature-PR target of dev.
+Do not merge into main or deploy production without further approval. Do not apply
+hosted Supabase migrations. Keep #61/#83/#103 open until production verification.
+#114 is the next feature candidate, outside this session; do not implement it.
+The owner also found accidental empty upcoming plans could not be removed. Add
+a direct retained Discard plan action using the existing #83 RPC, with empty,
+populated, failure/retry/reload and active/history-isolation regressions. Keep this
+in release PR #132; no new migration or production merge is authorized. The
+owner requested a clean fresh Home: label the action Plan a cook, omit the empty
+Upcoming panel, and use a trash icon inside the planning card and on saved-plan
+cards rather than a loose Discard plan text link. Keep a 44px accessible target.
 
 Handoffs include the exact feature testing URL reported by Cloudflare's successful
 check/comment and a short owner test plan. Never infer the hostname from a branch
@@ -46,16 +55,16 @@ meal readiness when the requested target cannot be met. Never silently move the
 target or fabricate actual activity. Keep the accepted Beerometer and #101 live
 execution model. The read-only planning projection is not #3's resource optimizer.
 
-**Next production-readiness bug: #117.** Manual fixed starts/durations on template
-cooking intervals can incorrectly serialize checkpoints and over-delay serving.
-Default brisket/ribs serving alignment is covered and works. Resolve #117 in a
-focused, separately reviewed fix before production validation of manual template
-phase edits. Do not repeat #109 or start new capabilities as incidental cleanup.
-Shared-smoker preheat/capacity/temperature coordination remains #3; alarms and
-notifications remain #11. See docs/releases/2026-11-07-dev.md.
+#117 is delivered in dev through #128. #119/#121 are delivered through #120/#122;
+#123 through #129; #124/#125/#126/#127 through #131. #118 is the current
+pre-production metadata-edit investigation. The release must preserve the accepted
+physical model and Hold → Finish, all actuals, sessions, guest/account boundaries
+and saving/history. See docs/work-queue.md and the current release notes.
 
 Both November 5 Supabase migrations are owner-confirmed applied and verified in
-dev. Do not reapply them or modify hosted database state in this work.
+dev. Do not reapply them or modify hosted database state in this work. The owner
+confirmed production is missing both and will apply the two files manually before
+release merge; keep that gate pending until success/verification is confirmed.
 
 ### Delivered UI and deferred capabilities
 
@@ -127,6 +136,15 @@ Study `src/domain/meal.ts`, `src/domain/cookState.ts`, `src/domain/schedule.ts` 
 Steps conceptually belong to dishes. The overall schedule is derived from all dishes and custom steps. Step edit/remove/reorder paths already exist; reuse domain helpers and cover event-history preservation rather than building a second inconsistent state model. Built-in template steps may be computed instead of stored as fully independent step entities, so inspect the data model before making editable-step guarantees.
 
 Use accessible labels, keyboard-friendly buttons and mobile tap targets. Expose unscheduled/estimated/condition-driven items truthfully. Never portray timing estimates as food safety guarantees.
+
+## User-journey regression coverage
+
+See [the coverage map](docs/user-journey-coverage.md) for implemented pathways,
+known cook regressions, whole-UI journeys and manual/hosted boundaries. Preserve
+its guest/account/legacy/offline distinctions. Update the map when changing an
+experience or adding a concrete regression; do not imply exhaustive device or
+hosted-service coverage from mocks. New overnight/mixed-meal journeys run on
+desktop/mobile Chromium and iPhone WebKit.
 
 ## Test-first feature delivery
 

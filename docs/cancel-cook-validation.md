@@ -1,5 +1,7 @@
 # Retained cancellation (#61)
 
+> **Current status, November 9:** Retained cancellation is implemented in dev through PR #104. Keep #61 open for production verification. Both November 5 migrations are owner-confirmed verified in dev. Production schema readiness remains a separate release gate; no hosted changes are authorized here. Earlier implementation/rollout notes below are historical.
+
 Implementation is proposed for dev; no hosted migrations, merges or production
 changes have been made. Production remains release #100. The UI uses native modal
 focus trapping, safe default Keep cooking, Escape dismissal, pending-write protection

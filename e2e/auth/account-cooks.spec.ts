@@ -2,7 +2,8 @@ import {changeStepDuration} from '../helpers/stepEditing';
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { backend, user, session } from "./fixtures";
 import { newMeal, createDish } from "../../src/domain/meal";
-import { migrateMeal } from "../../src/domain/cookState";
+import { migrateMeal, type ExtendedMeal } from "../../src/domain/cookState";
+import {holdAppFrames,releaseAppFrames} from '../helpers/appFrames';
 import { archiveCook, emptyHistory } from "../../src/domain/cookHistory";
 const rpc = "https://auth.example.test/rest/v1/rpc/";
 type Workspace = {
@@ -105,7 +106,7 @@ test("a signed-in cook is acknowledged and recovered in a fresh browser context"
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -139,6 +140,46 @@ test("a signed-in cook is acknowledged and recovered in a fresh browser context"
   await other.close();
 });
 
+test('post-add frame preserves an immediate meal-name edit through start, history and Cook Again (#118)',async({page,context},info)=>{
+ const remote=server(),oldDish=createDish('side');
+ const previous=archiveCook({...newMeal(),name:'Earlier dinner',serveAt:'2026-11-01T18:00:00Z',dishes:[oldDish],events:[{id:'previous-actual',taskId:oldDish.id+':start',kind:'started' as const,occurredAt:'2026-11-01T17:00:00Z'}]} as ExtendedMeal,emptyHistory(),'Keep this history','2026-11-01T19:00:00Z').cooks.map(c=>({...c,serveInstant:new Date(c.meal.serveAt).toISOString()}));
+ remote.state.history=structuredClone(previous);await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:/Plan a cook/}).click();
+ await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-13T18:00');
+ await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await holdAppFrames(page);
+ await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await expect(page.getByRole('region',{name:'Review your method',exact:true})).toHaveCount(0);
+ const name=page.getByLabel('Meal name',{exact:true});await name.click();await name.press('ControlOrMeta+A');
+ const frames=await releaseAppFrames(page);
+ // Type through the real keyboard target, without re-focusing the locator.
+ await page.keyboard.type('Friday brisket');
+ const focusEvidence=await page.evaluate(frames=>({frames,focused:document.activeElement?.id,name:(document.getElementById('meal-name') as HTMLInputElement)?.value}),frames);
+ await info.attach('post-add-focus',{body:JSON.stringify(focusEvidence),contentType:'application/json'});
+ await expect(name).toHaveValue('Friday brisket');await expect(name).toBeFocused();
+ // Serving edits use the same save path; this does not assert they were lost in
+ // the original incident. Start immediately, without waiting for the save icon.
+ await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-13T18:30');
+ await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Friday brisket',exact:true})).toBeVisible();
+ const active=()=>remote.state.active as {meal:ExtendedMeal};
+ expect(active().meal.name).toBe('Friday brisket');expect(active().meal.serveAt).toBe('2026-11-13T18:30');
+ const mealId=active().meal.id;await page.getByRole('checkbox',{name:'Complete Trim brisket',exact:true}).click();
+ await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ const actuals=structuredClone(active().meal.events);expect(actuals?.length).toBeGreaterThan(0);expect(remote.state.history).toEqual(previous);
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();
+ expect(active().meal.id).toBe(mealId);expect(active().meal.events).toEqual(actuals);expect(active().meal.name).toBe('Friday brisket');
+ await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ await page.getByRole('button',{name:/Past cooks/}).click();await page.getByLabel('Find a past cook').fill('Friday');await page.getByRole('button',{name:'View cook',exact:true}).click();
+ const archived=remote.state.history.find(c=>(c as {meal:ExtendedMeal}).meal.id===mealId) as {meal:ExtendedMeal};
+ expect(archived.meal.events).toEqual(actuals);expect(archived.meal.serveAt).toBe('2026-11-13T18:30');expect(remote.state.history).toEqual(expect.arrayContaining(previous));
+ await page.screenshot({path:info.outputPath('118-preserved-history.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.on('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Cook again',exact:true}).click();
+ await expect(page.getByRole('button',{name:/Resume planning/})).toBeVisible();
+ expect(active().meal.name).toBe('Friday brisket');expect(active().meal.events).toEqual([]);expect(active().meal.completed).toEqual({});expect(remote.state.history).toEqual(expect.arrayContaining([archived,...previous]));
+});
+
 test("finishing recalls immutable history and Cook Again resets recorded events", async ({
   page,
   context,
@@ -147,12 +188,15 @@ test("finishing recalls immutable history and Cook Again resets recorded events"
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+  await expect(page.getByRole('region', {name: 'Review your method', exact: true})).toHaveCount(0);
+  await expect(page.locator('.cook-content')).not.toHaveAttribute('inert', '');
   await page.getByLabel("Meal name").fill("Friday brisket");
+  await expect.poll(() => (remote.state.active as {meal:ExtendedMeal})?.meal.name).toBe("Friday brisket");
   await expect(
     page.getByRole("status", { name: "Cook saved", exact: true }),
   ).toBeVisible();
@@ -222,7 +266,7 @@ test("failed account writes remain unsaved, block logout and recover through ret
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -291,7 +335,7 @@ test("earlier records stay untouched without migration prompts across account sw
   ).toBeVisible();
   await signIn(page);
   await expect(page.getByRole("region", {name:"Choose your account cook"})).toHaveCount(0);
-  await expect(page.getByRole("button", {name:/Plan a new cook/})).toBeEnabled();
+  await expect(page.getByRole("button", {name:/Plan a cook/})).toBeEnabled();
   expect(remote.state.active).toBeNull();
   await page.getByRole("button", {name:"Account",exact:true}).click();
   await expect(page.getByText("Signed in as "+user.email,{exact:true})).toBeVisible();
@@ -315,7 +359,7 @@ test("earlier records stay untouched without migration prompts across account sw
   };
   await signIn(page, other);
   await expect(
-    page.getByRole("button", { name: /Plan a new cook/ }),
+    page.getByRole("button", { name: /Plan a cook/ }),
   ).toBeVisible();
   await expect(
     page.getByText("Earlier family brisket", { exact: true }),
@@ -333,7 +377,7 @@ test("a stale device exports pending work and loads the newer account version ex
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -368,7 +412,7 @@ test("a pending account edit survives reload in IndexedDB and saves after reconn
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -404,7 +448,7 @@ test("an unconfirmed finish retries once without duplicating completed history",
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -452,7 +496,7 @@ test("guest trial is candid, does not persist cooks, and offers account saving",
   await expect(
     page.getByText(/Guest cooks aren’t kept after you leave/),
   ).toBeVisible();
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -478,7 +522,7 @@ test("confirmed logout hides pending work from another account and restores it f
   const remote = server();
   await remote.attach(context);
   await signIn(page);
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
@@ -586,7 +630,7 @@ test("account menu stays clean while earlier records remain untouched", async ({
 
 test('signed-in meal-first planning preserves serving time through cancel and reload',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toBeVisible();
+ await page.getByRole('button',{name:/Plan a cook/}).click();await expect(page.getByRole('heading',{name:'What do you want to cook?'})).toBeVisible();await expect(page.getByLabel('Serve date and time')).toBeVisible();
  await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toBeVisible();
  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-12-25T18:00');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Cancel adding',exact:true}).click();await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-12-25T18:00');
@@ -596,8 +640,14 @@ test('signed-in meal-first planning preserves serving time through cancel and re
 
 test('imported duration edits save and reload without changing another dish or history',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
- await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ // Add is an acknowledged critical save. fill() can bypass inert in WebKit;
+ // a real user cannot edit this field until the review closes and unlocks.
+ await expect(page.getByRole('region',{name:'Review your method',exact:true})).toHaveCount(0);
+ await expect(page.locator('.cook-content')).not.toHaveAttribute('inert','');
+ await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');
+ await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-11-26T00:05');
+ await expect.poll(()=>(remote.state.active as {meal:ExtendedMeal})?.meal.serveAt).toBe('2026-11-26T00:05');
  const original=JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0]),history=JSON.stringify(remote.state.history);
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Pumpkin seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds\nCool completely');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();
  await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});
@@ -611,17 +661,17 @@ test('imported duration edits save and reload without changing another dish or h
 
 
 test('guest imported durations produce a plan without persisting a trial cook',async({page})=>{
- await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Trial seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();await page.getByRole('button',{name:'Edit Trial seeds',exact:true}).click();
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Trial seeds');await page.getByLabel('Recipe instructions').fill('Clean seeds\nRoast seeds');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();await page.getByRole('button',{name:'Edit Trial seeds',exact:true}).click();
  for(const [name,minutes] of [['Clean seeds','5'],['Roast seeds','10']]){
   await changeStepDuration(page.getByRole('region',{name:'Trial seeds steps',exact:true}).getByRole('article',{name,exact:true}),minutes);
  }
  await expect(page.getByRole('region',{name:'Cook duration in beers'}).locator('strong')).toHaveText('0.2');
- expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeVisible();await expect(page.getByRole('button',{name:'Edit Trial seeds',exact:true})).toHaveCount(0);
+ expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:/Plan a cook/})).toBeVisible();await expect(page.getByRole('button',{name:'Edit Trial seeds',exact:true})).toHaveCount(0);
 });
 
 test('extracted recipe times save to an account without duration re-entry',async({page,context})=>{
  const remote=server();remote.state.history=archiveCook({...newMeal(),dishes:[createDish('brisket')]},emptyHistory(),'Keep original history','2026-10-28T23:00Z').cooks.map(c=>({...c,serveInstant:c.meal.serveAt}));await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
  const other=JSON.stringify((remote.state.active as {meal:{dishes:unknown[]}}).meal.dishes[0]),history=JSON.stringify(remote.state.history);
  const source='# Seeds\n## Ingredients\n1 cup seeds\n## Equipment\nPellet smoker\n## Source\nFamily notes\n## Instructions\nClean seeds (5 minutes).\nRoast seeds at 425°F for 10–15 minutes.\nCool seeds (10 minutes).';
  await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Extracted seeds');await page.getByLabel('Recipe instructions').fill(source);await page.getByRole('button',{name:'Preview recipe steps'}).click();const preview=page.getByRole('region',{name:'Review your method'});await expect(preview.getByLabel('Equipment',{exact:true})).toHaveValue('Pellet Smoker');await preview.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Edit Extracted seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();await page.getByText('Ingredients & recipe reference',{exact:true}).click();await page.getByLabel('Ingredients (one per line)').fill('2 cups seeds');await page.getByLabel('Source / notes').fill('Family notes, corrected');await page.getByText('Recipe temperatures',{exact:true}).click();await page.getByRole('spinbutton',{name:'Step 2 temperature 1',exact:true}).fill('450');await expect(page.getByRole('status',{name:'Cook saved',exact:true})).toBeVisible();
@@ -630,7 +680,7 @@ test('extracted recipe times save to an account without duration re-entry',async
 });
 
 test('guest can accept extracted timings without persisting the recipe',async({page})=>{
- await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Guest extracted seeds');await page.getByLabel('Recipe instructions').fill('# Seeds\n## Ingredients\n1 cup seeds\n## Instructions\nClean seeds (5 minutes).\nRoast seeds on pellet smoker at 425°F (10 minutes).');await page.getByRole('button',{name:'Preview recipe steps'}).click();const preview=page.getByRole('region',{name:'Review your method'});await expect(preview.getByLabel('Equipment',{exact:true})).toHaveValue('Pellet Smoker');await preview.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Edit Guest extracted seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();await page.getByText('Ingredients & recipe reference',{exact:true}).click();await page.getByLabel('Ingredients (one per line)').fill('2 cups seeds');await page.getByText('Recipe temperatures',{exact:true}).click();await page.getByRole('spinbutton',{name:'Step 2 temperature 1',exact:true}).fill('450');await expect(page.getByRole('region',{name:'Cook duration in beers'}).locator('strong')).toHaveText('0.2');expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:'Edit Guest extracted seeds',exact:true})).toHaveCount(0);
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Guest extracted seeds');await page.getByLabel('Recipe instructions').fill('# Seeds\n## Ingredients\n1 cup seeds\n## Instructions\nClean seeds (5 minutes).\nRoast seeds on pellet smoker at 425°F (10 minutes).');await page.getByRole('button',{name:'Preview recipe steps'}).click();const preview=page.getByRole('region',{name:'Review your method'});await expect(preview.getByLabel('Equipment',{exact:true})).toHaveValue('Pellet Smoker');await preview.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Edit Guest extracted seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();await page.getByText('Ingredients & recipe reference',{exact:true}).click();await page.getByLabel('Ingredients (one per line)').fill('2 cups seeds');await page.getByText('Recipe temperatures',{exact:true}).click();await page.getByRole('spinbutton',{name:'Step 2 temperature 1',exact:true}).fill('450');await expect(page.getByRole('region',{name:'Cook duration in beers'}).locator('strong')).toHaveText('0.2');expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();await page.reload();await expect(page.getByRole('button',{name:'Edit Guest extracted seeds',exact:true})).toHaveCount(0);
 });
 
 test('live estimates survive account reload without rewriting saved plans, activity or history',async({page,context})=>{
@@ -645,7 +695,7 @@ test('live estimates survive account reload without rewriting saved plans, activ
 
 test('compact step edits and order survive account saves with advanced options closed',async({page,context})=>{
  const remote=server();await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  await page.getByRole('button',{name:'Edit Grilled beer-bath brats',exact:true}).click();
  const steps=page.getByRole('region',{name:'Grilled beer-bath brats steps',exact:true}),first=steps.getByRole('article',{name:'Build the brat and vegetable tray',exact:true});
  await first.getByRole('button',{name:/^Edit(?: |$)/}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
@@ -668,7 +718,7 @@ test('compact step edits and order survive account saves with advanced options c
 
 
 test('trial guest sees honest finish choices and can finish without persisting a cook',async({page})=>{
- await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();const finish=page.getByRole('region',{name:'Finish cook',exact:true});await expect(finish).toContainText('This trial cook is not saved.');await expect(finish.getByRole('button',{name:'Sign in to save this cook',exact:true})).toBeVisible();page.once('dialog',dialog=>dialog.accept());await finish.getByRole('button',{name:'Finish without saving',exact:true}).click();await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeVisible();expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();
+ await backend(page);await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();await page.getByText('Cook details & tools',{exact:true}).click();await page.getByRole('button',{name:'Finish cook early',exact:true}).click();const finish=page.getByRole('region',{name:'Finish cook',exact:true});await expect(finish).toContainText('This trial cook is not saved.');await expect(finish.getByRole('button',{name:'Sign in to save this cook',exact:true})).toBeVisible();page.once('dialog',dialog=>dialog.accept());await finish.getByRole('button',{name:'Finish without saving',exact:true}).click();await expect(page.getByRole('button',{name:/Plan a cook/})).toBeVisible();expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();
 });
 
 test('completed cook has one primary finish and account history retains its actual records',async({page,context})=>{
@@ -697,7 +747,7 @@ test('unrestricted planning sequence and changed duration survive account reload
 
 test('another tab shows one accurate save notice without duplicate recovery panels',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);
- await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await page.getByRole('button',{name:/Plan a cook/}).click();
  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
  await page.getByRole('button',{name:'Add to meal',exact:true}).click();
@@ -712,4 +762,30 @@ test('another tab shows one accurate save notice without duplicate recovery pane
  await other.screenshot({path:info.outputPath('single-tab-notice.png'),fullPage:false});
  await notice.getByText('Save details',{exact:true}).click();await expect(notice.getByRole('button',{name:'Download backup',exact:true})).toBeVisible();
  expect(JSON.stringify(remote.state)).toBe(before);await other.close();
+});
+
+test('leaving a temporary guest cook returns to an empty trial without creating account history', async ({page, context}) => {
+  const remote = server();
+  const before = structuredClone(remote.state), requests: string[] = [];
+  page.on('request', request => {if (request.url().startsWith(rpc)) requests.push(request.url());});
+  await remote.attach(context);
+  await backend(page);
+  await page.goto('/');
+  await expect(page.getByText(/Guest cooks aren’t kept after you leave/)).toBeVisible();
+  await page.getByRole('button', {name: /Plan a cook/}).click();
+  await page.getByRole('button', {name: 'Choose a template', exact: true}).click();
+  await page.getByRole('button', {name: 'Add grilled beer-bath brats', exact: true}).click();
+  await page.getByRole('button', {name: 'Add to meal', exact: true}).click();
+  await page.getByRole('button', {name: 'Start cooking', exact: true}).click();
+  await page.getByRole('checkbox', {name: 'Complete Build the brat and vegetable tray', exact: true}).click();
+  await expect(page.getByRole('checkbox', {name: 'Complete Preheat grill to 250°F', exact: true})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', {name: /Plan a cook/})).toBeVisible();
+  await expect(page.getByRole('button', {name: /Continue cooking/})).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('how-many-beers:meal:v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('how-many-beers:history:v1'))).toBeNull();
+  expect(remote.state).toEqual(before);
+  expect(requests).toEqual([]);
+  await page.getByRole('button', {name: /Past cooks/}).click();
+  await expect(page.getByRole('button', {name: 'View cook', exact: true})).toHaveCount(0);
 });

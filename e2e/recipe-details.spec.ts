@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 const source='# Smoky BBQ Pumpkin Seeds\n## Ingredients\n- 1.5 cups pumpkin seeds\n- 2 tsp olive oil\n- salt, garlic powder and paprika\n## Equipment\nPellet smoker\n## Source\nFamily recipe\n## Instructions\nClean seeds for 5 minutes.\nDry seeds for 5 minutes.\nSeason seeds for 2 minutes.\nPreheat pellet smoker to 425°F for 10 minutes.\nRoast for 10–15 minutes.\nStir halfway through.\nCool completely.';
 for(const input of ['paste','md','txt'])test(input+' retains editable recipe details through review and reload',async({page},info)=>{
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
  await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();
  if(input==='paste')await page.getByLabel('Recipe instructions').fill(source);
  else await page.getByLabel('Upload .txt or .md',{exact:true}).setInputFiles({name:'Smoky BBQ Pumpkin Seeds.'+input,mimeType:'text/plain',buffer:Buffer.from(source)});

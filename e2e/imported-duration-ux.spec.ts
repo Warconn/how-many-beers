@@ -3,7 +3,7 @@ import {changeStepDuration} from './helpers/stepEditing';
 test.use({timezoneId:'UTC'});
 test('uploaded steps lead with planned time and keep duration editing optional',async({page},info)=>{
  test.setTimeout(60_000);
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();
+ await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();
  const preheat='Preheat pellet smoker to 425 F (about 10 minutes). Set a rimmed baking sheet aside for the seeds.';
  await page.getByLabel('Upload .txt or .md',{exact:true}).setInputFiles({name:'Pumpkin seeds.txt',mimeType:'text/plain',buffer:Buffer.from(preheat+'\nClean pumpkin seeds\nRoast seeds\nCool completely')});
  await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');

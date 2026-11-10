@@ -1,26 +1,24 @@
-## Current approved experience · November 7, 2026
+# Core cook experience
 
-#101's physical cooking, #61 cancellation and #83 upcoming plans are delivered in
-dev, along with #103's recipe review and shared step controls. Preserve them.
-#109 is delivered in dev via #116, following #115's CI repair:
-**set serving time → choose dishes → review recipes → combined meal → cook**.
-The requested target stays visible/editable. Start preparing, with day/date, is
-the normal summary; estimated readiness appears when the target cannot be met. See [the planning contract](planning-readiness.md).
+## Current approved experience · November 9, 2026
 
-Cooking remains checkbox-first: do the action, check it off, see what is next.
-Physical transitions/checkpoints, concurrent work, passive rest/cooling and actual
-corrections use the accepted [#101 contract](live-cooking-phases.md). A checkbox
-never proves a cooking interval elapsed or food is safe. Keep the Beerometer's
-beers-first design and live calculation path intact.
+PR #131 is approved and merged into dev at `62f4673`. It completes the post-brisket
+queue, including prominent/directly editable planned times, optional configuration,
+shared cooking cues, concise new brisket defaults and upcoming preparation times.
+#117/#119/#121 are also implemented in dev. Do not repeat these deliveries.
 
-Both November 5 account migrations are owner-confirmed applied/verified in dev.
-Do not reapply them. The owner approved #115/#116 dev integration and documentation
-alignment on November 7; production and future merges remain separate approvals.
-#117 is the remaining manual-template-start/checkpoint correctness bug to resolve
-before production validation. This is a dev delivery, not a production release.
-#3 advanced scheduling, notifications, recipe URL import, reusable recipes and
-social login remain deferred. The owner tests through actual cooking; do not create
-manual QA tickets. See [the current queue](work-queue.md).
+Preserve serving target → dishes → review/adjust → cook → hold → finish, the
+accepted #101 physical model, checkbox-first progress, Beerometer and immutable
+actuals/history. Start preparing is the whole-checklist preparation time, distinct
+from smoker load. A timing estimate never confirms doneness or completes a step.
+
+The current release work investigates #118's post-add metadata-edit/focus race and
+validates the integrated candidate. Release PR #132 targets main, but production
+promotion requires explicit approval. #61/#83/#103 remain open release trackers
+until production verification. Both November 5 migrations are verified in dev;
+production readiness is a separate prerequisite, not permission to apply SQL.
+#114 personal recipes is the next feature candidate and is not part of this work.
+See [work queue](work-queue.md) and [release readiness](releases/2026-11-09-readiness.md).
 
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.

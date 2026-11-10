@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {useAccount} from '@/auth/AccountProvider';
 import {recoveryStorage,type RecoveryStorage} from './recoveryStorage';
-import {SavedPlanStore,savedPlanCacheKey,type SavedPlanState} from './SavedPlanStore';
+import {SavedPlanStore,savedPlanCacheKey,readPlanDiscard,type SavedPlanState} from './SavedPlanStore';
 import {savedPlanAPI,orderPlans,validatePlanMeal,planDocument,planMeal,parseSavedPlan,type SavedPlan} from './savedPlans';
 import {AccountConflict} from './workspace';
 import {newMeal,type Meal} from '../domain/meal';
@@ -70,6 +70,8 @@ export function backupPendingPlan(draft:PendingPlan,raw:string|null,owner:string
     const cached=JSON.parse(raw);
     if(cached.version!==1||cached.owner!==owner||cached.planId!==draft.id)throw Error('Invalid recovery scope.');
     if(cached.base)parseSavedPlan(cached.base);
+    const discard=readPlanDiscard(cached);
+    if(discard)return discard.confirmed?null:{...draft,needsRecovery:true};
     if(!cached.desired&&!cached.operation)return null;
     if(!cached.desired)throw Error('Invalid pending plan journal.');
     const meal=validatePlanMeal(cached.desired,draft.id);
@@ -151,7 +153,10 @@ export function useUpcomingPlans(enabled:boolean){
           if(raw){
             const cached=JSON.parse(raw);
             if(cached.owner!==owner||cached.planId!==draft.id||cached.version!==1)throw Error('Invalid recovery scope.');
-            if(cached.desired||cached.operation){
+            const discard=readPlanDiscard(cached);
+            if(discard){
+              if(discard.confirmed)stale.push(draft.id);else recoverable.push({...draft,needsRecovery:true});
+            }else if(cached.desired||cached.operation){
               const meal=validatePlanMeal(cached.desired??cached.operation.snapshot,draft.id);
               recoverable.push({...draft,meal,serveInstant:cached.desiredServeInstant!==undefined?cached.desiredServeInstant:cached.operation?.document?.serveInstant??draft.serveInstant,timeZone:cached.desiredTimeZone??cached.operation?.timeZone??draft.timeZone,needsRecovery:true});
             }else if(cached.base){
@@ -217,7 +222,7 @@ export function useUpcomingPlans(enabled:boolean){
     if(opening.current)throw Error('Wait for the current plan to finish opening.');
     if(selectedRef.current?.id===id&&selectedRef.current.owner===ownerId){
       try{await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
-      return;
+      return store.current;
     }
     opening.current=true;stopBackground();
     const owner=ownerId,version=generation.current;
@@ -242,7 +247,7 @@ export function useUpcomingPlans(enabled:boolean){
       const next=new SavedPlanStore(owner,id,api,recovery,s=>{
         if(!isCurrent(owner)||version!==generation.current)return;
         setState(s);
-        if(s.plan){
+        if(s.plan&&!s.discarded){
           if(acknowledgedRevisions.current.get(s.plan.id)!==s.plan.revision){acknowledgedRevisions.current.set(s.plan.id,s.plan.revision);localAcknowledgements.current++;}
           setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),s.plan!]));
         }
@@ -251,7 +256,7 @@ export function useUpcomingPlans(enabled:boolean){
       await next.connect();
       if(recoveredSeed){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
       if(!next.state().meal)throw Error(next.state().error||'This plan could not be opened safely.');
-      setActionError('');
+      setActionError('');return next;
     }catch(error){
       if(!store.current){release.current?.();release.current=null;setActionError(error instanceof Error?error.message:'This plan has not been saved.');}
       throw error;
@@ -267,6 +272,30 @@ export function useUpcomingPlans(enabled:boolean){
     const selection=selectedRef.current,current=store.current;
     if(selection&&current&&!selectedReadonly.current&&!current.dirty()&&current.state().plan)await forgetPending(selection.id);
   };
+  const completeDiscard=async(owner:string,id:string)=>{
+    if(!isCurrent(owner))return;
+    await forgetPending(id);
+    if(!isCurrent(owner))return;
+    localAcknowledgements.current++;setActionError('');
+    setPlans(previous=>previous.filter(plan=>plan.id!==id));
+    if(selectedRef.current?.owner===owner&&selectedRef.current.id===id)releaseSelection();
+  };
+  const discard=async(id:string)=>{
+    const owner=ownerId;
+    if(!owner||!allowed.current)throw Error('Verify your account before discarding a plan.');
+    const expectedRevision=plans.find(plan=>plan.id===id)?.revision;
+    const current=await open(id);
+    if(!current||!isCurrent(owner))throw Error('Reopen the plan before discarding it.');
+    if(!current.state().discarded)await current.discard(expectedRevision);
+    if(!current.state().discarded)throw Error('Discarding this plan has not been confirmed.');
+    await completeDiscard(owner,id);
+  };
+  useEffect(()=>{
+    if(!state.discarded||!selected||selected.owner!==ownerId)return;
+    void completeDiscard(selected.owner,selected.id).catch(error=>{if(isCurrent(selected.owner))setActionError(error instanceof Error?error.message:'Could not update upcoming plans.');});
+    // Acknowledged discard can also complete through the existing automatic retry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[state.discarded,selected?.id,ownerId]);
   const protectSelected=async()=>{
     const current=store.current,selection=selectedRef.current;
     if(!current||!selection)return;
@@ -347,7 +376,8 @@ export function useUpcomingPlans(enabled:boolean){
             const after=current.state();
             if(after.phase==='saved'&&!current.dirty()){
               await pending.remove([draft.id]);
-              if(after.plan){localAcknowledgements.current++;setPlans(previous=>orderPlans([...previous.filter(plan=>plan.id!==draft.id),after.plan!]));}
+              if(after.discarded){localAcknowledgements.current++;setPlans(previous=>previous.filter(plan=>plan.id!==draft.id));}
+              else if(after.plan){localAcknowledgements.current++;setPlans(previous=>orderPlans([...previous.filter(plan=>plan.id!==draft.id),after.plan!]));}
             }else if(after.phase==='conflict')conflicted=true;
             else if(current.dirty()||after.phase==='load-error'){unsaved=true;needsRetry=after.phase!=='load-error'||needsRetry;}
           }catch(error){
@@ -395,7 +425,7 @@ export function useUpcomingPlans(enabled:boolean){
     plans:scope===ownerId?plans:[],
     selectedId:selected?.owner===ownerId?selected.id:null,
     state:selected?.owner===ownerId?state:initial,
-    listPhase,listError,savingPhase,actionError,store,open,create,flush,close,releaseSelection,forgetSelected,protectSelected,withPendingBackup,refresh,retry,
+    listPhase,listError,savingPhase,actionError,store,open,create,discard,flush,close,releaseSelection,forgetSelected,protectSelected,withPendingBackup,refresh,retry,
     hasSelection:()=>!!selectedRef.current&&selectedRef.current.owner===activeOwner.current,
   };
 }

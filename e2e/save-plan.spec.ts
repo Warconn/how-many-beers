@@ -31,7 +31,7 @@ test('save for later returns Home without starting, survives reopening and start
  await page.screenshot({path:info.outputPath('saved-plan.png'),fullPage:true});
  const url=page.url();const reopened=await context.newPage();await page.close();await reopened.goto(url);
  await expect(reopened.getByRole('region',{name:'Planned start',exact:true})).toBeVisible();expect(await saved(reopened)).toEqual(meal);
- reopened.once('dialog',d=>d.dismiss());await reopened.getByRole('button',{name:/Plan a new cook/}).click();expect(await saved(reopened)).toEqual(meal);
+ reopened.once('dialog',d=>d.dismiss());await reopened.getByRole('button',{name:/Plan a cook/}).click();expect(await saved(reopened)).toEqual(meal);
  await reopened.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(reopened.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
  const active=await saved(reopened);expect(active.mode).toBe('cooking');expect(active.startedAt).toBeTruthy();
  const {phasePlan,...originalFields}=active;expect(phasePlan?.version).toBe(1);expect({...originalFields,mode:meal.mode,startedAt:undefined}).toEqual({...meal,startedAt:undefined});

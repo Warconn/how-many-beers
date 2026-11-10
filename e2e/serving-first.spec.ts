@@ -2,7 +2,7 @@ import {changeStepDuration} from './helpers/stepEditing';
 import {test,expect} from '@playwright/test';
 test.use({timezoneId:'UTC'});
 test('serving target is the first planning decision and survives recipe review',async({page},info)=>{
- await page.clock.install({time:new Date('2026-11-08T16:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-08T16:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
+ await page.clock.install({time:new Date('2026-11-08T16:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-08T16:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
  const serving=page.getByLabel('Serve date and time',{exact:true});await expect(serving).toBeVisible();await serving.fill('2026-11-08T18:00');await page.screenshot({path:info.outputPath('serving-first-empty.png'),fullPage:false,scale:'css',style:'nextjs-portal{display:none}'});
  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await expect(serving).toHaveValue('2026-11-08T18:00');
  await page.getByRole('region',{name:'Review your method',exact:true}).getByRole('button',{name:'Add to meal',exact:true}).click();await expect(serving).toHaveValue('2026-11-08T18:00');
@@ -91,7 +91,7 @@ test('new unknown work needs an estimate; adding and removing its duration recal
 test.describe('actual brisket and ribs templates',()=>{
  test.use({timezoneId:'America/New_York'});
  test('start preparing is primary and both dishes serve Sunday at 1 PM after their own rests',async({page},info)=>{
-  await page.clock.install({time:new Date('2026-11-07T14:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-07T14:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-08T13:00');
+  await page.clock.install({time:new Date('2026-11-07T14:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-07T14:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-08T13:00');
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-11-07T21:45:00.000Z');await expect(page.getByLabel('Estimated meal ready',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Estimated start',{exact:true})).toContainText(/Sat.*Nov 7.*4:45/);
   await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add smoked ribs',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await combined(page);
