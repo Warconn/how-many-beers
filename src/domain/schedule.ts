@@ -3,7 +3,7 @@ import {temperatureF} from "./recipe";
 import type { Dish, Meal, PlannedTask } from "./meal";
 import {templateStage} from "./templateStages";
 import {turkeyPreparation} from "./turkeyPrep";
-import { templateSteps } from "../data/cookTemplates";
+import { stepsForDish } from "../data/cookTemplates";
 
 const minute = 60_000;
 
@@ -13,7 +13,7 @@ function at(serveAt: string, beforeMinutes: number): string | null {
 }
 
 function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
-  const steps=templateSteps[d.preset];
+  const steps=stepsForDish(d);
   if(!steps)return null;
   const cook=Math.max(15,d.cookMinutes);
   const rest=Math.max(0,d.restMinutes);
@@ -41,7 +41,7 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
         if(turkey.brineHours===0){title='Pat dry, season and refrigerate uncovered';instructions='Pat the thawed bird dry, season and refrigerate uncovered until preparation. No brining is included in this plan.';}
       }
     }
-    if(brisket){
+    if(brisket&&d.brisketTemplateVersion!==2){
       const i=brisket.inputs;
       // An explicitly applied researched estimate uses that source's profile,
       // independently of the personal manual template.
@@ -65,6 +65,12 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
       if(step.id==='wrap')instructions=i.wrap==='none'?'No-wrap plan: monitor bark, moisture and stall. Keep cooking until safe and tender; log any change of strategy.':instructions+' Selected wrap: '+(i.wrap==='foil'?'foil':'butcher paper')+'.';
       if(step.id==='rest')instructions='Rest and, if needed, use the separate hot-hold buffer. Monitor food temperature at 140°F or above during hot holding; do not assume an insulated cooler holds safely.';
     }
+    if(brisket&&d.brisketTemplateVersion===2){
+      if(step.id==='season')before=startOffset+Math.min(45,brisket.inputs.prepMinutes);
+      if(step.id==='wrap'&&brisket.inputs.wrap==='none'){title='Check bark and progress';instructions='No-wrap plan: monitor bark and moisture until tender.';}
+      if(step.id==='wrap'&&brisket.inputs.wrap==='foil')instructions='When bark is set, wrap in foil; consider raising the pit to 250°F.';
+      if(brisket.inputs.method==='traeger-225-v1'&&(step.id==='check'||step.id==='wrap'))instructions=step.id==='check'?'Check bark and the stall; maintain the selected 225°F profile.':'When bark is set, review wrapping; maintain the selected 225°F profile.';
+    }
     const subst=(s:string)=>s.replaceAll("{pitTempF}",temp===null?"your chosen pit temperature":String(temp));
     return {
       id:d.id+":"+step.id,
@@ -73,6 +79,7 @@ function curatedTasks(d: Dish, serveAt: string): PlannedTask[] | null {
       dishName:d.name,
       title:subst(title),
       instructions:subst(instructions),
+      ...(step.optionalDetails?{optionalDetails:step.optionalDetails}:{}),
       scheduledAt:at(serveAt,before),
       isCondition:!!step.conditional
     };

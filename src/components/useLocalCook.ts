@@ -4,10 +4,12 @@ import {ACTIVE_KEY,HISTORY_KEY,emptyHistory,type HistoryLibrary} from '@/domain/
 import {LocalCookStore,StorageConflict,JOURNAL_KEY,type LocalSnapshot} from '@/domain/localPersistence';
 import {migrateMeal} from '@/domain/cookState';
 import {newMeal,type Meal} from '@/domain/meal';
+import {CANCELED_KEY,emptyCanceled,mergeCanceled,type CanceledLibrary} from '@/domain/canceledCooks';
 
 export function useLocalCook(enabled=true){
   const [meal,setMeal]=useState<Meal|null>(null);
   const [history,setHistory]=useState<HistoryLibrary>(emptyHistory);
+  const [canceled,setCanceled]=useState<CanceledLibrary>(emptyCanceled);
   const [status,setStatus]=useState<'loading'|'saved'|'unsaved'|'conflict'|'recovery'>('loading');
   const [error,setError]=useState('');
   const store=useRef<LocalCookStore|null>(null);
@@ -15,7 +17,7 @@ export function useLocalCook(enabled=true){
   const dirty=useRef(false);
   const writer=useRef(false);
   const publish=useCallback((next:LocalSnapshot)=>{
-    current.current=next;setMeal(next.active);setHistory(next.history);
+    current.current=next;setMeal(next.active);setHistory(next.history);setCanceled(next.canceled??emptyCanceled());
   },[]);
   useEffect(()=>{
     if(!enabled)return;
@@ -48,7 +50,7 @@ export function useLocalCook(enabled=true){
     const changed=(event:StorageEvent)=>{
       if(event.key==='how-many-beers:legacy-owner:v1'&&event.newValue){store.current=null;dirty.current=false;publish({active:migrateMeal(newMeal()),history:emptyHistory()});setStatus('recovery');setError('Earlier cooks are protected by an account. Sign in to recover them.');return;}
 
-      if([ACTIVE_KEY,HISTORY_KEY,JOURNAL_KEY].includes(event.key??'')||event.key===null){
+      if([ACTIVE_KEY,HISTORY_KEY,CANCELED_KEY,JOURNAL_KEY].includes(event.key??'')||event.key===null){
         setStatus(s=>s==='recovery'?s:'conflict');
         setError('Another tab changed the saved cook. Download a backup of this tab before reloading the latest saved data.');
       }
@@ -57,7 +59,7 @@ export function useLocalCook(enabled=true){
     window.addEventListener('storage',changed);window.addEventListener('beforeunload',leave);
     return ()=>{alive=false;writer.current=false;release?.();window.removeEventListener('storage',changed);window.removeEventListener('beforeunload',leave);};
   },[publish,enabled]);
-  const save=useCallback((change:{active?:Meal;history?:HistoryLibrary})=>{
+  const save=useCallback((change:{active?:Meal;history?:HistoryLibrary;canceled?:CanceledLibrary})=>{
     const snapshot=current.current;
     if(!snapshot||!store.current)throw Error('Browser storage is not available.');
     const active=change.active??snapshot.active,history=change.history??snapshot.history;
@@ -65,7 +67,7 @@ export function useLocalCook(enabled=true){
       if(!writer.current)throw Error('Another tab is editing these cooks. Close it, then reload saved cooks here.');
       if(window.localStorage.getItem('how-many-beers:legacy-owner:v1'))throw Error('Sign in to open your account cooks.');
       store.current.write({...change,...(dirty.current?{active}: {})});
-      publish({active:migrateMeal(active),history});dirty.current=false;setStatus('saved');setError('');
+      publish({...snapshot,active:migrateMeal(active),history,...(change.canceled?{canceled:mergeCanceled(snapshot.canceled??emptyCanceled(),change.canceled)}:{})});dirty.current=false;setStatus('saved');setError('');
     }catch(error){
       const reason=error instanceof StorageConflict||!writer.current?(error instanceof Error?error.message:'Another tab is editing these cooks.'):
         error instanceof DOMException&&['QuotaExceededError','NS_ERROR_DOM_QUOTA_REACHED'].includes(error.name)?'Device storage is full.':'This browser could not save your cook.';
@@ -80,6 +82,20 @@ export function useLocalCook(enabled=true){
     try{save({active:next});}
     catch{dirty.current=true;publish({...current.current,active:next});}
   },[publish,save]);
+  const cancel=useCallback((cookId:string)=>{
+    const snapshot=current.current;
+    if(!snapshot||!store.current)throw Error('Browser storage is not available.');
+    try{
+      if(!writer.current)throw new StorageConflict();
+      if(window.localStorage.getItem('how-many-beers:legacy-owner:v1'))throw Error('Sign in to open your account cooks.');
+      const next=store.current.cancel(cookId,new Date().toISOString(),snapshot.active);
+      publish(next);dirty.current=false;setStatus('saved');setError('');
+    }catch(e){
+      setError('Could not cancel this cook. Your cook and progress are retained. Retry cancellation or download a backup.');
+      setStatus(s=>s==='recovery'||s==='conflict'?s:e instanceof StorageConflict?'conflict':'unsaved');
+      throw e;
+    }
+  },[publish]);
   const retry=()=>{if(current.current)save({active:current.current.active});};
   const reset=()=>{
     if(!writer.current)throw Error('Close the other cooking tab before resetting saved cooks.');
@@ -93,5 +109,5 @@ export function useLocalCook(enabled=true){
     if(!store.current)throw Error('Storage is unavailable.');
     publish(store.current.reset(snapshot));dirty.current=false;setStatus('saved');setError('');
   };
-  return {meal,history,status,error,setError,patch,save,retry,reset,restore,recoveryExport};
+  return {meal,history,canceled,status,error,setError,patch,save,cancel,retry,reset,restore,recoveryExport};
 }

@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from './fixtures/legacyDish';
 import {it,expect} from 'vitest';
-import {createDish,newMeal} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {parseRecipeText} from '../src/domain/recipe';
 import {cookTimeline,recordEvent,editStep,removeStep,type ExtendedMeal} from '../src/domain/cookState';
 import {cookProjection} from '../src/domain/cookProjection';

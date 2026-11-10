@@ -5,7 +5,7 @@ import { applyBrisketTiming, brisketDefaults, estimateBrisket, type BrisketInput
 const hours=(n:number)=>Number((n/60).toFixed(2));
 const time=(iso:string|null)=>iso?new Date(iso).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Timing needed';
 export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveAt:string;onChange:(dish:Dish)=>void}){
-  const inputs=dish.brisketPlan?.inputs ?? {...brisketDefaults,restMinutes:dish.restMinutes};
+  const inputs=dish.brisketPlan?.inputs ?? {...brisketDefaults,holdBufferMinutes:60,restMinutes:dish.restMinutes};
   const estimate=estimateBrisket(inputs,serveAt);
   const set=(changes:Partial<BrisketInputs>)=>onChange({...dish,brisketPlan:{...dish.brisketPlan,mode:dish.brisketPlan?.mode??'manual',inputs:{...inputs,...changes}}});
   const id=(field:string)=>'brisket-'+dish.id+'-'+field;
@@ -14,13 +14,11 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
   const estimated=dish.brisketPlan?.mode==='estimate';
   const current=estimated && !dirty;
   return <section className="brisket-planner" aria-label="Brisket timing">
-    <h3>Plan brisket timing</h3>
+
     <div><label htmlFor={id('weight')}>Brisket weight (lb)</label><input id={id('weight')} type="number" inputMode="decimal" min="1" max="40" step="0.5" placeholder="Unknown" value={inputs.weightLb??''} onChange={e=>set({weightLb:e.target.value===''?undefined:Number(e.target.value)})}/></div>
     {estimate.smokeMin===null ? <div className="notice"><strong>{!inputs.weightLb?'Weight unknown':'Timing needed'}</strong><ul>{estimate.unknowns.map(t=><li key={t}>{t}</li>)}</ul></div> : <div className="brisket-window" aria-live="polite">
-      <p><strong>Recommended start</strong><br/><time dateTime={estimate.recommendedStart!}>{time(estimate.recommendedStart)}</time></p>
-      <p>Estimated cook time: {hours(estimate.smokeMin)}–{hours(estimate.smokeMax!)} hours</p>
-      <p className="muted small">Brisket timing varies. Starting early gives you room to rest and hold.</p>
-      {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The recommended start has passed. Serving time may be at risk; review your plan.</p>}
+      <p><strong>Estimated cook time:</strong> {hours(estimate.smokeMin)}–{hours(estimate.smokeMax!)} hours on smoker</p>
+
     </div>}
     <div className={"timing-choice"+(current?" is-applied":"")}>
       <p role="status"><strong>{current?'Timing applied':estimated?'Using estimated timing':'Using manual timing'}</strong>{!current&&<span>{estimated?'Recommendation changed; apply to update.':'Recommendation not applied.'}</span>}</p>
@@ -29,7 +27,7 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
         {estimated&&<button type="button" className="link" onClick={()=>onChange({...dish,brisketPlan:{...dish.brisketPlan,inputs,mode:'manual'}})}>Use manual timing</button>}
       </div>
     </div>
-    <details><summary>Timing details</summary>
+    <div className="brisket-timing-settings">
     <div className="small-grid">
 
       <div><label htmlFor={id('measured')}>Weight measured</label><select id={id('measured')} value={inputs.weightMeasured} onChange={e=>set({weightMeasured:e.target.value as BrisketInputs['weightMeasured']})}><option value="trimmed">After trimming</option><option value="untrimmed">Before trimming</option></select></div>
@@ -40,12 +38,14 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <p className="muted small">{inputs.method==='meatchurch-staged-v1'?'Unvalidated app weight comparison; recipe stages are source-inspired.':'Broad source-guide comparison; not calibrated to your cooker.'}</p>
       {estimate.smokeMin!==null && <><strong>Estimated smoke: {hours(estimate.smokeMin)}–{hours(estimate.smokeMax!)} hours</strong>
       <p>Recommended on-smoker start <time dateTime={estimate.recommendedStart!}>{time(estimate.recommendedStart)}</time></p>
+      {estimate.recommendedStart && Date.parse(estimate.recommendedStart)<Date.now() && <p className="warning">The estimated on-smoker start has passed. Serving time may be at risk; review your checklist.</p>}
       <p>Latest plausible start <time dateTime={estimate.latestStart!}>{time(estimate.latestStart)}</time><span className="muted small"> Shortest estimate, no extra hold buffer; higher risk of missing dinner.</span></p>
       <p className="small">Begin prep {time(estimate.prepStart)} · Serve {time(new Date(serveAt).toISOString())}</p>
       <p className="muted small">The plan uses the longer smoke estimate plus rest and a separate hold buffer. Neither start guarantees dinner on time.</p>
 
       </>}
       <p className="muted small">These comparisons use separate researched profiles. Your fixed step times and recorded activity stay intact. Selecting manual timing retains the current schedule for further editing.</p>
+      <p className="small">Post-smoker reserve: {hours(inputs.restMinutes+inputs.holdBufferMinutes)} hours total, including rest. Planning allowance, not a required countdown.</p>
       <div className="small-grid">{(['prepMinutes','preheatMinutes','restMinutes','holdBufferMinutes'] as const).map((field,index)=><div key={field}><label htmlFor={id(field)}>{['Prep (minutes)','Preheat (minutes)','Rest (minutes)','Extra hot-hold buffer (minutes)'][index]}</label><input id={id(field)} type="number" min="0" max="720" value={inputs[field]} onChange={e=>set({[field]:e.target.value===''?0:Number(e.target.value)})}/></div>)}
         <div><label htmlFor={id('pit')}>Profile starting pit (°F)</label><input id={id('pit')} type="number" min="150" max="450" value={inputs.pitTempF} onChange={e=>set({pitTempF:Number(e.target.value)})}/></div>
       </div>
@@ -54,6 +54,6 @@ export default function BrisketPlanner({dish,serveAt,onChange}:{dish:Dish;serveA
       <label className="personal-rule"><input type="checkbox" checked={inputs.comparePersonal} onChange={e=>set({comparePersonal:e.target.checked})}/>Compare my 1.5 hr/lb rule</label>
       {inputs.comparePersonal && inputs.weightLb && <p className="small">Personal comparison: {inputs.weightLb*1.5} hours of smoke, plus rest/hold. User recollection, not validated guidance; not used in the recommendation.</p>}
       <div className="template-sources">{estimate.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} <Icon name="external"/></a>)}</div>
-    </details>
+    </div>
   </section>;
 }

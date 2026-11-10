@@ -1,6 +1,7 @@
+import {legacyDish as createDish} from './fixtures/legacyDish';
 import {describe,it,expect} from 'vitest';
 import {applyBrisketTiming,brisketDefaults} from '../src/domain/brisketEstimate';
-import {createDish,newMeal} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {cookTimeline,recordEvent,editStep,updateTaskNote,type ExtendedMeal} from '../src/domain/cookState';
 import {remainingCook} from '../src/domain/cookDuration';
 import {liveStepForecasts} from '../src/domain/cookForecast';

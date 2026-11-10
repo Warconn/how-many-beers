@@ -1,61 +1,71 @@
-# Current owner-approved sequence: November 5, 2026
+# Current queue · November 9, 2026
 
-Finish and stabilize the November 5 release: #21 / PR #98 plus #97 / PR #99,
-including accepted November 3 spacing, Cooking Mode layout and Beerometer cleanup.
-Full feature CI → merge dev → full integration CI → release PR dev to main → full
-candidate CI/build → merge → actual Cloudflare deployment confirmation. No failing
-check bypass, force merge or production account/cook-data mutations. See
-[release notes](releases/2026-11-05.md); verify live status before claiming release.
-The #96 deliveries (#92, #84, #62/#85, #77 and #86) remain complete.
+## Now: release readiness, not feature development
 
-After shipping, discuss the owner's in-progress cooking/timing concept separately.
-Do not infer its requirements or redesign execution during stabilization.
+The owner approved and merged the post-brisket work through **PR #131** into dev
+at `62f4673` on November 9. The active release candidate is
+`feat/118-release-readiness`, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
+targeting **main**. This explicit release target supersedes the ordinary feature
+PR target of dev. Do not merge into main or deploy production without owner approval.
 
-Prepared capability sequence, not implementation scope in this session:
-1. **#61:** Retained cancellation, authoritative lifecycle, terminal guards and safe
-   recovery. Review Supabase constraints/RLS/RPC first.
-2. **#83:** Multiple account plans and one live cook, after #61 design is understood.
-   No active-cook replacement or guest scope expansion. Separate feature PRs.
+1. **#118:** investigate the intermittent iPhone/WebKit meal-name miss. A controlled
+   delayed application frame reproduces focus moving from Meal name to serving
+   time and leaves the saved name as Next cook. Verify the narrow fix in WebKit,
+   including immediate Start, serving edits, history, reload and Cook Again.
+2. **Preview blocker: upcoming-plan discard.** An accidental empty plan had no
+   removal action. Expose the existing retained discard RPC from Home and the
+   planner, preserving active cooks/history and immutable retry receipts. No new
+   migration. Regress empty/populated, failure, stale and reload paths.
+3. Compare dev/main and retain all production fixes; run full unit, browser,
+   authentication, account, offline and database-security checks. The owner also
+   requested a [user-journey audit](user-journey-coverage.md) and continuous
+   whole-cook regression scenarios. Review actual
+   desktop/mobile/iPhone screenshots and provide the confirmed feature URL.
+4. Complete release acceptance and verify production schema readiness before the
+   separately approved production promotion. No hosted database changes are
+   authorized in this session.
 
-#69/#70 sync, #2 URL import, paid tiers and social login remain excluded. No manual
-QA/acceptance tickets. Reconcile #21/#97 only after their actual release.
+## Completed implementations in dev
 
-The following older queue is historical and superseded by this section.
+| Issue | Delivery | Status |
+| --- | --- | --- |
+| #117 fixed-template checkpoint scheduling | PR #128 / `4a3e891` | Implemented in dev |
+| #119 preparation-start hierarchy and mobile planner | PR #120 / `960abc9` | Implemented in dev |
+| #121 provisional brisket forecast | PR #122 / `ea2873a` | Implemented in dev |
+| #123 optional Cooking Mode tools | PR #129 / `ed0a165` | Implemented in dev |
+| #124 current/next timing cues | PR #131 / `62f4673` | Implemented in dev |
+| #125 direct planned-time edits | PR #131 / `62f4673` | Implemented in dev |
+| #126 upcoming preparation time | PR #131 / `62f4673` | Implemented in dev |
+| #127 concise new brisket template / 6–8h reserve | PR #131 / `62f4673` | Implemented in dev |
 
----
+Do not repeat these stories. Their implementation issues are closed with explicit
+dev-delivery evidence; closure does not claim production deployment. #130 is
+superseded by #131. Preserve the physical cooking model, checkbox-first controls,
+Beerometer, fixed/actual distinctions, guest/account boundaries and Hold → Finish.
 
-# Work queue: October 28, 2026
+## Keep open through production verification
 
-October 28 account status: PR #58 contains the opt-in #19 sign-in foundation and initial #20 account saving/history implementation. Email-code delivery needs the supplied Supabase template; cloud cooks require migration 002 and the preview build flag. Hosted two-account/retrieval QA, account linking/deletion/privacy and advanced synchronization remain open. See [setup and limits](account-cooks.md). Continue this delivery before starting Next work.
+- **#61:** retained cancellation, delivered through PR #104.
+- **#83:** independent upcoming plans / one active cook, delivered through PR #107.
+- **#103:** accepted recipe review/planning UI, delivered through #108/#111/#112.
+  The separate personal recipe library belongs to #114.
 
+Both November 5 migrations are owner-confirmed applied/verified in **dev**.
+The owner confirmed both are **not yet applied in production** and will apply
+them manually before merge. Verify success through the release checklist; do not reapply dev
+migrations or run bootstrap/test SQL on hosted Supabase.
 
-Owner priority: **#50 first tonight, then #19 and the initial #20 slice**. This follows the execution-queue clarification in PR #51. This is a prepared work order for the next kickoff, not a claim that background jobs have been scheduled.
+## Next feature, after release
 
-## Tonight
+**#114: personal saved recipes** is the next candidate for separate owner review.
+It is not part of this release and must not be started in this session.
 
-1. **#50: Home cleanup.** Remove the redundant hero eyebrow and top-of-Home local/offline status block. Remove install/offline help and routine offline-readiness text everywhere; preserve active-cook save feedback, errors, storage, background PWA behavior and safe app updates. Verify first-visit/returning Home, responsive screenshots, resume, failed saves and built-app offline/update behavior.
-2. Review the independently prepared Home change, **PR #49** (personal templates + prominent Beerometer), and **PR #51** (durable execution priorities). Integrate approved PRs into dev before branching the next work. Production promotion remains separate.
+## Deferred
 
-## Overnight implementation order
+#3 equipment/resource optimization, #11 notifications, #2 URL import, photo/PDF
+import, social login, paid features and #69/#70 advanced synchronization remain
+outside this release. Do not add incidental UX changes or manual-QA tickets.
 
-1. **#19: Free account foundation.** Authentication, stable identity/ownership, owner-only schema/RLS and account lifecycle. Follow the issue's approved login-provider choices. Test with two accounts, denied/expired authentication, sign-out and ownership isolation. Requires a configured Supabase project/public client configuration and provider setup; record unavailable setup as a blocker instead of inventing credentials or claiming live authentication works. Start with repository code/schema and reviewable setup instructions where possible.
-2. **#20: Account-backed cooks and history MVP.** Depends on #19's identity and ownership contract. Save/resume one active/planning cook, archive/search/open previous cooks and Cook Again. Test acknowledged writes, recovery, account switching, cross-device retrieval and guest transition behavior. Full concurrent-edit merging/offline outbox remains its later phase.
-
-## Next, outside the immediate overnight queue
-
-No fixed relative order in this bucket is approved; choose a product priority after the Now scope is complete.
-
-- **#11: Due/overdue cues and opt-in timers.** Extend the existing guided cook; test edits, resume, cancellation, overnight/DST and missed alerts. Keep platform background-notification limits explicit.
-- **#2: Recipe URL import.** Secure server-side retrieval, structured extraction and Review & Edit; test SSRF protections, blocked/unsupported pages and missing timing. Photo/PDF remains #9.
-- **#3:** Deeper cross-dish scheduling.
-- Separate reusable recipe library, advanced #20 concurrent-edit/outbox work and #21 cross-app design adoption.
-
-For each implementation: isolated feature branch, focused tests and appropriate CI, reviewable PR to dev. Do not merge or promote to production without explicit approval.
-
-## Parallel verification
-
-- **#4:** Real iPhone/Android cook, keyboard/touch/outdoor accessibility and first-cook feedback; include remaining #10 suspension/eviction checks.
-- **#5:** Independently review method sources and distinguish measured observations from guessed weights and app allowances. Personal notes improve templates but do not establish a calibrated timing model.
-- **#45:** Release/canonical-site and social-preview verification. Branding code is already implemented.
-
-Equipment profiles (#12), learned predictions (#6), probe integration and AI remain later work. Do not pull Next/Later items into the immediate coding queue ahead of unfinished #19/#20 Now scope.
+See [roadmap](roadmap.md), [release candidate / approval checklist](releases/2026-11-09-readiness.md)
+and [core experience](core-cook-experience.md). Handoffs distinguish tested feature
+preview, merged dev, production approval and verified production deployment.

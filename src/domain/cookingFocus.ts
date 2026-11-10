@@ -1,5 +1,6 @@
 import type {PlannedTask} from './meal';
 import {chronologicalTasks} from './stepTiming';
+import type {StepForecast} from './cookForecast';
 
 /** Planned clock groups only: no dependency solver or automatic completion. */
 export function cookingFocus(tasks:PlannedTask[],completed:Record<string,string>,now:number){
@@ -16,16 +17,20 @@ export function cookingFocus(tasks:PlannedTask[],completed:Record<string,string>
 }
 
 /** Selection is view state. Previewing a step never changes completion or events. */
-export function guidedCookingSteps(tasks:PlannedTask[],completed:Record<string,string>,selectedId:string|null=null){
+export function guidedCookingSteps(tasks:PlannedTask[],completed:Record<string,string>,selectedId:string|null=null,forecasts?:Record<string,StepForecast>){
   const instant=(task:PlannedTask)=>{const at=task.scheduledAt?Date.parse(task.scheduledAt):NaN;return Number.isFinite(at)?at:Infinity;};
+  const byId=new Map(tasks.map(t=>[t.id,t]));
+  // The full checklist must not jump beneath the user's finger as forecasts or
+  // completions change. Only the global primary/next-action priority is live.
   const ordered=chronologicalTasks(tasks);
-  const unfinished=ordered.filter(t=>!completed[t.id]);
+  const priority=forecasts?chronologicalTasks(tasks.map(t=>({...t,scheduledAt:forecasts[t.id]?.start??t.scheduledAt}))).map(t=>byId.get(t.id)!):ordered;
+  const unfinished=priority.filter(t=>!completed[t.id]);
   let first=unfinished[0]??null;
   // An imported recipe may have only a serving time. Review its untimed work first.
   if(first?.id.endsWith(':serve'))first=unfinished.find(t=>instant(t)===Infinity)??first;
   const current=ordered.find(t=>t.id===selectedId)??first;
   const index=current?ordered.findIndex(t=>t.id===current.id):-1;
-  const candidates=index<0?[]:[...ordered.slice(index+1),...ordered.slice(0,index)];
+  const candidates=forecasts?priority.filter(t=>t.id!==current?.id):index<0?[]:[...ordered.slice(index+1),...ordered.slice(0,index)];
   const next=candidates.find(t=>!completed[t.id] && t.id!==current?.id)??null;
   return {current,next,ordered,index,remaining:unfinished.length};
 }

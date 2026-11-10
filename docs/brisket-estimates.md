@@ -82,3 +82,13 @@ still required before treating these comparisons as calibrated recommendations.
 The timing choice shows which method is currently in the plan before the actions.
 After applying, Timing applied is disabled until the comparison changes; Use manual
 timing appears only while estimated timing is active. It keeps the current times.
+
+## November 2026 new-dish default
+
+New dishes reserve 6 hours total after the smoker: 120 minutes initial rest plus
+240 minutes flexible holding. Existing optional inputs can use 360 minutes extra
+holding for an 8-hour total. An unapplied new manual plan carries the same 6-hour
+total as one rest/hold allowance. Applying a weight plan replaces it with the
+explicit two components, never adding them to the old allowance. Existing saved
+recipes keep their stored inputs and template. See [post-brisket evidence and
+supporting holding guidance](post-brisket-experience.md).

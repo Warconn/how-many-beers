@@ -8,20 +8,20 @@ test.beforeEach(async ({ page }) => {
 
 test("home is a clean starting point with history access", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "From First Beer to First Bite." })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Plan a new cook/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Past cooks and backups/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Plan a cook/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Past cooks/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
 test("plan brisket and brats, see their combined timeline, then resume", async ({ page }) => {
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await expect(page.getByRole("heading", { name: "What do you want to cook?",exact:true })).toBeVisible();
-  await page.getByRole("button", { name: "Add smoked brisket" }).click();
+  await page.getByRole("button", { name: "Add smoked brisket" }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
 
   await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
-  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
+  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await expect(page.getByRole("heading", { name: /2 dishes in this cook/ })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Live schedule" })).toBeVisible();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
@@ -34,9 +34,9 @@ test("plan brisket and brats, see their combined timeline, then resume", async (
 });
 
 test("resuming an in-progress cook preserves cooking status", async ({ page }) => {
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole("button", { name: "Add smoked brisket" }).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole("button", { name: "Add smoked brisket" }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole("button", { name: "Start cooking", exact: true }).click();
   await expect(page.getByRole("progressbar",{name:"Cook progress",exact:true})).toBeVisible();
   await page.getByRole("button", { name: /Home/ }).first().click();
@@ -50,13 +50,13 @@ test("resuming an in-progress cook preserves cooking status", async ({ page }) =
 
 
 test("template picker adds dishes and keeps their settings separate", async ({ page }) => {
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await expect(page.getByRole("heading", { name: "Choose a template" })).toBeVisible();
-  await page.getByRole("button", { name: "Add smoked brisket" }).click();
+  await page.getByRole("button", { name: "Add smoked brisket" }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
   await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
-  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
+  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
   await page.getByRole("button", { name: "Edit Smoked brisket", exact: true }).click();
   await page.getByText("Dish settings", { exact: true }).click();
@@ -106,9 +106,9 @@ test("home fits common viewport widths without horizontal overflow", async ({ pa
 
 test("guided planner keeps menu beside schedule and allows full schedule expansion", async ({ page }) => {
   await page.setViewportSize({width:1440,height:900});
-  await page.getByRole("button", {name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole("button", {name:"Add smoked brisket"}).click();
+  await page.getByRole("button", {name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole("button", {name:"Add smoked brisket"}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const planner=await page.locator(".guided-main").boundingBox();
   const schedule=await page.getByRole("complementary",{name:"Live schedule"}).boundingBox();
   expect(planner && schedule).toBeTruthy();
@@ -116,15 +116,15 @@ test("guided planner keeps menu beside schedule and allows full schedule expansi
   expect(schedule.x).toBeGreaterThan(planner.x+planner.width-10);
   await expect(page.getByRole("button",{name:/Show full schedule/})).toBeVisible();
   await page.getByRole("button",{name:/Show full schedule/}).click();
-  await expect(page.locator(".schedule-list li")).toHaveCount(12);
+  await expect(page.locator(".schedule-list li")).toHaveCount(9);
   await page.getByRole("button",{name:/Show less/}).click();
   await expect(page.locator(".schedule-list li")).toHaveCount(4);
 });
 test("mobile planner keeps planning controls first and schedule accessible",async ({page})=>{
   await page.setViewportSize({width:390,height:844});
-  await page.getByRole("button",{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+  await page.getByRole("button",{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const p=await page.locator(".guided-main").boundingBox();
   const sched=await page.getByRole("complementary",{name:"Live schedule"}).boundingBox();
   expect(p&&sched).toBeTruthy();
@@ -134,31 +134,31 @@ test("mobile planner keeps planning controls first and schedule accessible",asyn
 });
 
 test("a recipe can be imported from the same Add Dish interface as templates", async ({ page }) => {
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await expect(page.getByRole("heading", { name: "Add a dish" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start with a template" })).toBeVisible();
-  await page.getByRole("button", { name: "Upload a recipe" }).click();
+  await page.getByRole("button", { name: "Cancel adding", exact:true }).click();
+  await page.getByRole("button", { name: "Add your own recipe" }).click();
   await expect(page.getByLabel("Recipe title")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Choose a template" })).toHaveCount(0);
   await page.getByLabel("Recipe title").fill("Mac and cheese");
   await page.getByLabel("Recipe instructions").fill("Preheat oven\nCook pasta\nBake");
   await page.getByRole("button", { name: "Preview recipe steps" }).click();
-  await page.getByRole("button", { name: "Add to this cook" }).click();
+  await page.getByRole("button", { name: "Add to meal" }).click();
   await expect(page.getByRole("heading", { name: /1 dish in this cook/ })).toBeVisible();
   await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
-  await page.getByRole("button", { name: "Start from template" }).click();
-  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();
+  await page.getByRole("button", { name: "Choose a template" }).click();
+  await page.getByRole("button", { name: "Add grilled beer-bath brats" }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await expect(page.locator(".workspace-dish")).toHaveCount(2);
   await expect(page.getByRole("complementary", { name: "Live schedule" })).toBeVisible();
 });
 
 test("planner expands one dish to manage its steps without edit mode",async({page})=>{
- await page.getByRole("button",{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
- await page.getByRole("button",{name:"Add smoked brisket"}).click();
+ await page.getByRole("button",{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+ await page.getByRole("button",{name:"Add smoked brisket"}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  await page.getByRole("button",{name:"+ Add a dish",exact:true}).click();
- await page.getByRole("button",{name:"Add grilled beer-bath brats"}).click();
+ await page.getByRole("button",{name:"Add grilled beer-bath brats"}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  await page.getByRole("button",{name:"Edit Smoked brisket",exact:true}).click();
  await expect(page.getByRole("region",{name:"Smoked brisket steps"})).toBeVisible();
  await expect(page.getByRole("button",{name:"Add a step to Smoked brisket"})).toBeVisible();

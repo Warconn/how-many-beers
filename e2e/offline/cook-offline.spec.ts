@@ -1,6 +1,7 @@
 import {test,expect,type Page} from '@playwright/test';
 import {createDish,newMeal} from '../../src/domain/meal';
-import {migrateMeal,cookTimeline,recordEvent} from '../../src/domain/cookState';
+import {migrateMeal,cookTimeline,recordEvent,startCookSession} from '../../src/domain/cookState';
+import {parseRecipeText} from '../../src/domain/recipe';
 import {ACTIVE_KEY,HISTORY_KEY} from '../../src/domain/cookHistory';
 
 test.use({timezoneId:'America/New_York'});
@@ -12,6 +13,20 @@ async function ready(page:Page){
 }
 
 test.beforeEach(async({request})=>{await request.post('/__test__/worker-mode?mode=original');});
+
+test('physical roast/cool observations resume and finish offline without inventing Serve',async({page,context},info)=>{
+ await page.clock.install({time:new Date('2026-11-08T16:05:00Z')});await page.goto('/');await ready(page);
+ const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nRemove seeds and leave to cool (10 minutes)');
+ let meal=startCookSession({...newMeal(),name:'Offline seeds',serveAt:'2026-11-08T12:00',dishes:[dish]},'2026-11-08T15:55:00Z');
+ meal=recordEvent(meal,dish.id+':step-1','completed','2026-11-08T16:00:00Z');meal=recordEvent(meal,dish.id+':step-2','completed','2026-11-08T16:00:00Z');
+ await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await ready(page);await context.setOffline(true);
+ await page.getByRole('button',{name:/Continue cooking/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});await expect(meter).toContainText('0h 20m');
+ await page.clock.fastForward(5*60000);await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox',{name:/Complete Remove seeds/}).click({noWaitAfter:true});await expect(meter).toContainText('0h 10m');
+ const observed=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),ACTIVE_KEY);expect(observed.events.slice(0,meal.events!.length)).toEqual(JSON.parse(JSON.stringify(meal.events)));expect(observed.completed[dish.id+':serve']).toBeUndefined();
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(meter).toContainText('0h 10m');await page.clock.fastForward(10*60000);await expect(meter).toContainText('0.0');await page.getByRole('button',{name:'Finish cook',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY);expect(saved.cooks[0].meal.events).toEqual(observed.events);expect(saved.cooks[0].meal.serveAt).toBe(meal.serveAt);
+ await page.screenshot({path:info.outputPath('physical-offline-finished.png'),fullPage:true});await context.setOffline(false);
+});
 
 test('installed shell resumes an overnight cook offline, including notes, readings and archive',async({page,context},info)=>{
  await page.clock.install({time:new Date('2026-11-01T00:30:00-04:00')});
@@ -25,7 +40,7 @@ test('installed shell resumes an overnight cook offline, including notes, readin
  await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox').click();
  const current=page.getByRole('region',{name:'Current step',exact:true});
  await current.getByText('Step details',{exact:true}).click();await current.getByRole('button',{name:'+ Log temperature',exact:true}).click();await current.getByLabel('Food temperature',{exact:true}).fill('173');await current.getByRole('button',{name:'Save timestamped reading',exact:true}).click();
- await current.getByLabel('Quick notes',{exact:true}).fill('Keep heat steady');
+ await current.getByRole('button',{name:'Notes',exact:true}).click();await current.getByLabel('Quick notes',{exact:true}).fill('Keep heat steady');
  const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),ACTIVE_KEY);
  expect(saved.startedAt).toBe(active.startedAt);expect(saved.notes[id]).toBe('Bark set');expect(saved.events).toEqual(expect.arrayContaining(active.events!));
  expect(saved.events.some((event:{kind:string;value?:number})=>event.kind==='temperature'&&event.value===173)).toBe(true);expect(Object.values(saved.notes)).toContain('Keep heat steady');
@@ -44,15 +59,15 @@ test('manifest and icons describe a standalone app with the correct scope',async
  const response=await request.get('/manifest.webmanifest');expect(response.ok()).toBe(true);
  const manifest=await response.json();expect(manifest.start_url).toBe('/');expect(manifest.scope).toBe('/');expect(manifest.display).toBe('standalone');
  for(const icon of manifest.icons){expect((await request.get(icon.src)).ok()).toBe(true);}
- await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
+ await expect(page.getByRole('button',{name:/Plan a cook/})).toBeInViewport();
  await page.screenshot({path:info.outputPath('offline-home.png'),fullPage:true});
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
 });
 
 test('failed worker update leaves the saved cook and previous offline shell usable',async({page,request,context})=>{
- await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  const before=await page.evaluate(k=>localStorage.getItem(k),ACTIVE_KEY);
  await request.post('/__test__/worker-mode?mode=fail');
  await page.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg!.update();});
@@ -63,8 +78,8 @@ test('failed worker update leaves the saved cook and previous offline shell usab
 });
 
 test('ready updates never reload a cook automatically and protect open forms',async({page,request})=>{
- await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  // Close the Add Dish surface and open a real step draft.
  const cancel=page.getByRole('button',{name:'Cancel adding',exact:true});if(await cancel.count())await cancel.click();
  await page.getByRole('complementary',{name:'Live schedule',exact:true}).getByRole('button').first().click();
@@ -87,8 +102,8 @@ test('ready updates never reload a cook automatically and protect open forms',as
 });
 
 test('an unsaved custom-step draft also blocks app updates until cancelled',async({page,request})=>{
- await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
  await page.getByText('Cook details & tools',{exact:true}).click();
  await page.getByRole('button',{name:/Add a checklist step/}).click();await page.getByLabel('Step title',{exact:true}).fill('Do not discard my sauce step');
  await request.post('/__test__/worker-mode?mode=custom-draft');await page.evaluate(async()=>{await (await navigator.serviceWorker.getRegistration())!.update();});
@@ -112,17 +127,28 @@ test('Home has no install or offline help while preparation stays functional',as
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
  await expect(page.getByText(/Safari’s Share menu/)).toHaveCount(0);
  await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
- await expect(page.getByRole('button',{name:/Plan a new cook/})).toBeInViewport();
+ await expect(page.getByRole('button',{name:/Plan a cook/})).toBeInViewport();
  await page.screenshot({path:info.outputPath('clean-home-production.png'),fullPage:true});
- await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await ready(page);await expect(page.getByText('Saved on this device',{exact:true})).toHaveCount(0);
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
- await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
  await expect(page.getByText('Offline ready on this device',{exact:true})).toHaveCount(0);
- await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Past cooks and backups/}).click();
+ await page.getByRole('button',{name:'Home',exact:true}).click();await page.getByRole('button',{name:/Past cooks/}).click();
  await expect(page.getByText('Install and offline help',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Install app',exact:true})).toHaveCount(0);
+});
+
+test('planned-time-only edits of a new brisket persist offline without changing duration or actuals',async({page,context})=>{
+ await page.clock.install({time:new Date('2026-11-07T20:00:00Z')});await page.goto('/');await ready(page);
+ const dish={...createDish('brisket'),id:'offline-brisket'},meal={...newMeal(),name:'Offline brisket',serveAt:'2026-11-08T18:00:00Z',dishes:[dish]};
+ await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await ready(page);await context.setOffline(true);
+ await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+ const steps=page.getByRole('region',{name:'Smoked brisket steps',exact:true});await steps.getByRole('button',{name:'Change planned time: Put brisket on smoker',exact:true}).click();
+ const form=steps.getByRole('form',{name:'Edit planned time',exact:true});await form.getByLabel('Planned date and time',{exact:true}).fill('2026-11-07T23:30');await form.getByRole('button',{name:'Save',exact:true}).click();
+ const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(before.dishes).toEqual(meal.dishes);expect(before.taskOverrides['offline-brisket:start']).toEqual({scheduledAt:'2026-11-08T04:30:00.000Z'});expect(before.serveAt).toBe(meal.serveAt);expect(before.events).toEqual([]);
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).toEqual(before);await context.setOffline(false);
 });

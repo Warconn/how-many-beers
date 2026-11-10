@@ -237,3 +237,82 @@ The Beerometer retains its design and math. At session start, identical projecte
 and remaining durations appear once, with zero elapsed hidden. Distinct projected
 duration and nonzero elapsed remain available as the cook progresses. Completed
 history retains frozen actual duration. This supersedes older unchanged-display notes.
+
+## Canceling an active cook (#61)
+
+Cancel cook is a secondary action in Cook details & tools, also available on Home's
+current-cook card. Confirmation names the cook, focuses Keep cooking, and separates
+cancellation from finishing. Canceling retains the cook and actual activity without
+adding completed history; a fresh cook becomes available only after saving succeeds.
+Failure keeps the original cook recoverable and offers retry. Cancellation never
+means food is ready and does not change the execution projection.
+
+Accounts use an owner/revision-checked transactional RPC and a durable operation
+receipt. Lost responses can be retried after reload without canceling a newer cook.
+The account control is available only when the installed server advertises the
+cancellation capability. Apply the additive migration to dev before enabling it.
+Legacy browser cooks retain canceled envelopes atomically alongside active/history
+storage and include them in backups. New guest trials retain the envelope only in
+memory, preserving their existing temporary policy. No canceled-history/restore UI.
+
+
+## Fixed future brisket load and provisional completion (#121)
+
+Changing only the planned `Put brisket on smoker` time preserves the template's
+existing smoke duration. The user need only edit the planned start; no change to
+the duration field is necessary. Older fixed-time edits that saved a missing
+duration can still show a qualified projection from the previously applied
+brisket estimate without rewriting the saved task or manufacturing an actual start.
+
+For one built-in brisket with a known heating allowance and a **future fixed load**
+(or an actually recorded load), Cooking Mode can show a qualified estimate for
+when the meat might come off the smoker and when its planned rest/hold interval
+would end. For example, a 7 lb brisket with an 8-hour allowance loaded at 1 AM,
+2-hour rest, and 1-hour holding buffer shows approximately **9 AM off smoker**
+and **noon ready after planned rest/hold**, against an unchanged 1 PM serving
+target. These are provisional assumptions, not proof of doneness or safe holding.
+The live card no longer replaces this useful estimate with only an unexplained
+lower-bound `+` when unrelated unresolved preparatory conditions remain.
+
+The conservative forecast remains intact underneath. When an actual heating
+phase runs past its estimated completion without a recorded end, do not display
+a fresh fictitious definite completion. The conservative earliest/unknown bound
+and condition review take precedence. Fixed/manual rest anchors, multi-dish
+meals, unsupported/custom phases and unknown durations do not gain invented
+whole-meal estimates from one brisket's start. #117 separately addresses raw
+checkpoint scheduling when editing manual physical starts/durations.
+
+
+## Step tools stay optional (#123)
+
+The default cooking card retains its checkbox, short action/instruction and timing
+cue. Step details is the single optional layer for contextual tools. Record actual
+start opens one timestamp form (prefilled with now); recorded phases offer correction
+instead. Notes, activity and supported remaining-estimate adjustments appear only
+when selected, with no blank fields or disabled estimate action on opening details.
+Activity expands inline rather than behind another nested disclosure. Full checklist
+uses the same shortened action titles. Repeated instructions, generic forecast
+explanations, duplicate checkpoint/finish timestamps and irrelevant equipment labels
+are removed. Remaining authored instructions and concise safety cues stay available.
+Closing/reopening details retains typed time/reading/estimate drafts and navigation
+protection. Existing actuals, forecasts, Beerometer, saves and Hold → Finish semantics
+are unchanged. Timing-cue improvements and template rewrites remain separate issues.
+
+
+## Collapsed step timing (#124)
+
+The collapsed card leads with Planned start for scheduled actions, or Actual start
+for a recorded physical phase. Original plan metadata stays in Step details when
+it differs from the primary cue. Duration remains supporting information. The card,
+full checklist and Up Next use the same read-only timing selector and clock.
+Supported checkpoints show Check around plus a short observable condition; missing
+or uncertain timing shows the condition without an invented date. Expired check
+estimates say Review now, never a renewed deadline or automatic completion. Fixed
+constraints and actual observations retain their existing meanings. Corrected
+actual starts update derived future cues without overwriting the original plan,
+serving target, events or archived cooks. Rest/hold remains its existing interval
+and Finish flow; no timers, steps or forecasting algorithms were added.
+
+The brisket raise-225 instruction no longer claims a separate two-hour point:
+its existing 18% checkpoint is approximate and requires reviewing bark, temperature
+and progress. Direct planned-time editing remains the separate #125 issue.

@@ -157,14 +157,14 @@ test("planner sign-in stays in the workspace and preserves an open recipe draft"
 }, info) => {
   await backend(page);
   await page.goto("/");
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
-    .click();
+    .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
   await page
-    .getByRole("button", { name: "Import a recipe", exact: true })
+    .getByRole("button", { name: "Add your own recipe", exact: true })
     .click();
   await page.getByLabel("Recipe title").fill("Friday beans");
   const before = await page.evaluate(() =>
@@ -205,11 +205,11 @@ test("account access works in cooking and history without changing cook progress
 }, info) => {
   await backend(page);
   await page.goto("/");
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
-    .click();
+    .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page
     .getByRole("button", { name: "Start cooking", exact: true })
     .click();
@@ -233,13 +233,13 @@ test("account access works in cooking and history without changing cook progress
     fullPage: true,
   });
   await page.getByRole("button", { name: /Home/ }).first().click();
-  await page.getByRole("button", { name: /Past cooks and backups/ }).click();
+  await page.getByRole("button", { name: /Past cooks/ }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Cook History", exact: true }),
+    page.getByRole("heading", { name: "Past cooks", exact: true }),
   ).toBeVisible();
 });
 
@@ -248,11 +248,11 @@ test("redirected sign-in can return to the same cooking view with exact saved pr
 }) => {
   await backend(page);
   await page.goto("/");
-  await page.getByRole("button", { name: /Plan a new cook/ }).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
+  await page.getByRole("button", { name: /Plan a cook/ }).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page
     .getByRole("button", { name: "Add smoked brisket", exact: true })
-    .click();
+    .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page
     .getByRole("button", { name: "Start cooking", exact: true })
     .click();

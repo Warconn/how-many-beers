@@ -1,5 +1,6 @@
+import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
-import {createDish,newMeal} from '../src/domain/meal';
+import {newMeal} from '../src/domain/meal';
 import {cookTimeline} from '../src/domain/cookState';
 const at='2026-10-29T22:43:00Z';
 async function load(page:Page,done:number){

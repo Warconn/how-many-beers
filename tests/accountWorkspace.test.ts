@@ -293,6 +293,26 @@ describe("account snapshot recovery", () => {
     expect(b.state().snapshot?.active.name).toBe("Next cook");
     expect(accountCacheKey(owner)).not.toBe(b.key);
   });
+  it("exports the exact acknowledged raw legacy plan without localized dates or shared mutable references", async () => {
+    const f = fixture();
+    const meal = {...newMeal(),name:"Legacy Sunday plan",serveAt:"2026-11-08T18:00",dishes:[createDish("brats")]};
+    const document = {meal,serveInstant:"2026-11-08T23:00:00.000Z"};
+    f.set({revision:1,writeId:null,active:document,history:[]});
+    vi.stubEnv("TZ","America/Los_Angeles");
+    let reads = 0;
+    const s = f.store(owner,{...f.api,read:async()=>{reads++;return f.api.read();}});
+    expect(s.currentDocument()).toBeNull();
+    await s.connect();
+    expect(s.state().snapshot!.active.serveAt).toBe("2026-11-08T15:00");
+    expect(s.currentDocument()).toEqual(document);
+    const exported = s.currentDocument()!;
+    exported.meal.serveAt="2026-12-31T01:00";
+    exported.meal.dishes[0].name="Changed externally";
+    exported.serveInstant=null;
+    expect(s.currentDocument()).toEqual(document);
+    expect(s.state().snapshot!.active.dishes[0].name).toBe(meal.dishes[0].name);
+    expect(reads).toBe(1);expect(f.writes()).toBe(0);
+  });
   it("preserves serving instants, actual event times and immutable archives across time zones", () => {
     vi.stubEnv("TZ", "America/New_York");
     const meal = migrateMeal({

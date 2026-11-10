@@ -10,50 +10,101 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priorities and decision rules (November 5, 2026)
+## Current owner direction (November 9, 2026)
 
-**This is the approved coding queue, not just a list of open tickets.** When asked "what should Codex work on next?", use this ordered list together with live issue status. Do not infer execution order from issue numbers, creation dates, the existence of a "Next" label, or an older chat/README. Recheck issue and PR status before recommending work. If a task is already complete or in progress, skip or continue it as appropriate rather than duplicate work.
+PR #131 is owner-approved and merged into dev at `62f4673`. Do not repeat the
+post-brisket implementation. The authorized work is now release readiness:
+investigate/fix #118 with deterministic WebKit regression coverage; preserve
+production fixes while comparing dev/main; run all regression suites; reconcile
+delivered issues and documentation; prepare one release PR targeting main.
+This explicit release instruction supersedes the usual feature-PR target of dev.
+Do not merge into main or deploy production without further approval. Do not apply
+hosted Supabase migrations. Keep #61/#83/#103 open until production verification.
+#114 is the next feature candidate, outside this session; do not implement it.
+The owner also found accidental empty upcoming plans could not be removed. Add
+a direct retained Discard plan action using the existing #83 RPC, with empty,
+populated, failure/retry/reload and active/history-isolation regressions. Keep this
+in release PR #132; no new migration or production merge is authorized. The
+owner requested a clean fresh Home: label the action Plan a cook, omit the empty
+Upcoming panel, and use a trash icon inside the planning card and on saved-plan
+cards rather than a loose Discard plan text link. Keep a 44px accessible target.
 
-### NOW: Finish and stabilize the approved production release
+Handoffs include the exact feature testing URL reported by Cloudflare's successful
+check/comment and a short owner test plan. Never infer the hostname from a branch
+name: aliases may be shortened.
 
-The November 5 release contains #21 (visual design system, PR #98) and #97
-(checklist-first Cooking Mode, PR #99), plus the accepted November 3 compact
-planning/cooking layout and Beerometer cleanup. These extend production #96
-(`925cbacd348afd43640d69b2db1c173352c95fd1`), which delivered #92 (#93/#95),
-#84 (#94), #62/#85 (#89), #77 (#80/#90) and #86 (#91). Do not duplicate these
-implementations. See docs/releases/2026-11-05.md for the release contract/evidence;
-verify live main/dev and release PR status before describing deployment as complete.
+## Prior priorities and decision rules (November 7, 2026)
 
-The owner explicitly authorized this stabilization and production promotion after
-all gates pass: finish #99, full CI, merge dev, full integration CI on that dev
-commit, release PR dev → main, full candidate CI/build, then merge and confirm the
-actual Cloudflare deployment of the intended main commit. Never bypass failures
-or force a merge. Inspect desktop/mobile/iPhone screenshots. No production account
-or cook-data mutations during smoke tests. Significant unresolved issues block
-promotion. Reconcile #21/#97 after release, not merely after implementation.
+Use the live repository and issue acceptance criteria together with this approved
+queue. Do not repeat delivered work or infer priority from issue numbers.
 
-Cooking defaults to one action, concise instructions, relevant duration/checkpoint
-and a checkbox. Optional physical starts/corrections and temperature/equipment
-logging live in Step details. A checkbox is not proof of elapsed cooking/resting.
-Corrections append events; preserve original observations, stable IDs, saved cooks,
-authentication, ownership, guest behavior and planning/forecast semantics. Keep the
-accepted Beerometer simplification: no duplicate initial projected duration or zero
-elapsed reading. Do not redesign accepted functions or the execution model.
+### NOW: dev stabilization before a separate production release
 
-**Next planning sequence remains #61, then #83**, but neither is implementation
-scope for this release. Review docs/cook-lifecycle-plan.md before database work.
-#83 must wait for #61's lifecycle/migration design. #69/#70 sync, #2 URL import,
-paid tiers and social login are also excluded. The owner's new in-progress timing
-concept requires a separate discovery conversation; do not infer requirements or
-change the timing engine ahead of that discussion. No manual QA/acceptance tickets.
-#87 is the completed historical queue; #4 was owner-tested and #5 closed at the
-owner's request without claiming extra calibration research.
+Dev delivery includes #101 physical cooking, #61 retained cancellation, #83
+multiple upcoming account plans/one active cook, #71 CI improvements, #103's recipe
+review/shared controls and #113's removal of routine backup/success clutter.
+#115 repairs the browser baseline; #116 delivers #109 serving-time-first planning.
+The owner approved integrating #115/#116 and their documentation into dev on
+November 7. That approval does not authorize future PR merges, production promotion
+or hosted database changes.
+
+Preserve the delivered flow:
+**set serving time → choose dishes → review recipes → combined meal → cook**.
+The normal planning summary is **Start preparing**, with day/date. Show estimated
+meal readiness when the requested target cannot be met. Never silently move the
+target or fabricate actual activity. Keep the accepted Beerometer and #101 live
+execution model. The read-only planning projection is not #3's resource optimizer.
+
+#117 is delivered in dev through #128. #119/#121 are delivered through #120/#122;
+#123 through #129; #124/#125/#126/#127 through #131. #118 is the current
+pre-production metadata-edit investigation. The release must preserve the accepted
+physical model and Hold → Finish, all actuals, sessions, guest/account boundaries
+and saving/history. See docs/work-queue.md and the current release notes.
+
+Both November 5 Supabase migrations are owner-confirmed applied and verified in
+dev. Do not reapply them or modify hosted database state in this work. The owner
+confirmed production is missing both and will apply the two files manually before
+release merge; keep that gate pending until success/verification is confirmed.
+
+### Delivered UI and deferred capabilities
+
+The default planner is `/`; old `/recipe-first/` bookmarks redirect there. Preserve
+inline instructions, left drag grips, upper-right Edit, grouped Save/Cancel,
+separated Remove and Review Meal Plan. Reuse docs/design-system.md.
+#103's recipe UI is delivered; reusable personal recipe saving remains deferred.
+Advanced scheduling (#3), timers/notifications, recipe URL import (#2), social
+login, paid features and advanced synchronization (#69/#70) remain deferred.
+Do not create manual QA or acceptance-testing tickets. Real data-loss/security bugs
+still take precedence. Stale docs PR #106 was closed as superseded without merging its old queue.
+
+### Existing lifecycle safeguards
+
+#61 retains canceled records, excludes them from active/completed views, permits a
+new cook only after acknowledged cancellation, and protects against stale-device
+resurrection. Fresh guest trials remain in-memory; legacy guest/account retention
+and existing completed history must remain intact. SQL migrations are additive and
+must pass real PostgreSQL security, seeded-upgrade and race checks. Capability-gate
+new account controls until their RPC/schema exists. Do not change hosted Supabase
+without verified environment access and explicit deployment scope.
+
+#83 follows the understood/tested #61 lifecycle foundation: separate account-owned
+saved plans, one active cook, independent edits and safe atomic promotion. No future
+plan may overwrite active progress. Preserve legacy planning drafts, actual events,
+backups, account ownership and guest behavior. See docs/cook-lifecycle-plan.md.
+
+#71 may improve CI independently while preserving all browser projects, account,
+offline and security coverage, required aggregate gates and actual screenshot review.
+Measure wall-clock and runner cost rather than claiming unmeasured speedups.
+
+Cooking keeps the accepted checklist-first flow and Beerometer display/calculations.
+#101's accepted physical timing is delivered; preserve its execution model. #69/#70 sync, URL import, paid/social and unrelated methods remain
+out of scope. Do not create manual QA/acceptance tickets.
 
 ### Approved free-tier product boundary
 
 - **All accounts are free for now. No paid tier, subscriptions or billing implementation.**
 - Guests can try the cooking workflow without sign-in, but the intended **new guest experience** has no persistent saves, tracked completed-cook history or account tracking. Clearly disclose that mode's limits.
-- Signed-in users have exactly **one** saved active/planning cook, plus a list of **unlimited completed cooks** (subject to reasonable technical limits). View details and Cook Again stay free.
+- Signed-in users retain **one active cook** and **unlimited completed cooks** (subject to reasonable technical limits). #83 account builds with the savedPlans server capability also support multiple independent upcoming plans; older schema builds keep their one planning/active workspace. View details and Cook Again stay free.
 - **No cooking analytics dashboard** required. A simple, useful Previous Cooks list is the focus.
 - Multiple future account plans are approved after #61 as #83; the separate personal recipe library remains outside this sequence.
 - **Migration is a non-negotiable constraint:** current builds already preserve guest sessions and history in browser storage, with backup/restore. Never erase, orphan or silently reset existing legacy guest data while moving toward the new guest/account behavior. Offer explicit safe migration/backup. Keep real cook progress safe even when connectivity fails.
@@ -86,6 +137,15 @@ Steps conceptually belong to dishes. The overall schedule is derived from all di
 
 Use accessible labels, keyboard-friendly buttons and mobile tap targets. Expose unscheduled/estimated/condition-driven items truthfully. Never portray timing estimates as food safety guarantees.
 
+## User-journey regression coverage
+
+See [the coverage map](docs/user-journey-coverage.md) for implemented pathways,
+known cook regressions, whole-UI journeys and manual/hosted boundaries. Preserve
+its guest/account/legacy/offline distinctions. Update the map when changing an
+experience or adding a concrete regression; do not imply exhaustive device or
+hosted-service coverage from mocks. New overnight/mixed-meal journeys run on
+desktop/mobile Chromium and iPhone WebKit.
+
 ## Test-first feature delivery
 
 1. Read the issue, current UX spec, source and existing Playwright flows. Summarize the desired journey and concrete acceptance criteria before editing.
@@ -108,10 +168,10 @@ This file is the durable working summary of the October 2026 product discussion,
 
 Save plan for later explicitly acknowledges the current browser-storage write and
 returns Home in planning. Home shows edited start times and supports starting the
-same cook later. Keep one active/planning cook per browser, existing autosave,
+same cook later. Legacy browser mode keeps one active/planning cook, existing autosave,
 archive/history, IDs and actual timestamps. Failed writes must not claim success.
-Suggested times do not automatically start a session. Cloud sync, background reminders
-and a library of multiple future plans remain separate work.
+Suggested times do not automatically start a session. Account cloud saving and multiple upcoming plans are delivered in dev (#83).
+Background reminders remain separate work.
 
 ## Cooking Mode review iteration (#26)
 
@@ -135,6 +195,12 @@ resource/dependency optimization remains #3. See docs/step-timing.md.
 ## Account menu refinement (October 28, 2026)
 
 The owner confirmed existing cooks are throwaway and migration must not dominate onboarding. Signed-in users land directly on account cooks. Earlier-cook import/download UI is removed during pre-1.0 (#60), with no automatic replacement import; leave stored records and recovery mechanisms intact. App-update actions also belong in that menu (Menu when accounts are disabled); keep background worker detection mounted and retain save/draft safeguards. No automatic reload during an open cook.
+
+Upcoming-plan saving reuses that existing mechanism: automatic bounded transient
+retries, owner-scoped protected drafts, and honest status in the existing icon. Do
+not add separate plan recovery/retry prompts or Resume draft controls. Never
+automatically overwrite a conflicting newer-device plan or claim an unconfirmed
+start succeeded. The owner accepted Cancel Cook as implemented; preserve its flow.
 
 Account saving uses a small status icon beside the Account control (cloud check, saving activity or attention warning), with accessible labels and hover text. Do not restore the separate Saved to account row. Keep actual save failures explicit and actionable.
 

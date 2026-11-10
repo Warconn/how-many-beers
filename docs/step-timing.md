@@ -144,7 +144,7 @@ fixed/recorded anchors, overnight/DST elapsed time, archive/backup/repeat and sc
 
 
 ### Imported duration controls
-In planning, edit Estimated duration directly on an imported step (minutes).
+In planning, tap the visible planned time for a focused time-only edit. Estimated duration is optional under the step’s Edit → More options controls.
 Changes apply immediately, including clearing to unknown or setting a zero-minute
 milestone, and save through the existing guest/account rules. The full Edit form
 shows the same effective duration; it remains the place for fixed starts and reset.
@@ -200,3 +200,14 @@ IDs for added steps. Existing `taskOrder` and earlier prep-only `planningStepOrd
 plans retain their behavior until the next planning move explicitly selects the
 new sequence model. Active-plan moves preserve notes, actuals and history. This
 does not introduce cross-dish resource scheduling (#3).
+
+
+## Template cooking interval edits (#117)
+During planning, editing a built-in cooking start or its explicit allowance keeps
+estimated checkpoints within that known cooking interval. Checkpoint positions
+scale with the allowance; finishing/rest and serving estimates move by the change
+in cooking finish. For ribs, an 8:10 AM start with 330 minutes cooking and 20 minutes
+rest gives 1:40 PM estimated doneness and 2 PM readiness, retaining the requested
+1 PM serving target. Fixed/recorded anchors remain constraints. No actual event,
+archived snapshot or active-session projection is rewritten; explicit planning
+sequences retain their separate scheduling rules. Estimates never confirm doneness.

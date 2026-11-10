@@ -29,12 +29,12 @@ These desktop and mobile screenshots show the current dev workspace, including t
 ## What works today
 
 - **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
-- **Personal cooking templates.** Brisket with SPG/Cow Cover and staged smoker heat, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
-- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Estimated durations remain editable directly on imported steps.
+- **Personal cooking templates.** Concise overnight brisket with flexible rest/holding reserve, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
+- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Planned times open a focused editor; duration and advanced settings remain optional.
 - **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
 - **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
-- **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or export and restore a JSON backup.
-- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, zero once all steps are checked, and distinct projected/elapsed/actual readings when useful; duplicate initial totals and zero elapsed are hidden.
+- **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or Cook Again. Exceptional recovery retains JSON backup/restore.
+- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, passive countdowns and uncertainty for overrunning heat; actual physical work governs remaining time, while duplicate projected/elapsed totals stay out of the main display.
 
 **Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
 
@@ -46,7 +46,7 @@ and cooking without persistent saves. Existing legacy browser records and recove
 mechanisms remain intact. Sign-in opens account cooks directly; the pre-1.0 Earlier
 cooks migration UI has been removed.
 
-Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, so keep JSON backups. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
+Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, and exceptional recovery preserves backup tools. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 
 Empty plans ask **What do you want to cook?** with template and recipe-upload choices. Serving time stays editable; the schedule and cooking controls appear once there are steps.
 
@@ -61,7 +61,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-For focused iteration, run `npm run test:fast -- e2e/home-cleanup.spec.ts` (typecheck, unit tests and desktop/mobile browsers). Use the affected spec or account config. Before integration/release, run `npm run test:full` to include auth, account recovery, full regression and production-built offline checks. See [CI testing and timing evidence](docs/ci-testing.md).
+For focused iteration, run `npm run test:fast -- e2e/home-cleanup.spec.ts` (typecheck, unit tests and desktop/mobile browsers). Use the affected spec or account config. Before integration/release, run `npm run test:full` to include auth, account recovery, full regression and production-built offline checks. See [CI testing and timing evidence](docs/ci-testing.md) and the [user-journey coverage map](docs/user-journey-coverage.md).
 
 To validate a change:
 
@@ -85,18 +85,19 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The November 5 release combines [#98](https://github.com/Warconn/how-many-beers/pull/98)
-(#21 visual consistency) with [#99](https://github.com/Warconn/how-many-beers/pull/99)
-(#97 checklist-first cooking and the approved compact layout/Beerometer cleanup).
-It extends release #96: #92, #84, #62/#85, #77 and #86 are completed work.
-See [release notes and validation](docs/releases/2026-11-05.md); check the release PR
-and Cloudflare status for deployment confirmation. Authentication, cloud saving and
-cross-device history remain supported without schema changes.
+The post-brisket changes are approved and merged into **dev** through
+[PR #131](https://github.com/Warconn/how-many-beers/pull/131), alongside the delivered
+#117/#119/#121 fixes. Current work is **#118 meal-name persistence investigation
+and release readiness**, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
+targeting main for explicit owner approval. No production deployment is authorized.
 
-Next is a separate discussion of the owner's cooking/timing concept, then the
-prepared **#61 retained cancellation → #83 multiple upcoming account plans**
-sequence. No new capabilities are included in this stabilization release. See
-[design system](docs/design-system.md) and [lifecycle investigation](docs/cook-lifecycle-plan.md).
+Keep #61/#83/#103 open until production is verified. The next feature candidate is
+#114 personal saved recipes, separate from this release and not started here.
+Both November 5 migrations are confirmed in dev; production schema readiness must
+be verified separately, with no automatic hosted migration or data changes.
+
+See [work queue](docs/work-queue.md), [roadmap](docs/roadmap.md) and
+[release readiness / acceptance](docs/releases/2026-11-09-readiness.md).
 
 ## Account foundation work
 
@@ -131,3 +132,48 @@ use aligned Edit, Move and Remove controls; Add a step stays below the list.
 Cooking Mode now uses one progress treatment and a single content column. Completed
 cooks have one primary Finish action and checklist review, while Finish cook early
 is available under Cook details & tools. The Beerometer retains the accepted design and calculations while hiding duplicate initial totals and zero elapsed.
+
+Retained **Cancel cook** is implemented for review in #61: Home and Cooking Mode
+provide a confirmation, completed history stays untouched, and account cancellation
+waits for a server receipt. Install the additive dev migration before the capability-
+gated account control appears. Guest trials remain temporary; legacy local canceled
+records remain retained and backup-compatible. See [rollout details](docs/account-cooks.md).
+
+Multiple upcoming account plans are implemented for review in #83, dependent on #61.
+Home separates future meals from the single current cook. Each future plan saves
+independently, and starting it is acknowledged atomically. Current cook/history and
+upcoming plans have explicitly separate backup files; keep both for a full account
+backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
+See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).
+
+## Approved meal planning (#103)
+
+The approved recipe-first planner now lives at `/`, including on the ordinary dev
+URL. Older `/recipe-first/` bookmarks redirect to `/`. Feature branches may still
+use isolated review URLs, but reviewed dev work uses the normal entry point. See
+[scope and test path](docs/recipe-first-preview.md). Personal recipe persistence
+remains a later slice; no hosted schema change is required for this flow.
+
+The approved planner shows short step instructions inline, expands longer
+text on demand, and labels the combined schedule **Review Meal Plan**. Generic
+review guidance and method-reference chrome are omitted; saved recipe/source data
+and existing cooks remain intact.
+
+Recipe review and prototype meal-planning rows share drag grips, upper-right Edit
+and editor-contained Remove. The reusable action placement standard lives in
+[the design system](docs/design-system.md#reusable-step-rows-and-actions-103-review).
+
+Cooking Mode keeps notes, readings, actual-time correction, activity and supported
+estimate adjustments optional within Step details. The checkbox and existing
+Hold/Finish flow remain unchanged.
+Built-in cooking-start edits keep estimated checkpoints within their cooking
+allowance, with rest/readiness following the estimated finish. Requested serving
+time and recorded actuals stay intact. See [step timing](docs/step-timing.md).
+
+Cooking Mode shows planned starts and useful approximate check/condition cues on
+the collapsed card and Up Next. Actual starts stay distinct; estimates never
+check food done automatically.
+
+The consolidated post-brisket feature review covers direct planned-time editing,
+quiet planning settings, cooking cues, new brisket defaults and upcoming start
+times. See [behavior and real-cook evidence](docs/post-brisket-experience.md).

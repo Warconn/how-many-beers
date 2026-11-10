@@ -6,7 +6,7 @@ test('brand Home explains the cook and keeps the primary action visible',async({
   await expect(page.getByRole('heading',{name:'How Many Beers?',exact:true})).toBeVisible();
   await expect(page.getByRole('heading',{name:'From First Beer to First Bite.',exact:true})).toBeVisible();
   await expect(page.getByText('Plan every dish. Time your dinner. Enjoy the cook.',{exact:true})).toBeVisible();
-  const start=page.getByRole('button',{name:/Plan a new cook/});
+  const start=page.getByRole('button',{name:/Plan a cook/});
   await expect(start).toBeInViewport();
   for(const label of ['Set serving time','Add dishes','Adjust the plan','Cook and check it off']){
     await expect(page.getByRole('complementary',{name:'How it works'}).getByText(label,{exact:true})).toBeVisible();
@@ -31,9 +31,9 @@ test('brand metadata and share assets identify the public domain',async({page,re
 
 test('returning cooks get a compact brand header and unchanged resume data',async({page},info)=>{
   await page.goto('/');
-  await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+  await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole('button',{name:'Start cooking',exact:true}).click();
   const saved=migrateMeal(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!)));
   await page.getByRole('button',{name:/Home/}).first().click();

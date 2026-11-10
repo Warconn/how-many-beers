@@ -25,7 +25,7 @@ describe("starter cooking templates",()=>{
     const meal=newMeal();meal.dishes=[createDish("brisket")];
     const steps=buildTimeline(meal);
     const descriptions=steps.map(t=>t.title+" "+t.instructions).join(" ").toLowerCase();
-    for(const word of ["bark","wrap","203","tender","140"])expect(descriptions).toContain(word);
+    for(const word of ["bark","wrap","tender","hold"])expect(descriptions).toContain(word);
   });
   it("wings include 165°F completion before finishing fry",()=>{
     const meal=newMeal();meal.dishes=[createDish("wings")];

@@ -22,17 +22,17 @@ test('unreadable saved data is preserved across reload and can be exported',asyn
   expect(recovered.active).toBe('{unreadable cook');expect(recovered.history).toBe('{"version":2,"cooks":[]}');
 });
 
-test('failed backup restore never leaves imported history paired with the old active cook',async({page})=>{
+test('failed protected restore preserves unreadable bytes and existing history',async({page})=>{
   const active=fixture();const history=archiveCook(active,emptyHistory(),'Original archive','2026-10-25T18:00:00Z');
-  await page.goto('/');await page.evaluate(({active,history,a,h})=>{localStorage.clear();localStorage.setItem(a,JSON.stringify(active));localStorage.setItem(h,JSON.stringify(history));},{active,history,a:ACTIVE_KEY,h:HISTORY_KEY});await page.reload();
-  await page.getByRole('button',{name:/Past cooks and backups/}).click();
+  await page.goto('/');await page.evaluate(({active,history,a,h})=>{localStorage.clear();localStorage.setItem(a,'{unreadable cook');localStorage.setItem(h,JSON.stringify(history));},{active,history,a:ACTIVE_KEY,h:HISTORY_KEY});await page.reload();
+  await expect(page.getByRole('region',{name:'Saved cook recovery',exact:true})).toBeVisible();
   const before=await page.evaluate(({a,h})=>[localStorage.getItem(a),localStorage.getItem(h)],{a:ACTIVE_KEY,h:HISTORY_KEY});
   await page.evaluate(k=>{const original=Storage.prototype.setItem;let failed=false;Storage.prototype.setItem=function(key,value){if(key===k&&!failed){failed=true;throw new DOMException('Full','QuotaExceededError');}return original.call(this,key,value);};},ACTIVE_KEY);
   page.once('dialog',d=>d.accept());
   await page.getByLabel('Restore a backup').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(exportBackup({...fixture(),name:'Imported'},emptyHistory(),'2026-10-27T12:00:00Z'))});
   await expect(page.getByRole('alert').filter({hasText:'Could not restore backup'})).toContainText('Could not restore backup');
   expect(await page.evaluate(({a,h})=>[localStorage.getItem(a),localStorage.getItem(h)],{a:ACTIVE_KEY,h:HISTORY_KEY})).toEqual(before);
-  await page.reload();expect(await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!).name,ACTIVE_KEY)).toBe('Overnight cook');
+  await page.reload();expect(await page.evaluate(k=>localStorage.getItem(k),ACTIVE_KEY)).toBe('{unreadable cook');await expect(page.getByRole('region',{name:'Saved cook recovery',exact:true})).toBeVisible();
 });
 
 test('failed critical writes remain visibly unsaved, exportable and retryable',async({page},info)=>{
@@ -89,8 +89,8 @@ test('failed finish/archive keeps the original active cook and history together'
 });
 
 test('a stale tab cannot silently replace a newer cook',async({page,context})=>{
-  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+  await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const other=await context.newPage();await other.goto(page.url());await other.getByRole('button',{name:/Resume planning/}).click();
   await page.getByLabel('Meal name',{exact:true}).fill('Newer plan');
   await expect(other.getByRole('alert').filter({hasText:'Another tab'})).toContainText('Another tab');

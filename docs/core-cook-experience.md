@@ -1,17 +1,24 @@
-## Current release and next work (November 5, 2026)
+# Core cook experience
 
-The November 5 release adds #21 visual consistency and #97 checklist-first cooking
-to #96's completed #92/#84/#62/#85/#77/#86 delivery. See
-[release notes](releases/2026-11-05.md) and verify deployment status in the release PR.
+## Current approved experience · November 9, 2026
 
-Cooking shows one action, a relevant duration or manual checkpoint and a checkbox.
-Optional physical-start corrections and logging live in Step details; check-offs
-never prove a physical interval elapsed. The accepted compact mobile layout and
-Beerometer cleanup remain. Preserve actual events, accounts, guests and history.
+PR #131 is approved and merged into dev at `62f4673`. It completes the post-brisket
+queue, including prominent/directly editable planned times, optional configuration,
+shared cooking cues, concise new brisket defaults and upcoming preparation times.
+#117/#119/#121 are also implemented in dev. Do not repeat these deliveries.
 
-The owner's new timing concept needs separate discovery. #61 retained cancellation
-and then #83 multiple upcoming plans remain the prepared next capability sequence,
-not part of this release. See cook-lifecycle-plan.md. No manual QA tickets.
+Preserve serving target → dishes → review/adjust → cook → hold → finish, the
+accepted #101 physical model, checkbox-first progress, Beerometer and immutable
+actuals/history. Start preparing is the whole-checklist preparation time, distinct
+from smoker load. A timing estimate never confirms doneness or completes a step.
+
+The current release work investigates #118's post-add metadata-edit/focus race and
+validates the integrated candidate. Release PR #132 targets main, but production
+promotion requires explicit approval. #61/#83/#103 remain open release trackers
+until production verification. Both November 5 migrations are verified in dev;
+production readiness is a separate prerequisite, not permission to apply SQL.
+#114 personal recipes is the next feature candidate and is not part of this work.
+See [work queue](work-queue.md) and [release readiness](releases/2026-11-09-readiness.md).
 
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.
@@ -194,7 +201,7 @@ accordion within the menu instead, with a single dish heading and no return navi
    keyboard focus moves to its header.
 3. Adjust that dish's steps in place, or select another dish. Clicking the expanded
    header collapses it. Only one dish is expanded at a time.
-4. Use Dish settings for name, equipment, template durations and optional reference settings. Imported step durations are edited directly on their step rows.
+4. Use Dish settings for name, equipment, template durations and optional reference settings. All step rows expose planned time directly. Duration editing stays optional under Edit → More options.
    Settings stay collapsed by default. Step actions are visible directly in the dish.
    Remove dish is a compact trash icon beside the heading, not hidden in settings;
    it retains a descriptive accessible label/tooltip and a 44px touch target;
@@ -520,3 +527,92 @@ unknown work and food-readiness checks remain explicit. Planning an active cook
 does not modify its recorded starts, completions or notes. Current/upcoming
 forecasts and the Beerometer share that sequence without changing the Beerometer
 UI. Existing plans do not silently migrate. See step-timing.md.
+
+## Retained cancellation (#61)
+Cancel cook is separate from Finish cook. Confirmation defaults to Keep cooking;
+only an acknowledged cancellation removes the cook from active/resume. Canceled
+records remain retained outside normal completed history. Guests keep their existing
+trial/legacy persistence policy; account writes preserve ownership, original actuals
+and idempotent recovery. A new cook can start after successful cancellation.
+
+## Upcoming account cooks (#83)
+
+With the savedPlans server capability, Home shows one current cooking session plus
+independent future plans. Plan another cook and Cook Again create future documents,
+never replacement live sessions. Reuse the existing planner for each selected plan;
+explicit start is blocked while another cook is active. Navigation protects pending
+per-plan drafts and preserves current actuals. Upcoming plan backups are separate
+from the existing cook/history backup, with clearly labeled scopes and atomic merge.
+This is account-only; guest behavior and the timing/execution model remain unchanged.
+
+Upcoming plan saving uses the existing account save icon and automatic transient
+retries. Pending drafts are protected internally; there are no separate recovery,
+retry or Resume draft controls for future plans. Conflicting newer-device edits
+remain protected without automatic replacement. Cancel Cook is unchanged.
+
+## Approved method review and default planning
+
+On `/`, tailor one dish before adding it to the meal. Read short
+instructions inline, expand only overflowing text, edit beside the title/estimate,
+and drag a collapsed grip to reorder. The review omits the repeated generic
+guidance and method-reference footer. **Review Meal Plan** opens the combined
+steps across all dishes; it is distinct from reviewing one recipe method. The owner approved this as the default planner. Older `/recipe-first/` bookmarks
+redirect home. Cooking semantics, source data and persistence formats are preserved.
+Account save errors use the existing status icon; genuine blockers have one accurate
+notice, with exceptional save tools behind Save details. Do not render duplicate
+recovery banners or describe a tab lock as a newer device version.
+
+
+## Step tools stay optional (#123)
+
+The default cooking card retains its checkbox, short action/instruction and timing
+cue. Step details is the single optional layer for contextual tools. Record actual
+start opens one timestamp form (prefilled with now); recorded phases offer correction
+instead. Notes, activity and supported remaining-estimate adjustments appear only
+when selected, with no blank fields or disabled estimate action on opening details.
+Activity expands inline rather than behind another nested disclosure. Full checklist
+uses the same shortened action titles. Repeated instructions, generic forecast
+explanations, duplicate checkpoint/finish timestamps and irrelevant equipment labels
+are removed. Remaining authored instructions and concise safety cues stay available.
+Closing/reopening details retains typed time/reading/estimate drafts and navigation
+protection. Existing actuals, forecasts, Beerometer, saves and Hold → Finish semantics
+are unchanged. Timing-cue improvements and template rewrites remain separate issues.
+## Template cooking interval edits (#117)
+During planning, editing a built-in cooking start or its explicit allowance keeps
+estimated checkpoints within that known cooking interval. Checkpoint positions
+scale with the allowance; finishing/rest and serving estimates move by the change
+in cooking finish. For ribs, an 8:10 AM start with 330 minutes cooking and 20 minutes
+rest gives 1:40 PM estimated doneness and 2 PM readiness, retaining the requested
+1 PM serving target. Fixed/recorded anchors remain constraints. No actual event,
+archived snapshot or active-session projection is rewritten; explicit planning
+sequences retain their separate scheduling rules. Estimates never confirm doneness.
+
+
+## Collapsed step timing (#124)
+
+The collapsed card leads with Planned start for scheduled actions, or Actual start
+for a recorded physical phase. Original plan metadata stays in Step details when
+it differs from the primary cue. Duration remains supporting information. The card,
+full checklist and Up Next use the same read-only timing selector and clock.
+Supported checkpoints show Check around plus a short observable condition; missing
+or uncertain timing shows the condition without an invented date. Expired check
+estimates say Review now, never a renewed deadline or automatic completion. Fixed
+constraints and actual observations retain their existing meanings. Corrected
+actual starts update derived future cues without overwriting the original plan,
+serving target, events or archived cooks. Rest/hold remains its existing interval
+and Finish flow; no timers, steps or forecasting algorithms were added.
+
+The brisket raise-225 instruction no longer claims a separate two-hour point:
+its existing 18% checkpoint is approximate and requires reviewing bark, temperature
+and progress. Direct planned-time editing remains the separate #125 issue.
+
+## Consolidated post-brisket review
+
+The owner superseded separate issue previews with one feature review for
+#124/#125/#127/#126 and the agreed planning cleanup. Planned time is the direct
+editing target in planning and cooking; full editors expose it without a nested
+menu. Duration and advanced inputs stay optional. Dish settings follow the steps
+and remain collapsed. New brisket dishes use concise steps and a 6-hour total
+rest/hold reserve (8 hours via the existing optional inputs); old recipes remain
+unchanged. Home upcoming plans show derived Start preparing and Serve times.
+See [the consolidated contract and cook evidence](post-brisket-experience.md).

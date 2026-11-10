@@ -1,14 +1,17 @@
 import {planStepSequence,localStepKey} from "./stepSequence";
-import type { Meal, PlannedTask } from "./meal";
+import type { Meal, PlannedTask,Dish } from "./meal";
 import { buildDishTimeline } from "./schedule";
 import {adjustDishSequence,servingConflict} from "./stepDependencies";
 import {turkeyPreparation} from "./turkeyPrep";
 import {physicalPhase} from "./physicalPhase";
 import {chronologicalTasks} from "./stepTiming";
+import {buildPhasePlan,type PhaseObservation} from './cookingPhases';
 
 export type CookEventKind = "started" | "completed" | "reopened" | "temperature" | "equipment" | "removed";
 
 export type CookEvent = {
+  phaseObservations?: PhaseObservation[];
+  phaseEstimate?: {phaseId:string;minutes:number};
   id: string;
   taskId: string;
   kind: CookEventKind;
@@ -19,15 +22,35 @@ export type CookEvent = {
   note?: string;
 };
 
+/** Starting/resuming is explicit and backwards compatible. Old sessions never
+ * acquire physical events merely because this version opened them. */
+export function startCookSession(meal:Meal,occurredAt:string):ExtendedMeal{
+ if(meal.startedAt||meal.mode==='cooking'||Object.keys(meal.completed).length||((meal as ExtendedMeal).events??[]).some(e=>e.kind!=='removed'))return {...migrateMeal(meal),mode:'cooking',startedAt:meal.startedAt??occurredAt};
+ if(!Number.isFinite(Date.parse(occurredAt)))throw Error('Choose a valid cook start.');
+ return {...migrateMeal(meal),mode:'cooking',startedAt:occurredAt,phasePlan:buildPhasePlan(meal,cookTimeline(meal))};
+}
+
+/** Adding a dish during execution never starts it and never recompiles existing
+ * physical relationships or recorded actuals. */
+export function addDishToMeal(meal:Meal,dish:Dish,occurredAt:string):ExtendedMeal{
+ const next:ExtendedMeal={...meal,dishes:[...meal.dishes,meal.mode==='cooking'?{...dish,executionAddedAt:occurredAt}:dish]};
+ if(meal.phasePlan){
+  const added=buildPhasePlan({...next,dishes:next.dishes.filter(d=>d.id===dish.id)},cookTimeline(next));
+  next.phasePlan={...meal.phasePlan,phases:[...meal.phasePlan.phases,...added.phases],actions:{...meal.phasePlan.actions,...added.actions},order:{...meal.phasePlan.order,...added.order},suppressed:[...meal.phasePlan.suppressed,...added.suppressed]};
+ }
+ return next;
+}
+
 export type TaskOverride = {
   title?: string; instructions?: string; scheduledAt?: string | null;
   recordedPlanAt?: string | null; // Planned position at first activity, separate from actual timestamps.
   durationMinutes?: number | null; equipment?: string; targetTempF?: number | null;
 };
 export type StepPlanEdit = {
+  plannedTimeOnly?: boolean;
   timingMode: "plan" | "fixed" | "unscheduled";
   scheduledAt: string | null;
-  durationMinutes: number | null;
+  durationMinutes?: number | null; // Omitted for a planned-time-only edit.
   equipment: string;
   targetTempF: number | null;
 };
@@ -88,7 +111,7 @@ function derivedSchedule(meal:Meal):{tasks:PlannedTask[];warnings:string[]}{
       const added=(m.customTasks??[]).filter(t=>t.dishId===d.id&&!hidden.has(t.id)).map(project);
       const planned=planStepSequence([...source,...added],keys,m.serveAt,recorded,m.taskOverrides);warnings.push(...planned.warnings,...servingConflict(planned.tasks,m.serveAt));return planned.tasks;
     }
-    const adjusted=adjustDishSequence(sequence,recorded);warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
+    const adjusted=adjustDishSequence(sequence,recorded,m.mode!=="cooking");warnings.push(...adjusted.warnings,...servingConflict(adjusted.tasks,m.serveAt));return adjusted.tasks;
   });
   const general=(m.customTasks??[]).filter(t=>!hidden.has(t.id)&&!m.dishes.some(d=>d.id===t.dishId&&d.planningSequence));
   const independent=general.filter(t=>!m.planningGeneralSequence||t.dishId!=='custom');
@@ -138,6 +161,16 @@ export function addStep(meal: Meal, title: string, instructions = "", scheduledA
 }
 
 export function editStep(meal: Meal, taskId: string, title: string, instructions: string, details?: StepPlanEdit): ExtendedMeal {
+  if(details?.plannedTimeOnly){
+    if(!['plan','fixed','unscheduled'].includes(details.timingMode))throw new Error('Choose a valid timing mode.');
+    if(details.timingMode==='fixed'&&(!details.scheduledAt||!Number.isFinite(Date.parse(details.scheduledAt))))throw new Error('Choose a valid planned date and time.');
+    if(!cookTimeline(meal).some(t=>t.id===taskId))throw new Error('Task not found.');
+    const m=migrateMeal(meal);
+    const timeOverride={...m.taskOverrides?.[taskId]};
+    if(details.timingMode==='plan')delete timeOverride.scheduledAt;
+    else timeOverride.scheduledAt=details.timingMode==='unscheduled'?null:new Date(details.scheduledAt!).toISOString();
+    return {...m,taskOverrides:{...m.taskOverrides,[taskId]:timeOverride}};
+  }
   const trimmed = title.trim();
   if (!trimmed || trimmed.length > 160) throw new Error("Give the task a title (up to 160 characters).");
   const task=cookTimeline(meal).find(t=>t.id===taskId);
@@ -147,18 +180,21 @@ export function editStep(meal: Meal, taskId: string, title: string, instructions
   if(details){
     if(!["plan","fixed","unscheduled"].includes(details.timingMode))throw new Error("Choose a valid timing mode.");
     if(details.timingMode==="fixed" && (!details.scheduledAt || !Number.isFinite(Date.parse(details.scheduledAt))))throw new Error("Choose a valid planned date and time.");
-    if(details.durationMinutes!==null && (!Number.isFinite(details.durationMinutes) || details.durationMinutes<0 || details.durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
+    if(details.durationMinutes!==undefined && details.durationMinutes!==null && (!Number.isFinite(details.durationMinutes) || details.durationMinutes<0 || details.durationMinutes>43200))throw new Error("Duration must be between 0 and 43200 minutes, or blank for unknown.");
     if(details.targetTempF!==null && (!Number.isFinite(details.targetTempF) || details.targetTempF<=0 || details.targetTempF>600))throw new Error("Target food temperature must be between 1 and 600°F, or blank.");
     if(details.equipment.trim().length>80)throw new Error("Keep equipment names under 80 characters.");
     if(details.timingMode==="plan")delete override.scheduledAt;
     else override.scheduledAt=details.timingMode==="unscheduled"?null:new Date(details.scheduledAt!).toISOString();
-    if(details.durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
-    else override.durationMinutes=details.durationMinutes;
+    if(details.durationMinutes!==undefined){
+      if(details.durationMinutes===(task.baseDurationMinutes??null))delete override.durationMinutes;
+      else override.durationMinutes=details.durationMinutes;
+    }
     if(details.equipment.trim()===task.baseEquipment)delete override.equipment;
     else override.equipment=details.equipment.trim();
     if(details.targetTempF===null)delete override.targetTempF;
     else override.targetTempF=details.targetTempF;
   }
+
   return {...m, taskOverrides: {...m.taskOverrides, [taskId]:override}};
 }
 
@@ -222,6 +258,7 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const planned=cookTimeline(m).find(t=>t.id===taskId);
   if (!planned) throw new Error("Task not found.");
   if (!Number.isFinite(new Date(occurredAt).getTime())) throw new Error("Invalid event timestamp.");
+  if(meal.phasePlan&&kind==='completed'&&meal.completed[taskId])return m;
   if (kind==="temperature" && (!Number.isFinite(value) || value === undefined || value <= 0 || value > (unit==="°C" ? 300 : 600))) {
     throw new Error("Enter a valid food temperature.");
   }
@@ -242,10 +279,23 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const reopenIndex = afterReopen.map(e=>e.kind).lastIndexOf("reopened");
   const attemptEvents = afterReopen.slice(reopenIndex+1);
   const alreadyStarted = attemptEvents.some(e=>e.kind==="started" || e.kind==="completed");
-  const start = !physicalPhase(planned) && !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
+  const start = !meal.phasePlan && !physicalPhase(planned) && !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
     ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,startSource:"activity" as const,occurredAt:timestamp}]
     : [];
   const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp,...(kind==="started"&&physicalPhase(planned)?{startSource:"physical" as const}:{})};
+  const action=meal.phasePlan?.actions[taskId];
+  if(action&&(kind==='completed'||kind==='started')){
+    const seen=(id:string,boundary:'start'|'end')=>priorEvents.some(e=>e.phaseObservations?.some(o=>o.phaseId===id&&o.boundary===boundary));
+    const observations:PhaseObservation[]=[
+      ...(action.ends??[]).filter(id=>(kind==='completed'||!(action.starts??[]).some(start=>seen(start,'start')))&&!seen(id,'end')).map(phaseId=>({phaseId,boundary:'end' as const})),
+      ...(action.starts??[]).filter(id=>kind==='started'||!seen(id,'start')).map(phaseId=>({phaseId,boundary:'start' as const}))
+    ];
+    if(observations.length)event.phaseObservations=observations;
+    for(const o of observations){
+      const opposite=priorEvents.filter(e=>e.phaseObservations?.some(p=>p.phaseId===o.phaseId&&p.boundary===(o.boundary==='start'?'end':'start'))).at(-1);
+      if(opposite&&(o.boundary==='start'?Date.parse(timestamp)>Date.parse(opposite.occurredAt):Date.parse(timestamp)<Date.parse(opposite.occurredAt)))throw Error('The actual start must be before the recorded end. Correct the related actual time first.');
+    }
+  }
   if (value !== undefined) event.value=value;
   if (unit) event.unit=unit;
   if (note?.trim()) event.note=note.trim().slice(0,500);
@@ -267,7 +317,7 @@ export function updateTaskNote(meal: Meal, taskId:string, value:string, occurred
   const m=migrateMeal(meal);
   if(!cookTimeline(m).some(t=>t.id===taskId)) throw Error("Task not found.");
   const notes={...m.notes,[taskId]:value.slice(0,500)};
-  if(physicalPhase(cookTimeline(m).find(t=>t.id===taskId)!) || m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
+  if(m.phasePlan?.actions[taskId]?.starts?.length || physicalPhase(cookTimeline(m).find(t=>t.id===taskId)!) || m.mode!=="cooking" || !value.trim() || (m.notes[taskId]||"")===value) return {...m,notes};
   const taskEvents=(m.events??[]).filter(e=>e.taskId===taskId);
   const lastReopen=taskEvents.map(e=>e.kind).lastIndexOf("reopened");
   const attempt=taskEvents.slice(lastReopen+1);

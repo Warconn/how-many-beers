@@ -13,13 +13,15 @@ test('brisket weight planning is explicit, updates the schedule and preserves re
   await page.reload();
   await page.getByRole('button',{name:'View cook',exact:true}).click();
   await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+  await page.getByText('Dish settings',{exact:true}).click();
   const planner=page.getByRole('region',{name:'Brisket timing'});
   await expect(planner.getByLabel('Brisket weight (lb)',{exact:true})).toHaveValue('');
   await expect(planner.getByText('Weight unknown',{exact:true})).toBeVisible();
   await planner.getByLabel('Brisket weight (lb)',{exact:true}).fill('15');
   await expect(planner.getByText(/Estimated cook time:/)).toBeVisible();
-  await expect(planner.getByText(/Recommended start/)).toBeVisible();
-  await expect(planner.getByLabel('Cooking profile',{exact:true})).toBeHidden();
+  await expect(planner.getByText('Recommended on-smoker start')).toBeVisible();
+  await expect(planner.getByText('Recommended start',{exact:true})).toHaveCount(0);
+  await expect(planner.getByLabel('Cooking profile',{exact:true})).toBeVisible();
   await planner.scrollIntoViewIfNeeded();await planner.screenshot({path:info.outputPath('compact-recommendation.png')});
   await planner.getByRole('button',{name:'Use recommended timing',exact:true}).click();
   await expect(planner.getByRole('status')).toContainText('Timing applied');
@@ -42,27 +44,49 @@ test('brisket weight planning is explicit, updates the schedule and preserves re
   const manual=(await saved()).dishes[0].cookMinutes;
   await planner.getByLabel('Brisket weight (lb)',{exact:true}).fill('13');
   expect((await saved()).dishes[0].cookMinutes).toBe(manual);
-  await planner.getByText('Timing details',{exact:true}).click();
+  await expect(planner.getByText('Recommended on-smoker start')).toBeVisible();
   await planner.getByLabel('Compare my 1.5 hr/lb rule').check();
   await expect(planner.getByText(/Personal comparison: 19.5 hours/)).toBeVisible();
   await planner.evaluate(el=>el.scrollIntoView({block:"start"}));
   await page.screenshot({path:info.outputPath('brisket-planning.png')});
-  await page.reload();await page.getByRole('button',{name:'View cook',exact:true}).click();await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+  await page.reload();await page.getByRole('button',{name:'View cook',exact:true}).click();await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
   await expect(planner.getByLabel('Brisket weight (lb)',{exact:true})).toHaveValue('13');
   expect((await saved()).events).toEqual(meal.events);
 });
 
 test('unknown or unsupported brisket inputs do not manufacture a recommendation',async({page})=>{
-  await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();
-  await page.getByRole('button',{name:'Start with a template',exact:true}).click();
-  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();
+  await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
+  await page.getByRole('button',{name:'Choose a template',exact:true}).click();
+  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+  await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+  await page.getByText('Dish settings',{exact:true}).click();
   const planner=page.getByRole('region',{name:'Brisket timing'});
   await expect(planner.getByRole('button',{name:'Use recommended timing',exact:true})).toBeDisabled();
   await planner.getByLabel('Brisket weight (lb)',{exact:true}).fill('15');
-  await planner.getByText('Timing details',{exact:true}).click();
   await planner.getByLabel('Cooking profile', {exact:true}).selectOption('traeger-225-v1');
-  await expect(planner.getByText('Estimated cook time: 7.5–15 hours',{exact:true})).toBeVisible();
+  await expect(planner.getByText('Estimated cook time: 7.5–15 hours on smoker',{exact:true})).toBeVisible();
   await planner.getByLabel('Weight measured',{exact:true}).selectOption('untrimmed');
   await expect(planner.getByText(/Enter trimmed weight/)).toBeVisible();
   await expect(planner.getByRole('button',{name:'Use recommended timing',exact:true})).toBeDisabled();
+});
+
+
+test('brisket planning highlights the checklist start and keeps the mobile Beerometer out of the way',async({page})=>{
+  await page.setViewportSize({width:375,height:812});
+  const dish=createDish('brisket'),meal={...newMeal(),serveAt:'2026-11-08T13:00',dishes:[dish]};
+  await page.goto('/');
+  await page.evaluate(m=>{localStorage.clear();localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m));},meal);
+  await page.reload();
+  await page.getByRole('button',{name:/Resume planning/}).click();
+  await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+  await page.getByText('Dish settings',{exact:true}).click();
+  const planner=page.getByRole('region',{name:'Brisket timing'});
+  await planner.getByLabel('Brisket weight (lb)',{exact:true}).fill('12.5');
+  await planner.getByRole('button',{name:'Use recommended timing',exact:true}).click();
+  await expect(page.getByText('Start preparing',{exact:true})).toBeVisible();
+  await expect(page.locator('time[aria-label="Estimated start"]')).toBeVisible();
+  await expect(planner.getByText('Recommended on-smoker start')).toBeVisible();
+  await expect(page.locator('.planning-screen .beerometer')).toHaveCSS('position','static');
+  await expect(planner.getByText('Recommended on-smoker start')).toBeVisible();
+  await expect(page.getByText('Start preparing',{exact:true})).toHaveCount(1);
 });
