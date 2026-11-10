@@ -50,7 +50,7 @@ test('remove is a separate keyboard action with a phone-sized target', async ({ 
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button', { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const dish = page.getByRole('region', { name: 'Cook overview' }).getByRole('article', { name: 'Smoked brisket', exact: true });
@@ -77,7 +77,7 @@ test('removing the last dish returns focus to Add without replacing the cook', a
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button', { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page.getByRole('button', { name: 'Add smoked brisket', exact: true }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const id = await page.evaluate(() => JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!).id);

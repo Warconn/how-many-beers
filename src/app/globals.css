@@ -664,4 +664,12 @@ main:has(.storage-alert) .guided-step .cook-task{scroll-margin-top:200px}
 
 /* Upcoming plans use a direct, quiet retained-discard action. */
 .upcoming-cook-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-button.discard-plan{min-height:44px;padding:8px 12px;font-size:14px}
+.serving-plan-heading,.upcoming-plan-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.serving-plan-heading h2,.upcoming-plan-heading h4{flex:1;min-width:0}
+button.plan-trash{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:44px;min-height:44px;padding:10px;border:0;background:transparent;color:var(--muted)}
+button.plan-trash:hover{color:var(--accent-dark);background:var(--surface-warm,#f6eee8)}
+
+.upcoming-plan-heading{align-items:center}
+.upcoming-plan-heading h4{margin:0;line-height:1.4}
+.upcoming-cook-list{list-style:none;margin:16px 0 0;padding:0}
+.upcoming-cook-list>li+li{border-top:1px solid var(--line);margin-top:16px;padding-top:16px}

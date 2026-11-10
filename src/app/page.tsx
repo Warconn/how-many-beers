@@ -554,9 +554,9 @@ function CookExperience() {
           </section>}
           {workspace.plansEnabled&&<UpcomingCooks plans={workspace.upcomingPlans} active={workspace.currentCookInProgress} busy={workspace.locked||discardingPlan} onDiscard={discardPlan} onOpen={openUpcomingPlan} onStart={startUpcomingPlan} loading={workspace.plansLoading||!!workspace.plansError} onCreate={beginNewCook}/>}
           {!workspace.plansEnabled&&<section className="panel home-new">
-            <h3>{workspace.plansEnabled?"Plan another cook":hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
+            <h3>{workspace.plansEnabled?"Plan a cook":hasActiveWork ? "Start another cook" : "Start a cook"}</h3>
             <p className="muted">{workspace.plansEnabled?"Save a future meal without changing your current cook.":hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
-            <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>+ Plan a new cook</button>
+            <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>Plan a cook</button>
           </section>}
           <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks <Icon name="arrow-right"/></button>
           </div>
@@ -628,10 +628,10 @@ function CookExperience() {
         </>
       ) : (
         <>
-          {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&<div className="between"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>{workspace.plansEnabled&&workspace.isSelectedPlan&&<button type="button" className="link discard-plan" disabled={discardingPlan||workspace.locked} onClick={()=>void discardPlan(meal.id).catch(()=>{/* Existing plan/account save state retains the error and retry. */})}>Discard plan</button>}</div>}
+          {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&<button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>}
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
           <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
-          <ServingPlan meal={meal} hasSteps={timeline.length>0} startAt={plan?.startAt??null} now={clockNow} readyAt={plan?.readyAt??projection?.finish??null} lateMinutes={plan?.lateMinutes??0} suggestion={plan?.suggestedServeAt??null}
+          <ServingPlan onDiscard={workspace.plansEnabled&&workspace.isSelectedPlan?()=>void discardPlan(meal.id).catch(()=>{/* Existing save state retains failure and retry. */}):undefined} discardDisabled={discardingPlan||workspace.locked} meal={meal} hasSteps={timeline.length>0} startAt={plan?.startAt??null} now={clockNow} readyAt={plan?.readyAt??projection?.finish??null} lateMinutes={plan?.lateMinutes??0} suggestion={plan?.suggestedServeAt??null}
             onName={name=>patch(m=>({...m,name}))}
             onServe={serveAt=>{patch(m=>({...m,serveAt}));setClockNow(Date.now());}}
             onSuggestion={()=>{if(plan?.suggestedServeAt)safelyPatch(m=>({...m,serveAt:formatLocalDateTime(plan.suggestedServeAt!,Intl.DateTimeFormat().resolvedOptions().timeZone)}));}}/>

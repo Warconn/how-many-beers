@@ -29,7 +29,7 @@ sleeping through a cook. Screenshots join the existing review artifact.
 
 | User experience / scenario | Browser tests | Setup and scope |
 | --- | --- | --- |
-| First visit, Home, start/resume and responsive navigation | `cook-flow`, `home-cleanup`, `branding`, `empty-planner`, `cook-action` | Real Home/template flows plus retained-state resume |
+| First visit, Home, start/resume and responsive navigation | `auth/upcoming-plans` (fresh Plan a cook / no empty panel / trash inside serving card), `cook-flow`, `home-cleanup`, `branding`, `empty-planner`, `cook-action` | Real Home/template flows plus retained-state resume |
 | Serving first, cancel Add, multiple independent dishes | `serving-first`, `recipe-first`, `flat-menu`, `dish-editor` | UI creation/review; complex timing cases also seed exact inputs |
 | Templates for brisket, brats, turkey, wings, ribs, chicken, sides | `template-estimates`, `personal-templates` | All seven legacy templates in real cooking UI; new brisket additionally has full UI journey and `post-brisket` |
 | Paste recipe text, upload `.txt`/`.md`, extracted/unknown durations | `cook-flow`, `recipe-extraction`, `recipe-first`, `imported-duration-ux`, `imported-timing` | Real chooser/import/review, correction and reload |

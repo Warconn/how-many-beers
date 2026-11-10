@@ -4,7 +4,7 @@ test('add and adjust dishes in one menu surface', async ({ page }, info) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button', { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page.getByRole('button', { name: 'Add smoked brisket' }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   const menu = page.getByRole('region', { name: 'Cook overview' });

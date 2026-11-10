@@ -18,7 +18,7 @@ test('Beerometer updates during planning and stays visible while cooking',async(
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(cookTimeline(saved).map(t=>t.id)).toEqual(cookTimeline(meal).map(t=>t.id));expect(Object.keys(saved.completed)).toHaveLength(1);
 });
 test('empty or untimed plans never display a made-up beer count',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});
+ await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});
  if(await meter.count()){await expect(meter.locator('strong')).toHaveText('—');}else{await expect(page.getByRole('heading',{name:'What do you want to cook?',exact:true})).toBeVisible();}
  const choose=page.getByRole('button',{name:'Choose a template',exact:true});if(await choose.count())await choose.click();
  await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('');await expect(meter.locator('strong')).toHaveText('—');

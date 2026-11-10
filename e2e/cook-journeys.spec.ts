@@ -14,7 +14,7 @@ async function begin(page: Page, at: string, name: string) {
   await page.clock.install({time: new Date(at)});
   await page.clock.pauseAt(new Date(at));
   await page.goto('/');
-  await page.getByRole('button', {name: /Plan a new cook/}).click();
+  await page.getByRole('button', {name: /Plan a cook/}).click();
   await page.getByLabel('Serve date and time', {exact: true}).fill('2026-11-08T13:00');
   await page.getByLabel('Meal name', {exact: true}).fill(name);
 }

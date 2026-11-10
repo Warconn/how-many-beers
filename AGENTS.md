@@ -24,7 +24,10 @@ hosted Supabase migrations. Keep #61/#83/#103 open until production verification
 The owner also found accidental empty upcoming plans could not be removed. Add
 a direct retained Discard plan action using the existing #83 RPC, with empty,
 populated, failure/retry/reload and active/history-isolation regressions. Keep this
-in release PR #132; no new migration or production merge is authorized.
+in release PR #132; no new migration or production merge is authorized. The
+owner requested a clean fresh Home: label the action Plan a cook, omit the empty
+Upcoming panel, and use a trash icon inside the planning card and on saved-plan
+cards rather than a loose Discard plan text link. Keep a 44px accessible target.
 
 Handoffs include the exact feature testing URL reported by Cloudflare's successful
 check/comment and a short owner test plan. Never infer the hostname from a branch

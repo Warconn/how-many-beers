@@ -2,7 +2,7 @@ import {changeStepDuration} from './helpers/stepEditing';
 import {test,expect} from '@playwright/test';
 test.use({timezoneId:'UTC'});
 test('uploaded recipe duration edits update timeline and Beerometer through reload',async({page},info)=>{
- await page.goto('/');await page.getByRole('button',{name:/Plan a new cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();
+ await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();
  await page.getByLabel('Upload .txt or .md',{exact:true}).setInputFiles({name:'Pumpkin seeds.txt',mimeType:'text/plain',buffer:Buffer.from('Clean seeds\nRoast seeds\nCool completely')});await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal'}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-11-26T00:05');
  const steps=page.getByRole('region',{name:'Pumpkin seeds steps',exact:true});
  const edit=async(title:string,minutes:string)=>{const row=steps.getByRole('article',{name:title,exact:true});await row.getByRole('button',{name:/^Edit(?: |$)/}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});await form.getByText(/^More options/).click();await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);await form.getByRole('button',{name:'Save',exact:true}).click();return row;};

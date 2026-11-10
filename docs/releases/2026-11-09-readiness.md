@@ -90,7 +90,9 @@ explicit boundaries. #114 is excluded.
 The owner found that accidentally creating an empty meal left an undeletable
 Upcoming card. The existing saved-plan migration already supports retained
 `discarded` records; the app did not expose it. The release now adds a direct
-**Discard plan** action in the selected planner and on Home's upcoming cards.
+**trash icon** inside the serving-plan card and on Home's upcoming cards
+(accessible name: Discard plan). Fresh Home shows one **Plan a cook** action,
+without an empty Upcoming panel or filler sentence.
 Empty plans need no routine confirmation; populated plans receive one brief
 confirmation. Discarding a plan never archives it as a completed cook or changes
 another active cook, upcoming plan or existing history. Legacy planning records

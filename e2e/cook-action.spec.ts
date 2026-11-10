@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('empty plans invite dishes; prep-only plans and invalid serving times keep start validation', async ({ page }) => {
-  await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button', { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await expect(page.getByText('READY WHEN YOU ARE', { exact: true })).toHaveCount(0);
   const start = page.getByRole('button', { name: 'Start cooking', exact: true });
@@ -29,7 +29,7 @@ test('empty plans invite dishes; prep-only plans and invalid serving times keep 
 });
 
 test('planned cook has one compact action beneath the menu and optional checklist', async ({ page }, info) => {
-  await page.getByRole('button', { name: /Plan a new cook/ }).click();
+  await page.getByRole('button', { name: /Plan a cook/ }).click();
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await page.getByRole('button', { name: 'Add smoked brisket' }).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole('button', { name: '+ Add a dish', exact: true }).click();
