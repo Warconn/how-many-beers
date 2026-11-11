@@ -37,3 +37,15 @@ describe('canonical authored document v1 boundary',()=>{
   expect(()=>parseCookingDocument({...brisket,name:'x'.repeat(1024*1024)})).toThrow();
  });
 });
+
+it.each([NaN,Infinity,undefined,new Date(),()=>0])('rejects non-JSON parameter values before coercion',value=>{
+ expect(()=>parseCookingDocument({...brisket,recipe:{...brisket.recipe,parameters:{unsafe:value}}})).toThrow();
+});
+it.each(['2026-02-30T13:00','2026-11-15T25:00','2026-00-15T13:00'])('rejects impossible local dates',local=>{
+ expect(()=>parseCookingDocument({...meal,serving:{...meal.serving,local}})).toThrow();
+});
+it('rejects cycles, excessive nesting and partial checkpoint references',()=>{
+ const cycle:Record<string,unknown>={};cycle.self=cycle;expect(()=>parseCookingDocument(cycle)).toThrow();
+ const r=structuredClone(brisket);r.recipe.steps[1].actions=[{type:'checkpoint',phaseId:'heat'}];
+ expect(()=>parseCookingDocument(r)).toThrow();
+});

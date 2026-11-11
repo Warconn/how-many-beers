@@ -49,8 +49,7 @@
               "enum": [
                 "prepare",
                 "serve",
-                "custom",
-                "checkpoint"
+                "custom"
               ]
             }
           },
@@ -78,6 +77,29 @@
           "required": [
             "type",
             "phaseId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "checkpoint"
+            },
+            "phaseId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "fraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "type"
           ],
           "additionalProperties": false
         }
@@ -189,6 +211,77 @@
             "$ref": "#/$defs/action"
           },
           "maxItems": 50
+        },
+        "generated": {
+          "type": "boolean"
+        },
+        "cookingKind": {
+          "enum": [
+            "heating",
+            "passive"
+          ]
+        },
+        "templatePosition": {
+          "type": "object",
+          "properties": {
+            "anchor": {
+              "enum": [
+                "prep",
+                "preheat",
+                "start",
+                "progress",
+                "finish",
+                "serve"
+              ]
+            },
+            "beforeStartMin": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 43200
+            },
+            "progress": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "anchor"
+          ],
+          "additionalProperties": false
+        },
+        "templateStage": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "preparation",
+                "cook",
+                "rest",
+                "activity"
+              ]
+            },
+            "minutes": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 43200
+            },
+            "after": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "startLabel": {
+              "type": "string",
+              "maxLength": 16000
+            }
+          },
+          "required": [
+            "kind",
+            "minutes"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -242,6 +335,17 @@
           "maximum": 43200
         },
         "after": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "leadMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "durationStepId": {
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
@@ -375,6 +479,19 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/phase"
+          },
+          "maxItems": 500
+        },
+        "configuration": {
+          "$ref": "#/$defs/configuration"
+        },
+        "suppressedStepIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
           },
           "maxItems": 500
         }
@@ -576,6 +693,190 @@
         "name",
         "serving",
         "dishes"
+      ],
+      "additionalProperties": false
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "enum": [
+            "brisket",
+            "turkey",
+            "ribs",
+            "chicken",
+            "side",
+            "wings",
+            "brats",
+            "custom"
+          ]
+        },
+        "cookMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "restMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "pitTempF": {
+          "type": "number",
+          "minimum": -459.67,
+          "maximum": 2000
+        },
+        "brisketTemplateVersion": {
+          "const": 2
+        },
+        "brisketInputs": {
+          "$ref": "#/$defs/brisketInputs"
+        },
+        "turkeyPrep": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "frozen",
+                "thawing",
+                "thawed"
+              ]
+            },
+            "thawDays": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 14
+            },
+            "brineHours": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 48
+            },
+            "dryHours": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 48
+            }
+          },
+          "required": [
+            "state",
+            "thawDays",
+            "brineHours",
+            "dryHours"
+          ],
+          "additionalProperties": false
+        },
+        "planningSequence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "planningStepOrder": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "sourceStepOrder": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        }
+      },
+      "required": [
+        "preset",
+        "cookMinutes",
+        "restMinutes"
+      ],
+      "additionalProperties": false
+    },
+    "brisketInputs": {
+      "type": "object",
+      "properties": {
+        "weightLb": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100000
+        },
+        "weightMeasured": {
+          "enum": [
+            "trimmed",
+            "untrimmed"
+          ]
+        },
+        "cut": {
+          "enum": [
+            "packer",
+            "flat"
+          ]
+        },
+        "method": {
+          "enum": [
+            "meatchurch-staged-v1",
+            "traeger-225-v1"
+          ]
+        },
+        "pitTempF": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "wrap": {
+          "enum": [
+            "paper",
+            "foil",
+            "none"
+          ]
+        },
+        "prepMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "preheatMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "restMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "holdBufferMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "comparePersonal": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "weightMeasured",
+        "cut",
+        "method",
+        "pitTempF",
+        "wrap",
+        "prepMinutes",
+        "preheatMinutes",
+        "restMinutes",
+        "holdBufferMinutes",
+        "comparePersonal"
       ],
       "additionalProperties": false
     }

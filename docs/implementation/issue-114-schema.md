@@ -79,3 +79,52 @@ SQL must independently validate payloads; the client schema is not an RLS bounda
 No UI, RPC, database migration, hosted change or cooking behavior is introduced in
 this phase. Later persistence uses retained active/deleted lifecycle, revisions,
 immutable operation receipts and owner isolation, following #61/#83 patterns.
+
+## Phase 2a: native dish adapter (current checkpoint)
+
+`dishAdapter.ts` now provides deterministic `convertDish`, guarded
+`convertRecipeReview`, and `instantiateRecipe` for the supported native subset.
+These are pure in-memory APIs, not a stored-data migration. The recipe definition
+now carries typed optional `configuration` for native preset/cook/rest settings,
+manual brisket inputs, turkey preparation and source/planning order. Source step
+order is distinct from planning order; neither is lost after reordering.
+
+Steps retain template anchor/progress positions and template stage allowances,
+reviewed custom `cookingKind`, and a `generated` marker for runtime/template steps
+versus authored imported steps. Phases retain duration-step references, upper/lead
+allowances and suppressed step IDs. Checkpoints may explicitly carry phase ID and
+fraction together (or neither for a plain manual cue). Start/end arrays use local
+phase IDs. The adapter invokes `cookTimeline` and `buildPhasePlan`; it does not
+introduce phase interpretation or a new scheduler. Its fixed compilation date is
+internal and absent from serialized recipes. Conditional checkpoint positions are
+not sequential cooking intervals.
+
+Instantiation creates a fresh dish ID by default, leaving stable recipe-local keys;
+existing code constructs independent task/phase IDs from that dish ID. The optional
+explicit instance ID supports round-trip verification, not replacing an existing
+meal. Template step changes and arbitrary new action semantics are deliberately
+rejected if recompilation cannot reproduce the complete canonical document. This
+prevents edits from being acknowledged while silently discarded by native code.
+
+Every conversion retains an isolated original and verifies native authored payload
+round-trip equality before returning `converted`; unsupported data returns `skipped`
+and a reason. Native input validation does not imply conversion eligibility.
+Unknown native/nested fields, execution-added markers, template/custom hybrids and
+applied/calendar-bearing brisket estimates are skipped. `convertRecipeReview`
+examines the entire review and skips overrides, custom/hidden steps, ordering stored
+at meal level, notes or execution instead of accidentally saving only the base dish.
+These exclusions are not final product limitations: complete their explicit mapping
+before exposing Save recipe. Meal/historical conversion remains unimplemented.
+
+Validation additionally rejects non-JSON values (including nonfinite numbers,
+undefined, Dates, functions and cycles), excessive nesting, impossible local dates,
+invalid serving instants and partial checkpoint references. Local/instant/time-zone
+coherence, DST ambiguity, stored step-time validation, and optional link rendering
+still need the meal/import boundary work. Source reference strings are untrusted
+provenance and are not followed by these APIs.
+
+Tests exercise all seven built-in methods, manual nested brisket parameters,
+imported/manual steps, authored duration/order edits, unchanged timeline/physical
+projection, combined heat-end/hold-start actions, wing lead, custom suppression,
+independent copy identities, source retention, skipped original protection and
+repeated deterministic conversion. No Browns Brisket production data is involved.

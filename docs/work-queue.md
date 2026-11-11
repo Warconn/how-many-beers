@@ -6,8 +6,10 @@ Release #132 (`ae12d36`) is deployed and owner-accepted. #61/#83/#103/#118 are
 closed. Both November 5 production migrations and Browns Brisket import are
 complete; do not rerun them. #117/#119/#121/#123–#127 shipped with that release.
 
-The owner authorized phased #114 implementation. Phase 1 establishes a shared
-recipe/meal contract candidate and compatibility inventory. Follow the
+The owner authorized phased #114 implementation. Phase 1 established the shared
+recipe/meal contract candidate. Phase 2a adds tested native dish adapters for all
+built-ins and plain custom/text methods; whole-review edits and meal/history
+conversion remain pending. Follow the
 [checkpoint](implementation/issue-114-handoff.md) for exact progress and next step.
 No UI/library persistence or migration is delivered yet. No automatic merge or
 hosted changes. Add to meal remains primary; saving a recipe is explicit and
