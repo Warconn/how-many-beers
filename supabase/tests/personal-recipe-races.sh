@@ -25,7 +25,7 @@ account_psql -c "set role authenticated;select set_config('request.jwt.claim.sub
 recipe_result=$?
 set -e
 wait "$recipe_holder"
-if [ "$recipe_result" = 0 ]||! rg -q 'Recipe changed or removed' "$recipe_logs/contender";then echo 'FAIL: stale save passed competing removal';cat "$recipe_logs/contender";exit 1;fi
+if [ "$recipe_result" = 0 ]||! grep -q 'Recipe changed or removed' "$recipe_logs/contender";then echo 'FAIL: stale save passed competing removal';cat "$recipe_logs/contender";exit 1;fi
 if [ "$(account_psql -Atc "select state='deleted' and revision=2 and deleted_at is not null from public.personal_recipes where id='a1400000-0000-4000-8000-000000000014'")" != t ];then echo 'FAIL: recipe was resurrected';exit 1;fi
 account_psql >/dev/null <<'SQL'
 drop function public.hmb_recipe_race_doc(uuid);

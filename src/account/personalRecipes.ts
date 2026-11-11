@@ -24,7 +24,7 @@ export const recipePendingKey=(owner:string)=>`how-many-beers:recipes:v1:${owner
 export class PersonalRecipeStore{
  private running=false;
  async protectPendingConflict():Promise<void>{
-  if(typeof navigator!=='undefined'&&!navigator.locks)throw Error('This browser cannot protect recipe changes between tabs. Use a current browser.');
+  if(typeof window!=='undefined'&&typeof navigator!=='undefined'&&!navigator.locks)throw Error('This browser cannot protect recipe changes between tabs. Use a current browser.');
   const work=async()=>{const pending=this.pending();if(!pending)return;const key=recipePendingKey(this.owner),raw=JSON.stringify(pending);
    if(this.storage.getItem(key)!==raw)throw Error('Recipe recovery changed. Reload first.');
    this.storage.setItem(key+':protected:'+pending.writeId,raw);
@@ -43,7 +43,7 @@ export class PersonalRecipeStore{
  }
  async write(op?:RecipeOperation):Promise<PersonalRecipe>{
   if(this.running)throw Error('A recipe action is still saving.');
-  if(typeof navigator!=='undefined'&&!navigator.locks)throw Error('This browser cannot protect recipe changes between tabs. Use a current browser.');
+  if(typeof window!=='undefined'&&typeof navigator!=='undefined'&&!navigator.locks)throw Error('This browser cannot protect recipe changes between tabs. Use a current browser.');
   this.running=true;
   const work=async()=>{
    let pending=this.pending();

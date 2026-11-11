@@ -662,7 +662,7 @@ function CookExperience() {
               <p className="muted small">Choose a starter or use your own recipe. You can add more dishes afterward.</p>
             </div>}
             {meal.dishes.length>0 && <p className="muted small menu-guidance">{showDishSetup ? (recipeFirst?"Choose a template or add your own recipe. Everything stays in this meal.":"Choose a starter or import your recipe. Everything stays in this cook.") : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
-            {recipeFirst&&recipes.recipes.length>0&&!methodReview&&<button type="button" className="link" onClick={()=>setShowRecipes(true)}>My recipes</button>}
+            {recipeFirst&&recipes.recipes.length>0&&!methodReview&&<button type="button" className="link" disabled={!!editingStep||!!newStepDishId||workspace.locked} onClick={()=>setShowRecipes(true)}>My recipes</button>}
             {showDishSetup && <section id="menu-add-dish" className="menu-add-dish" role="region" aria-label="Add dish">
               {!(recipeFirst&&methodReview)&&<h3>Add a dish</h3>}
               {meal.dishes.length>0&&!(recipeFirst&&methodReview) && <div className="add-method-tabs" role="group" aria-label="Add dish method">
@@ -780,7 +780,7 @@ function CookExperience() {
 
                   {d.recipeSource&&<RecipeDetails dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
-                  {recipes.authenticated&&<button type="button" className="link" onClick={()=>{
+                  {recipes.authenticated&&<button type="button" className="link" disabled={!!editingStep||!!newStepDishId||workspace.locked||recipes.busy} onClick={()=>{
                     setRecipeCopyError('');const result=convertMeal(meal,{timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',serveInstant:null});
                     if(result.status==='skipped'){setRecipeCopyError('This dish cannot be extracted safely yet. Your cook is unchanged.');return;}
                     const snapshot=result.conversion.document.dishes.find(item=>item.id===d.id);if(!snapshot)return;
