@@ -47,3 +47,7 @@ it('recovers an ambiguous removal without resurrecting its retained document',as
  await expect(new PersonalRecipeStore(owner,api,local).write(removal)).rejects.toThrow();expect(local.getItem(recipePendingKey(owner))).not.toBeNull();
  const recovered=await new PersonalRecipeStore(owner,api,local).write();expect(recovered.state).toBe('deleted');expect(recovered.document).toEqual(saved.document);expect(calls).toEqual([removal,removal]);expect(local.getItem(recipePendingKey(owner))).toBeNull();
 });
+it('hands an authoring draft over only after the immutable recipe operation is protected',async()=>{
+ const local=storage(),steps:string[]=[];const store=new PersonalRecipeStore(owner,{list:async()=>[],mutate:async()=>{steps.push('rpc');throw Error('offline');}},local);
+ await expect(store.write(op,()=>{expect(JSON.parse(local.getItem(recipePendingKey(owner))!)).toEqual(op);steps.push('protected');})).rejects.toThrow('offline');expect(steps).toEqual(['protected','rpc']);expect(store.pending()).toEqual(op);
+});

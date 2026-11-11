@@ -21,16 +21,16 @@ export function usePersonalRecipes(){
   const current=store.current;if(!authenticated||!current||current.owner!==ownerId)throw Error('Verify your account first.');
   await current.protectPendingConflict();return reload();
  };
- const mutate=async(operation:'save'|'remove',document:RecipeDocument|null,recipe?:PersonalRecipe)=>{
+ const mutate=async(operation:'save'|'remove',document:RecipeDocument|null,recipe?:PersonalRecipe,onProtected?:()=>void)=>{
   const current=store.current,version=generation.current;if(!authenticated||!current||current.owner!==ownerId)throw Error('Sign in to save recipes.');
   setState(s=>({...s,busy:true,error:''}));
   try{const pending=current.pending();
    const op:RecipeOperation=pending??{owner:current.owner,id:recipe?.id??document!.id,revision:recipe?.revision??0,writeId:crypto.randomUUID(),operation,document};
    if(pending&&(pending.operation!==operation||pending.id!==(recipe?.id??document?.id)||JSON.stringify(pending.document)!==JSON.stringify(document)))throw Error('Retry the pending recipe action before saving another version.');
-   const result=await current.write(op);if(version!==generation.current)throw Error('Your account changed. Reopen My recipes.');
+   const result=await current.write(op,()=>{if(version!==generation.current)throw Error('Your account changed.');onProtected?.();});if(version!==generation.current)throw Error('Your account changed. Reopen My recipes.');
    setState(s=>({...s,recipes:[...(result.state==='active'?[result]:[]),...s.recipes.filter(r=>r.id!==result.id)],busy:false}));
    if(operation==='save'&&result.state!=='active')throw Error('This recipe was removed on another device.');return result;
   }catch(e){if(version===generation.current)setState(s=>({...s,busy:false,error:e instanceof Error?e.message:'Could not save recipe.'}));throw e;}
  };
- return {recipes:state.owner===ownerId?state.recipes:[],error:state.owner===ownerId?state.error:'',loading:state.loading,busy:state.busy,authenticated,enabled:phase!=='disabled',reload,useSavedVersion,save:(doc:RecipeDocument,original?:PersonalRecipe)=>mutate('save',doc,original),remove:(r:PersonalRecipe)=>mutate('remove',null,r)};
+ return {recipes:state.owner===ownerId?state.recipes:[],error:state.owner===ownerId?state.error:'',loading:state.loading,busy:state.busy,authenticated,guest:phase==='guest',enabled:phase!=='disabled',reload,useSavedVersion,save:(doc:RecipeDocument,original?:PersonalRecipe,onProtected?:()=>void)=>mutate('save',doc,original,onProtected),remove:(r:PersonalRecipe)=>mutate('remove',null,r)};
 }

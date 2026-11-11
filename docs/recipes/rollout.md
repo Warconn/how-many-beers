@@ -47,13 +47,15 @@ works. The feature URL is reported separately after Cloudflare confirms it.
    device; it stays hidden. Existing dishes, actuals, plans and history stay intact.
 6. Save a meal-specific method via Dish settings > Save as new recipe. It extracts
    authored steps and excludes actuals/calendar history without changing the meal.
-7. Guest Save recipe opens optional sign-in and preserves the review draft. It does
+7. Guest Save recipe opens optional sign-in and preserves the review draft. Email and existing provider redirect returns preserve the tab-scoped draft. It does
    not automatically import the guest meal or save the method after sign-in.
 
 ## Failure and rollback boundaries
 
 Explicit saves/removals journal an immutable owner-scoped operation before RPC.
-Lost replies reuse the same operation ID across reload. Failure is not success;
+Lost replies reuse the same operation ID across reload. An explicitly guest-authored
+review is protected across existing provider redirects, then handed to the durable
+owner journal before its temporary guest slot is released. Failure is not success;
 review inputs stay in place. Revision conflicts never become fresh overwrites or
 resurrect deleted recipes. Explicit Use saved version protects the pending change
 on the device before releasing its journal. Recipe controls do not write workspace,

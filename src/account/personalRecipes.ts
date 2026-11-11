@@ -41,7 +41,7 @@ export class PersonalRecipeStore{
   if(!op||op.owner!==this.owner||!['save','remove'].includes(op.operation)||typeof op.id!=='string'||typeof op.writeId!=='string'||!Number.isSafeInteger(op.revision)||op.revision<0)throw Error('Protected recipe operation could not be read.');
   if(op.operation==='save'){const d=parseCookingDocument(op.document);if(d.type!=='recipe'||d.id!==op.id)throw Error('Invalid protected recipe.');}else if(op.document!==null||op.revision<1)throw Error('Invalid protected removal.');return op;
  }
- async write(op?:RecipeOperation):Promise<PersonalRecipe>{
+ async write(op?:RecipeOperation,onProtected?:()=>void):Promise<PersonalRecipe>{
   if(this.running)throw Error('A recipe action is still saving.');
   if(typeof window!=='undefined'&&typeof navigator!=='undefined'&&!navigator.locks)throw Error('This browser cannot protect recipe changes between tabs. Use a current browser.');
   this.running=true;
@@ -50,6 +50,7 @@ export class PersonalRecipeStore{
    if(pending&&op&&JSON.stringify(pending)!==JSON.stringify(op))throw Error('Retry the pending recipe action before saving another version.');
    if(!pending){if(!op||op.owner!==this.owner)throw Error('No pending recipe action.');this.storage.setItem(recipePendingKey(this.owner),JSON.stringify(op));pending=this.pending();}
    if(!pending)throw Error('Could not protect this recipe write.');
+   onProtected?.();
    const result=await this.api.mutate(pending);
    if(this.storage.getItem(recipePendingKey(this.owner))!==JSON.stringify(pending))throw Error('Recipe recovery changed in another tab. Reload My recipes.');
    this.storage.removeItem(recipePendingKey(this.owner));return result;

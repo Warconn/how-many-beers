@@ -2,9 +2,9 @@
 
 ## State
 
-Storage checkpoint: `886d6d6`; UI checkpoint: `3a44905`.
-Local typecheck and all 526 tests / 42 files pass. Local Chromium covered 18
-desktop/phone cases across the final runs. Full CI/WebKit gates remain pending.
+Storage checkpoint: `886d6d6`; UI checkpoint: `3a44905`; CI portability fixes: `fea8e49`.
+Local typecheck and all 530 tests / 42 files pass. Final local Chromium run covered
+20 desktop/phone cases, plus focused guest-journal handoff/removal checks. PR #134 targets dev and remains draft. Final CI/WebKit gates remain pending.
 
 Phase 2c implementation commit: `c3351f1d2c64ab77981d4f7883628765bd0b84d6`.
 The following docs-only commit records this tested checkpoint.
@@ -115,10 +115,11 @@ No claim that this meets the entire #114 acceptance criteria.
   Save changes, Save as new, Cancel and confirmed retained removal.
 - Library selection creates independent unstarted copies. Dish settings can extract
   a customized meal/active-cook method as a new recipe, excluding events/dates.
-- Optional guest sign-in preserves the review across account selection; no guest
+- Optional guest sign-in preserves a tab-scoped authoring draft across email and
+  provider redirect/account selection; no guest
   meal import or automatic recipe save. Disabled account builds hide Save recipe.
 - Missing hosted migration reports unavailable; it does not fake a local library.
-- Local system Chromium: 16 desktop/phone journeys passed plus 2 meal-copy cases.
+- Final local system Chromium: all 20 desktop/phone journeys passed.
   Screenshots reviewed for list management. Final full CI/WebKit still required.
 - Storage unit tests pass. Final full-suite counts belong to the PR handoff.
 
@@ -146,3 +147,14 @@ verification, preserving the dev-migration approval gate. No hosted changes or
 automatic merges.
 Keep Add to meal primary and execution/history separate; no hosted mutations or
 automatic merge. Checkpoint tested increments and stop cleanly if budget is tight.
+
+## Final recovery checkpoint notes
+
+Provider redirects protect only an explicitly guest-authored review in session
+storage. Account-owned/unverified cached data is never written to that guest slot.
+The guest slot is handed off only after an owner-scoped immutable recipe journal
+exists, preventing duplicate recovery intents after lost replies. Both email and
+the existing provider callback/Back to cook path have actual browser tests.
+WebKit caught a missing setup wait in the new active-cook test; it now waits for
+Add acknowledgement and editor dismissal before seeding active events, then tests
+recipe removal against the unchanged actuals snapshot. Assertions were strengthened.
