@@ -2,6 +2,9 @@
 
 ## State
 
+Phase 2b implementation commit: `54b57c9015ab9ea27986cdabc11e06d708105c6f`.
+The following docs-only commit records this tested checkpoint.
+
 Phase 2a implementation commit: `b98283a4388f04713d014d187b64014352e4cfaa`.
 The following docs-only checkpoint commit records this SHA.
 
