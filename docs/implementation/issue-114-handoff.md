@@ -50,7 +50,8 @@ PR to dev. No hosted migration or merge without review.
 ## Safety and resume
 
 Stop here at the owner-requested budget boundary rather than beginning the larger
-converter/persistence refactor. Completed work is committed on the feature branch.
+converter/persistence refactor. Completed work is committed on the feature branch. Implementation commit:
+`591c730a835660d485cd07f7a34ae704f0620eb8`.
 Use the latest branch tip and the preceding implementation commit as the recorded
 checkpoint (exact SHA is also in the session handoff). No pending tool operation.
 
