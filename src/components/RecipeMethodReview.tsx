@@ -1,4 +1,5 @@
 'use client';
+import type {ReactNode} from 'react';
 import {useEffect,useRef,useState} from 'react';
 import type {ExtendedMeal} from '@/domain/cookState';
 import {addStep,cookTimeline,editStep,removeStep,setStepDuration} from '@/domain/cookState';
@@ -8,14 +9,14 @@ import {StepGrip,StepEditButton,StepInstructions,StepReorderHelp} from './StepLi
 import {reorderPlannedStep} from '@/domain/stepReorder';
 import {reviewDuration} from '@/domain/recipeReview';
 
-export default function RecipeMethodReview({meal,onChange,onAdd,onBack}:{meal:ExtendedMeal;onChange:(meal:ExtendedMeal)=>void;onAdd:()=>Promise<void>;onBack:()=>void}){
+export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveAction,busy=false,primaryLabel='Add to meal'}:{busy?:boolean;saveAction?:ReactNode;primaryLabel?:string;meal:ExtendedMeal;onChange:(meal:ExtendedMeal)=>void;onAdd:()=>Promise<void>;onBack:()=>void}){
  const dish=meal.dishes[0],tasks=cookTimeline(meal),heading=useRef<HTMLHeadingElement>(null);
  const [editing,setEditing]=useState<string|null>(null),[title,setTitle]=useState(''),[instructions,setInstructions]=useState(''),[minutes,setMinutes]=useState(''),[error,setError]=useState(''),[adding,setAdding]=useState(false),[committing,setCommitting]=useState(false);
  const reorder=useStepReorder(editing!==null||adding||committing,(id,target,after)=>onChange(reorderPlannedStep(meal,id,target,after)));
  useEffect(()=>{heading.current?.focus();heading.current?.scrollIntoView({block:'start',behavior:'instant'});},[]);
  const change=(fn:()=>ExtendedMeal)=>{try{onChange(fn());setError('');}catch(e){setError(e instanceof Error?e.message:'Review this change.');}};
- return <section className="method-review" aria-label="Review your method" aria-busy={committing}><fieldset disabled={committing} className="method-review-fields">
-  <h3 ref={heading} tabIndex={-1}>Review your method</h3><p className="muted small">Adjust the steps, then add this dish to your meal.</p>
+ return <section className="method-review" aria-label="Review your method" aria-busy={committing||busy}><fieldset disabled={committing||busy} className="method-review-fields">
+  <h3 ref={heading} tabIndex={-1}>Review your method</h3><p className="muted small">{primaryLabel==='Add to meal'?'Adjust the steps, then add this dish to your meal.':'Save this method independently of your meals.'}</p>
   <div className="method-review-meta">
   <label>Recipe name<input value={dish.name} maxLength={80} onChange={e=>onChange({...meal,dishes:[{...dish,name:e.target.value}],customTasks:meal.customTasks?.map(t=>({...t,dishName:e.target.value}))})}/></label>
   <label>Equipment<input value={dish.equipment} maxLength={80} onChange={e=>onChange({...meal,dishes:[{...dish,equipment:e.target.value}]})}/></label>
@@ -39,6 +40,7 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack}:{meal:Ex
   </form>:<button type="button" className="button secondary" disabled={editing!==null} onClick={()=>{setTitle('');setInstructions('');setMinutes('');setAdding(true);}}>Add a step</button>}
   {dish.recipeSource&&<details><summary>Original recipe</summary><pre>{dish.recipeSource}</pre></details>}
   {error&&<p className="form-error" role="alert">{error}</p>}
-  <div className="method-review-actions"><button type="button" className="button primary" disabled={!dish.name.trim()||!tasks.length||editing!==null||adding} onClick={async()=>{setCommitting(true);setError('');try{await onAdd();}catch(e){setError(e instanceof Error&&e.message.startsWith('Your meal changed.')?e.message:'Could not add the recipe yet. Your edits are still here.');}finally{setCommitting(false);}}}>Add to meal</button><button type="button" className="button secondary" onClick={()=>{if((editing!==null||adding)&&!window.confirm('Discard this open step edit?'))return;onBack();}}>Back to choices</button></div>
+  {editing===null&&!adding&&saveAction}
+  <div className="method-review-actions"><button type="button" className="button primary" disabled={!dish.name.trim()||!tasks.length||editing!==null||adding} onClick={async()=>{setCommitting(true);setError('');try{await onAdd();}catch(e){setError(e instanceof Error&&(primaryLabel!=='Add to meal'||e.message.startsWith('Your meal changed.'))?e.message:'Could not add the recipe yet. Your edits are still here.');}finally{setCommitting(false);}}}>{primaryLabel}</button><button type="button" className="button secondary" onClick={()=>{if((editing!==null||adding)&&!window.confirm('Discard this open step edit?'))return;onBack();}}>{primaryLabel==='Save changes'?'Cancel':'Back to choices'}</button></div>
  </fieldset></section>;
 }

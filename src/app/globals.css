@@ -673,3 +673,12 @@ button.plan-trash:hover{color:var(--accent-dark);background:var(--surface-warm,#
 .upcoming-plan-heading h4{margin:0;line-height:1.4}
 .upcoming-cook-list{list-style:none;margin:16px 0 0;padding:0}
 .upcoming-cook-list>li+li{border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
+
+/* Personal methods reuse the existing editor and quiet account dialog. */
+.recipe-save-action { margin-top: 1rem; margin-bottom: .75rem; }
+.recipe-library-dialog { width: min(54rem, calc(100% - 2rem)); max-height: 90dvh; overflow-y: auto; }
+.personal-recipe-list { list-style: none; padding: 0; margin: 0; }
+.personal-recipe-list > li { padding: 1.25rem 0; border-bottom: 1px solid var(--border, #e4e0da); }
+.personal-recipe-list .method-review-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.recipe-library-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
+.recipe-library-heading h2 { margin: 0; }

@@ -1,0 +1,78 @@
+import {test,expect,type Page,type BrowserContext} from '@playwright/test';
+import {backend,user} from './fixtures';
+import {newMeal} from '../../src/domain/meal';
+test.use({timezoneId:'UTC'});
+const rpc='https://auth.example.test/rest/v1/rpc/';
+function server(){
+ const meal={...newMeal(),name:'Current dinner',serveAt:'2026-11-15T13:00'};
+ const workspace={revision:1,writeId:null as string|null,active:{meal,serveInstant:'2026-11-15T13:00Z'},history:[]};
+ const rows=new Map<string,any>(),receipts=new Map<string,any>(),operations:string[]=[];
+ let lose=false,fail=false,missing=false;
+ return {workspace,rows,operations,lose:()=>{lose=true;},fail:(v:boolean)=>{fail=v;},missing:()=>{missing=true;},attach:async(context:BrowserContext)=>context.route(rpc+'**',async route=>{
+  const b=route.request().postDataJSON(),name=route.request().url().slice(rpc.length);
+  if(b.expected_owner!==user.id)return route.fulfill({status:403,json:{code:'42501'}});
+  if(name==='list_personal_recipes')return missing?route.fulfill({status:404,json:{code:'PGRST202'}}):route.fulfill({json:{recipes:[...rows.values()].filter(r=>r.state==='active')}});
+  if(name==='mutate_personal_recipe'){
+   if(missing)return route.fulfill({status:404,json:{code:'PGRST202'}});
+   if(fail)return route.fulfill({status:503,json:{code:'unavailable'}});
+   operations.push(b.write_id);if(receipts.has(b.write_id))return route.fulfill({json:receipts.get(b.write_id)});
+   const old=rows.get(b.target_recipe_id);if((old?.revision??0)!==b.expected_revision||old?.state==='deleted')return route.fulfill({status:409,json:{code:'40001'}});
+   const row={id:b.target_recipe_id,state:b.operation==='remove'?'deleted':'active',document:b.document??old.document,revision:(old?.revision??0)+1,createdAt:old?.createdAt??'2026-11-11T00:00Z',updatedAt:'2026-11-11T01:00Z',deletedAt:b.operation==='remove'?'2026-11-11T01:00Z':null};rows.set(row.id,row);
+   const result={...row,receipt:{operationId:b.write_id,recipeId:row.id,operation:b.operation}};receipts.set(b.write_id,result);if(lose){lose=false;return route.abort('failed');}return route.fulfill({json:result});
+  }
+  if(name==='save_cook_workspace'&&b.write_id!==workspace.writeId){workspace.active=b.document.active;workspace.history=b.document.history;workspace.revision++;workspace.writeId=b.write_id;}
+  return route.fulfill({json:workspace});
+ })};
+}
+async function signIn(page:Page){await backend(page);await page.goto('/');await page.getByRole('button',{name:'Sign in',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Your account'});await dialog.getByLabel('Email address').fill(user.email);await dialog.getByRole('button',{name:'Send sign-in code',exact:true}).click();await dialog.getByLabel('Email code').fill('123456');await dialog.getByRole('button',{name:'Verify code',exact:true}).click();await expect(dialog.getByText('Signed in as '+user.email,{exact:true})).toBeVisible();await dialog.getByRole('button',{name:'Close account',exact:true}).click();}
+async function review(page:Page){await page.getByRole('button',{name:'Resume planning',exact:true}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await expect(page.getByRole('region',{name:'Review your method'})).toBeVisible();}
+async function library(page:Page){await page.getByRole('button',{name:'My recipes',exact:true}).first().click();return page.getByRole('dialog',{name:'My recipes',exact:true});}
+
+test('explicit Save recipe is independent from Add, survives another signed-in device and preserves the original on reuse',async({page,context,browser},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);
+ const method=page.getByRole('region',{name:'Review your method'});await method.getByLabel('Recipe name',{exact:true}).fill('My weekend brisket');const before=structuredClone(remote.workspace);
+ await method.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(method.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();expect(remote.rows.size).toBe(1);expect(remote.workspace).toEqual(before);
+ await page.screenshot({path:info.outputPath('explicit-recipe-save.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ await method.getByRole('button',{name:'Add to meal',exact:true}).click();await expect(method).toHaveCount(0);expect(remote.rows.size).toBe(1);await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);
+ const second=await browser.newContext({timezoneId:'UTC'});await remote.attach(second);const other=await second.newPage();await signIn(other);const dialog=await library(other);await expect(dialog.getByText('My weekend brisket',{exact:true})).toBeVisible();await dialog.getByRole('button',{name:'Use recipe',exact:true}).click();const used=other.getByRole('region',{name:'Review your method'});await used.getByLabel('Recipe name',{exact:true}).fill('Today only');await used.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(2);expect([...remote.rows.values()][0].document.name).toBe('My weekend brisket');expect(remote.workspace.active.meal.serveAt).toBe(before.active.meal.serveAt);await second.close();
+});
+test('edit, save as new and retained removal leave independent meal copies intact',async({page,context},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ let dialog=await library(page);await dialog.getByRole('button',{name:/^Edit /}).click();await dialog.getByLabel('Recipe name',{exact:true}).fill('Renamed brisket');await dialog.getByRole('button',{name:'Save changes',exact:true}).click();await expect(dialog.getByText('Renamed brisket',{exact:true})).toBeVisible();
+ await dialog.getByRole('button',{name:'Edit Renamed brisket',exact:true}).click();await dialog.getByLabel('Recipe name',{exact:true}).fill('Another method');await dialog.getByRole('button',{name:'Save as new recipe',exact:true}).click();await expect(dialog.getByText('Another method',{exact:true})).toBeVisible();expect(remote.rows.size).toBe(2);
+ await page.screenshot({path:info.outputPath('my-recipes-management.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ const active=structuredClone(remote.workspace);page.once('dialog',d=>d.dismiss());await dialog.getByRole('button',{name:'Remove Renamed brisket',exact:true}).click();await expect(dialog.getByText('Renamed brisket',{exact:true})).toBeVisible();
+ page.once('dialog',d=>d.accept());await dialog.getByRole('button',{name:'Remove Renamed brisket',exact:true}).click();await expect(dialog.getByText('Renamed brisket',{exact:true})).toHaveCount(0);expect([...remote.rows.values()].filter(r=>r.state==='deleted')).toHaveLength(1);expect(remote.workspace).toEqual(active);
+ await dialog.getByRole('button',{name:'Close My recipes',exact:true}).click();await page.reload();dialog=await library(page);await expect(dialog.getByText('Renamed brisket',{exact:true})).toHaveCount(0);await expect(dialog.getByText('Another method',{exact:true})).toBeVisible();
+});
+test('lost save reply replays one operation after reload without creating duplicates',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);remote.lose();await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'Could not save'})).toBeVisible();expect(remote.rows.size).toBe(1);
+ await page.reload();const dialog=await library(page);await expect(dialog.getByText('Smoked brisket',{exact:true})).toBeVisible();expect(remote.rows.size).toBe(1);expect(new Set(remote.operations).size).toBe(1);
+});
+test('failed save never claim success or add a meal dish',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);const before=structuredClone(remote.workspace);remote.fail(true);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'Could not save'})).toBeVisible();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toHaveCount(0);expect(remote.workspace).toEqual(before);expect(remote.rows.size).toBe(0);
+});
+test('missing recipe migration is honest and leaves the review available to Add to meal',async({page,context})=>{
+ const remote=server();remote.missing();await remote.attach(context);await signIn(page);await review(page);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'not available on this server yet'})).toBeVisible();expect(remote.rows.size).toBe(0);await expect(page.getByRole('button',{name:'Add to meal',exact:true})).toBeEnabled();
+});
+test('optional guest sign-in preserves the reviewed method and does not add it automatically',async({page,context})=>{
+ const remote=server();await remote.attach(context);await backend(page);await page.goto('/');await page.getByRole('button',{name:'Plan a cook',exact:true}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByLabel('Recipe name',{exact:true}).fill('My guest method');await page.getByRole('button',{name:'Save recipe',exact:true}).click();
+ const account=page.getByRole('dialog',{name:'Your account'});await expect(account).toBeVisible();await account.getByLabel('Email address').fill(user.email);await account.getByRole('button',{name:'Send sign-in code',exact:true}).click();await account.getByLabel('Email code').fill('123456');await account.getByRole('button',{name:'Verify code',exact:true}).click();await expect(account.getByText('Signed in as '+user.email,{exact:true})).toBeVisible();await account.getByRole('button',{name:'Close account',exact:true}).click();
+ await expect(page.getByLabel('Recipe name',{exact:true})).toHaveValue('My guest method');expect(remote.rows.size).toBe(0);expect(remote.workspace.active.meal.dishes).toHaveLength(0);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();expect([...remote.rows.values()][0].document.name).toBe('My guest method');
+});
+test('a newer-device edit blocks stale Save changes and retains the local draft',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();await page.getByRole('button',{name:'Add to meal',exact:true}).click();const dialog=await library(page);await dialog.getByRole('button',{name:/^Edit /}).click();await dialog.getByLabel('Recipe name',{exact:true}).fill('My protected draft');
+ const row=[...remote.rows.values()][0];row.revision++;row.document={...row.document,name:'Changed on another device'};remote.rows.set(row.id,row);await dialog.getByRole('button',{name:'Save changes',exact:true}).click();await expect(dialog.getByRole('alert').filter({hasText:'changed or was removed'}).first()).toBeVisible();await expect(dialog.getByLabel('Recipe name',{exact:true})).toHaveValue('My protected draft');expect(remote.rows.get(row.id).document.name).toBe('Changed on another device');
+});
+import {startCookSession,recordEvent,cookTimeline} from '../../src/domain/cookState';
+test('recipe save and removal preserve an active cook, its actuals and serving target',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ let active=startCookSession(remote.workspace.active.meal,'2026-11-14T12:00Z');active=recordEvent(active,cookTimeline(active)[0].id,'completed','2026-11-14T12:01Z');remote.workspace.active.meal=active;remote.workspace.revision++;
+ await page.reload();const before=structuredClone(remote.workspace),dialog=await library(page);await dialog.getByRole('button',{name:'Use recipe',exact:true}).click();const method=page.getByRole('region',{name:'Review your method'});await method.getByLabel('Recipe name',{exact:true}).fill('A separate future method');await method.getByRole('button',{name:'Save as new recipe',exact:true}).click();await expect(method.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();expect(remote.workspace).toEqual(before);expect(remote.rows.size).toBe(2);
+});
+test('an adjusted meal dish can be saved as a new method without changing that meal',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);await page.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);
+ await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();await page.getByLabel('Dish name',{exact:true}).fill('My meal-specific brisket');
+ await expect.poll(()=>remote.workspace.active.meal.dishes[0].name).toBe('My meal-specific brisket');const before=structuredClone(remote.workspace);
+ await page.getByRole('button',{name:'Save as new recipe',exact:true}).click();const method=page.getByRole('region',{name:'Review your method'});await expect(method.getByLabel('Recipe name',{exact:true})).toHaveValue('My meal-specific brisket');await method.getByRole('button',{name:'Save as new recipe',exact:true}).click();await expect(method).toHaveCount(0);expect(remote.workspace).toEqual(before);expect(remote.rows.size).toBe(1);expect([...remote.rows.values()][0].document.name).toBe('My meal-specific brisket');
+});

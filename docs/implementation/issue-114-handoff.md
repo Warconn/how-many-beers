@@ -89,22 +89,43 @@ No claim that this meets the entire #114 acceptance criteria.
   suites total 70 tests. Browser/E2E/screenshots not run for this disconnected domain
   increment; required when integrating the feature.
 
+## Phase 3 storage checkpoint
+
+- Additive `202611110001_personal_recipes.sql`: owner-scoped active/deleted records,
+  retained document/deletion timestamp, revision CAS, immutable hashed operation
+  receipts, per-owner serialization and no direct client mutation grants.
+- Server embeds the canonical JSON Schema; a unit test pins it to the source.
+  SQL also validates relationship uniqueness, ranges and references.
+- Isolated PostgreSQL clean/seeded-upgrade harness passes, including an actual
+  concurrent save-versus-remove race. No hosted migration was applied.
+- Client API verifies owner scope and receipts. Immutable operations are journaled
+  before RPC, replay after lost replies, and never silently replace changed drafts.
+  Explicit conflict resolution retains a protected copy before using saved data.
+- Development/production review prerequisites: `docs/recipes/rollout.md`.
+
+## Phase 4 UI checkpoint (implementation, integration checks pending)
+
+- Existing method review keeps Add to meal primary with independent Save recipe
+  above it on phones; acknowledged inline Saved state only.
+- My recipes has quiet Home/chooser entries, compact list, existing editor reuse,
+  Save changes, Save as new, Cancel and confirmed retained removal.
+- Library selection creates independent unstarted copies. Dish settings can extract
+  a customized meal/active-cook method as a new recipe, excluding events/dates.
+- Optional guest sign-in preserves the review across account selection; no guest
+  meal import or automatic recipe save. Disabled account builds hide Save recipe.
+- Missing hosted migration reports unavailable; it does not fake a local library.
+- Local system Chromium: 16 desktop/phone journeys passed plus 2 meal-copy cases.
+  Screenshots reviewed for list management. Final full CI/WebKit still required.
+- Storage unit tests pass. Final full-suite counts belong to the PR handoff.
+
 ## Next exact step
 
-Review/finalize the v1 candidate contract and conversion boundaries before Phase 3.
-The adapters now cover the planned Phase 2 categories in memory, but compatibility
-contexts still need explicit persisted-envelope validation and payload bounds if
-adopted as a storage/import format. Never pass them directly to a new RPC based on
-TypeScript types alone. Archived native-method projections cannot replace saved
-plannedTimeline; preserve authoritative legacy snapshots and skipped read paths.
-
-Then begin Phase 3 only within owner scope: additive owner-scoped saved-recipe
-schema/RPC with strict server validation, capability detection, revisions and
-idempotent receipts; retained active/deleted lifecycle; isolated PostgreSQL clean/
-seeded-upgrade/security/race tests. No hosted migration or automatic merge.
-Phase 4 uses the existing method review/chooser for explicit Save recipe and My
-recipes. Phase 5 requires full browser/auth/account/offline compatibility and actual
-desktop/mobile/iPhone WebKit screenshot review before a PR targeting dev.
+Run/inspect final feature CI (full browser/auth/account/offline/build/security),
+review actual iPhone screenshots, fix failures and verify Cloudflare deployment.
+Keep the feature PR draft until those gates are green. The owner must review/apply
+`202611110001_personal_recipes.sql` to development Supabase before hosted library
+saving can work; no hosted migration or automatic merge is authorized. Migration
+has only run in disposable PostgreSQL. Do not claim hosted saving was verified.
 
 ## Safety and resume
 
@@ -116,8 +137,8 @@ checkpoint (exact SHA is also in the session handoff). No pending tool operation
 
 Resume Codex: Read AGENTS.md, the entire current issue #114 and
 `docs/implementation/issue-114-handoff.md` on `feat/114-personal-recipes`.
-Review/finalize the Phase 2 schema and envelope validation gates in
-`issue-114-schema.md`, then implement Phase 3 saved-recipe persistence only with
-isolated security tests. No hosted changes or automatic merges.
+Read this checkpoint and the feature PR. Complete final CI/screenshots/preview
+verification, preserving the dev-migration approval gate. No hosted changes or
+automatic merges.
 Keep Add to meal primary and execution/history separate; no hosted mutations or
 automatic merge. Checkpoint tested increments and stop cleanly if budget is tight.
