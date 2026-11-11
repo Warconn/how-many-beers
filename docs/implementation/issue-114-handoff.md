@@ -2,6 +2,9 @@
 
 ## State
 
+Phase 2a implementation commit: `b98283a4388f04713d014d187b64014352e4cfaa`.
+The following docs-only checkpoint commit records this SHA.
+
 Branch: `feat/114-personal-recipes`, based on current dev `c405b7d`.
 Production main is `ae12d36` (PR #132), owner accepted. No open PRs existed at
 session start. No production fix is dropped: production and dev application trees
