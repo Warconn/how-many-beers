@@ -171,3 +171,61 @@ combined phase actions, projection equality, fixed/recorded date isolation,
 repeated conversion stability, canonical rejection, plain Phase 2a compatibility
 and adding a fresh copy without modifying an existing active dish or events.
 The Phase 2a statement that all edited reviews are skipped is superseded here.
+
+## Phase 2c: meals and retained records (in-memory only)
+
+`mealAdapter.ts` converts native Meal v1 into a MealDocument plus a versioned
+`how-many-beers-compatibility` envelope, retaining an isolated original. Each dish
+uses the existing shared RecipeDefinition/review overlay. General prep uses the
+same DocumentStep type with typed native custom metadata; meal-wide ordering and
+hidden references identify dish + recipe-local key (or null dish for General prep).
+No recipe library entry is created.
+
+A separate MealContext owns native execution state (mode, startedAt, completed,
+notes, events and PhasePlan), original task identities, fixed/custom timestamps,
+applied brisket forecasts and native insertion markers. Brisket inputs and current
+cook/rest allowances remain authored; applied forecast dates are not reusable.
+Review contexts restore each independent dish's native authored overrides.
+General tasks and meal-wide order are reconstructed from the document and context,
+then compared against the retained original. Restore additionally reprojects the
+canonical document to reject changed fields the native bridge would silently drop.
+This API is an immutable compatibility restore, not a meal editing API.
+
+Serving metadata is supplied explicitly: timeZone and nullable serveInstant. Local
+minute values must agree with an explicit instant in the declared zone; conflicts,
+impossible local dates and malformed dates skip safely. Both occurrences of a DST
+fold retain the supplied instant; a nonexistent local time conflicting with that
+instant is rejected. Floating legacy local targets remain floating. If the native
+target already carries an explicit offset/Z and external metadata has no instant,
+the canonical document retains that native instant, never a guessed browser-zone
+conversion. Context preserves the original date spelling and null external metadata.
+
+`retainedRecordAdapter.ts` wraps saved plans, ArchivedCook and CanceledCook without
+changing their lifecycle, revisions, write receipts, envelope fields or dates.
+Archived `plannedTimeline` is copied verbatim and remains authoritative for history
+display, including old titles/times that differ from today's generated projection.
+The canonical native-method projection is not a replacement for that archived
+snapshot. Do not render/replan finished history from it or auto-extract a library
+recipe from it. The compatibility envelope retains both representations explicitly.
+No account RPC, cancellation, archive operation or import is called by conversion.
+
+Repeated conversion validates an existing v1 artifact and reports unchanged.
+Future versions, dangling references, unsupported native fields and incompatible
+serving metadata report skipped with the original retained. Batch dry runs report
+converted/unchanged/skipped/failed counts; failed non-JSON inputs are distinct from
+unsupported stored shapes. Restore supplies rollback to the original native record.
+This is not a migration runner, persistent storage format rollout or resume journal.
+
+Verification includes multi-dish/General prep, edited and hidden work, applied
+brisket forecasts, fixed anchors, active observations/phase plans, inserted steps,
+legacy completion-only records (without synthesizing stored events), nullable and
+DST serving metadata, archive/cancellation lifecycle, saved-plan revisions/receipts,
+unknown fields, immutable canonical rejection and batch idempotence. The Browns
+Brisket 16-event fixture is synthetic; no production record was accessed/reimported.
+
+Remaining gates: finalize/review the candidate schema and compatibility-envelope
+validation/size limits before any persistence/import wiring. More unusual native
+constructs may remain skipped on the original read path. There is no new meal
+editing/compiler engine or consumer of these envelopes in the active application.
+SQL validation, RLS/receipts, retained recipe deletion, UI, cross-device E2E and
+actual browser screenshots remain later phases, not delivered by these adapters.

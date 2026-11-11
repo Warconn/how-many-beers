@@ -69,26 +69,39 @@ No claim that this meets the entire #114 acceptance criteria.
   The three focused document/adapter suites contain 57 passing tests. No browser
   or screenshot run for this disconnected domain change; required at integration.
 
+## Phase 2c increment completed
+
+- Added immutable MealDocument/MealContext conversion and exact native restoration.
+  Independent dish snapshots reuse the review adapter. General prep, global order,
+  fixed timestamps, applied forecasts and execution state preserve their ownership.
+- Explicit time-zone/instant handling, conflict checks, nullable legacy targets and
+  DST-fold tests; original date spelling remains in compatibility context.
+- SavedPlan, ArchivedCook and CanceledCook envelopes round-trip with lifecycle,
+  revisions, receipts and archived plannedTimeline intact. Archived timelines remain
+  authoritative; never display/replan finished history from today's projection.
+- Versioned artifacts support unchanged/idempotent results and batch dry-run counts.
+  Unsupported data keeps originals; no runtime read/write path was modified.
+- Synthetic 16-event Browns Brisket test, not production data or a reimport.
+- Typecheck, all **521 tests / 41 files** and diff checks pass. Four document/adapter
+  suites total 70 tests. Browser/E2E/screenshots not run for this disconnected domain
+  increment; required when integrating the feature.
+
 ## Next exact step
 
-Continue Phase 2c: MealDocument adapters and execution/history compatibility
-separation. Preserve meal General prep, all dish identities, original serving
-instant/time zone, applied brisket forecast metadata and stable authored overrides.
-Use the tested review overlay as each dish snapshot, and keep fixed/calendar
-values and actual events in meal/execution ownership. Do not replan archived
-plannedTimeline or mutate historical records. Provide versioned/idempotent
-conversion outcomes, retained originals and rollback. Add multi-dish/account/
-guest/history/cancellation fixtures before any stored-data adoption.
+Review/finalize the v1 candidate contract and conversion boundaries before Phase 3.
+The adapters now cover the planned Phase 2 categories in memory, but compatibility
+contexts still need explicit persisted-envelope validation and payload bounds if
+adopted as a storage/import format. Never pass them directly to a new RPC based on
+TypeScript types alone. Archived native-method projections cannot replace saved
+plannedTimeline; preserve authoritative legacy snapshots and skipped read paths.
 
-Phase 2b still rejects direct canonical base-template edits not representable by
-native configuration; explicit authored review overrides are supported. Arbitrary
-future action/phase compilation remains gated by native round-trip validation.
-Document and test any additional mapping before widening eligibility.
-
-Local/instant/zone coherence and planning date validation remain required at the
-meal boundary. Only after Phase 2 is complete: persistence/security, existing-review
-UI, then full browser/auth/account/offline regression and screenshot review.
-No hosted mutation or merge is authorized.
+Then begin Phase 3 only within owner scope: additive owner-scoped saved-recipe
+schema/RPC with strict server validation, capability detection, revisions and
+idempotent receipts; retained active/deleted lifecycle; isolated PostgreSQL clean/
+seeded-upgrade/security/race tests. No hosted migration or automatic merge.
+Phase 4 uses the existing method review/chooser for explicit Save recipe and My
+recipes. Phase 5 requires full browser/auth/account/offline compatibility and actual
+desktop/mobile/iPhone WebKit screenshot review before a PR targeting dev.
 
 ## Safety and resume
 
@@ -100,7 +113,8 @@ checkpoint (exact SHA is also in the session handoff). No pending tool operation
 
 Resume Codex: Read AGENTS.md, the entire current issue #114 and
 `docs/implementation/issue-114-handoff.md` on `feat/114-personal-recipes`.
-Continue Phase 2c meal/history compatibility from the mapping inventory in
-`issue-114-schema.md` before wiring canonical documents to storage.
+Review/finalize the Phase 2 schema and envelope validation gates in
+`issue-114-schema.md`, then implement Phase 3 saved-recipe persistence only with
+isolated security tests. No hosted changes or automatic merges.
 Keep Add to meal primary and execution/history separate; no hosted mutations or
 automatic merge. Checkpoint tested increments and stop cleanly if budget is tight.

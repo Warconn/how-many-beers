@@ -28,7 +28,8 @@ export type RecipeDefinition = {
 };
 type Envelope={format:'how-many-beers';schemaVersion:1;id:string;name:string};
 export type RecipeDocument=Envelope & {type:'recipe';recipe:RecipeDefinition};
-export type MealDocument=Envelope & {type:'meal';serving:{local:string;timeZone:string;instant?:string};dishes:{id:string;name:string;sourceRecipe?:{id:string;revision:number};recipe:RecipeDefinition;planning?:{stepTimes?:Record<string,string|null>;stepOrder?:string[];hiddenStepIds?:string[]}}[]};
+export type TaskReference={dishId:string|null;stepId:string};
+export type MealDocument=Envelope & {generalSteps?:DocumentStep[];ordering?:{taskOrder?:TaskReference[];hiddenTasks?:TaskReference[];generalSequence?:string[];generalOverrides?:Record<string,AuthoredOverride>};type:'meal';serving:{local:string;timeZone:string;instant?:string};dishes:{id:string;name:string;sourceRecipe?:{id:string;revision:number};recipe:RecipeDefinition;planning?:{stepTimes?:Record<string,string|null>;stepOrder?:string[];hiddenStepIds?:string[]}}[]};
 export type CookingDocument=RecipeDocument|MealDocument;
 const shape=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
 const unique=(ids:string[])=>new Set(ids).size===ids.length;
@@ -66,12 +67,20 @@ export function parseCookingDocument(value:unknown):CookingDocument{
  if(doc.type==='recipe'){
   if(!recipeLinks(doc.recipe))throw Error('Invalid recipe relationships or timing.');
  }else{
+  const general=doc.generalSteps??[];
+  if(!unique(general.map(s=>s.id))||general.some(s=>!s.nativeCustom||s.actions.length!==1||s.actions[0].type!=='custom'))throw Error('Invalid general steps.');
+  const known=new Map(doc.dishes.map(d=>[d.id,new Set([...d.recipe.steps,...(d.recipe.review?.addedSteps??[])].map(s=>s.id))]));
+  const generalIds=new Set(general.map(s=>s.id));
+  for(const refs of [doc.ordering?.taskOrder,doc.ordering?.hiddenTasks]){
+   if(refs&&(new Set(refs.map(r=>JSON.stringify([r.dishId,r.stepId]))).size!==refs.length||refs.some(r=>!(r.dishId===null?generalIds:known.get(r.dishId))?.has(r.stepId))))throw Error('Invalid meal task references.');
+  }
+  for(const ids of [doc.ordering?.generalSequence,Object.keys(doc.ordering?.generalOverrides??{})])if(ids&&(!unique(ids)||ids.some(id=>!generalIds.has(id))))throw Error('Invalid general references.');
   if(!unique(doc.dishes.map(d=>d.id)))throw Error('Duplicate dish identity.');
   if(!validLocal(doc.serving.local)||doc.serving.instant!==undefined&&(!/Z$|[+-]\d{2}:\d{2}$/.test(doc.serving.instant)||!Number.isFinite(Date.parse(doc.serving.instant))))throw Error('Invalid serving date.');
   try{new Intl.DateTimeFormat('en-US',{timeZone:doc.serving.timeZone});}catch{throw Error('Invalid serving time zone.');}
   for(const d of doc.dishes){
    if(!recipeLinks(d.recipe))throw Error('Invalid dish recipe.');
-   const keys=d.recipe.steps.map(s=>s.id),p=d.planning;
+   const keys=[...d.recipe.steps,...(d.recipe.review?.addedSteps??[])].map(s=>s.id),p=d.planning;
    for(const ids of [p?.stepOrder,p?.hiddenStepIds,Object.keys(p?.stepTimes??{})])if(ids&&(!unique(ids)||ids.some(id=>!keys.includes(id))))throw Error('Invalid meal planning references.');
   }
  }

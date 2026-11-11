@@ -10,7 +10,9 @@ The owner authorized phased #114 implementation. Phase 1 established the shared
 recipe/meal contract candidate. Phase 2a adds tested native dish adapters for all
 built-ins and plain custom/text methods. Phase 2b supports whole-review overrides,
 hidden/custom steps and ordering with dates/history in a separate context.
-Meal/history conversion remains pending. Follow the
+Phase 2c adds in-memory meal/history/saved-plan compatibility adapters, preserving
+serving metadata, execution and archived timelines. Contract review and storage
+validation gates remain before persistence. Follow the
 [checkpoint](implementation/issue-114-handoff.md) for exact progress and next step.
 No UI/library persistence or migration is delivered yet. No automatic merge or
 hosted changes. Add to meal remains primary; saving a recipe is explicit and

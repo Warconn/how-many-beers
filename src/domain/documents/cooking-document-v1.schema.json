@@ -731,6 +731,95 @@
             "$ref": "#/$defs/dish"
           },
           "maxItems": 100
+        },
+        "generalSteps": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        },
+        "ordering": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "taskOrder": {
+              "type": "array",
+              "maxItems": 1000,
+              "items": {
+                "$ref": "#/$defs/taskReference"
+              }
+            },
+            "hiddenTasks": {
+              "type": "array",
+              "maxItems": 1000,
+              "items": {
+                "$ref": "#/$defs/taskReference"
+              }
+            },
+            "generalSequence": {
+              "type": "array",
+              "maxItems": 500,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              }
+            },
+            "generalOverrides": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "maxProperties": 500,
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 16000
+                  },
+                  "instructions": {
+                    "type": "string",
+                    "maxLength": 16000
+                  },
+                  "equipment": {
+                    "type": "string",
+                    "maxLength": 16000
+                  },
+                  "durationMinutes": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 43200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "targetTempF": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 2000
+                  },
+                  "unscheduled": {
+                    "const": true
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
         }
       },
       "required": [
@@ -1032,6 +1121,35 @@
         }
       },
       "required": [],
+      "additionalProperties": false
+    },
+    "taskReference": {
+      "type": "object",
+      "properties": {
+        "dishId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stepId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "dishId",
+        "stepId"
+      ],
       "additionalProperties": false
     }
   }
