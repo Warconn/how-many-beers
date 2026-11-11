@@ -1,3 +1,8 @@
+> **Final status:** PR #132 deployed to production at `ae12d36`. Owner accepted
+> production and #61/#83/#103/#118 were closed. Both November 5 migrations and
+> Browns Brisket import were completed manually. Earlier pending gates below are
+> historical. #114 is now separately authorized, not part of this release.
+
 # November 9 release candidate
 
 [Release PR #132](https://github.com/Warconn/how-many-beers/pull/132) targets main

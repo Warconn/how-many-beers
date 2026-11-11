@@ -1,0 +1,107 @@
+{
+  "format": "how-many-beers",
+  "schemaVersion": 1,
+  "type": "recipe",
+  "id": "brisket-example",
+  "name": "Smoked brisket",
+  "recipe": {
+    "method": "smoking",
+    "equipment": [
+      "Pellet smoker"
+    ],
+    "source": {
+      "kind": "manual"
+    },
+    "weight": {
+      "value": 7,
+      "unit": "lb"
+    },
+    "phases": [
+      {
+        "id": "heat",
+        "kind": "heating",
+        "estimatedMinutes": 480
+      },
+      {
+        "id": "hold",
+        "kind": "passive",
+        "purpose": "hold",
+        "estimatedMinutes": 360,
+        "upperMinutes": 480,
+        "after": "heat"
+      }
+    ],
+    "steps": [
+      {
+        "id": "smoke",
+        "type": "phase-boundary",
+        "title": "Put brisket on smoker",
+        "timing": {
+          "estimatedMinutes": 480
+        },
+        "actions": [
+          {
+            "type": "start_phase",
+            "phaseId": "heat"
+          }
+        ]
+      },
+      {
+        "id": "wrap",
+        "type": "checkpoint",
+        "title": "Wrap when bark is ready",
+        "timing": {
+          "estimatedMinutes": null
+        },
+        "condition": {
+          "description": "Bark is set",
+          "manualConfirmation": true
+        },
+        "actions": [
+          {
+            "type": "checkpoint"
+          }
+        ]
+      },
+      {
+        "id": "hold",
+        "type": "phase-boundary",
+        "title": "Hold until serving",
+        "timing": {
+          "estimatedMinutes": 360,
+          "rangeMinutes": [
+            360,
+            480
+          ]
+        },
+        "actions": [
+          {
+            "type": "end_phase",
+            "phaseId": "heat"
+          },
+          {
+            "type": "start_phase",
+            "phaseId": "hold"
+          }
+        ]
+      },
+      {
+        "id": "serve",
+        "type": "serving",
+        "title": "Slice and serve",
+        "timing": {
+          "estimatedMinutes": null
+        },
+        "actions": [
+          {
+            "type": "end_phase",
+            "phaseId": "hold"
+          },
+          {
+            "type": "serve"
+          }
+        ]
+      }
+    ]
+  }
+}

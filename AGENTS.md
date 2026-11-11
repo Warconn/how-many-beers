@@ -10,24 +10,22 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current owner direction (November 9, 2026)
+## Current owner direction (#114, November 10, 2026)
 
-PR #131 is owner-approved and merged into dev at `62f4673`. Do not repeat the
-post-brisket implementation. The authorized work is now release readiness:
-investigate/fix #118 with deterministic WebKit regression coverage; preserve
-production fixes while comparing dev/main; run all regression suites; reconcile
-delivered issues and documentation; prepare one release PR targeting main.
-This explicit release instruction supersedes the usual feature-PR target of dev.
-Do not merge into main or deploy production without further approval. Do not apply
-hosted Supabase migrations. Keep #61/#83/#103 open until production verification.
-#114 is the next feature candidate, outside this session; do not implement it.
-The owner also found accidental empty upcoming plans could not be removed. Add
-a direct retained Discard plan action using the existing #83 RPC, with empty,
-populated, failure/retry/reload and active/history-isolation regressions. Keep this
-in release PR #132; no new migration or production merge is authorized. The
-owner requested a clean fresh Home: label the action Plan a cook, omit the empty
-Upcoming panel, and use a trash icon inside the planning card and on saved-plan
-cards rather than a loose Discard plan text link. Keep a 44px accessible target.
+Production release #132 at `ae12d36` is owner-accepted. #61/#83/#103/#118 are
+closed after owner verification. Both November 5 migrations and the Browns
+Brisket import were completed manually; do not rerun or reimport them.
+
+The owner now authorizes #114: explicit Save recipe with Add to meal primary,
+shared versioned recipe/meal JSON, independent snapshots and retained deletion.
+Read the entire current issue and `docs/implementation/issue-114-handoff.md`.
+Work in tested phases, commit and checkpoint between major phases. Stop cleanly
+at a safe boundary when the session budget is limited. No automatic dev/main
+merge, production release or hosted migration. Historical migration may be
+proposed only where lossless, with retained originals and rollback review.
+
+Earlier release-readiness directions below are historical. They do not prohibit
+this explicitly authorized feature or imply that production migrations are pending.
 
 Handoffs include the exact feature testing URL reported by Cloudflare's successful
 check/comment and a short owner test plan. Never infer the hostname from a branch
@@ -56,15 +54,12 @@ target or fabricate actual activity. Keep the accepted Beerometer and #101 live
 execution model. The read-only planning projection is not #3's resource optimizer.
 
 #117 is delivered in dev through #128. #119/#121 are delivered through #120/#122;
-#123 through #129; #124/#125/#126/#127 through #131. #118 is the current
-pre-production metadata-edit investigation. The release must preserve the accepted
+#123 through #129; #124/#125/#126/#127 through #131. #118 is delivered in the accepted production release. The release must preserve the accepted
 physical model and Hold → Finish, all actuals, sessions, guest/account boundaries
 and saving/history. See docs/work-queue.md and the current release notes.
 
 Both November 5 Supabase migrations are owner-confirmed applied and verified in
-dev. Do not reapply them or modify hosted database state in this work. The owner
-confirmed production is missing both and will apply the two files manually before
-release merge; keep that gate pending until success/verification is confirmed.
+dev. Do not reapply them or modify hosted database state in this work. Both were also owner-confirmed applied in production before release #132.
 
 ### Delivered UI and deferred capabilities
 

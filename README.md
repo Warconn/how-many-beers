@@ -40,8 +40,8 @@ These desktop and mobile screenshots show the current dev workspace, including t
 
 ### Saving and recovery
 
-Production accounts support one saved active/planning cook, completed history and
-retrieval on another device. In account-enabled builds, new guests can try planning
+Production accounts support one active cook, multiple independent upcoming plans,
+completed history and retrieval on another device. In account-enabled builds, new guests can try planning
 and cooking without persistent saves. Existing legacy browser records and recovery
 mechanisms remain intact. Sign-in opens account cooks directly; the pre-1.0 Earlier
 cooks migration UI has been removed.
@@ -85,19 +85,16 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The post-brisket changes are approved and merged into **dev** through
-[PR #131](https://github.com/Warconn/how-many-beers/pull/131), alongside the delivered
-#117/#119/#121 fixes. Current work is **#118 meal-name persistence investigation
-and release readiness**, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
-targeting main for explicit owner approval. No production deployment is authorized.
+Release [PR #132](https://github.com/Warconn/how-many-beers/pull/132) is deployed
+at `ae12d36` and owner-accepted. #61/#83/#103/#118 are closed. Production supports
+multiple independent upcoming plans, retained cancellation and plan discard.
+Both November 5 migrations and the Browns Brisket import were completed manually.
 
-Keep #61/#83/#103 open until production is verified. The next feature candidate is
-#114 personal saved recipes, separate from this release and not started here.
-Both November 5 migrations are confirmed in dev; production schema readiness must
-be verified separately, with no automatic hosted migration or data changes.
-
-See [work queue](docs/work-queue.md), [roadmap](docs/roadmap.md) and
-[release readiness / acceptance](docs/releases/2026-11-09-readiness.md).
+Current work is **#114 personal saved recipes**, explicitly authorized in phases.
+Phase 1 establishes a schema candidate and compatibility inventory; library UI,
+persistence and migration remain pending. See the [checkpoint](docs/implementation/issue-114-handoff.md),
+[work queue](docs/work-queue.md) and [roadmap](docs/roadmap.md).
+No automatic merge, hosted migration or production deployment is authorized.
 
 ## Account foundation work
 

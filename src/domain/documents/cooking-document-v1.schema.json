@@ -1,0 +1,583 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://howmanybeers.app/schemas/cooking-document-v1.json",
+  "title": "How Many Beers authored cooking document v1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/recipeDocument"
+    },
+    {
+      "$ref": "#/$defs/mealDocument"
+    }
+  ],
+  "$defs": {
+    "temperature": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": -273.15,
+          "maximum": 2000
+        },
+        "unit": {
+          "enum": [
+            "F",
+            "C"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "equipment",
+            "food",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "action": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "prepare",
+                "serve",
+                "custom",
+                "checkpoint"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "start_phase",
+                "end_phase"
+              ]
+            },
+            "phaseId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          "required": [
+            "type",
+            "phaseId"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "type": {
+          "enum": [
+            "preparation",
+            "instruction",
+            "checkpoint",
+            "phase-boundary",
+            "serving"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "instructions": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "timing": {
+          "type": "object",
+          "properties": {
+            "estimatedMinutes": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 43200
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rangeMinutes": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 43200
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "estimatedMinutes"
+          ],
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "maxLength": 16000
+            },
+            "manualConfirmation": {
+              "const": true
+            }
+          },
+          "required": [
+            "description",
+            "manualConfirmation"
+          ],
+          "additionalProperties": false
+        },
+        "equipment": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 16000
+          },
+          "maxItems": 50
+        },
+        "temperatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/temperature"
+          },
+          "maxItems": 20
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          },
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "timing",
+        "actions"
+      ],
+      "additionalProperties": false
+    },
+    "phase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "kind": {
+          "enum": [
+            "heating",
+            "passive"
+          ]
+        },
+        "purpose": {
+          "enum": [
+            "cook",
+            "rest",
+            "hold",
+            "cool",
+            "other"
+          ]
+        },
+        "estimatedMinutes": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 43200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upperMinutes": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 43200
+        },
+        "after": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "estimatedMinutes"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "template",
+            "customized-template",
+            "text",
+            "manual",
+            "saved-recipe",
+            "past-cook"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "originalText": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "templateId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "templateVersion": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "recipe": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "equipment": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 16000
+          },
+          "maxItems": 50
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "ingredients": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 16000
+          },
+          "maxItems": 500
+        },
+        "weight": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100000
+            },
+            "unit": {
+              "enum": [
+                "lb",
+                "kg",
+                "g",
+                "oz"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        "yield": {
+          "type": "string",
+          "maxLength": 16000
+        },
+        "parameters": {
+          "type": "object",
+          "maxProperties": 50,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          },
+          "maxItems": 500,
+          "minItems": 1
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/phase"
+          },
+          "maxItems": 500
+        }
+      },
+      "required": [
+        "method",
+        "equipment",
+        "source",
+        "steps",
+        "phases"
+      ],
+      "additionalProperties": false
+    },
+    "dish": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "sourceRecipe": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "id",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "recipe": {
+          "$ref": "#/$defs/recipe"
+        },
+        "planning": {
+          "type": "object",
+          "properties": {
+            "stepTimes": {
+              "type": "object",
+              "maxProperties": 500,
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 40
+              }
+            },
+            "stepOrder": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "maxItems": 500
+            },
+            "hiddenStepIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "maxItems": 500
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "recipe"
+      ],
+      "additionalProperties": false
+    },
+    "recipeDocument": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "how-many-beers"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "recipe"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "recipe": {
+          "$ref": "#/$defs/recipe"
+        }
+      },
+      "required": [
+        "format",
+        "schemaVersion",
+        "type",
+        "id",
+        "name",
+        "recipe"
+      ],
+      "additionalProperties": false
+    },
+    "mealDocument": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "how-many-beers"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "meal"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "serving": {
+          "type": "object",
+          "properties": {
+            "local": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$"
+            },
+            "timeZone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "instant": {
+              "type": "string",
+              "maxLength": 40
+            }
+          },
+          "required": [
+            "local",
+            "timeZone"
+          ],
+          "additionalProperties": false
+        },
+        "dishes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dish"
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "format",
+        "schemaVersion",
+        "type",
+        "id",
+        "name",
+        "serving",
+        "dishes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
