@@ -2,6 +2,10 @@
 
 ## State
 
+Storage checkpoint: `886d6d6`; UI checkpoint: `3a44905`.
+Local typecheck and all 526 tests / 42 files pass. Local Chromium covered 18
+desktop/phone cases across the final runs. Full CI/WebKit gates remain pending.
+
 Phase 2c implementation commit: `c3351f1d2c64ab77981d4f7883628765bd0b84d6`.
 The following docs-only commit records this tested checkpoint.
 

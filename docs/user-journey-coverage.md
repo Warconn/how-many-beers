@@ -95,3 +95,17 @@ not just visible success text. For an experience change, update this map and the
 relevant journey alongside focused assertions. Never replace a failing scenario
 with sleeps, forgiving retries, weaker assertions or deletion of browser coverage.
 Keep real screenshots/traces and review them before declaring release readiness.
+
+## Personal recipes (#114 feature branch)
+
+`e2e/auth/personal-recipes.spec.ts` covers independent explicit Save/Add, saved
+methods across fresh signed-in contexts, meal-local edits, library updates/new
+copies, retained removal, reload, lost-response replay, unavailable schema, failed
+saves, guest sign-in draft preservation, stale-device conflicts, active-cook
+protection and meal-specific extraction. Desktop and iPhone projects run under the
+account config; local narrow Chromium additionally checks layout. RPC/auth mocks
+validate UI state isolation; real isolated PostgreSQL checks validation, ownership,
+receipts and save/remove races. Neither substitutes for hosted dev acceptance.
+
+No hosted migration has run. The feature preview requires the reviewed migration
+in `docs/recipes/rollout.md` before account library writes can work.

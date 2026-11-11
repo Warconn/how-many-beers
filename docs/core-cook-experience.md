@@ -16,7 +16,9 @@ Release #132 is deployed at `ae12d36` and owner-accepted. #61/#83/#103/#118 are
 closed; both November 5 production migrations are complete. #114 is now authorized:
 explicit personal recipe saving independent from Add to meal, immutable meal
 snapshots and retained recipe deletion. See the [implementation checkpoint](implementation/issue-114-handoff.md).
-No #114 UI or persistence is delivered in Phase 1.
+The #114 feature branch now includes explicit Save recipe/My recipes with retained
+removal, independent meal copies and existing-editor reuse. It is not integrated
+or released; hosted use needs the reviewed additive migration.
 
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.

@@ -14,7 +14,10 @@ Phase 2c adds in-memory meal/history/saved-plan compatibility adapters, preservi
 serving metadata, execution and archived timelines. Contract review and storage
 validation gates remain before persistence. Follow the
 [checkpoint](implementation/issue-114-handoff.md) for exact progress and next step.
-No UI/library persistence or migration is delivered yet. No automatic merge or
+Phase 3/4 now implement additive recipe storage and the minimal library UI on the
+feature branch. Isolated SQL and focused Chromium checks pass; final full CI and
+WebKit review are pending. Hosted saving needs the owner-reviewed development
+migration in [rollout notes](recipes/rollout.md); it has not been applied remotely. No automatic merge or
 hosted changes. Add to meal remains primary; saving a recipe is explicit and
 independent, deletion retained, and existing cook/history behavior preserved.
 

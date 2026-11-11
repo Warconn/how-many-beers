@@ -3,9 +3,9 @@
 ## Now: personal recipes (#114)
 
 Implement explicit Save recipe, My recipes, independent reusable method snapshots,
-shared versioned cooking documents and retained deletion. Current progress is
-Phase 1 only; see [implementation checkpoint](implementation/issue-114-handoff.md).
-Persistence, UX and conversion rollout remain pending. Review the contract and
+shared versioned cooking documents and retained deletion. Storage and UI are implemented on the feature branch, with final integration
+checks and development migration approval pending; see [implementation checkpoint](implementation/issue-114-handoff.md).
+No hosted conversion or migration has run. Review the contract and
 actual screenshots before dev integration; hosted migration and production release
 require separate approval.
 

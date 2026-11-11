@@ -91,8 +91,9 @@ multiple independent upcoming plans, retained cancellation and plan discard.
 Both November 5 migrations and the Browns Brisket import were completed manually.
 
 Current work is **#114 personal saved recipes**, explicitly authorized in phases.
-Phase 1 establishes a schema candidate and compatibility inventory; library UI,
-persistence and migration remain pending. See the [checkpoint](docs/implementation/issue-114-handoff.md),
+The feature branch now implements the shared contract, compatibility adapters,
+retained recipe storage and explicit library UI. Full integration review and the
+owner-applied development migration remain pending; see [rollout notes](docs/recipes/rollout.md). See the [checkpoint](docs/implementation/issue-114-handoff.md),
 [work queue](docs/work-queue.md) and [roadmap](docs/roadmap.md).
 No automatic merge, hosted migration or production deployment is authorized.
 
