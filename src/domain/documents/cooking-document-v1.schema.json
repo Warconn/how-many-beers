@@ -282,6 +282,51 @@
             "minutes"
           ],
           "additionalProperties": false
+        },
+        "nativeCustom": {
+          "type": "object",
+          "properties": {
+            "dishName": {
+              "type": "string",
+              "maxLength": 16000
+            },
+            "isCondition": {
+              "type": "boolean"
+            },
+            "optionalDetails": {
+              "type": "string",
+              "maxLength": 16000
+            },
+            "durationMinutes": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 43200
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "equipment": {
+              "type": "string",
+              "maxLength": 16000
+            },
+            "targetTempF": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "dishName",
+            "isCondition"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -494,6 +539,9 @@
             "pattern": "^[A-Za-z0-9_-]+$"
           },
           "maxItems": 500
+        },
+        "review": {
+          "$ref": "#/$defs/review"
         }
       },
       "required": [
@@ -878,6 +926,112 @@
         "holdBufferMinutes",
         "comparePersonal"
       ],
+      "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "overrides": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxProperties": 500,
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 16000
+              },
+              "instructions": {
+                "type": "string",
+                "maxLength": 16000
+              },
+              "equipment": {
+                "type": "string",
+                "maxLength": 16000
+              },
+              "durationMinutes": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 43200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "targetTempF": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 2000
+              },
+              "unscheduled": {
+                "const": true
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "hiddenStepIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "taskOrder": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "dishSequence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "dishStepOrder": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 500
+        },
+        "addedSteps": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        }
+      },
+      "required": [],
       "additionalProperties": false
     }
   }

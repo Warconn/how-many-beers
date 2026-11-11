@@ -79,17 +79,4 @@ export function instantiateRecipe(value:unknown,instanceId:string=crypto.randomU
  return dish;
 }
 
-/** Application-facing extraction must examine the whole review, not just its
- * Dish: otherwise task overrides or hidden work could be silently omitted. */
-export function convertRecipeReview(value:unknown,recipeId:string):Omit<Extract<DishConversion,{status:'converted'}>,'original'> & {original:unknown}|Extract<DishConversion,{status:'skipped'}>{
- const original=structuredClone(value);
- const skip=(reason:string):Extract<DishConversion,{status:'skipped'}>=>({status:'skipped',reason,original});
- if(!isStoredMeal(value))return skip('Invalid or unsupported review.');
- const m=value as import('../cookState').ExtendedMeal;
- const allowed=['version','id','name','serveAt','dishes','completed','notes','mode','events','taskOverrides','hiddenTaskIds','taskOrder','customTasks','planningGeneralSequence'];
- if(Object.keys(m).some(k=>!allowed.includes(k)))return skip('Unsupported review fields or phase/execution state.');
- if(m.mode==='cooking'||m.dishes.length!==1||Object.keys(m.completed).length||Object.keys(m.notes).length||m.events?.length)return skip('Only a single unstarted, annotation-free review is supported.');
- if(Object.keys(m.taskOverrides??{}).length||m.hiddenTaskIds?.length||m.taskOrder?.length||m.customTasks?.length||m.planningGeneralSequence?.length)return skip('Edited review requires the planning compatibility adapter.');
- const result=convertDish(m.dishes[0],recipeId);
- return result.status==='converted'?{...result,original}:skip(result.reason);
-}
+export {convertRecipeReview,instantiateRecipeReview,restoreRecipeReview} from './reviewAdapter';

@@ -128,3 +128,46 @@ imported/manual steps, authored duration/order edits, unchanged timeline/physica
 projection, combined heat-end/hold-start actions, wing lead, custom suppression,
 independent copy identities, source retention, skipped original protection and
 repeated deterministic conversion. No Browns Brisket production data is involved.
+
+## Phase 2b: whole-review authored overlay and separate context
+
+`reviewAdapter.ts` supports single unstarted reviews with authored overrides,
+hidden steps, dish sequences, dish step order, checklist task order and dish-owned
+custom tasks. RecipeDefinition gains an optional `review` overlay. Overrides retain
+explicit null duration/temperature and unscheduled intent. Added steps use the same
+DocumentStep type; `nativeCustom` holds only native custom-task metadata needed to
+round-trip optional fields. Base method steps and typed template configuration stay
+intact, so a removed boundary is not replaced by an invented physical transition.
+Consumers must apply the overlay through `instantiateRecipeReview`, not render the
+base steps as the effective edited method. `instantiateRecipe` (Dish-only) continues
+to reject a review it would drop.
+
+`convertRecipeReview` returns the canonical authored document, retained original
+and a separate typed ReviewContext. The context keeps meal name/ID/serving target,
+notes, removed-event history, original task-ID mappings, original custom-step dates,
+and fixed/recorded planned timestamps. Those dates never enter reusable JSON.
+Explicit unscheduled intent survives as `unscheduled: true`; it is not a duration.
+The source review is not mutated. A conversion is eligible only after reconstructing
+and comparing its complete native payload (with JSON optional-field semantics).
+
+`restoreRecipeReview` reconstructs the source review using its context, preserving
+calendar spelling, hidden tasks, annotations and removed-event timestamps.
+`instantiateRecipeReview` instead takes a new target and mints meal/dish/task IDs,
+reuses authored changes/order/removals, resets custom dates for recomputation and
+copies no notes/events/completion state. Canonical added-step keys stay stable over
+repeated reuse. Both APIs reproject through the native bridge and reject canonical
+semantics they cannot preserve, including inconsistent added-step durations.
+
+Current safety boundaries: only dish-owned custom tasks belong to the recipe;
+unrelated General prep, cross-dish/dangling references, unknown fields, applied
+dated forecasts, physical activity, startedAt and stored phase plans remain skipped
+with the original retained. General prep is a meal-level concern for the next adapter.
+Removed events are preserved only in context, not treated as physical activity.
+No stored historical data has been converted and no saved recipe entry is created.
+
+Tests cover edited brisket/brats/wings/turkey/ribs, native and checklist ordering,
+imported/custom steps, hidden source/added steps, zero and unknown durations,
+combined phase actions, projection equality, fixed/recorded date isolation,
+repeated conversion stability, canonical rejection, plain Phase 2a compatibility
+and adding a fresh copy without modifying an existing active dish or events.
+The Phase 2a statement that all edited reviews are skipped is superseded here.

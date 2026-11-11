@@ -47,27 +47,45 @@ No claim that this meets the entire #114 acceptance criteria.
   all 493 tests across 39 files pass. Diff checks pass. Browser/screenshot testing
   remains pending integration because no application path imports these adapters.
 
+## Phase 2b increment completed
+
+- Whole-review overrides, hidden/custom steps and ordering map to an authored
+  RecipeDefinition.review overlay using the shared DocumentStep type.
+- Fixed/recorded dates, custom-step dates, notes and removal-event history stay in
+  a separate typed ReviewContext. Exact native restoration is proven before
+  conversion is marked eligible; no original is rewritten.
+- New reuse remints IDs, preserves authored edits/order/removals and recomputes
+  against the supplied target, without old notes/events/calendar timestamps.
+- Restore/reuse reproject and reject unrepresentable canonical fields. Earlier
+  plain Phase 2a documents still work. All supported paths remain unconnected
+  to runtime persistence/UI.
+- Started/physical reviews, unrelated General prep, dangling/cross-dish refs,
+  unknown fields and applied forecasts still skip safely with retained originals.
+
+- Verification: typecheck, all **508 tests / 40 files**, and diff checks pass.
+  The three focused document/adapter suites contain 57 passing tests. No browser
+  or screenshot run for this disconnected domain change; required at integration.
+
 ## Next exact step
 
-Continue Phase 2b: map whole-review taskOverrides, hidden/custom tasks and meal-level
-ordering losslessly, separating authored changes from fixed dates and observations.
-Start from the existing skipped edited-review cases in `tests/dishAdapter.test.ts`;
-turn them into proven eligible conversions only as all fields gain explicit support.
-Support canonical edited template steps through the existing engine rather than
-silently regenerating defaults. Current instantiateRecipe rejects unrepresentable
-canonical changes by recompiling and comparing the complete document.
+Continue Phase 2c: MealDocument adapters and execution/history compatibility
+separation. Preserve meal General prep, all dish identities, original serving
+instant/time zone, applied brisket forecast metadata and stable authored overrides.
+Use the tested review overlay as each dish snapshot, and keep fixed/calendar
+values and actual events in meal/execution ownership. Do not replan archived
+plannedTimeline or mutate historical records. Provide versioned/idempotent
+conversion outcomes, retained originals and rollback. Add multi-dish/account/
+guest/history/cancellation fixtures before any stored-data adoption.
 
-Then add MealDocument adapters, including applied brisket inputs/estimates (calendar
-fields belong to the meal), separate execution/history compatibility envelopes,
-versioned/idempotent conversion outcomes and retained-original rollback. Prove
-saved-plan/account/guest/history identity, timeline, phase and Beerometer invariants.
-No historical migration has run. Local/instant/zone coherence and planning date
-validation remain required before wiring documents to persistence/imports.
+Phase 2b still rejects direct canonical base-template edits not representable by
+native configuration; explicit authored review overrides are supported. Arbitrary
+future action/phase compilation remains gated by native round-trip validation.
+Document and test any additional mapping before widening eligibility.
 
-Only after that: Phase 3 additive saved-recipe storage with isolated PostgreSQL
-ownership/race tests; Phase 4 existing-review UI wiring; Phase 5 full browser/auth/
-account/offline compatibility, actual desktop/mobile/WebKit screenshot review and
-PR to dev. No hosted migration or merge without review.
+Local/instant/zone coherence and planning date validation remain required at the
+meal boundary. Only after Phase 2 is complete: persistence/security, existing-review
+UI, then full browser/auth/account/offline regression and screenshot review.
+No hosted mutation or merge is authorized.
 
 ## Safety and resume
 
@@ -79,7 +97,7 @@ checkpoint (exact SHA is also in the session handoff). No pending tool operation
 
 Resume Codex: Read AGENTS.md, the entire current issue #114 and
 `docs/implementation/issue-114-handoff.md` on `feat/114-personal-recipes`.
-Continue Phase 2b from the skipped edited-review cases and mapping gaps in
+Continue Phase 2c meal/history compatibility from the mapping inventory in
 `issue-114-schema.md` before wiring canonical documents to storage.
 Keep Add to meal primary and execution/history separate; no hosted mutations or
 automatic merge. Checkpoint tested increments and stop cleanly if budget is tight.

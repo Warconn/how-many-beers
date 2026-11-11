@@ -4,6 +4,7 @@ import type {Dish,RecipeTemperature} from '../meal';
 
 export type RecipeAction = {type:'prepare'|'serve'|'custom'} | {type:'checkpoint';phaseId?:string;fraction?:number} | {type:'start_phase'|'end_phase';phaseId:string};
 export type DocumentStep = {
+ nativeCustom?:Pick<import('../meal').PlannedTask,'dishName'|'isCondition'|'optionalDetails'|'durationMinutes'|'equipment'|'targetTempF'>;
  generated?:boolean;cookingKind?:'heating'|'passive';
  templatePosition?:{anchor:'prep'|'preheat'|'start'|'progress'|'finish'|'serve';beforeStartMin?:number;progress?:number};
  templateStage?:import('../meal').TemplateStage;
@@ -12,7 +13,10 @@ export type DocumentStep = {
  condition?:{description:string;manualConfirmation:true}; equipment?:string[];temperatures?:RecipeTemperature[];
  dependsOn?:string[];actions:RecipeAction[];
 };
+export type AuthoredOverride=Pick<import('../cookState').TaskOverride,'title'|'instructions'|'durationMinutes'|'equipment'|'targetTempF'> & {unscheduled?:true};
+export type ReviewDefinition={overrides?:Record<string,AuthoredOverride>;hiddenStepIds?:string[];taskOrder?:string[];dishSequence?:string[];dishStepOrder?:string[];addedSteps?:DocumentStep[]};
 export type RecipeDefinition = {
+ review?:ReviewDefinition;
  configuration?:Pick<Dish,'preset'|'cookMinutes'|'restMinutes'|'pitTempF'|'brisketTemplateVersion'|'turkeyPrep'|'planningSequence'|'planningStepOrder'> & {brisketInputs?:import('../brisketEstimate').BrisketInputs;sourceStepOrder?:string[]};
  suppressedStepIds?:string[];
  method:string;equipment:string[];
@@ -29,16 +33,18 @@ export type CookingDocument=RecipeDocument|MealDocument;
 const shape=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
 const unique=(ids:string[])=>new Set(ids).size===ids.length;
 function recipeLinks(r:RecipeDefinition):boolean{
- const stepIds=r.steps.map(s=>s.id),phaseIds=r.phases.map(p=>p.id);
+ const allSteps=[...r.steps,...(r.review?.addedSteps??[])];
+ const stepIds=allSteps.map(s=>s.id),phaseIds=r.phases.map(p=>p.id);
  if(!unique(stepIds)||!unique(phaseIds))return false;
- for(const [index,s] of r.steps.entries()){
+ if(r.review?.addedSteps?.some(s=>!s.nativeCustom||s.actions.length!==1||s.actions[0].type!=='custom'))return false;
+ for(const [index,s] of allSteps.entries()){
   if(s.dependsOn&&(!unique(s.dependsOn)||s.dependsOn.some(id=>!stepIds.slice(0,index).includes(id))))return false;
   const range=s.timing.rangeMinutes;
   if(range&&(range[0]>range[1]||(s.timing.estimatedMinutes!==null&&(s.timing.estimatedMinutes<range[0]||s.timing.estimatedMinutes>range[1]))))return false;
   for(const a of s.actions)if('phaseId' in a&&a.phaseId!==undefined&&!phaseIds.includes(a.phaseId))return false;
  }
- for(const ids of [r.suppressedStepIds,r.configuration?.planningSequence,r.configuration?.planningStepOrder,r.configuration?.sourceStepOrder])if(ids&&(!unique(ids)||ids.some(id=>!stepIds.includes(id))))return false;
- for(const s of r.steps)for(const a of s.actions)if(a.type==='checkpoint'&&((a.phaseId===undefined)!==(a.fraction===undefined)))return false;
+ for(const ids of [r.suppressedStepIds,r.configuration?.planningSequence,r.configuration?.planningStepOrder,r.configuration?.sourceStepOrder,r.review?.hiddenStepIds,r.review?.taskOrder,r.review?.dishSequence,r.review?.dishStepOrder,Object.keys(r.review?.overrides??{})])if(ids&&(!unique(ids)||ids.some(id=>!stepIds.includes(id))))return false;
+ for(const s of allSteps)for(const a of s.actions)if(a.type==='checkpoint'&&((a.phaseId===undefined)!==(a.fraction===undefined)))return false;
  for(const [index,p] of r.phases.entries()){
   if(p.durationStepId&&!stepIds.includes(p.durationStepId))return false;
   if(p.after&&!phaseIds.slice(0,index).includes(p.after))return false;

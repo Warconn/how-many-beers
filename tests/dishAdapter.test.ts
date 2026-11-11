@@ -72,7 +72,7 @@ describe('non-mutating native recipe adapters',()=>{
 });
 
 import {recipeReview} from '../src/domain/recipeReview';
-import {convertRecipeReview} from '../src/domain/documents/dishAdapter';
+import {convertRecipeReview,restoreRecipeReview} from '../src/domain/documents/dishAdapter';
 import {editStep,recordEvent,setStepDuration,removeStep} from '../src/domain/cookState';
 it('extracts an unstarted review without importing its serving date or meal identity',()=>{
  const review=recipeReview(createDish('brisket'),serve),before=structuredClone(review);
@@ -83,10 +83,15 @@ it('extracts an unstarted review without importing its serving date or meal iden
  }
  expect(review).toEqual(before);
 });
-it('never omits review edits, removals or historical activity during extraction',()=>{
+it('round-trips reviewed edits and removal history while rejecting physical execution',()=>{
  const review=recipeReview(createDish('brisket'),serve),task=cookTimeline(review)[0];
- const versions=[editStep(review,task.id,'Changed title','Changed instructions'),setStepDuration(review,task.id,null),removeStep(review,task.id,'2026-11-14T12:00Z'),recordEvent(review,task.id,'completed','2026-11-14T12:00Z'),{...review,notes:{[task.id]:'Keep my observation'}}];
- for(const value of versions){const before=structuredClone(value),r=convertRecipeReview(value,'recipe');expect(r.status).toBe('skipped');expect(r.original).toEqual(before);expect(value).toEqual(before);}
+ for(const value of [editStep(review,task.id,'Changed title','Changed instructions'),setStepDuration(review,task.id,null),removeStep(review,task.id,'2026-11-14T12:00Z'),{...review,notes:{[task.id]:'Keep my observation'}}]){
+  const before=structuredClone(value),r=convertRecipeReview(value,'recipe');expect(r.status).toBe('converted');
+  if(r.status==='converted')expect(restoreRecipeReview(r)).toEqual(before);
+  expect(r.original).toEqual(before);expect(value).toEqual(before);
+ }
+ const actual=recordEvent(review,task.id,'completed','2026-11-14T12:00Z');
+ const skipped=convertRecipeReview(actual,'recipe');expect(skipped.status).toBe('skipped');expect(skipped.original).toEqual(actual);
 });
 it('skips unknown nested settings rather than dropping them and returns isolated originals',()=>{
  const d={...createDish('brisket'),brisketPlan:{mode:'manual' as const,inputs:{...brisketDefaults,futureFlag:true}}};
