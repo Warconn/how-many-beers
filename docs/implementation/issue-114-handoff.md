@@ -2,6 +2,9 @@
 
 ## State
 
+Phase 2c implementation commit: `c3351f1d2c64ab77981d4f7883628765bd0b84d6`.
+The following docs-only commit records this tested checkpoint.
+
 Phase 2b implementation commit: `54b57c9015ab9ea27986cdabc11e06d708105c6f`.
 The following docs-only commit records this tested checkpoint.
 
