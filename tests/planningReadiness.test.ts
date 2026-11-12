@@ -71,3 +71,56 @@ describe('#109 whole-meal planning',()=>{
   const {m,d}=sequence(),task=cookTimeline(m)[0],fixed=editStep(m,task.id,task.title,task.instructions,{timingMode:'fixed',scheduledAt:at('17:00'),durationMinutes:15,equipment:'Grill',targetTempF:null}),p=project(fixed,'17:10');expect(start(p,d.id)).toBe(at('17:00'));expect(p.conflicts.join(' ')).toContain(task.title);expect(p.readyAt).toBe(at('18:10'));expect(fixed.taskOverrides?.[task.id].scheduledAt).toBe(at('17:00'));
  });
 });
+
+
+describe('#136 production wings backward-reflow regression', () => {
+  function wings() {
+    const d = createDish('wings');
+    const m: ExtendedMeal = {...newMeal(), serveAt: '2026-11-14T18:00:00.000Z', dishes: [d]};
+    return {d, m, oil: d.id + ':oil', dry: d.id + ':dry'};
+  }
+
+  it('replans an extended oil-heating step backward without changing the 1 PM-equivalent serving target', () => {
+    const {m,oil,dry} = wings();
+    const before = cookTimeline(m);
+    const changed = setStepDuration(m,oil,45);
+    const raw = cookTimeline(changed);
+    const now = Date.parse('2026-11-13T00:00:00Z');
+    expect(Date.parse(raw.find(t=>t.id.endsWith(':serve'))!.scheduledAt!)).toBeGreaterThan(Date.parse(m.serveAt));
+    const plan = planningReadiness(changed,raw,now)!;
+    expect(plan.lateMinutes).toBe(0);
+    expect(plan.readyAt).toBe(m.serveAt);
+    expect(plan.tasks.find(t=>t.id===oil)?.durationMinutes).toBe(45);
+    expect(Date.parse(plan.tasks.find(t=>t.id===dry)!.scheduledAt!)).toBeLessThan(
+      Date.parse(before.find(t=>t.id===dry)!.scheduledAt!));
+    expect(changed.serveAt).toBe(m.serveAt);
+    expect(changed.taskOverrides?.[oil].durationMinutes).toBe(45);
+  });
+
+  it('does not promise the target when moving optional preparation earlier would require time travel', () => {
+    const {m,oil}=wings();
+    const changed=setStepDuration(m,oil,45);
+    const ahead=planningReadiness(changed,cookTimeline(changed),Date.parse('2026-11-13T00:00:00Z'))!;
+    const tooLate=planningReadiness(changed,cookTimeline(changed),Date.parse(ahead.startAt!)+5*60000)!;
+    expect(tooLate.lateMinutes).toBeGreaterThan(0);
+    expect(Date.parse(tooLate.readyAt!)).toBeGreaterThan(Date.parse(m.serveAt));
+    expect(changed.serveAt).toBe(m.serveAt);
+  });
+
+  it('respects a deliberate fixed-time override and never replans a started session', () => {
+    const {m,oil}=wings();
+    const changed=setStepDuration(m,oil,45);
+    const before=cookTimeline(changed);
+    const oilTask=before.find(t=>t.id===oil)!;
+    const fixed=editStep(changed,oil,oilTask.title,oilTask.instructions,{
+      timingMode:'fixed',scheduledAt:oilTask.scheduledAt,durationMinutes:45,
+      equipment:oilTask.equipment??'',targetTempF:null
+    });
+    const fixedPlan=planningReadiness(fixed,cookTimeline(fixed),Date.parse('2026-11-13T00:00:00Z'))!;
+    expect(fixedPlan.tasks.find(t=>t.id===oil)?.scheduledAt).toBe(oilTask.scheduledAt);
+    expect(fixedPlan.lateMinutes).toBeGreaterThan(0);
+    const active=startCookSession(changed,'2026-11-13T12:00:00Z');
+    expect(planningReadiness(active,cookTimeline(active),Date.parse('2026-11-13T12:00:00Z'))).toBeNull();
+    expect(active.serveAt).toBe(m.serveAt);
+  });
+});

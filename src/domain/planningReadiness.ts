@@ -41,7 +41,35 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
     groups.set(key, list);
   }
 
-  for (const list of groups.values()) {
+  // Built-in templates have authored overlap and checkpoints. A duration edit may
+  // push their raw timeline past serving; in planning, re-anchor the flexible
+  // *whole path* backward instead of carrying that delay into dinner. The clock
+  // floor below still decides if this earlier start is actually feasible.
+  const backwardPlan = (list: PlannedTask[]): PlannedTask[] => {
+    if (target === null || list.some(t => t.userSequence || t.timingMode === 'fixed')) return list;
+    const ends: number[] = [];
+    for (const task of list) {
+      const dish = meal.dishes.find(d => d.id === task.dishId);
+      const turkey = dish?.preset === 'turkey' ? turkeyPreparation(dish) : null;
+      if (turkey && (task.id === dish!.id + ':thaw' ||
+          task.id === dish!.id + ':brine' && turkey.brineHours === 0)) continue;
+      const start = stamp(task.scheduledAt);
+      const minutes = stepMinutes(meal, task) ??
+        (turkey && task.id === dish!.id + ':dry' ? turkey.dryHours * 60 : null) ??
+        (task.id.endsWith(':serve') || task.isCondition && !task.templateStage ? 0 : null);
+      if (start === null || minutes === null) return list; // Never invent unknown timing.
+      ends.push(start + minutes * 60000);
+    }
+    if (!ends.length) return list;
+    const overshoot = Math.max(...ends) - target;
+    if (overshoot <= 0) return list;
+    return list.map(task => {
+      const start = stamp(task.scheduledAt);
+      return start === null ? task : {...task, scheduledAt: iso(start - overshoot)};
+    });
+  };
+  for (const original of groups.values()) {
+    const list = backwardPlan(original);
     const sequential = list.some(t => t.userSequence);
     const tasks = [...list].sort((a, b) => sequential
       ? (a.recipeOrder ?? 0) - (b.recipeOrder ?? 0)
