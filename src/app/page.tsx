@@ -194,7 +194,16 @@ function CookExperience() {
   const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
   const forecasts=useMemo(()=>projection?.forecasts??(meal?liveStepForecasts(meal,timeline,clockNow):{}),[meal,timeline,clockNow,projection]);
   const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
-  const warnings = useMemo(() => meal ? [...equipmentWarnings(meal),...stepTimingWarnings(meal),...(plan?.conflicts??[])] : [], [meal,plan]);
+  const warnings = useMemo(() => {
+    if (!meal) return [];
+    // The raw template timeline can be late *before* planningReadiness moves its
+    // flexible steps backward. Never show its stale "move the start earlier" note.
+    const timing = stepTimingWarnings(meal).filter(w => !plan || !w.includes(': plan runs '));
+    const late = plan?.lateMinutes && plan.readyAt ? [
+      `Estimated ready ${when(plan.readyAt)}, ${plan.lateMinutes} min past your ${when(meal.serveAt)} target. ${plan.startAt && Date.parse(plan.startAt) <= clockNow ? 'The earliest preparation is now; review optional preparation or change serving time.' : 'Review fixed starts or adjust serving time.'}`
+    ] : [];
+    return [...equipmentWarnings(meal), ...timing, ...(plan?.conflicts ?? []), ...late];
+  }, [meal,plan,clockNow]);
   const cookingTasks=meal?.phasePlan?timeline.filter(t=>!meal.phasePlan!.suppressed.includes(t.id)):timeline;
   const progressTasks=view==='cooking'?cookingTasks:timeline;
   const complete = meal ? progressTasks.filter(task => !!meal.completed[task.id]).length : 0;
