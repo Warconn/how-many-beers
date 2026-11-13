@@ -1,6 +1,7 @@
 'use client';
 import type {ReactNode} from 'react';
 import {useEffect,useRef,useState} from 'react';
+import EquipmentSelect from './EquipmentSelect';
 import type {ExtendedMeal} from '@/domain/cookState';
 import {addStep,cookTimeline,editStep,removeStep,setStepDuration} from '@/domain/cookState';
 import {formatDuration} from '@/domain/stepTiming';
@@ -32,7 +33,7 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
   <h3 ref={heading} tabIndex={-1}>Review your method</h3><p className="muted small">{primaryLabel==='Add to meal'?'Adjust the steps, then add this dish to your meal.':'Save this method independently of your meals.'}</p>
   <div className="method-review-meta">
   <label>Recipe name<input value={dish.name} maxLength={80} onChange={e=>onChange({...meal,dishes:[{...dish,name:e.target.value}],customTasks:meal.customTasks?.map(t=>({...t,dishName:e.target.value}))})}/></label>
-  <label>Equipment<input value={dish.equipment} maxLength={80} onChange={e=>onChange({...meal,dishes:[{...dish,equipment:e.target.value}]})}/></label>
+  <div><span className="field-label">Equipment</span><EquipmentSelect value={dish.equipment} onChange={equipment=>onChange({...meal,dishes:[{...dish,equipment}]})}/></div>
   </div>
   <StepReorderHelp id={reorder.helpId} announcement={reorder.announcement}/>
   <ol className="method-review-steps" data-step-list="method">{tasks.map(task=><li key={task.id} data-step-id={task.id} data-step-group={task.dishId} className={"step-list-row "+(reorder.dragging===task.id?'is-dragging ':'')+(reorder.drop?.id===task.id?(reorder.drop.after?'drop-after':'drop-before'):'')}>
@@ -41,7 +42,7 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
     <label>Step name<input required maxLength={160} value={title} onChange={e=>setTitle(e.target.value)}/></label>
     <label>Instructions<textarea maxLength={500} rows={3} value={instructions} onChange={e=>setInstructions(e.target.value)}/></label>
     {!task.isCondition&&!task.id.endsWith(':serve')&&<label>Minutes<input type="number" inputMode="decimal" min={0} max={43200} step="any" placeholder="Unknown" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label>}
-    <details><summary>Step settings</summary><label>Step equipment<input maxLength={80} value={equipment} onChange={e=>setEquipment(e.target.value)}/></label><label>Target food temperature (°F)<input type="number" min={1} max={600} step="any" value={temperature} onChange={e=>setTemperature(e.target.value)}/></label></details>
+    <details><summary>Step settings</summary><div><span className="field-label">Step equipment</span><EquipmentSelect label="Step equipment" value={equipment} onChange={setEquipment}/></div><label>Target food temperature (°F)<input type="number" min={1} max={600} step="any" value={temperature} onChange={e=>setTemperature(e.target.value)}/></label></details>
     <div className="method-review-actions step-editor-actions"><button type="submit" className="button primary">Save step</button><button type="button" className="button secondary" onClick={()=>{setEditing(null);setError('');}}>Cancel edit</button><button type="button" className="link danger step-editor-remove" aria-label={'Remove '+task.title} disabled={tasks.length===1||adding} onClick={()=>{change(()=>removeStep(meal,task.id,new Date().toISOString()));setEditing(null);}}>Remove step</button></div>
    </form>:<>
     {task.instructions&&task.instructions!==task.title&&<StepInstructions text={task.instructions}/>}
@@ -55,6 +56,6 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
   {dish.recipeSource&&<details><summary>Original recipe</summary><pre>{dish.recipeSource}</pre></details>}
   {error&&<p className="form-error" role="alert">{error}</p>}
   
-  <div className="method-review-actions"><button type="button" className="button primary" disabled={!dish.name.trim()||!tasks.length||adding} onClick={async()=>{setCommitting(true);setError('');try{await onAdd(prepare());}catch(e){setError(e instanceof Error&&(primaryLabel!=='Add to meal'||e.message.startsWith('Your meal changed.'))?e.message:'Could not add the recipe yet. Your edits are still here.');}finally{setCommitting(false);}}}>{primaryLabel}</button>{!adding&&saveAction?.(prepare,editing!==null)}<button type="button" className="button secondary" onClick={()=>{if((editing!==null||adding)&&!window.confirm('Discard this open step edit?'))return;onBack();}}>{primaryLabel==='Save changes'?'Cancel':'Back to choices'}</button></div>
+  <div className="method-review-actions recipe-review-footer"><button type="button" className="button primary" disabled={!dish.name.trim()||!tasks.length||adding} onClick={async()=>{setCommitting(true);setError('');try{await onAdd(prepare());}catch(e){setError(e instanceof Error&&(primaryLabel!=='Add to meal'||e.message.startsWith('Your meal changed.'))?e.message:'Could not add the recipe yet. Your edits are still here.');}finally{setCommitting(false);}}}>{primaryLabel}</button>{!adding&&saveAction?.(prepare,editing!==null)}<button type="button" className="link" onClick={()=>{if((editing!==null||adding)&&!window.confirm('Discard this open step edit?'))return;onBack();}}>{primaryLabel==='Add to meal'?'Back to choices':'Cancel'}</button></div>
  </fieldset></section>;
 }

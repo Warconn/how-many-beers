@@ -5,7 +5,11 @@
 Implement explicit Save recipe, My recipes, independent reusable method snapshots,
 shared versioned cooking documents and retained deletion. Storage and UI are implemented on the feature branch, with final integration
 checks and development migration approval pending; see [implementation checkpoint](implementation/issue-114-handoff.md).
-No hosted conversion or migration has run. Review the contract and
+The agent has run no hosted conversion or migration. November 13's validator
+upgrade is additive for projects with the original recipe migration installed.
+Production #137 backward scheduling is included in the candidate. The library
+navigation/action/equipment refinement and edited-step save regressions are
+implemented; full CI and owner acceptance remain required. Review the contract and
 actual screenshots before dev integration; hosted migration and production release
 require separate approval.
 

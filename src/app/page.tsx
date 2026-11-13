@@ -36,6 +36,8 @@ import RecipeDetails from "@/components/RecipeDetails";
 import {convertMeal} from '@/domain/documents/mealAdapter';
 import {convertRecipeReview,instantiateRecipeReview} from '@/domain/documents/reviewAdapter';
 import {usePersonalRecipes} from '@/account/usePersonalRecipes';
+import {recipeDocumentForSave} from '@/account/recipeDraft';
+import EquipmentSelect from '@/components/EquipmentSelect';
 import MyRecipes from '@/components/MyRecipes';
 import RecipeSaveButton from '@/components/RecipeSaveButton';
 import RecipePreview from "@/components/RecipePreview";
@@ -122,7 +124,16 @@ const GUEST_RECIPE_REVIEW='how-many-beers:guest-recipe-review:v1';
 function CookExperience() {
   const recipeFirst=useRecipeFirst();
   const recipes=usePersonalRecipes();
-  const [showRecipes,setShowRecipes]=useState(false);
+  const [showRecipes,setShowRecipes]=useState(false),[libraryEditing,setLibraryEditing]=useState(false);
+  useEffect(()=>{
+    const onBack=()=>{
+      const opening=window.location.hash==='#my-recipes';
+      if(!opening&&(recipes.busy||libraryEditing&&!window.confirm('Discard these unsaved recipe edits?'))){window.history.pushState(window.history.state,'','#my-recipes');return;}
+      setShowRecipes(opening);
+    };
+    if(window.location.hash==='#my-recipes')setShowRecipes(true);
+    window.addEventListener('popstate',onBack);return()=>window.removeEventListener('popstate',onBack);
+  },[libraryEditing,recipes.busy]);
   const guestRecipeDraft=useRef<{meal:ExtendedMeal;selection:number}|null>(null);
   const reviewSource=useRef<string|null>(null);
   const [methodReview,setMethodReview]=useState<ExtendedMeal|null>(null);
@@ -499,7 +510,10 @@ function CookExperience() {
     }
   };
 
-  const canUpdate=!methodReview&&!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!showCancel&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
+  const closeLibrary=()=>{if(window.location.hash==='#my-recipes')window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);setShowRecipes(false);};
+  const leaveLibrary=(action:()=>void)=>{if(recipes.busy)return;if(libraryEditing&&!window.confirm('Discard these unsaved recipe edits?'))return;setLibraryEditing(false);action();};
+  const openLibrary=()=>{window.history.pushState(window.history.state,'','#my-recipes');setShowRecipes(true);};
+  const canUpdate=!showRecipes&&!methodReview&&!workspace.locked&&storageStatus==='saved'&&!editingStep&&!newStepDishId&&!cookReadingOpen&&!addStepDraftOpen&&!showFinish&&!showCancel&&!(showDishSetup&&(view==='planning'||(addMethod==='recipe'&&(!!recipeText||!!recipeName||!!draft))));
 
   return (
     <main className={"shell " + (cooking ? "cooking-screen"+(!remaining.length?" cooking-screen-complete":"") : "planning-screen")}>
@@ -526,8 +540,15 @@ function CookExperience() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
+      {(showRecipes||view==='home'||view==='history')&&<nav className="app-navigation" aria-label="Main navigation">
+        <button type="button" className="link" aria-current={!showRecipes&&view==='home'?'page':undefined} disabled={recipes.busy} onClick={()=>leaveLibrary(()=>{closeLibrary();void goHome();})}>Home</button>
+        {recipes.enabled&&<button type="button" className="link" aria-current={showRecipes?'page':undefined} disabled={recipes.busy} onClick={()=>{if(!showRecipes)openLibrary();}}>My recipes</button>}
+        <button type="button" className="link" aria-current={!showRecipes&&view==='history'?'page':undefined} disabled={recipes.busy} onClick={()=>leaveLibrary(()=>{closeLibrary();setView('history');})}>Past cooks</button>
+      </nav>}
         {meal&&<AccountControl view={view} cookId={meal.id} canReload={canUpdate} savePhase={workspace.kind==='account'?workspace.savePhase:undefined}/>}
       </header>
+
+
 
 
 
@@ -546,7 +567,7 @@ function CookExperience() {
       </section>}
       {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked&&<nav aria-label="Plan navigation"><button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button></nav>}
       <div className="cook-content" inert={workspace.locked||discardingPlan}>{recipeFirst&&view==='planning'&&<StepReorderHelp id={planReorder.helpId} announcement={planReorder.announcement}/>}
-      {storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
+      {showRecipes ? <MyRecipes recipes={recipes} serveAt={meal.serveAt} onDraftChange={setLibraryEditing} onClose={()=>leaveLibrary(closeLibrary)} onUse={draft=>{setRecipeSaveOnly(false);reviewSource.current=JSON.stringify(draft);reviewTarget.current=meal.id;setMethodReview(draft);closeLibrary();setShowDishSetup(true);setView('planning');}}/> : storageStatus==='recovery'&&workspace.kind!=='account' ? <section className="panel" aria-label="Saved cook recovery">
         <h2>Recover your saved cooks</h2>
         <p>Your existing saved data is protected. Download recovery data above before resetting anything. It preserves the original data for recovery; it is not a normal cook backup.</p>
         <p>If you have a known-good JSON backup, restore it here. Your original recovery data will be kept before replacement.</p>
@@ -583,8 +604,6 @@ function CookExperience() {
             <p className="muted">{workspace.plansEnabled?"Save a future meal without changing your current cook.":hasActiveWork ? "Start fresh when you're ready. Your unfinished cook is not automatically archived." : "Choose what you are making. We will build the checklist."}</p>
             <button type="button" className={hasActiveWork ? "button secondary" : "button primary"} onClick={beginNewCook}>Plan a cook</button>
           </section>}
-          <button type="button" className="home-history-link" onClick={()=>setView("history")}>Past cooks <Icon name="arrow-right"/></button>
-          {recipes.authenticated&&<button type="button" className="home-history-link" onClick={()=>setShowRecipes(true)}>My recipes <Icon name="arrow-right"/></button>}
           </div>
           <aside className="home-guide" aria-label="How it works">
             <p className="eyebrow">THE GAME PLAN</p>
@@ -598,7 +617,6 @@ function CookExperience() {
         </section>
       ) : view === "history" ? (
         <section className="home-history">
-          <button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>
           <CookHistoryPanel history={history} onRepeat={repeatCook} onDelete={deleteCook}/>
         </section>
       ) : cooking ? (
@@ -673,7 +691,7 @@ function CookExperience() {
               <p className="muted small">Choose a starter or use your own recipe. You can add more dishes afterward.</p>
             </div>}
             {meal.dishes.length>0 && <p className="muted small menu-guidance">{showDishSetup ? (recipeFirst?"Choose a template or add your own recipe. Everything stays in this meal.":"Choose a starter or import your recipe. Everything stays in this cook.") : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
-            {recipeFirst&&recipes.recipes.length>0&&!methodReview&&<button type="button" className="link" disabled={!!editingStep||!!newStepDishId||workspace.locked} onClick={()=>setShowRecipes(true)}>My recipes</button>}
+            {recipeFirst&&recipes.recipes.length>0&&!methodReview&&<button type="button" className="link" disabled={!!editingStep||!!newStepDishId||workspace.locked} onClick={openLibrary}>My recipes</button>}
             {showDishSetup && <section id="menu-add-dish" className="menu-add-dish" role="region" aria-label="Add dish">
               {!(recipeFirst&&methodReview)&&<h3>Add a dish</h3>}
               {meal.dishes.length>0&&!(recipeFirst&&methodReview) && <div className="add-method-tabs" role="group" aria-label="Add dish method">
@@ -681,7 +699,7 @@ function CookExperience() {
                 <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={()=>setAddMethod("recipe")}>{recipeFirst?"Add your own recipe":"Import a recipe"}</button>
               </div>
               }
-              {recipeFirst&&methodReview?<RecipeMethodReview busy={recipeSaveOnly&&(recipes.busy||recipes.loading)} primaryLabel={recipeSaveOnly?'Save as new recipe':'Add to meal'} meal={methodReview} saveAction={recipeSaveOnly?undefined:(prepare,hasOpenEdit)=><RecipeSaveButton prepareMeal={prepare} hasOpenEdit={hasOpenEdit} key={methodReview.dishes[0].id} initiallySaved={reviewSource.current===JSON.stringify(methodReview)} meal={methodReview} recipes={recipes} onProtected={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}}} onSaved={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}}} onSignIn={draft=>{if(recipes.guest){if(convertRecipeReview(draft,'guest-draft').status!=='converted')throw Error('This review cannot be protected safely yet.');window.sessionStorage.setItem(GUEST_RECIPE_REVIEW,JSON.stringify({version:1,review:draft}));guestRecipeDraft.current={meal:draft,selection:workspace.selection};}window.dispatchEvent(new Event('hmb-open-account'));}}/>} onChange={setMethodReview} onBack={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}guestRecipeDraft.current=null;setRecipeSaveOnly(false);setMethodReview(null);}} onAdd={async draft=>{if(recipeSaveOnly){const converted=convertRecipeReview(draft,copyRecipeId.current!);if(converted.status!=='converted')throw Error('This method cannot be saved safely yet.');await recipes.save(converted.document);setRecipeSaveOnly(false);setMethodReview(null);setShowDishSetup(false);return;}if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,draft,true)});try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}setClockNow(Date.now());setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>{if(!document.activeElement||document.activeElement===document.body)document.getElementById('serve-at')?.focus();});}}/>:addMethod==="template" ? <>
+              {recipeFirst&&methodReview?<RecipeMethodReview busy={recipeSaveOnly&&(recipes.busy||recipes.loading)} primaryLabel={recipeSaveOnly?'Save as new recipe':'Add to meal'} meal={methodReview} saveAction={recipeSaveOnly?undefined:(prepare,hasOpenEdit)=><RecipeSaveButton prepareMeal={prepare} hasOpenEdit={hasOpenEdit} key={methodReview.dishes[0].id} initiallySaved={reviewSource.current===JSON.stringify(methodReview)} meal={methodReview} recipes={recipes} onProtected={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}}} onSaved={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}}} onSignIn={draft=>{if(recipes.guest){if(convertRecipeReview(draft,'guest-draft').status!=='converted')throw Error('This review cannot be protected safely yet.');window.sessionStorage.setItem(GUEST_RECIPE_REVIEW,JSON.stringify({version:1,review:draft}));guestRecipeDraft.current={meal:draft,selection:workspace.selection};}window.dispatchEvent(new Event('hmb-open-account'));}}/>} onChange={setMethodReview} onBack={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}guestRecipeDraft.current=null;setRecipeSaveOnly(false);setMethodReview(null);}} onAdd={async draft=>{if(recipeSaveOnly){const document=recipeDocumentForSave(draft,copyRecipeId.current!);await recipes.save(document);setRecipeSaveOnly(false);setMethodReview(null);setShowDishSetup(false);return;}if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,draft,true)});try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}setClockNow(Date.now());setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>{if(!document.activeElement||document.activeElement===document.body)document.getElementById('serve-at')?.focus();});}}/>:addMethod==="template" ? <>
               <h3>Choose a template</h3>
               <p className="muted small">Start with a dish. You can adjust it without changing the other dishes.</p>
               <div className="template-picker">
@@ -733,6 +751,15 @@ function CookExperience() {
                     <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}>Cancel</button>
                   </form> : <button id={"add-step-"+d.id} type="button" className="button secondary dish-add-step" disabled={!!editingStep} onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
                 </section>
+                  <div className="method-management-actions">
+                  {recipes.authenticated&&<button type="button" className="button secondary" disabled={!!editingStep||!!newStepDishId||workspace.locked||recipes.busy} onClick={()=>{
+                    setRecipeCopyError('');const result=convertMeal(meal,{timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',serveInstant:null});
+                    if(result.status==='skipped'){setRecipeCopyError('This dish cannot be extracted safely yet. Your cook is unchanged.');return;}
+                    const snapshot=result.conversion.document.dishes.find(item=>item.id===d.id);if(!snapshot)return;
+                    try{copyRecipeId.current=crypto.randomUUID();const draft=instantiateRecipeReview({format:'how-many-beers',schemaVersion:1,type:'recipe',id:copyRecipeId.current,name:d.name,recipe:snapshot.recipe},meal.serveAt);reviewTarget.current=meal.id;setRecipeSaveOnly(true);setMethodReview(draft);setShowDishSetup(true);}catch{setRecipeCopyError('This method cannot be reused safely with this version.');}
+                  }}>Save to My recipes</button>}
+                  {recipeCopyError&&<p role="alert" className="form-error">{recipeCopyError}</p>}
+                  </div>
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
                   {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
 
@@ -740,7 +767,7 @@ function CookExperience() {
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
 
                   <label htmlFor={"equipment-"+d.id}>Equipment</label>
-                  <input id={"equipment-"+d.id} value={d.equipment} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment:e.target.value}:item)}))}/>
+                  <EquipmentSelect label="Dish equipment" value={d.equipment} onChange={equipment=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment}:item)}))}/>
                   {d.preset!=="custom" ? <div className="small-grid">
                     <div>
                       <label htmlFor={"cook-"+d.id}>Estimated cook ({d.preset==="brisket" || d.preset==="ribs" ? "hours" : "min"})</label>
@@ -791,13 +818,6 @@ function CookExperience() {
 
                   {d.recipeSource&&<RecipeDetails dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   {d.recipeSource&&<details className="recipe-original"><summary>Original recipe</summary><pre>{d.recipeSource}</pre></details>}
-                  {recipes.authenticated&&<button type="button" className="link" disabled={!!editingStep||!!newStepDishId||workspace.locked||recipes.busy} onClick={()=>{
-                    setRecipeCopyError('');const result=convertMeal(meal,{timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',serveInstant:null});
-                    if(result.status==='skipped'){setRecipeCopyError('This dish cannot be extracted safely yet. Your cook is unchanged.');return;}
-                    const snapshot=result.conversion.document.dishes.find(item=>item.id===d.id);if(!snapshot)return;
-                    try{copyRecipeId.current=crypto.randomUUID();const draft=instantiateRecipeReview({format:'how-many-beers',schemaVersion:1,type:'recipe',id:copyRecipeId.current,name:d.name,recipe:snapshot.recipe},meal.serveAt);reviewTarget.current=meal.id;setRecipeSaveOnly(true);setMethodReview(draft);setShowDishSetup(true);}catch{setRecipeCopyError('This method cannot be reused safely with this version.');}
-                  }}>Save as new recipe</button>}
-                  {recipeCopyError&&<p role="alert" className="form-error">{recipeCopyError}</p>}
                   </details>
 
                 </div>}
@@ -855,7 +875,7 @@ function CookExperience() {
       )}
       <footer>How Many Beers? <span>From First Beer to First Bite.</span><span className="build-version" title="Deployment branch and Git commit">{process.env.NEXT_PUBLIC_BUILD_BRANCH ?? "local"} · {(process.env.NEXT_PUBLIC_BUILD_SHA ?? "local").slice(0, 7)}</span></footer>
       </div>
-    {showRecipes&&<MyRecipes recipes={recipes} serveAt={meal.serveAt} onClose={()=>setShowRecipes(false)} onUse={draft=>{setRecipeSaveOnly(false);reviewSource.current=JSON.stringify(draft);reviewTarget.current=meal.id;setMethodReview(draft);setShowRecipes(false);setShowDishSetup(true);setView('planning');}}/>}
+
     </main>
   );
 }

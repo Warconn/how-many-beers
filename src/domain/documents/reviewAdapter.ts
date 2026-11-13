@@ -32,7 +32,16 @@ export function convertRecipeReview(value:unknown,recipeId:string):ReviewConvers
   if(m.mode==='cooking'||m.dishes.length!==1||Object.keys(m.completed).length||m.events?.some(e=>e.kind!=='removed'))return skip('Only a single unstarted review is supported.');
   if(m.planningGeneralSequence?.length)return skip('General preparation is not owned by this recipe.');
   const dish=m.dishes[0],{planningSequence,planningStepOrder,...base}=dish;
-  const result=convertDish(base,recipeId);if(result.status==='skipped')return skip(result.reason);
+  let result=convertDish(base,recipeId);if(result.status==='skipped')return skip(result.reason);
+  // Selecting a wings sequence exposes the existing implicit rest allowance.
+  // Compile its native rows before mapping review references. Added user steps
+  // stay in the overlay; feeding their keys to the native compiler is lossy.
+  if(dish.preset==='wings'&&dish.restMinutes>0&&(planningSequence!==undefined||planningStepOrder!==undefined)){
+   const nativeKeys=new Set([...result.document.recipe.steps.map(s=>s.id),'rest']);
+   const nativeOrder=(order:string[])=>order.filter(key=>nativeKeys.has(key));
+   result=convertDish({...base,...(planningSequence!==undefined?{planningSequence:nativeOrder(planningSequence)}:{}),...(planningStepOrder!==undefined?{planningStepOrder:nativeOrder(planningStepOrder)}:{})},recipeId);
+   if(result.status==='skipped')return skip(result.reason);
+  }
   const document=result.document,r:ReviewDefinition={};
   const ids:Record<string,string>=Object.fromEntries(document.recipe.steps.map(s=>[s.id,dish.id+':'+s.id]));
   const lookup=new Map(Object.entries(ids).map(([local,id])=>[id,local]));

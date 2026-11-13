@@ -112,3 +112,24 @@ it('reads the actual PostgreSQL edited-template RPC fixture without losing metad
  const review=instantiateRecipeReview(doc,date),round=convertRecipeReview(review,doc.id);expect(round.status).toBe('converted');if(round.status==='converted')expect(round.document).toEqual(doc);
  const tasks=cookTimeline(review);expect(tasks[0].title).toBe('My second step');expect(tasks[1].title).toBe('My first step');expect(tasks[0]).toMatchObject({instructions:'My second instructions',durationMinutes:45,equipment:'Oven',targetTempF:195});
 });
+it('saves edited and reordered saved wings including the implicit rest allowance',()=>{
+ const first=conversion(recipeReview(createDish('wings'),date));let review=instantiateRecipeReview(first.document,date);
+ const tasks=cookTimeline(review);
+ review=setStepDuration(editStep(review,tasks[0].id,'Dry my wings','On a rack overnight.'),tasks[0].id,60);
+ review=setStepDuration(editStep(review,tasks[1].id,'Season my wings','Use my rub.'),tasks[1].id,15);
+ review=reorderPlannedStep(review,tasks[0].id,tasks[1].id,true);
+ expect(cookTimeline(review).some(t=>t.id.endsWith(':rest'))).toBe(true);
+ const saved=roundtrip(review),fresh=instantiateRecipeReview(saved.document,nextDate);
+ expect(cookTimeline(fresh).find(t=>t.id.endsWith(':rest'))?.templateStage?.minutes).toBe(5);
+ expect(cookTimeline(fresh).find(t=>t.title==='Dry my wings')?.durationMinutes).toBe(60);
+});
+
+it('preserves added steps and hidden implicit wings rest through the same mapping',()=>{
+ let review=recipeReview(createDish('wings'),date);const tasks=cookTimeline(review);review=reorderPlannedStep(review,tasks[0].id,tasks[1].id,true);const dish=review.dishes[0];
+ review.customTasks=[{id:'extra-wing-step',dishId:dish.id,dishName:dish.name,title:'My garnish',instructions:'Add herbs.',scheduledAt:null,isCondition:false,durationMinutes:2}];dish.planningSequence!.splice(-1,0,'extra-wing-step');
+ const rest=cookTimeline(review).find(t=>t.id.endsWith(':rest'))!;review=editStep(review,rest.id,'My rest','Let them settle.');review=removeStep(review,rest.id,'2026-11-14T12:00Z');roundtrip(review);
+});
+
+it('rehydrates the real SQL reordered-wings fixture including its rest step',()=>{
+ const doc=parseCookingDocument(JSON.parse(readFileSync('supabase/tests/personal-recipe-edits.sql','utf8').split('$wingsRecipe$')[1]));if(doc.type!=='recipe')throw Error();const fresh=instantiateRecipeReview(doc,date);const r=convertRecipeReview(fresh,doc.id);expect(r.status).toBe('converted');if(r.status==='converted')expect(r.document).toEqual(doc);expect(cookTimeline(fresh).find(t=>t.id.endsWith(':rest'))?.templateStage?.minutes).toBe(5);
+});

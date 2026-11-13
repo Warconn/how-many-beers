@@ -155,3 +155,34 @@ or equipment fields. In the full editor, duration/equipment/temperature are unde
 More options; planned time remains outside. Dish settings follow the step list
 and contain brisket configuration in one layer, collapsed by default. These rules
 supersede the earlier separate delivery boundaries for #124/#125.
+
+
+### Personal recipe refinement (#114 owner review)
+
+Home keeps its existing cook content. Home, My recipes and Past cooks share a
+quiet text navigation within the existing header; My recipes is a full screen, never a modal overlay.
+Recipe names open the existing review editor, Use recipe opens an independent
+meal draft, and contextual trash controls retain records after confirmation.
+The review footer groups Add to meal (primary), Save to My recipes (secondary)
+and Back (navigation). An explicit library edit uses Save changes as primary,
+Save as new and Cancel as contextual actions. Saving includes an open step edit.
+Equipment choice uses existing labels with additional/custom equipment where
+needed; native combined labels remain lossless. Step configuration remains optional
+in a single Step settings disclosure. No equipment profiles or scheduling mode
+changes are part of this refinement.
+
+
+### Action and navigation hierarchy
+
+Keep the current Home typography, ivory surface, Upcoming cooks and Game Plan.
+Navigation belongs in the existing header, separate from save/sync status, with
+44px targets. It does not precede or interrupt Plan/Resume cook. My recipes uses
+full-screen semantics and browser Back; direct selection stays in planning.
+Use one primary action per decision area. Put secondary decisions beside the
+primary as secondary buttons, and Back/Cancel in a consistent low-emphasis place.
+Keep step edits in the step editor and Add a step directly after the list.
+Method saving belongs in the review footer or a separate method action area,
+never beside Add a step or disguised as equipment configuration. Retained Remove
+is contextual, visually separate and confirmed. Do not broadly change Cooking
+Mode or the Beerometer. A future standalone Equipment screen may manage favorites
+and settings; profiles/configuration are outside #114. Community #135 is deferred.

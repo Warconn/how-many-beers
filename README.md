@@ -175,3 +175,9 @@ check food done automatically.
 The consolidated post-brisket feature review covers direct planned-time editing,
 quiet planning settings, cooking cues, new brisket defaults and upcoming start
 times. See [behavior and real-cook evidence](docs/post-brisket-experience.md).
+
+
+Personal recipes (#114, feature review): My recipes is a dedicated screen beside
+Home and Past cooks. Explicit Save to My recipes stays independent of Add to meal;
+recipe edits and retained removal never rewrite existing cooks. See the
+[review and migration notes](docs/recipes/rollout.md).

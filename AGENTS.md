@@ -21,7 +21,13 @@ shared versioned recipe/meal JSON, independent snapshots and retained deletion.
 Read the entire current issue and `docs/implementation/issue-114-handoff.md`.
 Work in tested phases, commit and checkpoint between major phases. Stop cleanly
 at a safe boundary when the session budget is limited. No automatic dev/main
-merge, production release or hosted migration. Historical migration may be
+merge, production release or hosted migration. The November 13 owner refinement requests a dedicated library screen, grouped
+review actions and simple equipment choice, with edited-step persistence first.
+Recipe-level saving includes open step edits. Production #137 is included on the
+feature branch. Do not bundle Plan time / Use plan timing removal. The original
+November 11 recipe migration may already be applied in dev; use only the new
+November 13 validator upgrade in that case, after owner review.
+Historical migration may be
 proposed only where lossless, with retained originals and rollback review.
 
 Earlier release-readiness directions below are historical. They do not prohibit

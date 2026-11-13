@@ -79,8 +79,8 @@ pass report.
 - No finite suite proves every combination of recipe, clock, browser and network
   failure. This map covers implemented entry points and known cook regressions;
   new concrete bugs should receive deterministic coverage at their failure boundary.
-- Personal recipe-library saving (#114), URL/photo/PDF import, notifications and
-  other deferred features are not implemented and are not claimed as tested paths.
+- URL/photo/PDF import, notifications and other deferred features are not
+  implemented and are not claimed as tested paths. #114 feature coverage is below.
 
 ## Keep coverage current
 
@@ -107,5 +107,17 @@ account config; local narrow Chromium additionally checks layout. RPC/auth mocks
 validate UI state isolation; real isolated PostgreSQL checks validation, ownership,
 receipts and save/remove races. Neither substitutes for hosted dev acceptance.
 
-No hosted migration has run. The feature preview requires the reviewed migration
+No hosted migration was run by the agent. The feature preview requires the reviewed migrations
 in `docs/recipes/rollout.md` before account library writes can work.
+
+The owner-reported template edit regression is covered with multiple titles,
+instructions, durations, per-step equipment/food temperatures, ordering, Save
+changes, Save as new, reload and Cancel. A separate failing-before regression
+covers saving an open step without Save step. These run in both account browser
+projects. Dedicated navigation and grouped primary/secondary actions have browser
+assertions and screenshots. The real SQL edited-template fixture saves/updates,
+creates an independent new recipe and checks read-back JSON equality, while a
+client test rehydrates exactly that fixture. The owner's wings example reproduces the conversion rejection after editing and
+reordering exposes its implicit rest row. Domain and actual UI tests failed before
+the mapping fix and pass afterward, preserving the five-minute allowance. Imported
+methods also cover edited steps and independent added/reordered/removed work.

@@ -6,11 +6,18 @@ historical import or My recipes population. Browns Brisket was not accessed.
 
 ## Development preview prerequisite
 
-After reviewing it, the owner may apply the complete checked-in migration
-`supabase/migrations/202611110001_personal_recipes.sql` to the **development**
-Supabase project used by feature previews. It runs in a transaction and includes
-PostgREST schema-cache reload. Do not run test/bootstrap SQL in a hosted project.
-The agent has applied this migration only to disposable local PostgreSQL.
+For a fresh project, review/apply `202611110001_personal_recipes.sql`, followed
+by `202611130001_personal_recipe_validation.sql`. If the November 11 migration
+is already installed (as it may be in the manually tested development project),
+apply **only the November 13 validator upgrade**. Do not rerun the original
+migration. The upgrade preserves all rows, ownership, receipts and revision/CAS
+behavior; it extends the embedded contract for date-free applied brisket settings.
+Both migrations are transactional and reload the PostgREST schema cache.
+
+The agent has run these only in disposable local PostgreSQL, including a seeded
+upgrade. Hosted migration status has not been independently inspected. Do not run
+test/bootstrap SQL in a hosted project. Production application needs separate
+owner approval; this PR does not authorize hosted changes.
 
 This creates owner-scoped personal_recipes and immutable operation receipts;
 it does not modify cook tables or saved plans. Normal removal retains document,
@@ -38,11 +45,14 @@ works. The feature URL is reported separately after Cloudflare confirms it.
 ## Owner review
 
 1. Sign in on the feature preview. Plan a cook and review a template/custom method.
-   Save recipe is secondary; saving leaves the method open and meal unchanged.
+   Save to My recipes is secondary; saving leaves the method open and meal unchanged.
 2. Add to meal independently. It must not create another library entry.
 3. Open My recipes, select Use recipe, adjust today's copy and Add to meal. The
    saved original and meal serving target remain unchanged.
-4. Edit > Save changes, rename, Cancel and Save as new should have explicit outcomes.
+4. Open a recipe by its name. Edit two steps (including duration and optional step
+   settings), reorder, and Save changes. The final open edit is included without
+   requiring Save step first. Reload and verify the edits. Save as new creates an
+   independent recipe; Cancel leaves the saved version unchanged.
 5. Remove a recipe: dismiss to keep it, then confirm. Reload/sign in on another
    device; it stays hidden. Existing dishes, actuals, plans and history stay intact.
 6. Save a meal-specific method via Dish settings > Save as new recipe. It extracts

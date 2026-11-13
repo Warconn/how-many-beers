@@ -1,5 +1,11 @@
 # Issue #114 implementation checkpoint
 
+Latest owner refinement checkpoint (November 13): P0 wings implicit-rest mapping
+fixed with failing-before/passing-after domain and actual UI tests. Dedicated
+library/header navigation, browser Back, grouped actions, direct method saving and
+multiple/custom equipment selection are implemented. Full verification is in
+progress; PR #134 remains draft targeting dev. See the final sections for details.
+
 ## State
 
 Storage checkpoint: `886d6d6`; UI checkpoint: `3a44905`; CI portability fixes: `fea8e49`.
@@ -180,3 +186,26 @@ do not describe the reproduced UI failure as a proven database root cause.
 A real PostgreSQL RPC fixture tests edited template metadata/order and independent
 Save as new; the same fixture is parsed/reinstantiated by the client adapter test.
 Navigation/action/equipment refinements and full integration verification follow.
+
+
+## Confirmed P0 root cause after reading full PR acceptance comments
+
+Owner example: **Smo-fried wings**. A saved method with edited/reordered steps
+exposes the existing implicit five-minute rest row. `convertRecipeReview` stripped
+its planning sequence before compiling the base recipe, then rejected the rest
+reference as dangling. The real browser displayed the reported "This method cannot
+be saved safely yet" before any RPC. Both the domain regression and actual UI
+regression failed before the fix and pass after it on desktop/phone Chromium.
+
+The adapter now compiles that native sequence first, maps the generated rest row,
+and keeps its timing/phase relationships. User-added steps remain in the overlay,
+not in the native-only compiler input. Unknown/foreign references, physical
+activity and lossy conversions are still rejected. Tests include edited/hidden
+rest, added work, exact restoration, fresh reuse and real SQL fixture rehydration.
+The prior open-step save fix is useful independently; it was not the root cause
+of this reported adapter rejection. Earlier unconfirmed notes above are historical.
+
+Owner's full PR feedback also requires header-contained navigation with meaningful
+browser Back, direct method saving outside Dish settings, and a small picker for
+multiple/custom equipment labels. Those refinements use existing UI and native
+storage semantics; no profiles, #135 or planning-mode removal are included.

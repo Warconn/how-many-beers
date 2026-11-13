@@ -674,11 +674,42 @@ button.plan-trash:hover{color:var(--accent-dark);background:var(--surface-warm,#
 .upcoming-cook-list{list-style:none;margin:16px 0 0;padding:0}
 .upcoming-cook-list>li+li{border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
 
-/* Personal methods reuse the existing editor and quiet account dialog. */
-.recipe-save-action { margin-top: 1rem; margin-bottom: .75rem; }
-.recipe-library-dialog { width: min(54rem, calc(100% - 2rem)); max-height: 90dvh; overflow-y: auto; }
+/* Personal methods reuse the existing review editor. */
+.recipe-save-action { margin:0; }
 .personal-recipe-list { list-style: none; padding: 0; margin: 0; }
 .personal-recipe-list > li { padding: 1.25rem 0; border-bottom: 1px solid var(--border, #e4e0da); }
 .personal-recipe-list .method-review-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
 .recipe-library-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
 .recipe-library-heading h2 { margin: 0; }
+
+/* Shared quiet navigation and grouped recipe actions; existing cook styling stays. */
+.app-navigation { display:flex; flex-wrap:wrap; gap:1.5rem; margin:0 0 1.5rem; }
+.app-navigation .link { padding:.5rem 0; min-height:44px; color:var(--muted); }
+.app-navigation [aria-current="page"] { color:var(--accent-dark); text-decoration:underline; text-underline-offset:.4rem; }
+.recipe-library-screen { max-width:54rem; margin:0 auto; }
+.recipe-library-screen .personal-recipe-list > li { display:flex; gap:1rem; justify-content:space-between; align-items:center; }
+.recipe-library-copy { min-width:0; }
+.recipe-library-copy p { margin:.35rem 0 0; }
+button.recipe-title-link { padding:0; border:0; background:none; color:inherit; font-weight:700; text-align:left; overflow-wrap:anywhere; }
+button.recipe-title-link:hover { color:var(--accent-dark); }
+.recipe-review-footer { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; border-top:1px solid var(--line); margin-top:1.5rem; padding-top:1rem; }
+.recipe-review-footer .recipe-save-action { margin:0; }
+.recipe-review-footer .recipe-save-action .form-error { flex-basis:100%; }
+@media(max-width:600px){
+ .app-navigation { gap:1.25rem; }
+ .recipe-library-screen .personal-recipe-list > li { align-items:flex-start; flex-wrap:wrap; }
+ .recipe-library-screen .personal-recipe-list .method-review-actions { width:100%; justify-content:space-between; }
+ .recipe-review-footer > .button.primary { flex:1 0 100%; }
+ .recipe-review-footer .recipe-save-action { flex:1; }
+ .recipe-review-footer .recipe-save-action > .button { width:100%; }
+}
+.site-header:has(.app-navigation) { flex-wrap:wrap; }
+.site-header .app-navigation { margin:0 0 0 auto; gap:1.25rem; }
+.equipment-picker { display:grid; gap:.5rem; }
+.equipment-choice { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+.equipment-choice > select { flex:1; min-width:0; }
+.equipment-custom { width:100%; }
+.equipment-picker > .link { justify-self:start; min-height:44px; }
+.method-management-actions { padding:1rem 0; border-top:1px solid var(--line); }
+@media(max-width:800px){.site-header .app-navigation { order:3; width:100%; margin:.5rem 0 0; }}
+.field-label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
