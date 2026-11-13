@@ -1,5 +1,13 @@
 # Issue #114 implementation checkpoint
 
+**PAUSED: owner product acceptance failed November 13.** Do not merge #134 or
+implement another UI patch. Earlier green CI and screenshot notes below are
+historical verification, not product approval. The owner rejects Recipe actions
+hiding core saves and the equipment editor. Investigation/proposal:
+`docs/proposals/114-product-acceptance-review.md`. Only tests/docs/proposal artifacts
+changed in this investigation; application and scheduling code remain unchanged.
+Owner must review the proposed complete editor before UI implementation.
+
 Latest owner refinement checkpoint (November 13): P0 wings implicit-rest mapping
 fixed with failing-before/passing-after domain and actual UI tests. Dedicated
 library/header navigation, browser Back, grouped actions, direct method saving and

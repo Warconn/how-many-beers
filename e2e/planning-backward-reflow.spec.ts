@@ -31,3 +31,36 @@ test('planning wings oil duration reflows earlier while keeping the serving targ
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
   expect(saved.taskOverrides[dish.id+':oil'].durationMinutes).toBe(45);
 });
+
+test('investigation: early fixed drying still leaves a ten-minute preparation overrun',async({page})=>{
+  // Characterization of an unfixed defect, not acceptance of the late result.
+  // Forty-minute preparation is a synthetic explicit constraint; the owner's
+  // exact persisted durations are not available in this investigation.
+  await page.clock.install({time:new Date('2026-11-12T05:00:00Z')});
+  const dish=createDish('wings');
+  await page.goto('/');await page.evaluate(meal=>{
+    localStorage.clear();localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(meal));
+  },{...newMeal(),serveAt:'2026-11-14T13:00',dishes:[dish]});
+  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
+  await page.getByRole('button',{name:'Edit Smo-fried wings',exact:true}).click();
+  const region=page.getByRole('region',{name:'Smo-fried wings steps',exact:true});
+  const dry=region.getByRole('article',{name:'Optional: air-dry wings ahead of time',exact:true});
+  await dry.getByRole('button',{name:/^Change planned time:/}).click();
+  const timeForm=dry.getByRole('form',{name:'Edit planned time',exact:true});
+  await timeForm.getByLabel('Planned date and time',{exact:true}).fill('2026-11-13T07:00');
+  await timeForm.getByRole('button',{name:'Save',exact:true}).click();
+  const prep=region.getByRole('article',{name:'Season and set out cooking equipment',exact:true});
+  await prep.getByRole('button',{name:/^Edit(?: |$)/}).click();
+  const form=page.getByRole('form',{name:'Edit step',exact:true});
+  await form.getByText(/^More options/).click();
+  await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('40');
+  await form.getByRole('button',{name:'Save',exact:true}).click();
+  await expect(page.getByRole('region',{name:'Plan notes'})).toContainText('10 min past');
+  await expect(page.getByRole('region',{name:'Serving plan'})).toContainText('1:10 PM');
+  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
+  await expect(page.getByRole('region',{name:'Serving plan'})).toContainText('1:10 PM');
+  await expect(page.getByLabel('Serve date and time')).toHaveValue('2026-11-14T13:00');
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
+  expect(saved.taskOverrides[dish.id+':dry'].scheduledAt).toBe('2026-11-13T12:00:00.000Z');
+  expect(saved.events??[]).toEqual([]);expect(saved.completed).toEqual({});
+});
