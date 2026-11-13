@@ -3,12 +3,12 @@ import type {ReactNode} from 'react';
 import {useEffect,useRef,useState} from 'react';
 import EquipmentSelect from './EquipmentSelect';
 import type {ExtendedMeal} from '@/domain/cookState';
-import {addStep,cookTimeline,editStep,removeStep,setStepDuration} from '@/domain/cookState';
+import {addStep,cookTimeline,removeStep,setStepDuration} from '@/domain/cookState';
 import {formatDuration} from '@/domain/stepTiming';
 import {useStepReorder} from './useStepReorder';
 import {StepGrip,StepEditButton,StepInstructions,StepReorderHelp} from './StepListControls';
 import {reorderPlannedStep} from '@/domain/stepReorder';
-import {reviewDuration} from '@/domain/recipeReview';
+import {reviewDuration,editReviewedStep} from '@/domain/recipeReview';
 
 export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveAction,busy=false,primaryLabel='Add to meal'}:{busy?:boolean;saveAction?:(prepare:()=>ExtendedMeal,hasOpenEdit:boolean)=>ReactNode;primaryLabel?:string;meal:ExtendedMeal;onChange:(meal:ExtendedMeal)=>void;onAdd:(draft:ExtendedMeal)=>Promise<void>;onBack:()=>void}){
  const dish=meal.dishes[0],tasks=cookTimeline(meal),heading=useRef<HTMLHeadingElement>(null);
@@ -18,14 +18,7 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
  const prepare=()=>{
   if(!editing)return meal;
   const task=tasks.find(t=>t.id===editing);if(!task)throw Error('Choose an existing step.');
-  let next=editStep(meal,task.id,title,instructions);
-  if(!task.isCondition&&!task.id.endsWith(':serve')&&(minutes===''?null:Number(minutes))!==reviewDuration(meal,task))next=setStepDuration(next,task.id,minutes===''?null:Number(minutes));
-  if(equipment.trim().length>80)throw Error('Keep equipment names under 80 characters.');
-  const target=temperature===''?null:Number(temperature);if(target!==null&&(!Number.isFinite(target)||target<=0||target>600))throw Error('Target food temperature must be between 1 and 600°F, or blank.');
-  const override={...next.taskOverrides?.[task.id]};
-  if(equipment!==task.equipment)override.equipment=equipment.trim();
-  if(target!==(task.targetTempF??null))override.targetTempF=target;
-  next={...next,taskOverrides:{...next.taskOverrides,[task.id]:override}};
+  const next=editReviewedStep(meal,task.id,{title,instructions,equipment,targetTempF:temperature===''?null:Number(temperature),...(!task.isCondition&&!task.id.endsWith(':serve')?{durationMinutes:minutes===''?null:Number(minutes)}:{})});
   onChange(next);setEditing(null);return next;
  };
  const change=(fn:()=>ExtendedMeal)=>{try{onChange(fn());setError('');}catch(e){setError(e instanceof Error?e.message:'Review this change.');}};
@@ -39,8 +32,8 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
   <ol className="method-review-steps" data-step-list="method">{tasks.map(task=><li key={task.id} data-step-id={task.id} data-step-group={task.dishId} className={"step-list-row "+(reorder.dragging===task.id?'is-dragging ':'')+(reorder.drop?.id===task.id?(reorder.drop.after?'drop-after':'drop-before'):'')}>
    <div className="step-row-heading"><StepGrip stepId={task.id} title={task.title} {...reorder.grip(task.id)}/><div className="step-row-copy"><strong>{task.title}</strong><span>{task.isCondition?'Check when ready':task.id.endsWith(':serve')?'Serving':reviewDuration(meal,task)!=null?formatDuration(reviewDuration(meal,task)!):'Time unknown'}</span></div>{editing!==task.id&&(<StepEditButton title={task.title} disabled={editing!==null||adding} onClick={()=>{setTitle(task.title);setInstructions(task.instructions??'');setMinutes(reviewDuration(meal,task)==null?'':String(reviewDuration(meal,task)));setEquipment(task.equipment??'');setTemperature(task.targetTempF==null?'':String(task.targetTempF));setEditing(task.id);}}/>)}</div>
    {editing===task.id?<form aria-label="Edit recipe step" onSubmit={e=>{e.preventDefault();try{prepare();setError('');}catch(err){setError(err instanceof Error?err.message:'Check this step.');}}}>
-    <label>Step name<input required maxLength={160} value={title} onChange={e=>setTitle(e.target.value)}/></label>
-    <label>Instructions<textarea maxLength={500} rows={3} value={instructions} onChange={e=>setInstructions(e.target.value)}/></label>
+    <label>Step name<input required maxLength={500} value={title} onChange={e=>setTitle(e.target.value)}/></label>
+    <label>Instructions<textarea maxLength={16000} rows={3} value={instructions} onChange={e=>setInstructions(e.target.value)}/></label>
     {!task.isCondition&&!task.id.endsWith(':serve')&&<label>Minutes<input type="number" inputMode="decimal" min={0} max={43200} step="any" placeholder="Unknown" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label>}
     <details><summary>Step settings</summary><div><span className="field-label">Step equipment</span><EquipmentSelect label="Step equipment" value={equipment} onChange={setEquipment}/></div><label>Target food temperature (°F)<input type="number" min={1} max={600} step="any" value={temperature} onChange={e=>setTemperature(e.target.value)}/></label></details>
     <div className="method-review-actions step-editor-actions"><button type="submit" className="button primary">Save step</button><button type="button" className="button secondary" onClick={()=>{setEditing(null);setError('');}}>Cancel edit</button><button type="button" className="link danger step-editor-remove" aria-label={'Remove '+task.title} disabled={tasks.length===1||adding} onClick={()=>{change(()=>removeStep(meal,task.id,new Date().toISOString()));setEditing(null);}}>Remove step</button></div>

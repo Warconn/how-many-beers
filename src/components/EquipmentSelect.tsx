@@ -11,7 +11,7 @@ export default function EquipmentSelect({value,onChange,label='Equipment'}:{valu
  return <div className="equipment-picker">
   {selected.map((item,index)=><div key={index} className="equipment-choice">
    <select aria-label={label+(index?' '+(index+1):'')} value={custom===index?'__other__':item} onChange={e=>{if(e.target.value==='__other__'){setCustom(index);setCustomText(options.includes(item)?'':item);return;}setCustom(null);update(index,e.target.value);}}>
-    {!item&&<option value="">Unspecified</option>}
+    <option value="">Unspecified</option>
     {item&&!options.includes(item)&&<option value={item}>{item}</option>}
     {options.map(option=><option key={option} value={option}>{option}</option>)}<option value="__other__">Other…</option>
    </select>

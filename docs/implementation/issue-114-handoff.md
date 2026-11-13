@@ -209,3 +209,26 @@ Owner's full PR feedback also requires header-contained navigation with meaningf
 browser Back, direct method saving outside Dish settings, and a small picker for
 multiple/custom equipment labels. Those refinements use existing UI and native
 storage semantics; no profiles, #135 or planning-mode removal are included.
+
+## Final local text-preservation increment
+
+The recipe review editor now uses the canonical authoring limits (500-character
+step names, 16,000-character instructions) instead of silently applying the old
+planning editor's shorter limits. Unchanged imported text, including a sliced
+source title's trailing whitespace, is preserved exactly when editing duration.
+The helper preserves fixed/recorded date overrides and rejects execution input.
+A real imported long-text UI regression caught the mismatch before correction.
+
+Latest local checks: fresh locked dependency installation; typecheck; **539 unit
+tests / 42 files**; isolated SQL clean/seeded-upgrade/security/race checks, including
+exact edited-template/wings RPC fixtures. The 34 desktop/phone recipe cases were
+exercised: 32 passed before the final whitespace correction; all eight affected
+edit/import/equipment cases then passed on the corrected code. CI runs the full
+account matrix again on the final pushed commit, including iPhone WebKit.
+
+`npm run test:full` was attempted locally. Units passed, then browser launch was
+blocked because bundled Chromium/WebKit downloads return domain-policy 403s.
+System Chromium provided actual local desktop/phone validation. CI supplies the
+full auth/account/regression/offline browser matrix; final results/screenshots
+and Cloudflare commit confirmation belong to PR #134, not an assumed success.
+No hosted SQL, protected-branch merge, production deployment or Browns data access.

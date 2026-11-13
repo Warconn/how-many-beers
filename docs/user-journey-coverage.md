@@ -121,3 +121,8 @@ client test rehydrates exactly that fixture. The owner's wings example reproduce
 reordering exposes its implicit rest row. Domain and actual UI tests failed before
 the mapping fix and pass afterward, preserving the five-minute allowance. Imported
 methods also cover edited steps and independent added/reordered/removed work.
+
+Imported long titles/instructions also have a real UI save regression. Editing
+only duration preserves their exact original text; the recipe authoring helper
+uses canonical limits and keeps fixed/recorded overrides. This does not change
+native planning editor behavior or archived execution.
