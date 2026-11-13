@@ -158,3 +158,25 @@ the existing provider callback/Back to cook path have actual browser tests.
 WebKit caught a missing setup wait in the new active-cook test; it now waits for
 Add acknowledgement and editor dismissal before seeding active events, then tests
 recipe removal against the unchanged actuals snapshot. Assertions were strengthened.
+
+## November 13 owner persistence report
+
+Production #137 is included by merging main `5a34a3f` into this feature branch;
+no protected branch was merged. Applied brisket method extraction retains the
+full date-free holding reserve. The applied November 11 migration is unchanged;
+new `202611130001_personal_recipe_validation.sql` upgrades its validator additively.
+No hosted migration was applied.
+
+The reported multi-step template failure did not reproduce after explicitly
+saving each step: a new desktop/phone browser regression covers two edited names,
+instructions, durations, equipment and temperatures, Save changes, Save as new,
+reload, Cancel and unchanged meal snapshots. A separate confirmed failure was
+recipe-level saving while a step remains open: Save changes was disabled and Save
+as new disappeared. Both actions now include the open step in the draft before
+conversion/persistence. This regression failed on the previous UI and passes on
+desktop/phone Chromium. The exact owner-reported failure remains unconfirmed;
+do not describe the reproduced UI failure as a proven database root cause.
+
+A real PostgreSQL RPC fixture tests edited template metadata/order and independent
+Save as new; the same fixture is parsed/reinstantiated by the client adapter test.
+Navigation/action/equipment refinements and full integration verification follow.

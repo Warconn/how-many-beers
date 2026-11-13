@@ -104,3 +104,11 @@ it('continues to instantiate the earlier plain dish documents with native orderi
  const doc=convertDish(dish,'saved-recipe');expect(doc.status).toBe('converted');
  if(doc.status==='converted')expect(instantiateRecipeReview(doc.document,nextDate).dishes[0].planningSequence).toEqual(dish.planningSequence);
 });
+
+import {readFileSync} from 'node:fs';
+it('reads the actual PostgreSQL edited-template RPC fixture without losing metadata or order',()=>{
+ const doc=parseCookingDocument(JSON.parse(readFileSync('supabase/tests/personal-recipe-edits.sql','utf8').split('$editedRecipe$')[1]));
+ if(doc.type!=='recipe')throw Error('Expected recipe');
+ const review=instantiateRecipeReview(doc,date),round=convertRecipeReview(review,doc.id);expect(round.status).toBe('converted');if(round.status==='converted')expect(round.document).toEqual(doc);
+ const tasks=cookTimeline(review);expect(tasks[0].title).toBe('My second step');expect(tasks[1].title).toBe('My first step');expect(tasks[0]).toMatchObject({instructions:'My second instructions',durationMinutes:45,equipment:'Oven',targetTempF:195});
+});

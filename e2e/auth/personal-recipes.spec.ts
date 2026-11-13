@@ -89,3 +89,26 @@ test('guest draft handoff and lost save recovery create only one library recipe'
  const account=page.getByRole('dialog',{name:'Your account'});await account.getByLabel('Email address').fill(user.email);await account.getByRole('button',{name:'Send sign-in code',exact:true}).click();await account.getByLabel('Email code').fill('123456');await account.getByRole('button',{name:'Verify code',exact:true}).click();await expect(account.getByText('Signed in as '+user.email,{exact:true})).toBeVisible();await account.getByRole('button',{name:'Close account',exact:true}).click();await expect(page.getByLabel('Recipe name',{exact:true})).toHaveValue('Recover this guest method');
  remote.lose();await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'Could not save'})).toBeVisible();await page.reload();const dialog=await library(page);await expect(dialog.getByText('Recover this guest method',{exact:true})).toBeVisible();expect(remote.rows.size).toBe(1);expect(new Set(remote.operations).size).toBe(1);
 });
+
+test('multiple edited steps persist through Save changes, Save as new, reload and Cancel',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);
+ await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);
+ const before=structuredClone(remote.workspace);let dialog=await library(page);
+ await dialog.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+ const edit=async(index:number,title:string,minutes:string)=>{
+  await dialog.locator('.method-review-steps > li').nth(index).getByRole('button',{name:/^Edit /}).click();
+  const form=dialog.getByRole('form',{name:'Edit recipe step'});await form.getByLabel('Step name',{exact:true}).fill(title);await form.getByRole('textbox',{name:'Instructions',exact:true}).fill(title+' instructions');await form.getByLabel('Minutes',{exact:true}).fill(minutes);await form.getByText('Step settings',{exact:true}).click();await form.getByLabel('Step equipment',{exact:true}).fill('Oven');await form.getByLabel('Target food temperature (°F)',{exact:true}).fill('195');await form.getByRole('button',{name:'Save step',exact:true}).click();
+ };
+ await edit(0,'Trim my way','90');await edit(1,'Season my way','45');
+ await dialog.getByRole('button',{name:'Save changes',exact:true}).click();await expect(dialog.getByRole('button',{name:'Edit Smoked brisket',exact:true})).toBeVisible();
+ expect(remote.workspace).toEqual(before);
+ await page.reload();dialog=await library(page);await dialog.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
+ await expect(dialog.getByText('Trim my way',{exact:true})).toBeVisible();await expect(dialog.getByText('Season my way instructions',{exact:true})).toBeVisible();const saved=[...remote.rows.values()][0].document.recipe.review.overrides;expect(Object.values(saved)).toEqual(expect.arrayContaining([expect.objectContaining({title:'Trim my way',instructions:'Trim my way instructions',durationMinutes:90,equipment:'Oven',targetTempF:195}),expect.objectContaining({title:'Season my way',durationMinutes:45,equipment:'Oven',targetTempF:195})]));
+ await edit(0,'Trim the copy','100');await edit(1,'Season the copy','50');await dialog.getByLabel('Recipe name',{exact:true}).fill('Separate copy');await dialog.getByRole('button',{name:'Save as new recipe',exact:true}).click();await expect(dialog.getByText('Separate copy',{exact:true})).toBeVisible();expect(remote.rows.size).toBe(2);
+ await dialog.getByRole('button',{name:'Edit Separate copy',exact:true}).click();await expect(dialog.getByText('Trim the copy',{exact:true})).toBeVisible();await edit(0,'Do not save this','60');await dialog.getByRole('button',{name:'Cancel',exact:true}).click();await dialog.getByRole('button',{name:'Edit Separate copy',exact:true}).click();await expect(dialog.getByText('Trim the copy',{exact:true})).toBeVisible();expect(remote.workspace).toEqual(before);
+});
+
+test('recipe-level save includes an open template step edit',async({page,context})=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);await page.getByRole('button',{name:'Save recipe',exact:true}).click();await expect(page.getByRole('button',{name:'Saved to My recipes',exact:true})).toBeVisible();await page.getByRole('button',{name:'Add to meal',exact:true}).click();let dialog=await library(page);await dialog.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await dialog.getByRole('button',{name:'Edit Trim brisket',exact:true}).click();await dialog.getByRole('textbox',{name:'Step name',exact:true}).fill('Save this open edit');await expect(dialog.getByRole('button',{name:'Save changes',exact:true})).toBeEnabled();await dialog.getByRole('button',{name:'Save changes',exact:true}).click();await page.reload();dialog=await library(page);await dialog.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await expect(dialog.getByText('Save this open edit',{exact:true})).toBeVisible();
+});
