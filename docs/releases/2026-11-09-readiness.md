@@ -159,3 +159,16 @@ cancellation and upcoming-plan checks on https://howmanybeers.app before closing
 #61/#83/#103. Record the deployed SHA. For rollback, restore the previously verified
 application commit through an approved release; do not drop retained records or
 reverse additive migrations into unsafe legacy RPCs.
+
+## Final owner authorization
+
+The owner confirmed both production migrations were applied manually, and Browns
+Brisket was imported and independently verified: completed cook
+`a78995d2-1b97-42c2-8f3d-9837a9e381b7`, 16 archived and 16 stored events. Do not
+rerun either migration or reimport that cook. Discard uses the existing saved-plan
+RPC and introduces no schema requirement. This supersedes the pending migration
+status above. The owner gave final production merge approval in chat.
+
+PR #133 merged the approved candidate into dev at `c405b7d`, with the same tree
+as tested candidate `4830380`. The existing release PR #132 remains the production
+PR. Keep #61/#83/#103 open until actual production verification; #114 is excluded.
