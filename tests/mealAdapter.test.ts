@@ -91,3 +91,14 @@ it('retains account archive envelope fields as supplied without fetching or chan
  const m=fixture(),archive={...archiveCook(m,emptyHistory(),'Account snapshot','2026-11-15T18:30Z').cooks[0],serveInstant:serving.serveInstant,sourceOwner:'fixture-owner'};
  const r=convertRetainedRecord('archived',archive,serving);expect(r.status).toBe('converted');if(r.status!=='skipped')expect(restoreRetainedRecord(r.conversion)).toEqual(archive);
 });
+import {instantiateRecipeReview} from '../src/domain/documents/reviewAdapter';
+it('saving an applied brisket method preserves its full rest/hold reserve and planned timing without old dates',()=>{
+ const m=fixture(),converted=roundtrip(m),snapshot=converted.document.dishes[0];
+ const fresh=instantiateRecipeReview({format:'how-many-beers',schemaVersion:1,type:'recipe',id:'saved-brisket',name:snapshot.name,recipe:snapshot.recipe},m.serveAt,'new-dish');
+ const authored:ExtendedMeal={...m,dishes:[m.dishes[0]],customTasks:[],taskOverrides:{},hiddenTaskIds:[],taskOrder:[],planningGeneralSequence:[]};const original=cookTimeline(authored),next=cookTimeline(fresh);
+ const first=original.find(t=>t.id.endsWith(':rest'))!,copy=next.find(t=>t.id.endsWith(':rest'))!;
+ expect(copy.templateStage?.minutes).toBe(first.templateStage?.minutes);expect(copy.templateStage?.minutes).toBe(360);
+ const authoredTasks=(tasks:typeof original)=>tasks.map(({id:_id,dishId:_dish,...task})=>task);expect(authoredTasks(next)).toEqual(authoredTasks(original));
+ expect(next.find(t=>t.id.endsWith(':start'))?.scheduledAt).toBe(original.find(t=>t.id.endsWith(':start'))?.scheduledAt);
+ expect(JSON.stringify(snapshot.recipe)).not.toContain('recommendedStart');expect(JSON.stringify(snapshot.recipe)).not.toContain('2026-');
+});

@@ -17,7 +17,7 @@ export type AuthoredOverride=Pick<import('../cookState').TaskOverride,'title'|'i
 export type ReviewDefinition={overrides?:Record<string,AuthoredOverride>;hiddenStepIds?:string[];taskOrder?:string[];dishSequence?:string[];dishStepOrder?:string[];addedSteps?:DocumentStep[]};
 export type RecipeDefinition = {
  review?:ReviewDefinition;
- configuration?:Pick<Dish,'preset'|'cookMinutes'|'restMinutes'|'pitTempF'|'brisketTemplateVersion'|'turkeyPrep'|'planningSequence'|'planningStepOrder'> & {brisketInputs?:import('../brisketEstimate').BrisketInputs;sourceStepOrder?:string[]};
+ configuration?:Pick<Dish,'preset'|'cookMinutes'|'restMinutes'|'pitTempF'|'brisketTemplateVersion'|'turkeyPrep'|'planningSequence'|'planningStepOrder'> & {brisketMode?:'manual'|'estimate';brisketApplied?:Omit<import('../brisketEstimate').BrisketEstimate,'recommendedStart'|'latestStart'|'prepStart'>;brisketInputs?:import('../brisketEstimate').BrisketInputs;sourceStepOrder?:string[]};
  suppressedStepIds?:string[];
  method:string;equipment:string[];
  source:{kind:'template'|'customized-template'|'text'|'manual'|'saved-recipe'|'past-cook';reference?:string;originalText?:string;templateId?:string;templateVersion?:number};

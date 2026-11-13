@@ -58,7 +58,7 @@ export function convertMeal(value:unknown,metadata:ServingMetadata):MealConversi
   const refs=new Map<string,TaskReference>();
   const dishes=m.dishes.map(d=>{
    const {executionAddedAt,brisketPlan,...base}=d;
-   const native:Dish={...base,...(brisketPlan?{brisketPlan:{mode:'manual',inputs:brisketPlan.inputs}}:{})};
+   const native:Dish={...base,...(brisketPlan?{brisketPlan:{...brisketPlan,...(brisketPlan.applied?{applied:{...brisketPlan.applied,recommendedStart:null,latestStart:null,prepStart:null}}:{})}}:{})};
    const own=(id:string)=>id.startsWith(d.id+':')||(m.customTasks??[]).some(t=>t.id===id&&t.dishId===d.id);
    const review:ExtendedMeal={version:1,id:'extract',name:d.name,serveAt:m.serveAt,mode:'planning',completed:{},notes:{},dishes:[native],
     ...(m.customTasks!==undefined?{customTasks:m.customTasks.filter(t=>t.dishId===d.id).map(({executionAddedAt:_at,...t})=>t)}:{}),

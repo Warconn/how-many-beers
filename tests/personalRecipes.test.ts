@@ -25,7 +25,7 @@ it('does not replace an ambiguous operation with an edited document or removal',
  await expect(store.write({...op,writeId:'other',operation:'remove',document:null,revision:1})).rejects.toThrow('pending');expect(store.pending()).toEqual(op);expect(calls).toBe(0);
 });
 it('keeps SQL validation pinned to the checked-in canonical JSON Schema',()=>{
- const migration=readFileSync('supabase/migrations/202611110001_personal_recipes.sql','utf8');const embedded=migration.split('$schema$')[1];expect(JSON.parse(embedded)).toEqual(schema);
+ const migration=readFileSync('supabase/migrations/202611130001_personal_recipe_validation.sql','utf8');const embedded=migration.split('$schema$')[1];expect(JSON.parse(embedded)).toEqual(schema);
 });
 it('explicit conflict resolution retains the immutable draft before releasing its journal',async()=>{
  const local=storage();local.setItem(recipePendingKey(owner),JSON.stringify(op));const store=new PersonalRecipeStore(owner,{list:async()=>[],mutate:async()=>saved},local);

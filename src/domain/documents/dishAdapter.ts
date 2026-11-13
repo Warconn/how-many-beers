@@ -18,7 +18,7 @@ export function convertDish(value:unknown,recipeId:string):DishConversion{
   if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!keys.includes(k)))throw Error('Unsupported dish fields (including execution state).');
   const dish=value as Dish;
   if(!isStoredMeal({version:1,id:'check',name:'check',serveAt:referenceDate,dishes:[dish],completed:{},notes:{}}))throw Error('Invalid native dish.');
-  if(dish.brisketPlan&&(dish.brisketPlan.applied||dish.brisketPlan.mode!=='manual'))throw Error('Applied calendar estimates require the meal compatibility adapter.');
+  if(dish.brisketPlan&&((dish.brisketPlan.applied&&[dish.brisketPlan.applied.recommendedStart,dish.brisketPlan.applied.latestStart,dish.brisketPlan.applied.prepStart].some(date=>date!==null))||(!dish.brisketPlan.applied&&dish.brisketPlan.mode!=='manual')))throw Error('Applied calendar estimates require the meal compatibility adapter.');
   if(dish.preset!=='custom'&&dish.steps!==undefined)throw Error('Template with embedded custom steps requires compatibility review.');
   const document=projectDish(dish,recipeId);
   // Prove authored payload identity before marking eligible, including omitted fields.
@@ -49,7 +49,7 @@ function projectDish(d:Dish,id:string):RecipeDocument{
  });
  const configuration:NonNullable<RecipeDefinition['configuration']>={preset:d.preset,cookMinutes:d.cookMinutes,restMinutes:d.restMinutes};
  for(const k of ['pitTempF','brisketTemplateVersion','turkeyPrep','planningSequence','planningStepOrder'] as const)if(d[k]!==undefined)Object.assign(configuration,{[k]:d[k]});
- if(d.brisketPlan)configuration.brisketInputs=d.brisketPlan.inputs;
+ if(d.brisketPlan){configuration.brisketInputs=d.brisketPlan.inputs;if(d.brisketPlan.applied){const {recommendedStart:_a,latestStart:_b,prepStart:_c,...applied}=d.brisketPlan.applied;configuration.brisketApplied=applied;configuration.brisketMode=d.brisketPlan.mode;}}
  if(d.steps)configuration.sourceStepOrder=d.steps.map(s=>s.id);
  const doc={format:'how-many-beers' as const,schemaVersion:1 as const,type:'recipe' as const,id,name:d.name,recipe:{method:d.preset,equipment:[d.equipment],configuration,
   source:{kind:d.preset==='custom'?d.recipeSource!==undefined?'text' as const:'manual' as const:'template' as const,...(d.recipeReference!==undefined?{reference:d.recipeReference}:{}),...(d.recipeSource!==undefined?{originalText:d.recipeSource}:{}),...(d.preset!=='custom'?{templateId:d.preset,templateVersion:d.brisketTemplateVersion??1}:{})},
@@ -60,9 +60,9 @@ function projectDish(d:Dish,id:string):RecipeDocument{
 function nativeDish(doc:RecipeDocument,instanceId:string):Dish{
  const r=doc.recipe,c=r.configuration;
  if(!c||r.equipment.length!==1||r.method!==c.preset||r.weight&&r.weight.unit!=='lb')throw Error('Recipe needs a supported native configuration.');
- const {brisketInputs,sourceStepOrder,...config}=c;
+ const {brisketInputs,brisketApplied,brisketMode,sourceStepOrder,...config}=c;
  const dish:Dish={id:instanceId,name:doc.name,equipment:r.equipment[0],...config,
-  ...(brisketInputs?{brisketPlan:{mode:'manual',inputs:brisketInputs}}:{}),
+  ...(brisketInputs?{brisketPlan:{mode:brisketMode??'manual',inputs:brisketInputs,...(brisketApplied?{applied:{...brisketApplied,recommendedStart:null,latestStart:null,prepStart:null}}:{})}}:{}),
   ...(r.weight?{weightLb:r.weight.value}:{}),...(r.ingredients!==undefined?{recipeIngredients:r.ingredients}:{}),
   ...(r.source.reference!==undefined?{recipeReference:r.source.reference}:{}),...(r.source.originalText!==undefined?{recipeSource:r.source.originalText}:{})};
  if(c.preset==='custom')dish.steps=[...r.steps.filter(s=>!s.generated)].sort((a,b)=>(sourceStepOrder?.indexOf(a.id)??0)-(sourceStepOrder?.indexOf(b.id)??0)).map((s):RecipeStep=>({id:s.id,title:s.title,minutes:s.timing.estimatedMinutes,...(s.instructions!==undefined?{instructions:s.instructions}:{}),...(s.temperatures!==undefined?{recipeTemperatures:s.temperatures}:{}),...(s.cookingKind?{cookingKind:s.cookingKind}:{})}));
