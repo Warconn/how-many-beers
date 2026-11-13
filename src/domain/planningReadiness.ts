@@ -46,7 +46,7 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
   // *whole path* backward instead of carrying that delay into dinner. The clock
   // floor below still decides if this earlier start is actually feasible.
   const backwardPlan = (list: PlannedTask[]): PlannedTask[] => {
-    if (target === null || list.some(t => t.userSequence || t.timingMode === 'fixed')) return list;
+    if (target === null || list.some(t => t.userSequence)) return list;
     const ends: number[] = [];
     for (const task of list) {
       const dish = meal.dishes.find(d => d.id === task.dishId);
@@ -63,10 +63,26 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
     if (!ends.length) return list;
     const overshoot = Math.max(...ends) - target;
     if (overshoot <= 0) return list;
-    return list.map(task => {
-      const start = stamp(task.scheduledAt);
-      return start === null ? task : {...task, scheduledAt: iso(start - overshoot)};
-    });
+    // A fixed early preparation step constrains its own interval, not every
+    // later flexible start. Move only the suffix after the last fixed anchor,
+    // bounded by the finishes before it. Keep overlaps/checkpoints intact by
+    // translating that suffix together; never squeeze across a known interval.
+    const ordered = [...list].sort((a,b) => stamp(a.scheduledAt)! - stamp(b.scheduledAt)!);
+    const lastFixed = ordered.findLastIndex(t => t.timingMode === 'fixed');
+    const movable = ordered.slice(lastFixed + 1);
+    if (!movable.length) return list;
+    let shift = overshoot;
+    if (lastFixed >= 0) {
+      const prefixFinish = Math.max(...ordered.slice(0,lastFixed + 1).map(t => {
+        const length = stepMinutes(meal,t) ?? (t.isCondition && !t.templateStage || t.id.endsWith(':serve') ? 0 : null);
+        return length === null ? Infinity : stamp(t.scheduledAt)! + length * 60000;
+      }));
+      shift = Math.max(0,Math.min(shift,stamp(movable[0].scheduledAt)! - prefixFinish));
+    }
+    if (!shift) return list;
+    const ids = new Set(movable.map(t => t.id));
+    return list.map(task => ids.has(task.id)
+      ? {...task,scheduledAt:iso(stamp(task.scheduledAt)! - shift)} : task);
   };
   for (const original of groups.values()) {
     const list = backwardPlan(original);
