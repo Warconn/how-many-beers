@@ -699,7 +699,7 @@ button.recipe-title-link:hover { color:var(--accent-dark); }
  .app-navigation { gap:1.25rem; }
  .recipe-library-screen .personal-recipe-list > li { align-items:flex-start; flex-wrap:wrap; }
  .recipe-library-screen .personal-recipe-list .method-review-actions { width:100%; justify-content:space-between; }
- .recipe-review-footer { flex-direction:column; align-items:stretch; }
+ .method-review-actions.recipe-review-footer { flex-direction:column; align-items:stretch; }
  .recipe-review-footer > .button,.recipe-review-footer .recipe-save-action > .button { width:100%; }
 }
 .site-header:has(.app-navigation) { flex-wrap:wrap; }

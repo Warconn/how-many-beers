@@ -348,3 +348,9 @@ The affected local general matrix completed 50 cases plus four old-visibility
 expectation failures; those four now pass after asserting dates hidden in review
 and unchanged after Add, giving 54 verified desktop/phone cases. Final full CI
 must run on this final guard commit; earlier candidate gates are not substitutes.
+
+The final mobile review also verifies equal full-width primary/secondary footer
+rows, not only gaps. The added width assertion failed before correcting the
+shared responsive rule and passes afterward on desktop/phone (four affected
+layout/draft cases). The final default phone screenshot was inspected. No
+additional controls, design exceptions or data/schema changes were introduced.

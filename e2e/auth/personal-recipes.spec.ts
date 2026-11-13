@@ -128,7 +128,7 @@ test('quiet navigation opens a dedicated recipe screen and equipment selection p
  await expect(primary).toHaveClass(/primary/);await expect(secondary).toBeVisible();await expect(footer.getByRole('button')).toHaveCount(2);await expect(method.getByText('Recipe actions',{exact:true})).toHaveCount(0);
  await primary.scrollIntoViewIfNeeded();const a=(await primary.boundingBox())!,b=(await secondary.boundingBox())!;
  expect(a.height).toBeGreaterThanOrEqual(44);expect(b.height).toBeGreaterThanOrEqual(44);
- if(page.viewportSize()!.width<=600){expect(b.y-a.y-a.height).toBeGreaterThanOrEqual(15);}else{expect(Math.abs(b.y-a.y)).toBeLessThan(2);expect(b.x-a.x-a.width).toBeGreaterThanOrEqual(15);}
+ if(page.viewportSize()!.width<=600){expect(b.y-a.y-a.height).toBeGreaterThanOrEqual(15);expect(Math.abs(b.width-a.width)).toBeLessThan(1);}else{expect(Math.abs(b.y-a.y)).toBeLessThan(2);expect(b.x-a.x-a.width).toBeGreaterThanOrEqual(15);}
  await page.screenshot({path:info.outputPath('default-review-hierarchy.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
  const trigger=method.getByRole('button',{name:/^Equipment:/});await trigger.click();const choices=method.getByRole('group',{name:'Equipment choices',exact:true});
  await expect(choices.getByRole('combobox')).toHaveCount(0);await expect(method.getByRole('button',{name:/Done|Add equipment/})).toHaveCount(0);
