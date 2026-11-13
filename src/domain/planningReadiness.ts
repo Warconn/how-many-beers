@@ -67,7 +67,8 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
     // later flexible start. Move only the suffix after the last fixed anchor,
     // bounded by the finishes before it. Keep overlaps/checkpoints intact by
     // translating that suffix together; never squeeze across a known interval.
-    const ordered = [...list].sort((a,b) => stamp(a.scheduledAt)! - stamp(b.scheduledAt)!);
+    const ordered = list.filter(t => stamp(t.scheduledAt) !== null)
+      .sort((a,b) => stamp(a.scheduledAt)! - stamp(b.scheduledAt)!);
     const lastFixed = ordered.findLastIndex(t => t.timingMode === 'fixed');
     const movable = ordered.slice(lastFixed + 1);
     if (!movable.length) return list;

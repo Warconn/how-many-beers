@@ -338,3 +338,13 @@ review and Cloudflare commit confirmation must be recorded in PR #134 before
 owner re-review. Local bundled browser installation is blocked by CDN policy;
 system Chromium supplies local browser evidence, CI supplies WebKit/full suites.
 The feature remains draft for owner acceptance; no automatic merge.
+
+Final schedule review found an ignored, explicitly untimed turkey thaw reminder
+could be coerced into an epoch-based date when a longer roast triggered backward
+translation. A failing-before regression confirms it. Only timed rows are now
+eligible for translation; untimed reminders stay null. Typecheck and **548 unit
+tests / 43 files** pass with this guard. The owner-approved UI is unchanged.
+The affected local general matrix completed 50 cases plus four old-visibility
+expectation failures; those four now pass after asserting dates hidden in review
+and unchanged after Add, giving 54 verified desktop/phone cases. Final full CI
+must run on this final guard commit; earlier candidate gates are not substitutes.

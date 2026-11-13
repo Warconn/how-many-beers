@@ -52,4 +52,12 @@ describe('owner #114 early-pinned wings investigation regression',()=>{
   expect(p.tasks.filter(t=>t.dishId===other.id)).toEqual(baseline.tasks);expect(combined).toEqual(before);
   expect(planningReadiness({...combined,mode:'cooking'},cookTimeline(combined),now)).toBeNull();
  });
+ it('keeps explicitly untimed template reminders untimed during backward adjustment',()=>{
+  const d={...createDish('turkey'),turkeyPrep:{state:'thawed' as const,thawDays:0,brineHours:0,dryHours:0}};
+  let m:ExtendedMeal={...newMeal(),serveAt:target,dishes:[d],taskOverrides:{[d.id+':thaw']:{scheduledAt:null}}};
+  m=setStepDuration(m,d.id+':start',600);const before=structuredClone(m);
+  const p=planningReadiness(m,cookTimeline(m),now)!;
+  expect(p.tasks.find(t=>t.id===d.id+':thaw')?.scheduledAt).toBeNull();expect(m).toEqual(before);
+ });
+
 });
