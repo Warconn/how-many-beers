@@ -1,5 +1,9 @@
 # #114 product acceptance investigation and proposed reset
 
+**Subsequent owner decision: approved for implementation.** The report below
+records the rejected e91c57f candidate and the approved proposal. Current
+implementation/verification belongs to `../implementation/issue-114-handoff.md`.
+
 November 13, 2026. Application candidate inspected: `e91c57f`.
 PR #134 remains draft, unmerged, targeting dev. **Product acceptance failed.**
 This document is a proposal, not a new accepted design standard. No application,

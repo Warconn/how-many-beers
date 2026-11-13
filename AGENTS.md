@@ -23,14 +23,16 @@ Work in tested phases, commit and checkpoint between major phases. Stop cleanly
 at a safe boundary when the session budget is limited. No automatic dev/main
 merge, production release or hosted migration. The November 13 owner refinement requests a dedicated library screen, grouped
 review actions and simple equipment choice, with edited-step persistence first.
-Latest owner direction (November 13, product acceptance failed): PAUSE UI
-implementation and do not merge #134. The owner rejects stacked equipment selects,
-Done controls and hiding Save as new / Save to My recipes under Recipe actions.
-Investigate and propose the complete editor before implementation. Same-scope save
-actions must be immediately visible together, with one visually primary action.
-Keep recipe authoring separate from meal dates. See
-`docs/proposals/114-product-acceptance-review.md` for findings and unapproved mockups.
-The earlier single-button-footer/disclosure rule was rejected, not accepted.
+Latest owner direction (November 13): the complete editor proposal in
+`docs/proposals/114-product-acceptance-review.md` is approved for implementation.
+Keep both same-scope save choices visible together with one visually primary
+button, top Back/Cancel, and a compact flat-checkbox equipment selector without
+Done or stacked selects. Recipe authoring hides meal dates/schedule/cook controls.
+Step fields are draft edits; Close retains them and method saving commits them.
+The earlier single-button-footer/Recipe actions disclosure rule was rejected.
+The early-fixed-step scheduling correction is independent; preserve all anchors,
+actuals, physical cooking and histories. Keep #134 draft for owner acceptance;
+no automatic merges, production changes or hosted migrations.
 Recipe-level saving includes open step edits. Production #137 is included on the
 feature branch. Do not bundle Plan time / Use plan timing removal. The original
 November 11 recipe migration may already be applied in dev; use only the new

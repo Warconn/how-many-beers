@@ -179,5 +179,7 @@ times. See [behavior and real-cook evidence](docs/post-brisket-experience.md).
 
 Personal recipes (#114, feature review): My recipes is a dedicated screen beside
 Home and Past cooks. Explicit Save to My recipes stays independent of Add to meal;
-recipe edits and retained removal never rewrite existing cooks. See the
+recipe edits and retained removal never rewrite existing cooks. Method saves are
+visible together in a spaced footer; equipment uses one compact checklist and
+recipe authoring keeps calendar controls in meal planning. See the
 [review and migration notes](docs/recipes/rollout.md).

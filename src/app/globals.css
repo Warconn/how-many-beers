@@ -692,40 +692,31 @@ button.plan-trash:hover{color:var(--accent-dark);background:var(--surface-warm,#
 .recipe-library-copy p { margin:.35rem 0 0; }
 button.recipe-title-link { padding:0; border:0; background:none; color:inherit; font-weight:700; text-align:left; overflow-wrap:anywhere; }
 button.recipe-title-link:hover { color:var(--accent-dark); }
-.recipe-review-footer { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; border-top:1px solid var(--line); margin-top:1.5rem; padding-top:1rem; }
+.method-review-actions.recipe-review-footer { display:flex; flex-wrap:wrap; gap:var(--space-4); align-items:flex-start; border-top:1px solid var(--line); margin-top:var(--space-5); padding-top:var(--space-5); }
 .recipe-review-footer .recipe-save-action { margin:0; }
 .recipe-review-footer .recipe-save-action .form-error { flex-basis:100%; }
 @media(max-width:600px){
  .app-navigation { gap:1.25rem; }
  .recipe-library-screen .personal-recipe-list > li { align-items:flex-start; flex-wrap:wrap; }
  .recipe-library-screen .personal-recipe-list .method-review-actions { width:100%; justify-content:space-between; }
- .recipe-review-footer > .button.primary { flex:1 0 100%; }
- .recipe-review-footer .recipe-save-action { flex:1; }
- .recipe-review-footer .recipe-save-action > .button { width:100%; }
+ .recipe-review-footer { flex-direction:column; align-items:stretch; }
+ .recipe-review-footer > .button,.recipe-review-footer .recipe-save-action > .button { width:100%; }
 }
 .site-header:has(.app-navigation) { flex-wrap:wrap; }
 .site-header .app-navigation { margin:0 0 0 auto; gap:1.25rem; }
-.equipment-picker { display:grid; gap:.5rem; }
-.equipment-choice { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
-.equipment-choice > select { flex:1; min-width:0; }
-.equipment-custom { width:100%; }
-.equipment-picker > .link { justify-self:start; min-height:44px; }
+/* One in-flow equipment checklist; choices edit the surrounding draft. */
+.equipment-trigger { display:inline-flex; align-items:center; gap:var(--space-4); max-width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--field-border); border-radius:var(--radius-control); background:white; color:var(--ink); text-align:left; }
+.equipment-trigger > span { min-width:0; overflow-wrap:anywhere; }
+.equipment-options { max-width:24rem; border:1px solid var(--field-border); border-radius:var(--radius-control); padding:var(--space-3) var(--space-4); margin-top:var(--space-2); background:white; }
+.equipment-options .equipment-option { display:flex; align-items:center; gap:var(--space-3); min-height:44px; margin:0; font-size:var(--text-body); font-weight:400; }
+.equipment-options input[type=checkbox] { width:21px; height:21px; }
+.equipment-options .equipment-other { display:block; margin-top:var(--space-2); }
 .method-management-actions { padding:1rem 0; border-top:1px solid var(--line); }
 @media(max-width:800px){.site-header .app-navigation { order:3; width:100%; margin:.5rem 0 0; }}
 .field-label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
 
-/* Recipe decisions stay in their own scopes; no footer button bundle. */
-.method-review-back { margin-bottom:1rem; }
-.recipe-method-actions { margin:1rem 0; }
-.recipe-method-actions > summary { color:var(--muted); font-size:14px; font-weight:600; min-height:44px; display:list-item; cursor:pointer; }
-.recipe-method-actions .recipe-save-action,.recipe-method-actions > button { margin:.5rem 0 1rem; }
-.recipe-review-footer { display:block; }
-.recipe-review-footer > .button.primary { width:auto; min-width:10rem; }
-.method-add-step { min-height:44px; margin-top:.5rem; }
-.equipment-summary { display:flex; gap:1rem; justify-content:space-between; align-items:center; min-height:44px; }
-.equipment-summary > span { min-width:0; overflow-wrap:anywhere; }
-.equipment-summary .link { flex:0 0 auto; min-height:44px; }
-.equipment-done { justify-self:end; }
+/* Method actions share a scope; list actions stay with the list. */
+.method-review-back { margin-bottom:var(--space-4); }
+.method-add-step { min-height:44px; margin-top:var(--space-2); }
 .method-management-actions { padding:0 0 1rem; margin-bottom:1rem; border-top:0; border-bottom:1px solid var(--line); }
-@media(max-width:600px){.recipe-review-footer > .button.primary { width:100%; }}
 .method-management-actions .link { min-height:44px; }

@@ -163,16 +163,30 @@ Home keeps its existing cook content. Home, My recipes and Past cooks share a
 quiet text navigation within the existing header; My recipes is a full screen, never a modal overlay.
 Recipe names open the existing review editor, Use recipe opens an independent
 meal draft, and contextual trash controls retain records after confirmation.
-The review footer has one primary action: Add to meal, or Save changes when
-editing a saved recipe. Back/Cancel belongs at the top. Recipe actions near the
-method header discloses optional Save to My recipes / Save as new in one level;
-these actions never share a footer bundle with the primary action. Saving includes an open step edit.
-Equipment is normally a summary with one Edit control. The flat editor supports
-additional/custom equipment; native combined labels remain lossless. Inside an
-already open Step settings or Dish settings section, show the selector directly,
-without a second Edit disclosure. Step configuration remains optional
-in a single Step settings disclosure. No equipment profiles or scheduling mode
-changes are part of this refinement.
+The method footer groups the two same-scope decisions, with one visually primary
+action. Saved recipe editing uses Save changes plus immediately visible Save as
+new recipe. New review uses Add to meal plus Save to My recipes. Do not put these
+important actions under Recipe actions or another disclosure. Desktop controls
+share a row with 16px separation; phone controls occupy separate rows with 16px
+separation and 44px minimum targets. Back/Cancel uses top navigation. Acknowledged
+save/error state stays with the method action area. Add a step stays after the
+list, separate from persistence actions.
+
+Recipe authoring shows name, equipment, steps, durations and conditions. Hide the
+meal date/name form, schedule, other dishes and cooking controls during review;
+return to the same meal after Add/Back. Saved recipe editing remains on My recipes.
+Step fields edit a draft; Close retains those edits, method saving includes an
+open row, and top Cancel discards the method draft. Do not add another Save step
+workflow to recipe authoring. Existing meal step editors retain their save rules.
+
+Equipment is one compact summary selector opening a flat checkbox list for
+multiple choices and a contextual Other equipment field. Choices edit the draft
+immediately. Toggle the summary, tap outside or Escape to close; Escape returns
+focus. No Done button, repeated dropdown rows, Add equipment workflow or nested
+configuration. Preserve existing mixed/custom labels exactly until explicitly
+edited. Optional per-step equipment/temperature remains in one Step settings
+section using the same control. No equipment profiles or scheduling-mode changes.
+
 
 
 ### Action and navigation hierarchy
@@ -181,10 +195,10 @@ Keep the current Home typography, ivory surface, Upcoming cooks and Game Plan.
 Navigation belongs in the existing header, separate from save/sync status, with
 44px targets. It does not precede or interrupt Plan/Resume cook. My recipes uses
 full-screen semantics and browser Back; direct selection stays in planning.
-Use one primary action per decision area. Do not pile optional actions beside it.
-Keep Back/Cancel at the top of a review. Put optional recipe operations in one
-Recipe actions disclosure near its header, with secondary button styling when
-opened. Never nest that disclosure inside another options menu.
+Use one visually primary action per decision area. Group same-scope secondary
+decisions visibly with it, with deliberate spacing and responsive stacking rather
+than hiding them or piling unrelated controls together. Back/Cancel stays in top
+navigation. Disclosures are for optional supporting detail, not core save choices.
 Keep step edits in the step editor and Add a step directly after the list.
 Saving an existing meal's method is a single contextual action near that method's
 heading. It saves directly with an acknowledgement, without opening a second

@@ -7,9 +7,10 @@ shared versioned cooking documents and retained deletion. Storage and UI are imp
 checks and development migration approval pending; see [implementation checkpoint](implementation/issue-114-handoff.md).
 The agent has run no hosted conversion or migration. November 13's validator
 upgrade is additive for projects with the original recipe migration installed.
-Production #137 backward scheduling is included in the candidate. The library
-navigation/action/equipment refinement and edited-step save regressions are
-implemented; full CI and owner acceptance remain required. Review the contract and
+Production #137 backward scheduling is included in the candidate. The owner approved the complete editor reset on November 13: visible paired save
+actions, compact equipment checklist and recipe-only authoring. The early fixed
+preparation reflow correction is independent. Full CI and owner acceptance remain
+required for the updated implementation. Review the contract and
 actual screenshots before dev integration; hosted migration and production release
 require separate approval.
 

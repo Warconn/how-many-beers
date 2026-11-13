@@ -126,9 +126,9 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .method-review h3 { margin: 0 0 4px; padding-right: 80px; }
 .method-review p.small { margin-block: 4px 12px; }
 .method-review-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
-.method-review-meta { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.method-review-meta { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--space-4); }
 .method-review-meta > label { margin-block: 4px; }
-.method-review input,.method-review textarea { width: 100%; font-weight: 400; }
+.method-review input:not([type=checkbox]),.method-review textarea { width: 100%; font-weight: 400; }
 .method-review-steps { list-style: none; margin: 12px 0 8px; padding: 0; }
 .method-review-steps > li { position: relative; padding-block: 10px; border-top: 1px solid var(--line); }
 .step-row-heading { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 6px; align-items: start; }

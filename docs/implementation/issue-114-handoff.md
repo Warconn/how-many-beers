@@ -1,6 +1,11 @@
 # Issue #114 implementation checkpoint
 
-**PAUSED: owner product acceptance failed November 13.** Do not merge #134 or
+**Owner approved the complete editor reset for implementation November 13.**
+The rejection and investigation below are historical; the new implementation
+uses visible paired save decisions, a compact flat equipment checklist and
+recipe-only authoring. See the final checkpoint section for verification.
+
+**Prior pause: owner product acceptance failed November 13.** Do not merge #134 or
 implement another UI patch. Earlier green CI and screenshot notes below are
 historical verification, not product approval. The owner rejects Recipe actions
 hiding core saves and the equipment editor. Investigation/proposal:
@@ -293,3 +298,43 @@ Default desktop/phone screenshots were inspected: equipment summary/Edit, option
 header recipe operations, top Back and one footer primary. Whole-meal/history
 conversion validation and existing account persistence are unchanged. Run full CI
 and inspect final iPhone artifacts on the newly pushed checkpoint before review.
+
+## Owner-approved complete editor reset (November 13)
+
+The owner approved the investigation's complete desktop/mobile proposal. The
+rejected e91c57f interaction is replaced rather than patched around:
+
+- Name, compact equipment selector, editable step list, separate Add a step and
+  coherent paired method footer. Save changes / Save as new are immediately
+  visible; new review uses Add to meal / Save to My recipes. No Recipe actions menu.
+- Equipment uses a flat multi-choice checklist and contextual custom field. No
+  repeated selectors, Add equipment workflow or Done button. Escape returns focus;
+  outside click/toggle closes. Unchanged native labels are never normalized.
+- Existing/new step fields stay in the recipe draft. Close keeps their edits;
+  method-level saving includes open edits/additions. Cancel discards the method
+  draft. Validation failures retain fields without a write. Native meal step
+  editing keeps its existing Save behavior.
+- Recipe authoring temporarily hides meal dates/name, other dishes, Beerometer,
+  schedule and cooking controls; Add/Back returns to the unchanged meal.
+- Existing JSON/adapters/account persistence/retained deletion/schema remain
+  unchanged. No hosted mutation or merge. No #135 implementation.
+
+Independent scheduling correction `65eff4a`: backward planning can translate the
+flexible suffix following a fixed early preparation interval, bounded by known
+slack and preserving all preceding fixed starts. Unknown/manual-sequence/active
+cooking behavior stays unchanged. The synthetic 1 PM wings reproduction now
+passes normally (no expected-failure marker); a truly constraining second pin,
+limited slack, independent dishes and read-only state have unit coverage. The
+owner's exact original saved-plan constraint remains uninspected.
+
+Verification before final push: fresh locked dependencies; typecheck and **547
+unit tests / 43 files** pass. All **38 existing recipe desktop/phone cases**, plus
+**2 new open-addition/invalid-edit/Cancel cases**, pass locally. Revised acceptance
+failed on the old UI and now checks visible saves, 16px responsive action gaps,
+44px targets, recipe-only authoring, flat equipment and keyboard dismissal.
+Actual desktop default/equipment and phone saved-editor screenshots inspected.
+Broader affected general browser checks are running; final full CI, iPhone image
+review and Cloudflare commit confirmation must be recorded in PR #134 before
+owner re-review. Local bundled browser installation is blocked by CDN policy;
+system Chromium supplies local browser evidence, CI supplies WebKit/full suites.
+The feature remains draft for owner acceptance; no automatic merge.

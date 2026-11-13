@@ -20,8 +20,10 @@ migrations in [rollout notes](recipes/rollout.md). The agent has applied neither
 remotely; the development project may already have November 11 installed.
 November 13 adds a validator-only upgrade, without rewriting applied migrations.
 Owner refinements include open-step Save changes/new coverage, a dedicated library,
-one-primary footers, top navigation, one-level optional recipe actions and
-summary/Edit equipment. Selected-dish saving is direct; exact oil-before-check
+a coherent footer with primary plus visible secondary save decisions, top
+Back/Cancel, recipe-only authoring and a compact equipment checklist without Done.
+The complete reset proposal was owner-approved after rejecting the earlier
+Recipe actions disclosure and stacked-selector implementation. Selected-dish saving is direct; exact oil-before-check
 reordering and optional-meal-metadata extraction have regression coverage. The wings conversion failure is reproduced and fixed: native sequence compilation
 now retains its implicit rest row when mapping edited/reordered method references.
 Failing-before domain/UI regressions cover both save paths. Open-step saving is

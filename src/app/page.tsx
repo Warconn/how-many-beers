@@ -671,12 +671,12 @@ function CookExperience() {
         <>
           {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&<button type="button" className="back-link" onClick={()=>void goHome()}><Icon name="arrow-left"/>Home</button>}
           {meal.mode === "cooking" && <p className="notice">Cook in progress. Viewing or editing your plan won't reset your completed steps.</p>}
-          <div className={timeline.length?"guided-planner":"empty-planner"}><div className="guided-main">
-          <ServingPlan onDiscard={workspace.plansEnabled&&workspace.isSelectedPlan?()=>void discardPlan(meal.id).catch(()=>{/* Existing save state retains failure and retry. */}):undefined} discardDisabled={discardingPlan||workspace.locked} meal={meal} hasSteps={timeline.length>0} startAt={plan?.startAt??null} now={clockNow} readyAt={plan?.readyAt??projection?.finish??null} lateMinutes={plan?.lateMinutes??0} suggestion={plan?.suggestedServeAt??null}
+          <div className={timeline.length&&!methodReview?"guided-planner":"empty-planner"}><div className="guided-main">
+          {!methodReview&&<ServingPlan onDiscard={workspace.plansEnabled&&workspace.isSelectedPlan?()=>void discardPlan(meal.id).catch(()=>{/* Existing save state retains failure and retry. */}):undefined} discardDisabled={discardingPlan||workspace.locked} meal={meal} hasSteps={timeline.length>0} startAt={plan?.startAt??null} now={clockNow} readyAt={plan?.readyAt??projection?.finish??null} lateMinutes={plan?.lateMinutes??0} suggestion={plan?.suggestedServeAt??null}
             onName={name=>patch(m=>({...m,name}))}
             onServe={serveAt=>{patch(m=>({...m,serveAt}));setClockNow(Date.now());}}
-            onSuggestion={()=>{if(plan?.suggestedServeAt)safelyPatch(m=>({...m,serveAt:formatLocalDateTime(plan.suggestedServeAt!,Intl.DateTimeFormat().resolvedOptions().timeZone)}));}}/>
-          {timeline.length>0 && <BeerEstimator meal={meal} timeline={timeline} projection={projection}/>}
+            onSuggestion={()=>{if(plan?.suggestedServeAt)safelyPatch(m=>({...m,serveAt:formatLocalDateTime(plan.suggestedServeAt!,Intl.DateTimeFormat().resolvedOptions().timeZone)}));}}/>}
+          {timeline.length>0 && !methodReview && <BeerEstimator meal={meal} timeline={timeline} projection={projection}/>}
           <section className={"workspace-overview"+(recipeFirst&&methodReview?" reviewing-method":"")} aria-label="Cook overview">
             <div className="workspace-heading">
               {!(recipeFirst&&methodReview)&&<div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length ? `${meal.dishes.length} ${meal.dishes.length===1?"dish":"dishes"} in this cook` : "What do you want to cook?"}</h2></div>}
@@ -687,7 +687,7 @@ function CookExperience() {
               <button type="button" className="button secondary" onClick={()=>{setAddMethod('recipe');setShowDishSetup(true)}}>{recipeFirst?"Add your own recipe":"Upload a recipe"}</button>
               <p className="muted small">Choose a starter or use your own recipe. You can add more dishes afterward.</p>
             </div>}
-            {meal.dishes.length>0 && <p className="muted small menu-guidance">{showDishSetup ? (recipeFirst?"Choose a template or add your own recipe. Everything stays in this meal.":"Choose a starter or import your recipe. Everything stays in this cook.") : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
+            {meal.dishes.length>0 && !methodReview && <p className="muted small menu-guidance">{showDishSetup ? (recipeFirst?"Choose a template or add your own recipe. Everything stays in this meal.":"Choose a starter or import your recipe. Everything stays in this cook.") : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
             {recipeFirst&&recipes.recipes.length>0&&!methodReview&&<button type="button" className="link" disabled={!!editingStep||!!newStepDishId||workspace.locked} onClick={openLibrary}>My recipes</button>}
             {showDishSetup && <section id="menu-add-dish" className="menu-add-dish" role="region" aria-label="Add dish">
               {!(recipeFirst&&methodReview)&&<h3>Add a dish</h3>}
@@ -727,7 +727,7 @@ function CookExperience() {
                 {message && <p className="notice" role="status">{message}</p>}
               </div>}
             </section>}
-            {meal.dishes.length ? <div className="workspace-dish-grid">
+            {meal.dishes.length && !methodReview ? <div className="workspace-dish-grid">
               {meal.dishes.map(d=><article className={"workspace-dish"+(editingDishId===d.id?" is-open":"")} aria-label={d.name} key={d.id}>
                 <div className="dish-header">
                 <button id={"dish-toggle-"+d.id} className="dish-select" type="button" aria-label={"Edit "+d.name} aria-expanded={editingDishId===d.id} aria-controls={"dish-"+d.id} onClick={()=>{setEditingDishId(current=>current===d.id?null:d.id);setShowDishSetup(false);setNewStepDishId(null);setNewStepTitle("")}}>
@@ -756,7 +756,7 @@ function CookExperience() {
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
 
                   <label htmlFor={"equipment-"+d.id}>Equipment</label>
-                  <EquipmentSelect compact={false} id={"equipment-"+d.id} value={d.equipment} onChange={equipment=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment}:item)}))}/>
+                  <EquipmentSelect id={"equipment-"+d.id} value={d.equipment} onChange={equipment=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment}:item)}))}/>
                   {d.preset!=="custom" ? <div className="small-grid">
                     <div>
                       <label htmlFor={"cook-"+d.id}>Estimated cook ({d.preset==="brisket" || d.preset==="ribs" ? "hours" : "min"})</label>
@@ -813,7 +813,7 @@ function CookExperience() {
               </article>)}
             </div> : null}
           </section>
-          {timeline.length>0 && <section className="cook-actions" aria-label="Cooking actions">
+          {timeline.length>0 && !methodReview && <section className="cook-actions" aria-label="Cooking actions">
             <div className="cook-action-controls">
               <button type="button" className="button primary cook-action-button"
                 disabled={!!methodReview||(!cookInProgress && !!startBlockReason)||(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.currentCookInProgress)}
@@ -830,13 +830,13 @@ function CookExperience() {
             {!cookInProgress && startBlockReason && <p className="muted small" id="cook-start-help">{startBlockReason}</p>}
           </section>
           }
-          {timeline.length>0 && <section className="plan-notes" aria-label="Plan notes">
+          {timeline.length>0 && !methodReview && <section className="plan-notes" aria-label="Plan notes">
             {warnings.map((warning,i) => <p className="warning" key={i}>{warning}</p>)}
             {timeline.some(t => t.scheduledAt === null) && <p className="warning">Some steps have no timing. For uploaded recipes, add estimated durations on each step to work back from serving time. Use Edit for a fixed start, or leave timing unknown and review before cooking.</p>}
             <p className="muted small timing-guidance">Schedules are estimates, not food-safety checks or guaranteed finish times. Use a thermometer and follow your equipment instructions.</p>
           </section>
           }
-          {showChecklistPreview && timeline.length > 0 && (
+          {showChecklistPreview && timeline.length > 0 && !methodReview && (
             <section className="checklist-preview" id="checklist-preview" aria-label={recipeFirst?"Meal plan preview":"Cooking checklist preview"}>
               <div className="preview-intro"><h3>{recipeFirst?"Meal plan":"Cooking checklist"}</h3></div>
               <p className="muted small">Review all dishes together. Check off steps and record actual readings in Cooking Mode.</p>
@@ -846,9 +846,9 @@ function CookExperience() {
             </section>
           )}
 
-          {timeline.length===0 && <details className="empty-prep"><summary>Other preparation</summary><AddStepForm onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>}
+          {timeline.length===0 && !methodReview && <details className="empty-prep"><summary>Other preparation</summary><AddStepForm onAdd={addCustom} onDraftChange={setAddStepDraftOpen}/></details>}
           </div>
-          {timeline.length>0 && <aside className="guided-schedule" aria-label="Live schedule">
+          {timeline.length>0 && !methodReview && <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
             <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Untimed recipes stay in recipe order until start times are known.</p>}
             {timeline.length ? <>

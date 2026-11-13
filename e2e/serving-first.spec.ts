@@ -4,7 +4,7 @@ test.use({timezoneId:'UTC'});
 test('serving target is the first planning decision and survives recipe review',async({page},info)=>{
  await page.clock.install({time:new Date('2026-11-08T16:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-08T16:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
  const serving=page.getByLabel('Serve date and time',{exact:true});await expect(serving).toBeVisible();await serving.fill('2026-11-08T18:00');await page.screenshot({path:info.outputPath('serving-first-empty.png'),fullPage:false,scale:'css',style:'nextjs-portal{display:none}'});
- await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await expect(serving).toHaveValue('2026-11-08T18:00');
+ await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await expect(serving).toHaveCount(0);
  await page.getByRole('region',{name:'Review your method',exact:true}).getByRole('button',{name:'Add to meal',exact:true}).click();await expect(serving).toHaveValue('2026-11-08T18:00');
  await page.screenshot({path:info.outputPath('serving-first-plan.png'),fullPage:true,style:'nextjs-portal{display:none}'});
 });
