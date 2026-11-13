@@ -8,8 +8,8 @@ for(const input of ['paste','md','txt'])test(input+' retains editable recipe det
  await page.getByRole('button',{name:'Preview recipe steps'}).click();
  const preview=page.getByRole('region',{name:'Review your method',exact:true});
  await page.screenshot({path:info.outputPath('recipe-details-default.png'),fullPage:true,scale:'css'});
- await expect(preview.getByLabel('Equipment',{exact:true})).toHaveValue('Pellet Smoker');
- await preview.getByLabel('Equipment',{exact:true}).fill('Backyard pellet smoker');
+ await expect(preview.getByRole('combobox',{name:'Equipment',exact:true})).toHaveValue('Pellet Smoker');
+ await preview.getByRole('combobox',{name:'Equipment',exact:true}).selectOption('__other__');await preview.getByRole('textbox',{name:'Custom equipment',exact:true}).fill('Backyard pellet smoker');
  await preview.getByRole('button',{name:'Add to meal',exact:true}).click();
  await page.getByRole('button',{name:'Edit Smoky BBQ Pumpkin Seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
  const details=page.getByRole('article',{name:'Smoky BBQ Pumpkin Seeds',exact:true});
@@ -24,7 +24,7 @@ for(const input of ['paste','md','txt'])test(input+' retains editable recipe det
  await expect(page.getByRole('region',{name:'Smoky BBQ Pumpkin Seeds steps'})).toContainText('Preheat pellet smoker to 450°F');
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
  await page.getByRole('button',{name:'Edit Smoky BBQ Pumpkin Seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
- await expect(page.getByLabel('Equipment',{exact:true})).toHaveValue('Backyard pellet smoker');
+ await expect(page.getByRole('combobox',{name:'Equipment',exact:true})).toHaveValue('Backyard pellet smoker');
  await page.getByText('Ingredients & recipe reference',{exact:true}).click();await expect(page.getByLabel('Ingredients (one per line)')).toHaveValue('1.5 cups pumpkin seeds\n3 tsp olive oil\npaprika');await expect(page.getByLabel('Source / notes')).toHaveValue('Family recipe, adjusted');
  await page.getByText('Recipe temperatures',{exact:true}).click();await expect(page.getByRole('spinbutton',{name:'Step 4 temperature 1',exact:true})).toHaveValue('450');
  await page.screenshot({path:info.outputPath('recipe-details-saved.png'),fullPage:true,scale:'css'});

@@ -22,7 +22,8 @@ test('dish editor separates adding from selecting and preserves cooks', async ({
   await editor.getByRole('button', { name: 'Save step' }).click();
   await expect(editor.getByText('Get wood pellets')).toBeVisible();
   await editor.getByText('Dish settings', { exact: true }).click();
-  await editor.getByLabel('Equipment', { exact: true }).fill('Patio smoker');
+  await editor.getByRole('combobox',{name:'Equipment',exact:true}).selectOption('__other__');
+  await editor.getByRole('textbox',{name:'Custom equipment',exact:true}).fill('Patio smoker');
   await editor.getByText('Dish settings', { exact: true }).click();
   await editor.scrollIntoViewIfNeeded();
   await info.attach('dish-editor.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
@@ -35,6 +36,7 @@ test('dish editor separates adding from selecting and preserves cooks', async ({
   await page.getByRole('button', { name: /Resume planning/ }).click();
   await page.getByRole('button', { name: 'Edit Saturday brisket', exact: true }).click();
   await expect(page.getByText('Get wood pellets', { exact: true })).toBeVisible();
+  await editor.getByText('Dish settings',{exact:true}).click();await expect(editor.getByRole('combobox',{name:'Equipment',exact:true})).toHaveValue('Patio smoker');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });
 

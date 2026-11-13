@@ -767,7 +767,7 @@ function CookExperience() {
                   <input id={"name-"+d.id} value={d.name} onChange={e=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,name:e.target.value}:item),customTasks:(m as ExtendedMeal).customTasks?.map(t=>t.dishId===d.id?{...t,dishName:e.target.value}:t)}))}/>
 
                   <label htmlFor={"equipment-"+d.id}>Equipment</label>
-                  <EquipmentSelect label="Dish equipment" value={d.equipment} onChange={equipment=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment}:item)}))}/>
+                  <EquipmentSelect id={"equipment-"+d.id} value={d.equipment} onChange={equipment=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?{...item,equipment}:item)}))}/>
                   {d.preset!=="custom" ? <div className="small-grid">
                     <div>
                       <label htmlFor={"cook-"+d.id}>Estimated cook ({d.preset==="brisket" || d.preset==="ribs" ? "hours" : "min"})</label>

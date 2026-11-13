@@ -232,3 +232,21 @@ System Chromium provided actual local desktop/phone validation. CI supplies the
 full auth/account/regression/offline browser matrix; final results/screenshots
 and Cloudflare commit confirmation belong to PR #134, not an assumed success.
 No hosted SQL, protected-branch merge, production deployment or Browns data access.
+
+## CI integration correction
+
+The full `0001a51` run passed unit/type, auth, offline and SQL security gates.
+Broader failures were old equipment tests calling fill() on the new selector;
+they now exercise Other/custom entry and keep all ingredient/temperature/reload,
+step-count and history assertions. The visible Equipment caption is associated
+with the first select and uses the same accessible name across review/planning.
+All ten affected local desktop/phone import/dish-edit cases pass.
+
+Account CI passed 129/130 cases. The new wings iPhone assertion compared against
+a snapshot taken before Add acknowledgement (its baseline had zero dishes).
+It now waits for both editor dismissal and the saved source dish before capturing
+the unchanged-meal baseline. Exact whole-workspace equality remains required;
+there are no sleeps, relaxed assertions or added retries. Both local desktop/phone
+wings cases pass after correction. Full CI must rerun on this checkpoint's commit.
+Actual iPhone library/editor screenshots from that run were inspected successfully;
+final artifact review remains part of PR #134's verification.
