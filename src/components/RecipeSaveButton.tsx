@@ -5,12 +5,12 @@ import type {ExtendedMeal} from '@/domain/cookState';
 import {recipeDocumentsEqual} from '@/account/personalRecipes';
 import {convertRecipeReview} from '@/domain/documents/reviewAdapter';
 import type {usePersonalRecipes} from '@/account/usePersonalRecipes';
-export default function RecipeSaveButton({meal,recipes,onSignIn,onSaved,onProtected,initiallySaved=false,prepareMeal,hasOpenEdit=false}:{prepareMeal?:()=>ExtendedMeal;hasOpenEdit?:boolean;initiallySaved?:boolean;onSaved?:()=>void;onProtected?:()=>void;meal:ExtendedMeal;recipes:ReturnType<typeof usePersonalRecipes>;onSignIn:(draft:ExtendedMeal)=>void}){
+export default function RecipeSaveButton({meal,recipes,onSignIn,onSaved,onProtected,initiallySaved=false,prepareMeal,hasOpenEdit=false,appearance='secondary',disabled=false}:{disabled?:boolean;appearance?:'secondary'|'link';prepareMeal?:()=>ExtendedMeal;hasOpenEdit?:boolean;initiallySaved?:boolean;onSaved?:()=>void;onProtected?:()=>void;meal:ExtendedMeal;recipes:ReturnType<typeof usePersonalRecipes>;onSignIn:(draft:ExtendedMeal)=>void}){
  const version=useRef('');
  const id=useRef<string|null>(null),[saved,setSaved]=useState(initiallySaved?JSON.stringify(meal):''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const fingerprint=JSON.stringify(meal),isSaved=saved===fingerprint&&!hasOpenEdit;
  if(!recipes.enabled)return null;
- return <div className="recipe-save-action"><button type="button" className="button secondary" disabled={busy||recipes.busy||recipes.loading||(isSaved&&!hasOpenEdit)} onClick={async()=>{
+ return <div className="recipe-save-action"><button type="button" className={appearance==='link'?'link':'button secondary'} disabled={disabled||busy||recipes.busy||recipes.loading||(isSaved&&!hasOpenEdit)} onClick={async()=>{
   let draft:ExtendedMeal;try{draft=prepareMeal?.()??meal;}catch(e){setError(e instanceof Error?e.message:'Check this step.');return;}
   const fingerprint=JSON.stringify(draft);
   if(!recipes.authenticated){try{onSignIn(draft);}catch{setError('Could not protect this recipe draft for sign-in. Keep this review open and try again.');}return;}

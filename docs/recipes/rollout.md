@@ -45,7 +45,7 @@ works. The feature URL is reported separately after Cloudflare confirms it.
 ## Owner review
 
 1. Sign in on the feature preview. Plan a cook and review a template/custom method.
-   Save to My recipes is secondary; saving leaves the method open and meal unchanged.
+   Optional Save to My recipes lives in the one-level Recipe actions disclosure; saving leaves the method open and meal unchanged.
 2. Add to meal independently. It must not create another library entry.
 3. Open My recipes, select Use recipe, adjust today's copy and Add to meal. The
    saved original and meal serving target remain unchanged.
@@ -55,8 +55,10 @@ works. The feature URL is reported separately after Cloudflare confirms it.
    independent recipe; Cancel leaves the saved version unchanged.
 5. Remove a recipe: dismiss to keep it, then confirm. Reload/sign in on another
    device; it stays hidden. Existing dishes, actuals, plans and history stay intact.
-6. Save a meal-specific method via Dish settings > Save as new recipe. It extracts
-   authored steps and excludes actuals/calendar history without changing the meal.
+6. Save a meal-specific method directly near the expanded method heading. One
+   Save to My recipes action acknowledges the write in place; there is no second
+   review/save screen. Authored extraction excludes actuals/calendar history and
+   leaves the meal unchanged.
 7. Guest Save recipe opens optional sign-in and preserves the review draft. Email and existing provider redirect returns preserve the tab-scoped draft. It does
    not automatically import the guest meal or save the method after sign-in.
 

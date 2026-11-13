@@ -9,7 +9,7 @@ import Icon from './Icon';
 import {recipeDocumentForSave} from '@/account/recipeDraft';
 export default function MyRecipes({recipes,onClose,onUse,serveAt,onDraftChange}:{onDraftChange:(open:boolean)=>void;recipes:ReturnType<typeof usePersonalRecipes>;onClose:()=>void;onUse:(meal:ExtendedMeal)=>void;serveAt:string}){
  const heading=useRef<HTMLHeadingElement>(null);
- useEffect(()=>{heading.current?.focus();heading.current?.scrollIntoView({block:'start',behavior:'instant'});},[]);
+ useEffect(()=>{heading.current?.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});},[]);
  const [editing,setEditing]=useState<{recipe:PersonalRecipe;meal:ExtendedMeal}|null>(null),[error,setError]=useState(''),newId=useRef<string|null>(null);
  useEffect(()=>{onDraftChange(editing!==null);return()=>onDraftChange(false);},[editing!==null,onDraftChange]);
  const open=(recipe:PersonalRecipe)=>{try{newId.current=null;setEditing({recipe,meal:instantiateRecipeReview(recipe.document,serveAt)});setError('');}catch{setError('This recipe cannot be opened safely with this version.');}};
@@ -19,7 +19,7 @@ export default function MyRecipes({recipes,onClose,onUse,serveAt,onDraftChange}:
   const result=await recipes.save(document,asNew?undefined:editing.recipe);setEditing(null);setError('');return result;
  };
  return <section className="panel recipe-library-screen" aria-label="My recipes">
- <div className="recipe-library-heading"><h2 ref={heading} tabIndex={-1}>My recipes</h2><button type="button" className="back-link" aria-label="Close My recipes" disabled={recipes.busy} onClick={onClose}>Back to cook</button></div>
+ <div className="recipe-library-heading"><h2 ref={heading} tabIndex={-1}>My recipes</h2>{!editing&&<button type="button" className="back-link" aria-label="Close My recipes" disabled={recipes.busy} onClick={onClose}>Back to cook</button>}</div>
  {!recipes.authenticated?<p>Sign in to save and reuse your recipes.</p>:editing?<RecipeMethodReview busy={recipes.busy||recipes.loading} meal={editing.meal} onChange={meal=>setEditing({...editing,meal})} onBack={()=>setEditing(null)} onAdd={async draft=>{await save(false,draft);}} primaryLabel="Save changes" saveAction={prepare=><button type="button" className="button secondary" disabled={recipes.busy||recipes.loading} onClick={async()=>{try{await save(true,prepare());}catch(e){setError(e instanceof Error?e.message:'Check this step.');}}}>Save as new recipe</button>}/>:<>
  {recipes.loading&&<p role="status">Loading recipes…</p>}
  {!recipes.loading&&!recipes.error&&recipes.recipes.length===0&&<p>Save a method while reviewing a recipe to find it here.</p>}

@@ -102,3 +102,23 @@ it('saving an applied brisket method preserves its full rest/hold reserve and pl
  expect(next.find(t=>t.id.endsWith(':start'))?.scheduledAt).toBe(original.find(t=>t.id.endsWith(':start'))?.scheduledAt);
  expect(JSON.stringify(snapshot.recipe)).not.toContain('recommendedStart');expect(JSON.stringify(snapshot.recipe)).not.toContain('2026-');
 });
+
+import {dishReviewForRecipe} from '../src/domain/documents/dishExtraction';
+import {convertRecipeReview} from '../src/domain/documents/reviewAdapter';
+it('extracts a selected method after planned-time edits independently of optional meal metadata',()=>{
+ let m:ExtendedMeal={...newMeal(),name:'',serveAt:'2026-11-15T13:00',dishes:[createDish('wings'),createDish('brats')]};const task=cookTimeline(m).find(t=>t.id.endsWith(':start'))!;
+ m=editStep(m,task.id,task.title,task.instructions,{plannedTimeOnly:true,timingMode:'fixed',scheduledAt:'2026-11-15T10:00Z',equipment:task.equipment??'',targetTempF:null});const before=structuredClone(m);
+ expect(convertMeal(m,{timeZone:'UTC',serveInstant:null}).status).toBe('skipped');const review=dishReviewForRecipe(m,task.dishId),saved=convertRecipeReview(review,'saved');expect(saved.status).toBe('converted');if(saved.status==='converted')expect(JSON.stringify(saved.document)).not.toContain('2026-11-15');expect(m).toEqual(before);expect(m.taskOverrides?.[task.id].scheduledAt).toBe('2026-11-15T10:00:00.000Z');
+});
+it('method extraction leaves execution, other dishes and unsupported metadata on the source intact',()=>{
+ let m=startCookSession(fixture(),'2026-11-14T22:00Z');const t=cookTimeline(m).find(t=>t.dishId===m.dishes[0].id)!;m=recordEvent(m,t.id,'completed','2026-11-14T22:01Z');Object.assign(m.dishes[1],{futureSetting:true});const before=structuredClone(m);
+ const review=dishReviewForRecipe(m,m.dishes[0].id),saved=convertRecipeReview(review,'saved');expect(saved.status).toBe('converted');expect(review.events).toBeUndefined();expect(review.completed).toEqual({});expect(review.notes).toEqual({});expect(m).toEqual(before);
+ const unsupported=structuredClone(m);Object.assign(unsupported.dishes[0],{futureSetting:true});expect(convertRecipeReview(dishReviewForRecipe(unsupported,unsupported.dishes[0].id),'saved').status).toBe('skipped');
+});
+
+import {reorderPlannedStep} from '../src/domain/stepReorder';
+it('extracts and reuses wings after moving oil preparation before the preceding doneness check',()=>{
+ let m:ExtendedMeal={...newMeal(),name:'Wings',serveAt:'2026-11-15T13:00',dishes:[createDish('wings')]};const tasks=cookTimeline(m),oil=tasks.find(t=>t.id.endsWith(':oil'))!,check=tasks.find(t=>t.id.endsWith(':check'))!;
+ m=reorderPlannedStep(m,oil.id,check.id,false);const before=structuredClone(m),result=convertRecipeReview(dishReviewForRecipe(m,oil.dishId),'saved');expect(result.status).toBe('converted');if(result.status!=='converted')throw Error(result.reason);
+ const fresh=instantiateRecipeReview(result.document,'2026-12-25T13:00');const next=cookTimeline(fresh);expect(next.findIndex(t=>t.id.endsWith(':oil'))).toBeLessThan(next.findIndex(t=>t.id.endsWith(':check')));expect(next.find(t=>t.id.endsWith(':rest'))?.templateStage?.minutes).toBe(5);expect(m).toEqual(before);
+});

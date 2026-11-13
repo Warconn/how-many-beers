@@ -8,6 +8,7 @@ for(const input of ['paste','md','txt'])test(input+' retains editable recipe det
  await page.getByRole('button',{name:'Preview recipe steps'}).click();
  const preview=page.getByRole('region',{name:'Review your method',exact:true});
  await page.screenshot({path:info.outputPath('recipe-details-default.png'),fullPage:true,scale:'css'});
+ await preview.getByRole('button',{name:'Edit equipment',exact:true}).click();
  await expect(preview.getByRole('combobox',{name:'Equipment',exact:true})).toHaveValue('Pellet Smoker');
  await preview.getByRole('combobox',{name:'Equipment',exact:true}).selectOption('__other__');await preview.getByRole('textbox',{name:'Custom equipment',exact:true}).fill('Backyard pellet smoker');
  await preview.getByRole('button',{name:'Add to meal',exact:true}).click();

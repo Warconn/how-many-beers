@@ -126,3 +126,11 @@ Imported long titles/instructions also have a real UI save regression. Editing
 only duration preserves their exact original text; the recipe authoring helper
 uses canonical limits and keeps fixed/recorded overrides. This does not change
 native planning editor behavior or archived execution.
+
+The latest owner oil-before-check case runs through meal step reordering, direct
+method save, reload and reuse with unchanged source data. A separate planned-time
+edit/blank optional meal-name case failed through whole-meal conversion and now
+saves the selected method independently. Full meal/history compatibility validation
+remains unchanged; unknown fields on the selected method are still rejected.
+Default action assertions require one footer primary, optional header recipe
+operations, collapsed equipment and no nested disclosures in method review.

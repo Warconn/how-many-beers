@@ -250,3 +250,38 @@ there are no sleeps, relaxed assertions or added retries. Both local desktop/pho
 wings cases pass after correction. Full CI must rerun on this checkpoint's commit.
 Actual iPhone library/editor screenshots from that run were inspected successfully;
 final artifact review remains part of PR #134's verification.
+
+
+## Latest owner correction: order change and minimal actions
+
+The owner clarified the failing move was **Prepare fryer and heat oil before the
+preceding wings check**, not a planned-date edit. Exact unit and actual UI coverage
+now tests that order, direct meal-method saving, reload and reuse, preserving the
+source meal and five-minute rest. A separate blank optional meal-name + planned
+start edit reproduced the same whole-meal extraction error before the fix.
+
+Method saving now extracts only the selected dish's authored inputs, still using
+the strict review/schema boundary. It does not convert or rewrite the meal/history
+envelope; optional meal metadata and unrelated dishes cannot block recipe saving.
+Unsupported selected-method fields still reject. Execution and calendar context
+stay on the source, and applied forecast dates stay out of reusable recipes.
+
+The owner rejected the footer bundle and exposed equipment rows. The successor
+layout has Back/Cancel at the top, one primary footer action, and one-level Recipe
+actions near the header for optional save/copy. Equipment is a summary with Edit;
+inside existing settings its selector stays flat. Existing-meal method saving is
+one direct contextual action near its heading, without another review/save screen.
+No new settings layers, profiles, #135 or protected cooking changes are included.
+
+Before preview update: run all relevant browser/account/auth/offline checks again,
+inspect the default desktop/mobile/iPhone layouts and update PR #134's candidate.
+The preceding CI notes describe earlier candidates, not this unpushed correction.
+
+Local verification of the latest owner correction: typecheck and **542 tests / 42
+files** pass; all **38 personal-recipe desktop/phone cases** pass, plus **38 existing
+recipe/dish/cooking compatibility cases**. The final six targeted cases also pass
+after adding equipment focus return and the original pending-step export guard.
+Default desktop/phone screenshots were inspected: equipment summary/Edit, optional
+header recipe operations, top Back and one footer primary. Whole-meal/history
+conversion validation and existing account persistence are unchanged. Run full CI
+and inspect final iPhone artifacts on the newly pushed checkpoint before review.

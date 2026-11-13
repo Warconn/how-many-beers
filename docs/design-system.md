@@ -163,11 +163,14 @@ Home keeps its existing cook content. Home, My recipes and Past cooks share a
 quiet text navigation within the existing header; My recipes is a full screen, never a modal overlay.
 Recipe names open the existing review editor, Use recipe opens an independent
 meal draft, and contextual trash controls retain records after confirmation.
-The review footer groups Add to meal (primary), Save to My recipes (secondary)
-and Back (navigation). An explicit library edit uses Save changes as primary,
-Save as new and Cancel as contextual actions. Saving includes an open step edit.
-Equipment choice uses existing labels with additional/custom equipment where
-needed; native combined labels remain lossless. Step configuration remains optional
+The review footer has one primary action: Add to meal, or Save changes when
+editing a saved recipe. Back/Cancel belongs at the top. Recipe actions near the
+method header discloses optional Save to My recipes / Save as new in one level;
+these actions never share a footer bundle with the primary action. Saving includes an open step edit.
+Equipment is normally a summary with one Edit control. The flat editor supports
+additional/custom equipment; native combined labels remain lossless. Inside an
+already open Step settings or Dish settings section, show the selector directly,
+without a second Edit disclosure. Step configuration remains optional
 in a single Step settings disclosure. No equipment profiles or scheduling mode
 changes are part of this refinement.
 
@@ -178,11 +181,15 @@ Keep the current Home typography, ivory surface, Upcoming cooks and Game Plan.
 Navigation belongs in the existing header, separate from save/sync status, with
 44px targets. It does not precede or interrupt Plan/Resume cook. My recipes uses
 full-screen semantics and browser Back; direct selection stays in planning.
-Use one primary action per decision area. Put secondary decisions beside the
-primary as secondary buttons, and Back/Cancel in a consistent low-emphasis place.
+Use one primary action per decision area. Do not pile optional actions beside it.
+Keep Back/Cancel at the top of a review. Put optional recipe operations in one
+Recipe actions disclosure near its header, with secondary button styling when
+opened. Never nest that disclosure inside another options menu.
 Keep step edits in the step editor and Add a step directly after the list.
-Method saving belongs in the review footer or a separate method action area,
-never beside Add a step or disguised as equipment configuration. Retained Remove
+Saving an existing meal's method is a single contextual action near that method's
+heading. It saves directly with an acknowledgement, without opening a second
+review/save screen. Add a step stays with the list. Recipe saving never sits beside
+Add a step and never hides inside equipment configuration. Retained Remove
 is contextual, visually separate and confirmed. Do not broadly change Cooking
 Mode or the Beerometer. A future standalone Equipment screen may manage favorites
 and settings; profiles/configuration are outside #114. Community #135 is deferred.

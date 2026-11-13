@@ -18,8 +18,10 @@ explicit personal recipe saving independent from Add to meal, immutable meal
 snapshots and retained recipe deletion. See the [implementation checkpoint](implementation/issue-114-handoff.md).
 The #114 feature branch includes explicit Save to My recipes, a dedicated library
 screen with Home / My recipes / Past cooks navigation, retained removal,
-independent meal copies and existing-editor reuse. Review actions are grouped;
-recipe-level saves include an open step edit. Existing equipment choices preserve
+independent meal copies and existing-editor reuse. Reviews have one footer primary, top Back/Cancel and one-level optional Recipe
+actions near the header. Recipe-level saves include an open step edit. Saving an
+existing meal method is direct and does not validate or rewrite unrelated meal
+metadata. Existing equipment choices preserve
 configuration and custom labels. It is not integrated
 or released; hosted use needs the reviewed additive migration.
 

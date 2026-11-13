@@ -23,6 +23,10 @@ Work in tested phases, commit and checkpoint between major phases. Stop cleanly
 at a safe boundary when the session budget is limited. No automatic dev/main
 merge, production release or hosted migration. The November 13 owner refinement requests a dedicated library screen, grouped
 review actions and simple equipment choice, with edited-step persistence first.
+Latest owner correction: one footer primary, Back/Cancel at the top, optional
+Recipe actions in one header disclosure and summary/Edit equipment. No nested
+options menus or footer button bundle. Saving a meal method is direct and scoped
+to the selected dish, without a second review/save screen.
 Recipe-level saving includes open step edits. Production #137 is included on the
 feature branch. Do not bundle Plan time / Use plan timing removal. The original
 November 11 recipe migration may already be applied in dev; use only the new
