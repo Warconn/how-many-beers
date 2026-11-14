@@ -27,7 +27,11 @@ configuration and custom labels. It is not integrated
 or released; hosted use needs the reviewed additive migration.
 
 November 14 approved refinement: Add dish offers Choose a template / My recipes;
-the library includes Add your own recipe and the existing text/file entry path.
+My recipes in Add dish is an inline grid matching the template choice boxes,
+including an Add your own recipe box for the existing text/file entry path.
+It does not open library management; that remains in the header. Choosing a saved
+recipe opens the existing review and adds nothing until Add to meal. Back/Cancel
+retains the current meal and the same chooser. See the [manual regression plan](recipes/manual-regression.md).
 First explicit save associates only the selected dish with its personal recipe.
 Reusable changes offer Update original recipe / Save as copy below the step list;
 copy asks for a distinct name, defaulting to _1/_2. Saved library editing uses Save

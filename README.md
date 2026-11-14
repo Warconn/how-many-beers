@@ -184,6 +184,9 @@ visible together in a spaced footer only for reusable changes; meal dates and
 actuals do not expose saves. First save links this dish; Update original recipe
 reuses that identity, while Save as copy asks for a distinct name. Planning save
 controls sit below the step list. Add dish offers Choose a template / My recipes;
-the library includes the existing text/file creation path. Equipment uses one compact checklist and
+the latter is an inline picker with the same choice boxes and an Add your own
+recipe box for existing text/file creation. Header My recipes opens management.
+See the [manual regression plan](docs/recipes/manual-regression.md).
+Equipment uses one compact checklist and
 recipe authoring keeps calendar controls in meal planning. See the
 [review and migration notes](docs/recipes/rollout.md).

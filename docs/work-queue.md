@@ -2,6 +2,14 @@
 
 ## Now: #114 personal recipes
 
+Owner accepted the recipe editing/choosing/saving behavior and requested one entry
+correction: Add dish → My recipes is an inline grid using the template boxes,
+including Add your own recipe. Full library management stays in header navigation.
+The correction adds no persistence/schema changes. Manual acceptance and automated
+coverage are mapped in [recipe regression instructions](recipes/manual-regression.md).
+Current exact-head verification and feature URL are tracked in PR #134.
+
+
 November 14 approved follow-up is implemented for verification on #134: source
 identity survives first save/reuse, changed meal methods update the same original
 or create a distinctly named copy, and unchanged/date-only methods hide saves.

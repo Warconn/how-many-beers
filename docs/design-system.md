@@ -215,8 +215,14 @@ is contextual, visually separate and confirmed. Do not broadly change Cooking
 Mode or the Beerometer. A future standalone Equipment screen may manage favorites
 and settings; profiles/configuration are outside #114. Community #135 is deferred.
 
-Add dish has two entries: Choose a template and My recipes. The dedicated library
-contains Add your own recipe with the existing paste/.txt/.md path. Templates
+Add dish has two entries: Choose a template and My recipes. Both use the same
+inline choice-box grid and visual styling. My recipes contains saved recipe
+choices plus an Add your own recipe box for the existing paste/.txt/.md path.
+Do not navigate to full My recipes management, change the URL/hash, or expose
+Edit/Remove/Save controls just to select a dish. Selecting a saved choice opens
+the accepted method review; Add to meal remains explicit. Back returns to the
+same choices. First and later dishes use the same switching controls. The
+header's My recipes remains a separate management screen. Templates
 remain immutable computed starters; saving creates a personal recipe. A linked
 meal is an independent snapshot, not a live reference. Explicit original updates
 never mutate other snapshots. Older unlinked dishes require an explicit original

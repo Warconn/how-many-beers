@@ -39,6 +39,7 @@ import EquipmentSelect from '@/components/EquipmentSelect';
 import {withRecipeLink} from '@/domain/recipeLink';
 import DishRecipeSaveButton from '@/components/DishRecipeSaveButton';
 import MyRecipes from '@/components/MyRecipes';
+import RecipePicker from '@/components/RecipePicker';
 import RecipeSaveButton from '@/components/RecipeSaveButton';
 import RecipePreview from "@/components/RecipePreview";
 import Icon from "@/components/Icon";
@@ -160,7 +161,7 @@ function CookExperience() {
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [newStepDishId,setNewStepDishId] = useState<string | null>(null);
   const [newStepTitle,setNewStepTitle] = useState("");
-  const [addMethod, setAddMethod] = useState<"template" | "recipe">("template");
+  const [addMethod, setAddMethod] = useState<"template" | "saved" | "recipe">("template");
   const [preset, setPreset] = useState<BuiltIn>("brisket");
   const [recipeName, setRecipeName] = useState("");
   const [recipeText, setRecipeText] = useState("");
@@ -686,16 +687,16 @@ function CookExperience() {
             </div>
             {meal.dishes.length===0 && (!recipeFirst||!showDishSetup) && <div className="empty-planner-choices">
               <button id={!showDishSetup?"add-dish-button":undefined} type="button" className="button primary" onClick={()=>{setAddMethod('template');setShowDishSetup(true)}}>{recipeFirst?"Choose a template":"Start with a template"}</button>
-              <button type="button" className="button secondary" onClick={openLibrary}>My recipes</button>
+              <button type="button" className="button secondary" onClick={()=>{setAddMethod('saved');setShowDishSetup(true);}}>My recipes</button>
               <p className="muted small">Choose a starter or use your own recipe. You can add more dishes afterward.</p>
             </div>}
             {meal.dishes.length>0 && !methodReview && <p className="muted small menu-guidance">{showDishSetup ? (recipeFirst?"Choose a template or add your own recipe. Everything stays in this meal.":"Choose a starter or import your recipe. Everything stays in this cook.") : "Tap a dish to adjust its steps. Add another whenever you're ready."}</p>}
 
             {showDishSetup && <section id="menu-add-dish" className="menu-add-dish" role="region" aria-label="Add dish">
               {!(recipeFirst&&methodReview)&&<h3>Add a dish</h3>}
-              {meal.dishes.length>0&&!(recipeFirst&&methodReview) && <div className="add-method-tabs" role="group" aria-label="Add dish method">
+              {(meal.dishes.length>0||recipeFirst)&&!(recipeFirst&&methodReview) && <div className="add-method-tabs" role="group" aria-label="Add dish method">
                 <button type="button" aria-pressed={addMethod==="template"} className={addMethod==="template"?"selected":""} onClick={()=>setAddMethod("template")}>{recipeFirst?"Choose a template":"Start from template"}</button>
-                <button type="button" aria-pressed={addMethod==="recipe"} className={addMethod==="recipe"?"selected":""} onClick={openLibrary}>My recipes</button>
+                <button type="button" aria-pressed={addMethod!=="template"} className={addMethod!=="template"?"selected":""} onClick={()=>setAddMethod("saved")}>My recipes</button>
               </div>
               }
               {recipeFirst&&methodReview?<RecipeMethodReview meal={methodReview} saveAction={!recipes.enabled?undefined:(prepare,hasOpenEdit,onCopying)=><RecipeSaveButton onCopying={onCopying} onLinkChange={async(link,renameFrom)=>{setMethodReview(current=>current?withRecipeLink(current,current.dishes[0].id,link,renameFrom):current);}} prepareMeal={prepare} hasOpenEdit={hasOpenEdit} key={methodReview.dishes[0].id} meal={methodReview} recipes={recipes} onProtected={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}}} onSaved={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}}} onSignIn={draft=>{if(recipes.guest){if(convertRecipeReview(draft,'guest-draft').status!=='converted')throw Error('This review cannot be protected safely yet.');window.sessionStorage.setItem(GUEST_RECIPE_REVIEW,JSON.stringify({version:1,review:draft}));guestRecipeDraft.current={meal:draft,selection:workspace.selection};}window.dispatchEvent(new Event('hmb-open-account'));}}/>} onChange={setMethodReview} onBack={()=>{try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}guestRecipeDraft.current=null;setMethodReview(null);}} onAdd={async draft=>{if(meal.id!==reviewTarget.current)throw Error('Your meal changed. Go back to choices before adding this recipe.');await save({active:addReviewedDish(meal,draft,true)});try{window.sessionStorage.removeItem(GUEST_RECIPE_REVIEW);}catch{}setClockNow(Date.now());setMethodReview(null);setShowDishSetup(false);setEditingDishId(null);setDraft(null);setRecipeName('');setRecipeText('');requestAnimationFrame(()=>{if(!document.activeElement||document.activeElement===document.body)document.getElementById('serve-at')?.focus();});}}/>:addMethod==="template" ? <>
@@ -708,7 +709,7 @@ function CookExperience() {
                   </button>
                 ))}
               </div>
-              </> : <div className="recipe-import-inline">
+              </> : addMethod==="saved" ? <RecipePicker recipes={recipes} serveAt={meal.serveAt} onCreate={()=>setAddMethod('recipe')} onUse={draft=>{reviewTarget.current=meal.id;setMethodReview(draft);}}/> : <div className="recipe-import-inline">
                 {!draft ? <>
                 <p className="muted small">{recipeFirst?"Write your steps, paste a recipe, or upload a text file. We’ll pick up any times you include.":"Paste instructions or upload a text file. We'll find written times for you to review. Recipe URLs aren't supported yet."}</p>
                 <label htmlFor="recipe-name">Recipe title</label>

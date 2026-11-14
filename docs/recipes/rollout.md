@@ -45,13 +45,17 @@ works. The feature URL is reported separately after Cloudflare confirms it.
 ## Owner review
 
 1. Sign in on the feature preview. Plan a cook and review a template/custom method.
-   Optional Save to My recipes lives in the one-level Recipe actions disclosure; saving leaves the method open and meal unchanged.
+   After a reusable edit, Save to My recipes is visible beside/below Add to meal in
+   the footer. No Recipe actions disclosure. Saving leaves the method open and
+   the meal unchanged.
 2. Add to meal independently. It must not create another library entry.
-3. Open My recipes, select Use recipe, adjust today's copy and Add to meal. The
-   saved original and meal serving target remain unchanged.
+3. In Add dish, choose My recipes: use the same inline boxes as templates,
+   including Add your own recipe. Select a saved box, review and Add to meal. The
+   header My recipes remains separate management; the original and target remain
+   unchanged. See the [complete regression checklist](manual-regression.md).
 4. Open a recipe by its name. Edit two steps (including duration and optional step
    settings), reorder, and Save changes. The final open edit is included without
-   requiring Save step first. Reload and verify the edits. Save as new creates an
+   requiring Save step first. Reload and verify the edits. Save as copy creates an
    independent recipe; Cancel leaves the saved version unchanged.
 5. Remove a recipe: dismiss to keep it, then confirm. Reload/sign in on another
    device; it stays hidden. Existing dishes, actuals, plans and history stay intact.

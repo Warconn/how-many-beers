@@ -34,8 +34,10 @@ The early-fixed-step scheduling correction is independent; preserve all anchors,
 actuals, physical cooking and histories. Keep #134 draft for owner acceptance;
 no automatic merges, production changes or hosted migrations.
 November 14 source-aware refinement is approved: Add dish offers Choose a template
-and My recipes; Add your own recipe lives in My recipes with the existing text/file
-path. Templates are computed starters, never automatically personal library rows.
+and My recipes. In Add dish, My recipes stays INLINE as template-style choices
+plus an Add your own recipe box for the existing text/file path. It must not open
+the management page or expose Edit/Remove controls. Only the header's My recipes
+opens full library management. Preserve the accepted review/edit/save behavior. Templates are computed starters, never automatically personal library rows.
 Explicit first save links only this dish; changed linked methods offer Update
 original recipe / Save as copy (distinct editable _1/_2 name). Library editing uses
 Save changes / Save as copy. Hide saves for unchanged recipes and starter templates;

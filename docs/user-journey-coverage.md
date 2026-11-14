@@ -152,3 +152,19 @@ recovery, ambiguous reply recovery by known ID/receipt and explicit original
 selection for a legacy name collision. No heuristic recipe association occurs.
 Domain round trips preserve native pending/source context while excluding it from
 Recipe JSON; canonical Meal sourceRecipe contains only ID/revision provenance.
+
+
+## Inline saved-recipe selection refinement (#114)
+
+Add dish → My recipes now reuses the template-choice grid in place. The header
+library remains full management. The five inline-picker tests in
+`e2e/auth/personal-recipes.spec.ts` cover first/later dishes, no management detour
+or hash change, shared choice-box styling, explicit Add, Back, independent IDs and
+source links, no implicit save, retained deletion disappearing from choices,
+loading/empty/error states with text creation, keyboard activation, text/file review,
+Cancel/draft retention and signed-out creation without a sign-in requirement.
+These run on account desktop Chromium and iPhone WebKit. The common text-entry
+helper now asserts inline selection across existing guest/import/whole-cook and
+account journeys. Existing save/update/copy/conflict/history/offline suites remain.
+See [manual regression instructions](recipes/manual-regression.md) for the complete
+owner checklist and named coverage; mocks do not replace hosted-device acceptance.

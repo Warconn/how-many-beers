@@ -1,5 +1,12 @@
 # Issue #114 implementation checkpoint
 
+**Latest chooser refinement:** the owner accepted recipe editing/choosing/saving,
+but rejected Add dish → My recipes navigating to management. It now stays inline
+using the exact template-choice grid, with saved recipe boxes and an Add your own
+recipe box. Header My recipes remains management. The complete owner checklist
+and automated mapping are in [manual regression instructions](../recipes/manual-regression.md).
+PR #134 remains draft/unmerged; current verification/deployment evidence is on the PR.
+
 **Current owner direction, November 14:** source-aware saving is implemented on
 `feat/114-personal-recipes`, still draft/unmerged in [PR #134](https://github.com/Warconn/how-many-beers/pull/134).
 UI source commit `a667839` follows domain checkpoint `edacc33`. The owner-approved
@@ -446,3 +453,32 @@ The account suite exposed two issues in the broader plan pathways:
 No recipe persistence/schema/UX scope changes. Focused desktop/phone recovery,
 failed Add and retry checks accompany typecheck and all 553 units. Final exact-head
 full CI and owner acceptance are required; PR #134 carries current results.
+
+
+### Inline chooser correction: preserve accepted editing/saving
+
+Add dish → My recipes now sets the local selection category instead of opening
+`#my-recipes`. Both first/later dishes share template-style switching controls.
+RecipePicker reuses existing template-picker/template-choice CSS and plus icons;
+no new stylesheet, overlay or configuration workflow. Saved boxes open the
+existing review with the same owner-scoped source ID/revision/content baseline.
+Only explicit Add to meal writes a dish. The custom box leads to existing text/
+.txt/.md entry. Back returns to the same choices; Cancel retains the meal/draft.
+Library editing/removal stays behind explicit header navigation.
+
+Five browser journeys cover first/later selection, identical box styling, no
+management controls/hash changes, text/file/keyboard/Cancel, loading/empty/error/
+guest paths, source provenance, independent snapshots and removal disappearing
+from choices. The common text-entry helper now asserts inline selection across
+existing general/account journeys. The full manual checklist maps all accepted
+save/update/copy/equipment/history/offline behavior to existing tests as well.
+
+The exact selection regression fails on the old page at the missing inline
+picker, then passes after the change. Typecheck and all 553 units pass. Local
+personal-recipe coverage and focused provider-return/picker/loading/cancellation
+checks run on desktop/phone; final exact-head full CI/WebKit evidence is tracked
+in PR #134. One local provider-return check initially exceeded session checking
+and passed on focused rerun; no auth implementation changed. The previously
+reported cancellation-test race now waits for the actual RPC acknowledgement
+before asserting the same retained records/history. No cancellation code, JSON
+schema, domain scheduling or persistence was changed. No hosted migration or merge.
