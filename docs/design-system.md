@@ -222,7 +222,9 @@ Do not navigate to full My recipes management, change the URL/hash, or expose
 Edit/Remove/Save controls just to select a dish. Selecting a saved choice opens
 the accepted method review; Add to meal remains explicit. Back returns to the
 same choices. First and later dishes use the same switching controls. The
-header's My recipes remains a separate management screen. Templates
+header's My recipes remains a separate management screen. It has no creation/
+upload shortcut until independent recipe authoring exists; never redirect a
+library creation action into a meal plan. Templates
 remain immutable computed starters; saving creates a personal recipe. A linked
 meal is an independent snapshot, not a live reference. Explicit original updates
 never mutate other snapshots. Older unlinked dishes require an explicit original

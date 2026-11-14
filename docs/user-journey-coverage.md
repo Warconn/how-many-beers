@@ -168,3 +168,10 @@ helper now asserts inline selection across existing guest/import/whole-cook and
 account journeys. Existing save/update/copy/conflict/history/offline suites remain.
 See [manual regression instructions](recipes/manual-regression.md) for the complete
 owner checklist and named coverage; mocks do not replace hosted-device acceptance.
+
+
+Header management intentionally has no Add your own recipe action until recipe
+creation can be independent of meal planning. The new “header recipe management
+has no meal-creation shortcut…” regression covers empty and populated libraries,
+Home/planning origins, edit/Cancel, unchanged workspace/history/recipe rows and
+return to the original screen. Inline text/upload choice tests remain intact.

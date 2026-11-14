@@ -47,8 +47,9 @@ needed for this chooser correction. The app remains a feature preview.
    together below the step list. Copy suggests a distinct editable _1/_2 name;
    an existing name is rejected. Saving the copy preserves the original and links
    only this meal dish to the new recipe.
-9. **Header management.** Header My recipes still opens the dedicated library.
-   Edit/rename and Save changes, or Save as copy, then reload. Cancel discards an
+9. **Header management.** Header My recipes still opens the dedicated library. It must not
+   offer Add your own recipe or pull you into a meal plan; closing it returns to
+   the originating screen without creating/changing a plan. Edit/rename and Save changes, or Save as copy, then reload. Cancel discards an
    editor draft. Equipment stays a compact multi-choice checklist without Done
    or stacked selects. Remove asks for confirmation and retains the record; a
    confirmed removal disappears from both library and inline chooser. Existing
@@ -69,7 +70,7 @@ needed for this chooser correction. The app remains a feature preview.
 | 5 | Personal-recipes “an empty inline recipe picker…”; `recipe-details`, `recipe-extraction`, `imported-duration-ux`, `imported-timing`, `cook-journeys` browser specs |
 | 6 | Personal-recipes “loading saved recipes…”, “a failed saved-recipe list…” and “a guest chooses…”; existing guest sign-in and missing migration cases |
 | 7–8 | Personal-recipes saved-template/open-step/wings-order/update-original/named-copy/date-only/reload cases; `tests/recipeLink.test.ts` and document adapter suites |
-| 9 | Personal-recipes library edit/rename/copy/Cancel/retained-removal and equipment tests; inline chooser test checks removed records are absent while snapshots survive |
+| 9 | Personal-recipes library edit/rename/copy/Cancel/retained-removal and equipment tests; inline chooser test checks removed records are absent while snapshots survive; “header recipe management has no meal-creation shortcut…” covers empty/populated libraries opened from Home/planning |
 | 10 | Personal-recipes lost-reply/conflict/fresh-session/active-cook tests; `e2e/auth/upcoming-plans.spec.ts`, `cancel-account.spec.ts`, account/auth suites, production offline suite and `cook-journeys.spec.ts` |
 
 The common `e2e/helpers/recipeEntry.ts` checks that text entry uses the inline

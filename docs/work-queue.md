@@ -2,6 +2,12 @@
 
 ## Now: #114 personal recipes
 
+Pre-dev acceptance follow-up: remove the header-library Add your own recipe
+shortcut, which reused meal planning. Keep the working Add dish text/upload box.
+Independent recipe creation from management is deferred; there is no misleading
+creation action in the current library. No schema/persistence change or merge.
+
+
 Owner accepted the recipe editing/choosing/saving behavior and requested one entry
 correction: Add dish → My recipes is an inline grid using the template boxes,
 including Add your own recipe. Full library management stays in header navigation.

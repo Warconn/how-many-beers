@@ -1,5 +1,10 @@
 # Issue #114 implementation checkpoint
 
+**Latest pre-dev guard:** remove Add your own recipe from header management and
+remove its planner callback. Text/upload remains in the inline Add dish chooser.
+The owner approved temporary removal; independent library creation is deferred.
+No merge authorization was inferred from “before we merge into dev.”
+
 **Latest chooser refinement:** the owner accepted recipe editing/choosing/saving,
 but rejected Add dish → My recipes navigating to management. It now stays inline
 using the exact template-choice grid, with saved recipe boxes and an Add your own
@@ -482,3 +487,18 @@ and passed on focused rerun; no auth implementation changed. The previously
 reported cancellation-test race now waits for the actual RPC acknowledgement
 before asserting the same retained records/history. No cancellation code, JSON
 schema, domain scheduling or persistence was changed. No hosted migration or merge.
+
+
+### Management creation shortcut removed before dev acceptance
+
+The owner found that header My recipes → Add your own recipe opened the meal
+planner's importer. The small safe fix removes the management action and its
+onCreate prop/callback entirely, rather than introducing a new authoring flow.
+The Add dish chooser's text/upload box and all accepted edit/save/copy behavior
+remain unchanged. No JSON, timing, persistence, database or lifecycle change.
+
+The new UI regression fails on the old button, then checks empty/populated
+libraries, both Home/planning origins, edit/Cancel and exact workspace/history/
+recipe preservation. Focused coverage includes the existing inline creation paths.
+Current exact-head test/deployment evidence remains on PR #134. Keep draft and
+unmerged until owner approval; no hosted migration or production deployment.
