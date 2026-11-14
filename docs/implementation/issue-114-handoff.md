@@ -1,5 +1,14 @@
 # Issue #114 implementation checkpoint
 
+**Current owner direction, November 14:** source-aware saving is implemented on
+`feat/114-personal-recipes`, still draft/unmerged in [PR #134](https://github.com/Warconn/how-many-beers/pull/134).
+UI source commit `a667839` follows domain checkpoint `edacc33`. The owner-approved
+flow uses Choose a template / My recipes, links the first explicit save, and
+shows Update original recipe / Save as copy only after reusable changes. Saves
+sit below the step list, never at the heading. See the final checkpoint below;
+the PR carries current exact-head CI and Cloudflare deployment evidence. Earlier
+candidate statuses below are historical. No hosted mutation or automatic merge.
+
 **Owner approved the complete editor reset for implementation November 13.**
 The rejection and investigation below are historical; the new implementation
 uses visible paired save decisions, a compact flat equipment checklist and
@@ -19,7 +28,7 @@ library/header navigation, browser Back, grouped actions, direct method saving a
 multiple/custom equipment selection are implemented. Full verification is in
 progress; PR #134 remains draft targeting dev. See the final sections for details.
 
-## State
+## Initial implementation state (historical)
 
 Storage checkpoint: `886d6d6`; UI checkpoint: `3a44905`; CI portability fixes: `fea8e49`.
 Local typecheck and all 530 tests / 42 files pass. Final local Chromium run covered
@@ -408,4 +417,13 @@ Local checks so far: typecheck, 553 unit tests and all 48 personal-recipe cases 
 system Chromium desktop/Pixel pass. Actual desktop and phone equipment/review/
 planning screenshots inspected. Additional copy-name and failed source-write
 checks, broad browser CI and final iPhone/WebKit review remain required. This is
-still unpushed; bbbb75c remains the public preview until the next verified push.
+the local verification snapshot before pushing `a667839`. That UI source is now
+pushed and Cloudflare-confirmed at
+https://feat-114-personal-recipes.how-many-beers.pages.dev/ . Four additional local
+desktop/phone cases pass: duplicate copy names are rejected and an unacknowledged
+workspace source-link write creates no recipe. Fresh locked dependencies and
+`test:full` pass typecheck/553 units, then hit missing bundled browsers locally.
+System Chromium supplies local browser checks (video disabled because ffmpeg is
+also absent); unchanged CI runs the complete browser/WebKit/auth/account/offline
+matrix. Real isolated PostgreSQL clean/seeded-upgrade and all races pass. See PR
+#134 for final CI results, current deployed SHA and owner acceptance checklist.
