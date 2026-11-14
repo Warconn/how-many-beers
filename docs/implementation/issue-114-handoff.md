@@ -427,3 +427,22 @@ System Chromium supplies local browser checks (video disabled because ffmpeg is
 also absent); unchanged CI runs the complete browser/WebKit/auth/account/offline
 matrix. Real isolated PostgreSQL clean/seeded-upgrade and all races pass. See PR
 #134 for final CI results, current deployed SHA and owner acceptance checklist.
+
+### Final CI follow-up: locked-plan navigation and failure-injection phase
+
+The d0290a7 run passed 553 units, all 393 general browser cases, 26 auth,
+36 offline, database security and all 50 personal-recipe desktop/iPhone cases.
+The account suite exposed two issues in the broader plan pathways:
+- Header navigation duplicated the existing escape Home control while an upcoming
+  plan was locked/conflicted. Retain the existing Plan navigation in that state;
+  suppress the header navigation. The conflict regression now asserts exactly one
+  Home and the existing recovery escape, with no extra recovery workflow.
+- The temporary-save-failure fixture enabled failures when the initially empty
+  plan existed, before Add to meal had acknowledged its dish write. It therefore
+  tested a failed Add instead of a subsequent edit failure. The test now awaits
+  the actual review close and one-dish server acknowledgement before injecting
+  the failure. The separate failed-Add/retry/no-duplicate test remains intact.
+
+No recipe persistence/schema/UX scope changes. Focused desktop/phone recovery,
+failed Add and retry checks accompany typecheck and all 553 units. Final exact-head
+full CI and owner acceptance are required; PR #134 carries current results.

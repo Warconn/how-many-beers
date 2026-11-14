@@ -539,7 +539,7 @@ function CookExperience() {
           <h1>How Many Beers?</h1>
           <p className="subtitle">From First Beer to First Bite.</p>
         </div>
-      {(showRecipes||view==='home'||view==='history'||view==='planning'&&!methodReview)&&<nav className="app-navigation" aria-label="Main navigation">
+      {!(workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.locked)&&(showRecipes||view==='home'||view==='history'||view==='planning'&&!methodReview)&&<nav className="app-navigation" aria-label="Main navigation">
         <button type="button" className="link" aria-current={!showRecipes&&view==='home'?'page':undefined} disabled={recipes.busy} onClick={()=>leaveLibrary(()=>{closeLibrary();void goHome();})}>Home</button>
         {recipes.enabled&&<button type="button" className="link" aria-current={showRecipes?'page':undefined} disabled={recipes.busy} onClick={()=>{if(!showRecipes)openLibrary();}}>My recipes</button>}
         <button type="button" className="link" aria-current={!showRecipes&&view==='history'?'page':undefined} disabled={recipes.busy} onClick={()=>leaveLibrary(()=>{closeLibrary();setView('history');})}>Past cooks</button>
