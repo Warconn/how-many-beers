@@ -1,3 +1,4 @@
+import {openOwnRecipe} from './helpers/recipeEntry';
 import {changeStepDuration} from './helpers/stepEditing';
 import {test,expect} from '@playwright/test';
 test.use({timezoneId:'UTC'});
@@ -43,7 +44,7 @@ const grill=()=>meal(dish('Brats','Preheat grill (15 minutes)\nGrill brats (35 m
 test('independent dish windows overlap; target changes and short sauce preserve durations',async({page})=>{
  const m=pair();await open(page,m);await ready(page,'18:00');await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime',at('16:45'));await combined(page);await starts(row(page,'Roast potatoes (75 minutes)'),'16:45');await starts(row(page,'Grill brats (45 minutes)'),'17:15');
  await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 15m');
- await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Sauce');await page.getByLabel('Recipe instructions').fill('Simmer sauce (15 minutes)');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await openOwnRecipe(page);await page.getByLabel('Recipe title').fill('Sauce');await page.getByLabel('Recipe instructions').fill('Simmer sauce (15 minutes)');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  await ready(page,'18:00');await starts(row(page,'Simmer sauce (15 minutes)'),'17:45');await starts(row(page,'Roast potatoes (75 minutes)'),'16:45');
  await page.getByLabel('Serve date and time').fill('2026-11-08T18:45');await ready(page,'18:45');await starts(row(page,'Roast potatoes (75 minutes)'),'17:30');await starts(row(page,'Grill brats (45 minutes)'),'18:00');await starts(row(page,'Simmer sauce (15 minutes)'),'18:30');
  const saved=await stored(page);expect(saved.dishes[0]).toEqual(m.dishes[0]);expect(saved.dishes[1]).toEqual(m.dishes[1]);expect(saved.events).toEqual(m.events??[]);expect(saved.completed).toEqual({});

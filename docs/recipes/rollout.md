@@ -55,10 +55,11 @@ works. The feature URL is reported separately after Cloudflare confirms it.
    independent recipe; Cancel leaves the saved version unchanged.
 5. Remove a recipe: dismiss to keep it, then confirm. Reload/sign in on another
    device; it stays hidden. Existing dishes, actuals, plans and history stay intact.
-6. Save a meal-specific method directly near the expanded method heading. One
-   Save to My recipes action acknowledges the write in place; there is no second
-   review/save screen. Authored extraction excludes actuals/calendar history and
-   leaves the meal unchanged.
+6. Save a changed meal-specific method in the action area after its step list.
+   First save links this dish; subsequent changes offer Update original recipe or
+   Save as copy with a distinct name. Unchanged methods/date-only edits hide saves.
+   Authored extraction excludes actuals/calendar history. No second review wizard;
+   only this dish's source metadata (and explicit copy name) changes.
 7. Guest Save recipe opens optional sign-in and preserves the review draft. Email and existing provider redirect returns preserve the tab-scoped draft. It does
    not automatically import the guest meal or save the method after sign-in.
 
@@ -70,8 +71,14 @@ review is protected across existing provider redirects, then handed to the durab
 owner journal before its temporary guest slot is released. Failure is not success;
 review inputs stay in place. Revision conflicts never become fresh overwrites or
 resurrect deleted recipes. Explicit Use saved version protects the pending change
-on the device before releasing its journal. Recipe controls do not write workspace,
-upcoming-plan or history records.
+on the device before releasing its journal. Library review saves never modify the current workspace or history. A planning
+save first durably records an owner-scoped source intent in only the selected
+meal/dish using the existing acknowledged workspace API, then saves the recipe,
+then acknowledges the link. This prevents duplicate IDs across ambiguous replies.
+Copy relinks only that dish and conditionally updates its unchanged display name.
+Other dishes, meals and history stay independent. Source links never grant access;
+existing RPC ownership/CAS/receipts remain authoritative. No additional SQL or
+schema migration is needed for the November 14 source-link refinement.
 
 An application rollback should retain the additive tables and receipts. Do not drop
 recipe rows or reverse the existing cook migrations. Capability gating preserves

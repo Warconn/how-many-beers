@@ -26,6 +26,17 @@ metadata. Existing equipment choices preserve
 configuration and custom labels. It is not integrated
 or released; hosted use needs the reviewed additive migration.
 
+November 14 approved refinement: Add dish offers Choose a template / My recipes;
+the library includes Add your own recipe and the existing text/file entry path.
+First explicit save associates only the selected dish with its personal recipe.
+Reusable changes offer Update original recipe / Save as copy below the step list;
+copy asks for a distinct name, defaulting to _1/_2. Saved library editing uses Save
+changes / Save as copy. Unchanged recipes/templates and calendar-only edits hide
+save controls. Library updates never propagate into other meal/history snapshots.
+Native source identity and protected pending intent survive reload; canonical
+Recipe JSON remains date-free and canonical Meal sourceRecipe is provenance only.
+No new schema migration is needed for this refinement.
+
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.
 

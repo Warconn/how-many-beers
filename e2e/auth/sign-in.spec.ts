@@ -1,3 +1,4 @@
+import {openOwnRecipe} from '../helpers/recipeEntry';
 import { test, expect } from "@playwright/test";
 import { api, user, session, backend } from "./fixtures";
 test("email sign-in, reload and local sign-out preserve browser-local cook data", async ({
@@ -163,9 +164,7 @@ test("planner sign-in stays in the workspace and preserves an open recipe draft"
     .getByRole("button", { name: "Add smoked brisket", exact: true })
     .click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole("button", { name: "+ Add a dish", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Add your own recipe", exact: true })
-    .click();
+  await openOwnRecipe(page);
   await page.getByLabel("Recipe title").fill("Friday beans");
   const before = await page.evaluate(() =>
     localStorage.getItem("how-many-beers:meal:v1"),

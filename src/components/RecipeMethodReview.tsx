@@ -11,9 +11,11 @@ import {StepGrip,StepEditButton,StepInstructions,StepReorderHelp} from './StepLi
 import {reorderPlannedStep} from '@/domain/stepReorder';
 import {reviewDuration,editReviewedStep} from '@/domain/recipeReview';
 
-export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveAction,busy=false,primaryLabel='Add to meal'}:{busy?:boolean;saveAction?:(prepare:()=>ExtendedMeal,hasOpenEdit:boolean)=>ReactNode;primaryLabel?:string;meal:ExtendedMeal;onChange:(meal:ExtendedMeal)=>void;onAdd:(draft:ExtendedMeal)=>Promise<void>;onBack:()=>void}){
+export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveAction,hidePrimary=false,busy=false,primaryLabel='Add to meal'}:{hidePrimary?:boolean;busy?:boolean;saveAction?:(prepare:()=>ExtendedMeal,hasOpenEdit:boolean,onCopying:(open:boolean)=>void)=>ReactNode;primaryLabel?:string;meal:ExtendedMeal;onChange:(meal:ExtendedMeal)=>void;onAdd:(draft:ExtendedMeal)=>Promise<void>;onBack:()=>void}){
  const dish=meal.dishes[0],tasks=cookTimeline(meal),heading=useRef<HTMLHeadingElement>(null);
  const [editing,setEditing]=useState<string|null>(null),[title,setTitle]=useState(''),[instructions,setInstructions]=useState(''),[minutes,setMinutes]=useState(''),[equipment,setEquipment]=useState(''),[temperature,setTemperature]=useState(''),[error,setError]=useState(''),[adding,setAdding]=useState(false),[committing,setCommitting]=useState(false);
+ const [copying,setCopying]=useState(false);
+ const editDirty=adding||editing!==null&&(()=>{const t=tasks.find(t=>t.id===editing);return !!t&&(title!==t.title||instructions!==(t.instructions??'')||minutes!==(reviewDuration(meal,t)==null?'':String(reviewDuration(meal,t)))||equipment!==(t.equipment??'')||temperature!==(t.targetTempF==null?'':String(t.targetTempF)));})();
  const reorder=useStepReorder(editing!==null||adding||committing,(id,target,after)=>onChange(reorderPlannedStep(meal,id,target,after)));
  useEffect(()=>{heading.current?.focus({preventScroll:true});heading.current?.closest('.method-review')?.scrollIntoView({block:'start',behavior:'instant'});},[]);
  const prepare=()=>{
@@ -57,6 +59,6 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
   {dish.recipeSource&&<details><summary>Original recipe</summary><pre>{dish.recipeSource}</pre></details>}
   {error&&<p className="form-error" role="alert">{error}</p>}
   
-  <div className="method-review-actions recipe-review-footer"><button type="button" className="button primary" disabled={!dish.name.trim()||!tasks.length} onClick={async()=>{setCommitting(true);setError('');try{await onAdd(prepare());}catch(e){setError(e instanceof Error&&(primaryLabel!=='Add to meal'||e.message.startsWith('Your meal changed.'))?e.message:'Could not add the recipe yet. Your edits are still here.');}finally{setCommitting(false);}}}>{primaryLabel}</button>{saveAction?.(prepare,editing!==null||adding)}</div>
+  <div className="method-review-actions recipe-review-footer">{!hidePrimary&&!copying&&<button type="button" className="button primary" disabled={!dish.name.trim()||!tasks.length} onClick={async()=>{setCommitting(true);setError('');try{await onAdd(prepare());}catch(e){setError(e instanceof Error&&(primaryLabel!=='Add to meal'||e.message.startsWith('Your meal changed.'))?e.message:'Could not add the recipe yet. Your edits are still here.');}finally{setCommitting(false);}}}>{primaryLabel}</button>}{saveAction?.(prepare,editDirty,setCopying)}</div>
  </fieldset></section>;
 }

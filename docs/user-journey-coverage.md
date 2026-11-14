@@ -132,7 +132,7 @@ method save, reload and reuse with unchanged source data. A separate planned-tim
 edit/blank optional meal-name case failed through whole-meal conversion and now
 saves the selected method independently. Full meal/history compatibility validation
 remains unchanged; unknown fields on the selected method are still rejected.
-Default action assertions require both method choices visible together, one
+Dirty-method action assertions require both method choices visible together, one
 visually primary, desktop/mobile spacing and tap targets, no Recipe actions menu,
 no meal-date controls during review, and a compact equipment checklist with no
 Done/select rows. Escape/focus return, outside close and multiple/custom labels
@@ -143,3 +143,12 @@ preparation: flexible later work meets the unchanged 1 PM target after reload.
 Unit checks cover insufficient slack, a constraining second fixed start, other
 dishes and active-cook exclusion. It remains a synthetic reproduction of the
 reported pathway, not inspection of the owner's particular saved plan.
+
+Source-aware save regressions cover unchanged starter/library controls being
+absent, first explicit save linking only the selected dish, exact oil-before-check
+Update original with one ID, reload and date-only clean state, distinct named copy
+and relinking, independent second-dish snapshots, newer-device conflict/copy
+recovery, ambiguous reply recovery by known ID/receipt and explicit original
+selection for a legacy name collision. No heuristic recipe association occurs.
+Domain round trips preserve native pending/source context while excluding it from
+Recipe JSON; canonical Meal sourceRecipe contains only ID/revision provenance.

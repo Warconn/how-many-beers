@@ -164,8 +164,12 @@ quiet text navigation within the existing header; My recipes is a full screen, n
 Recipe names open the existing review editor, Use recipe opens an independent
 meal draft, and contextual trash controls retain records after confirmation.
 The method footer groups the two same-scope decisions, with one visually primary
-action. Saved recipe editing uses Save changes plus immediately visible Save as
-new recipe. New review uses Add to meal plus Save to My recipes. Do not put these
+action. Show persistence choices only when reusable content has changed; merely
+opening an editor, editing meal dates or recording activity does not expose saves.
+Saved recipe editing uses Save changes plus immediately visible Save as copy.
+New authored review uses Add to meal plus Save to My recipes; untouched starter
+templates need only Add to meal. Linked recipe review uses Update original recipe
+plus Save as copy when changed, alongside Add to meal. Do not put these
 important actions under Recipe actions or another disclosure. Desktop controls
 share a row with 16px separation; phone controls occupy separate rows with 16px
 separation and 44px minimum targets. Back/Cancel uses top navigation. Acknowledged
@@ -200,10 +204,20 @@ decisions visibly with it, with deliberate spacing and responsive stacking rathe
 than hiding them or piling unrelated controls together. Back/Cancel stays in top
 navigation. Disclosures are for optional supporting detail, not core save choices.
 Keep step edits in the step editor and Add a step directly after the list.
-Saving an existing meal's method is a single contextual action near that method's
-heading. It saves directly with an acknowledgement, without opening a second
-review/save screen. Add a step stays with the list. Recipe saving never sits beside
+A meal's source reference may appear quietly near the dish heading. Its save
+controls belong AFTER the editable step list, with a divider and space from Add a
+step. A first save links only this dish; subsequent edits offer Update original
+recipe and Save as copy. Do not float a save control at the top. Copy opens one
+inline name field with Save copy / Cancel copy, replacing the normal save choices;
+suggest a distinct _1/_2 name and require uniqueness. No second review wizard. Add a step stays with the list. Recipe saving never sits beside
 Add a step and never hides inside equipment configuration. Retained Remove
 is contextual, visually separate and confirmed. Do not broadly change Cooking
 Mode or the Beerometer. A future standalone Equipment screen may manage favorites
 and settings; profiles/configuration are outside #114. Community #135 is deferred.
+
+Add dish has two entries: Choose a template and My recipes. The dedicated library
+contains Add your own recipe with the existing paste/.txt/.md path. Templates
+remain immutable computed starters; saving creates a personal recipe. A linked
+meal is an independent snapshot, not a live reference. Explicit original updates
+never mutate other snapshots. Older unlinked dishes require an explicit original
+selection on name collision; never infer identity by title.

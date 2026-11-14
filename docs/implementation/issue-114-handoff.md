@@ -380,3 +380,32 @@ copy-name collisions and pending metadata have deterministic coverage. No hosted
 SQL/schema migration or merge. UI integration and expanded actual-browser tests
 are still in progress in the working tree; this is not a new review candidate.
 The previous accepted-for-testing head was bbbb75c, not this unfinished follow-up.
+
+### November 14 UI integration checkpoint (local verification)
+
+Implements the approved source-aware flow on the existing feature branch:
+- Add dish: Choose a template / My recipes. Library contains Add your own recipe
+  using the existing text/.txt/.md path; no new extraction or equipment system.
+- First explicit save links this dish. Reuse retains source ID/revision/content
+  hash, while retaining an independent method snapshot. Template starters remain
+  computed and do not become library rows automatically.
+- Changed linked methods: Update original recipe / Save as copy, after the step
+  list with deliberate separation from Add a step. Library: Save changes / Save
+  as copy. Unchanged recipes/templates and date/actual-only edits hide saves.
+- Copy replaces the action row with one named-copy form; distinct _1/_2 suggestion,
+  case-insensitive duplicate rejection, explicit save and Cancel. Acknowledgement
+  relinks/renames only the selected dish. No floating heading action.
+- Native planning saves persist a known target intent before recipe RPC, then
+  acknowledge the source after verified reply. Recovery uses exact ID/revision/
+  content and immutable receipts, never name guesses. Legacy name collisions ask
+  for explicit original selection; stale originals cannot be silently overwritten.
+- No canonical recipe schema change, hosted mutation or merge. Existing SQL
+  accepts native source/pending metadata; the new real PostgreSQL fixture passes
+  lossless save/read-back on clean and seeded-upgrade databases, alongside all
+  ownership/race suites.
+
+Local checks so far: typecheck, 553 unit tests and all 48 personal-recipe cases on
+system Chromium desktop/Pixel pass. Actual desktop and phone equipment/review/
+planning screenshots inspected. Additional copy-name and failed source-write
+checks, broad browser CI and final iPhone/WebKit review remain required. This is
+still unpushed; bbbb75c remains the public preview until the next verified push.

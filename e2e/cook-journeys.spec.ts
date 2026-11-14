@@ -1,3 +1,4 @@
+import {openOwnRecipe} from './helpers/recipeEntry';
 import {test, expect, type Page} from '@playwright/test';
 import type {ExtendedMeal} from '../src/domain/cookState';
 import type {HistoryLibrary} from '../src/domain/cookHistory';
@@ -102,7 +103,7 @@ test('a template plus an uploaded recipe finishes as one meal and Cook Again cre
   await begin(page, '2026-11-08T15:00:00Z', 'Brats and pumpkin seeds');
   await addTemplate(page, 'Add grilled beer-bath brats');
   await page.getByRole('button', {name: '+ Add a dish', exact: true}).click();
-  await page.getByRole('button', {name: 'Add your own recipe', exact: true}).click();
+  await openOwnRecipe(page);
   await page.getByLabel('Upload .txt or .md', {exact: true}).setInputFiles({
     name: 'Pumpkin seeds.md', mimeType: 'text/markdown',
     buffer: Buffer.from('# Pumpkin seeds\n## Instructions\n1. Season seeds (5 minutes).\n2. Roast seeds (15 minutes).\n3. Remove seeds and cool (10 minutes).')

@@ -2,6 +2,16 @@
 
 ## Now: #114 personal recipes
 
+November 14 approved follow-up is implemented for verification on #134: source
+identity survives first save/reuse, changed meal methods update the same original
+or create a distinctly named copy, and unchanged/date-only methods hide saves.
+Controls moved below the step list; Add dish is Choose a template / My recipes,
+with existing text/file creation in the library. Legacy links require explicit
+selection; lost replies and stale revisions preserve independent snapshots.
+No hosted changes or automatic merges. Final exact-head CI and owner review remain
+required; see the implementation checkpoint for verification progress.
+
+
 Release #132 (`ae12d36`) is deployed and owner-accepted. #61/#83/#103/#118 are
 closed. Both November 5 production migrations and Browns Brisket import are
 complete; do not rerun them. #117/#119/#121/#123–#127 shipped with that release.

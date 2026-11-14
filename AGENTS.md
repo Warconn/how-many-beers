@@ -25,7 +25,7 @@ merge, production release or hosted migration. The November 13 owner refinement 
 review actions and simple equipment choice, with edited-step persistence first.
 Latest owner direction (November 13): the complete editor proposal in
 `docs/proposals/114-product-acceptance-review.md` is approved for implementation.
-Keep both same-scope save choices visible together with one visually primary
+When reusable content is changed, keep both same-scope save choices visible together with one visually primary
 button, top Back/Cancel, and a compact flat-checkbox equipment selector without
 Done or stacked selects. Recipe authoring hides meal dates/schedule/cook controls.
 Step fields are draft edits; Close retains them and method saving commits them.
@@ -33,6 +33,17 @@ The earlier single-button-footer/Recipe actions disclosure rule was rejected.
 The early-fixed-step scheduling correction is independent; preserve all anchors,
 actuals, physical cooking and histories. Keep #134 draft for owner acceptance;
 no automatic merges, production changes or hosted migrations.
+November 14 source-aware refinement is approved: Add dish offers Choose a template
+and My recipes; Add your own recipe lives in My recipes with the existing text/file
+path. Templates are computed starters, never automatically personal library rows.
+Explicit first save links only this dish; changed linked methods offer Update
+original recipe / Save as copy (distinct editable _1/_2 name). Library editing uses
+Save changes / Save as copy. Hide saves for unchanged recipes and starter templates;
+dates/actuals/notes alone do not dirty a reusable method. Save controls belong after
+the step list, separated from Add a step, never at the dish heading. Source identity
+is owner-scoped provenance; snapshots remain independent. Do not guess legacy
+links by name or overwrite newer revisions. No new hosted schema requirement.
+
 Recipe-level saving includes open step edits. Production #137 is included on the
 feature branch. Do not bundle Plan time / Use plan timing removal. The original
 November 11 recipe migration may already be applied in dev; use only the new

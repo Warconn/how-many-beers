@@ -2,6 +2,16 @@
 
 ## Now: personal recipes (#114)
 
+November 14 approved follow-up is implemented for verification on #134: source
+identity survives first save/reuse, changed meal methods update the same original
+or create a distinctly named copy, and unchanged/date-only methods hide saves.
+Controls moved below the step list; Add dish is Choose a template / My recipes,
+with existing text/file creation in the library. Legacy links require explicit
+selection; lost replies and stale revisions preserve independent snapshots.
+No hosted changes or automatic merges. Final exact-head CI and owner review remain
+required; see the implementation checkpoint for verification progress.
+
+
 Implement explicit Save recipe, My recipes, independent reusable method snapshots,
 shared versioned cooking documents and retained deletion. Storage and UI are implemented on the feature branch, with final integration
 checks and development migration approval pending; see [implementation checkpoint](implementation/issue-114-handoff.md).
