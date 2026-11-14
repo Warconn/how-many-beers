@@ -79,8 +79,8 @@ pass report.
 - No finite suite proves every combination of recipe, clock, browser and network
   failure. This map covers implemented entry points and known cook regressions;
   new concrete bugs should receive deterministic coverage at their failure boundary.
-- Personal recipe-library saving (#114), URL/photo/PDF import, notifications and
-  other deferred features are not implemented and are not claimed as tested paths.
+- URL/photo/PDF import, notifications and other deferred features are not
+  implemented and are not claimed as tested paths. #114 feature coverage is below.
 
 ## Keep coverage current
 
@@ -95,3 +95,83 @@ not just visible success text. For an experience change, update this map and the
 relevant journey alongside focused assertions. Never replace a failing scenario
 with sleeps, forgiving retries, weaker assertions or deletion of browser coverage.
 Keep real screenshots/traces and review them before declaring release readiness.
+
+## Personal recipes (#114 feature branch)
+
+`e2e/auth/personal-recipes.spec.ts` covers independent explicit Save/Add, saved
+methods across fresh signed-in contexts, meal-local edits, library updates/new
+copies, retained removal, reload, lost-response replay, unavailable schema, failed
+saves, guest sign-in draft preservation, stale-device conflicts, active-cook
+protection and meal-specific extraction. Desktop and iPhone projects run under the
+account config; local narrow Chromium additionally checks layout. RPC/auth mocks
+validate UI state isolation; real isolated PostgreSQL checks validation, ownership,
+receipts and save/remove races. Neither substitutes for hosted dev acceptance.
+
+No hosted migration was run by the agent. The feature preview requires the reviewed migrations
+in `docs/recipes/rollout.md` before account library writes can work.
+
+The owner-reported template edit regression is covered with multiple titles,
+instructions, durations, per-step equipment/food temperatures, ordering, Save
+changes, Save as new, reload and Cancel. A separate failing-before regression
+covers saving an open step without Save step. These run in both account browser
+projects. Dedicated navigation and grouped primary/secondary actions have browser
+assertions and screenshots. The real SQL edited-template fixture saves/updates,
+creates an independent new recipe and checks read-back JSON equality, while a
+client test rehydrates exactly that fixture. The owner's wings example reproduces the conversion rejection after editing and
+reordering exposes its implicit rest row. Domain and actual UI tests failed before
+the mapping fix and pass afterward, preserving the five-minute allowance. Imported
+methods also cover edited steps and independent added/reordered/removed work.
+
+Imported long titles/instructions also have a real UI save regression. Editing
+only duration preserves their exact original text; the recipe authoring helper
+uses canonical limits and keeps fixed/recorded overrides. This does not change
+native planning editor behavior or archived execution.
+
+The latest owner oil-before-check case runs through meal step reordering, direct
+method save, reload and reuse with unchanged source data. A separate planned-time
+edit/blank optional meal-name case failed through whole-meal conversion and now
+saves the selected method independently. Full meal/history compatibility validation
+remains unchanged; unknown fields on the selected method are still rejected.
+Dirty-method action assertions require both method choices visible together, one
+visually primary, desktop/mobile spacing and tap targets, no Recipe actions menu,
+no meal-date controls during review, and a compact equipment checklist with no
+Done/select rows. Escape/focus return, outside close and multiple/custom labels
+are exercised alongside the existing save/isolation assertions.
+
+`planning-backward-reflow.spec.ts` also pins wings drying early and extends
+preparation: flexible later work meets the unchanged 1 PM target after reload.
+Unit checks cover insufficient slack, a constraining second fixed start, other
+dishes and active-cook exclusion. It remains a synthetic reproduction of the
+reported pathway, not inspection of the owner's particular saved plan.
+
+Source-aware save regressions cover unchanged starter/library controls being
+absent, first explicit save linking only the selected dish, exact oil-before-check
+Update original with one ID, reload and date-only clean state, distinct named copy
+and relinking, independent second-dish snapshots, newer-device conflict/copy
+recovery, ambiguous reply recovery by known ID/receipt and explicit original
+selection for a legacy name collision. No heuristic recipe association occurs.
+Domain round trips preserve native pending/source context while excluding it from
+Recipe JSON; canonical Meal sourceRecipe contains only ID/revision provenance.
+
+
+## Inline saved-recipe selection refinement (#114)
+
+Add dish → My recipes now reuses the template-choice grid in place. The header
+library remains full management. The five inline-picker tests in
+`e2e/auth/personal-recipes.spec.ts` cover first/later dishes, no management detour
+or hash change, shared choice-box styling, explicit Add, Back, independent IDs and
+source links, no implicit save, retained deletion disappearing from choices,
+loading/empty/error states with text creation, keyboard activation, text/file review,
+Cancel/draft retention and signed-out creation without a sign-in requirement.
+These run on account desktop Chromium and iPhone WebKit. The common text-entry
+helper now asserts inline selection across existing guest/import/whole-cook and
+account journeys. Existing save/update/copy/conflict/history/offline suites remain.
+See [manual regression instructions](recipes/manual-regression.md) for the complete
+owner checklist and named coverage; mocks do not replace hosted-device acceptance.
+
+
+Header management intentionally has no Add your own recipe action until recipe
+creation can be independent of meal planning. The new “header recipe management
+has no meal-creation shortcut…” regression covers empty and populated libraries,
+Home/planning origins, edit/Cancel, unchanged workspace/history/recipe rows and
+return to the original screen. Inline text/upload choice tests remain intact.

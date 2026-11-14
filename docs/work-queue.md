@@ -1,71 +1,62 @@
-# Current queue · November 9, 2026
+# Work queue
 
-## Now: release readiness, not feature development
+## Now: #114 personal recipes
 
-The owner approved and merged the post-brisket work through **PR #131** into dev
-at `62f4673` on November 9. The active release candidate is
-`feat/118-release-readiness`, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
-targeting **main**. This explicit release target supersedes the ordinary feature
-PR target of dev. Do not merge into main or deploy production without owner approval.
+Pre-dev acceptance follow-up: remove the header-library Add your own recipe
+shortcut, which reused meal planning. Keep the working Add dish text/upload box.
+Independent recipe creation from management is deferred; there is no misleading
+creation action in the current library. No schema/persistence change or merge.
 
-1. **#118:** investigate the intermittent iPhone/WebKit meal-name miss. A controlled
-   delayed application frame reproduces focus moving from Meal name to serving
-   time and leaves the saved name as Next cook. Verify the narrow fix in WebKit,
-   including immediate Start, serving edits, history, reload and Cook Again.
-2. **Preview blocker: upcoming-plan discard.** An accidental empty plan had no
-   removal action. Expose the existing retained discard RPC from Home and the
-   planner, preserving active cooks/history and immutable retry receipts. No new
-   migration. Regress empty/populated, failure, stale and reload paths.
-3. Compare dev/main and retain all production fixes; run full unit, browser,
-   authentication, account, offline and database-security checks. The owner also
-   requested a [user-journey audit](user-journey-coverage.md) and continuous
-   whole-cook regression scenarios. Review actual
-   desktop/mobile/iPhone screenshots and provide the confirmed feature URL.
-4. Complete release acceptance and verify production schema readiness before the
-   separately approved production promotion. No hosted database changes are
-   authorized in this session.
 
-## Completed implementations in dev
+Owner accepted the recipe editing/choosing/saving behavior and requested one entry
+correction: Add dish → My recipes is an inline grid using the template boxes,
+including Add your own recipe. Full library management stays in header navigation.
+The correction adds no persistence/schema changes. Manual acceptance and automated
+coverage are mapped in [recipe regression instructions](recipes/manual-regression.md).
+Current exact-head verification and feature URL are tracked in PR #134.
 
-| Issue | Delivery | Status |
-| --- | --- | --- |
-| #117 fixed-template checkpoint scheduling | PR #128 / `4a3e891` | Implemented in dev |
-| #119 preparation-start hierarchy and mobile planner | PR #120 / `960abc9` | Implemented in dev |
-| #121 provisional brisket forecast | PR #122 / `ea2873a` | Implemented in dev |
-| #123 optional Cooking Mode tools | PR #129 / `ed0a165` | Implemented in dev |
-| #124 current/next timing cues | PR #131 / `62f4673` | Implemented in dev |
-| #125 direct planned-time edits | PR #131 / `62f4673` | Implemented in dev |
-| #126 upcoming preparation time | PR #131 / `62f4673` | Implemented in dev |
-| #127 concise new brisket template / 6–8h reserve | PR #131 / `62f4673` | Implemented in dev |
 
-Do not repeat these stories. Their implementation issues are closed with explicit
-dev-delivery evidence; closure does not claim production deployment. #130 is
-superseded by #131. Preserve the physical cooking model, checkbox-first controls,
-Beerometer, fixed/actual distinctions, guest/account boundaries and Hold → Finish.
+November 14 approved follow-up is implemented for verification on #134: source
+identity survives first save/reuse, changed meal methods update the same original
+or create a distinctly named copy, and unchanged/date-only methods hide saves.
+Controls moved below the step list; Add dish is Choose a template / My recipes,
+with existing text/file creation in the library. Legacy links require explicit
+selection; lost replies and stale revisions preserve independent snapshots.
+No hosted changes or automatic merges. Final exact-head CI and owner review remain
+required; see the implementation checkpoint for verification progress.
 
-## Keep open through production verification
 
-- **#61:** retained cancellation, delivered through PR #104.
-- **#83:** independent upcoming plans / one active cook, delivered through PR #107.
-- **#103:** accepted recipe review/planning UI, delivered through #108/#111/#112.
-  The separate personal recipe library belongs to #114.
+Release #132 (`ae12d36`) is deployed and owner-accepted. #61/#83/#103/#118 are
+closed. Both November 5 production migrations and Browns Brisket import are
+complete; do not rerun them. #117/#119/#121/#123–#127 shipped with that release.
 
-Both November 5 migrations are owner-confirmed applied/verified in **dev**.
-The owner confirmed both are **not yet applied in production** and will apply
-them manually before merge. Verify success through the release checklist; do not reapply dev
-migrations or run bootstrap/test SQL on hosted Supabase.
+The owner authorized phased #114 implementation. Phase 1 established the shared
+recipe/meal contract candidate. Phase 2a adds tested native dish adapters for all
+built-ins and plain custom/text methods. Phase 2b supports whole-review overrides,
+hidden/custom steps and ordering with dates/history in a separate context.
+Phase 2c adds in-memory meal/history/saved-plan compatibility adapters, preserving
+serving metadata, execution and archived timelines. Follow the
+[checkpoint](implementation/issue-114-handoff.md) for exact progress and next step.
+Phase 3/4 now implement additive recipe storage and the minimal library UI on the
+feature branch. Isolated SQL and focused Chromium checks pass; final full CI and
+WebKit review are pending. Hosted saving needs the owner-reviewed development
+migrations in [rollout notes](recipes/rollout.md). The agent has applied neither
+remotely; the development project may already have November 11 installed.
+November 13 adds a validator-only upgrade, without rewriting applied migrations.
+Owner refinements include open-step Save changes/new coverage, a dedicated library,
+a coherent footer with primary plus visible secondary save decisions, top
+Back/Cancel, recipe-only authoring and a compact equipment checklist without Done.
+The complete reset proposal was owner-approved after rejecting the earlier
+Recipe actions disclosure and stacked-selector implementation. Selected-dish saving is direct; exact oil-before-check
+reordering and optional-meal-metadata extraction have regression coverage. The wings conversion failure is reproduced and fixed: native sequence compilation
+now retains its implicit rest row when mapping edited/reordered method references.
+Failing-before domain/UI regressions cover both save paths. Open-step saving is
+also covered independently.
+Production #137 backward planning is included on the feature branch. No automatic merge or
+hosted changes. Add to meal remains primary; saving a recipe is explicit and
+independent, deletion retained, and existing cook/history behavior preserved.
 
-## Next feature, after release
+## Later
 
-**#114: personal saved recipes** is the next candidate for separate owner review.
-It is not part of this release and must not be started in this session.
-
-## Deferred
-
-#3 equipment/resource optimization, #11 notifications, #2 URL import, photo/PDF
-import, social login, paid features and #69/#70 advanced synchronization remain
-outside this release. Do not add incidental UX changes or manual-QA tickets.
-
-See [roadmap](roadmap.md), [release candidate / approval checklist](releases/2026-11-09-readiness.md)
-and [core experience](core-cook-experience.md). Handoffs distinguish tested feature
-preview, merged dev, production approval and verified production deployment.
+#3 resource optimization, #11 notifications, #2 URL extraction, photo/PDF import,
+paid/social features and advanced synchronization remain deferred.

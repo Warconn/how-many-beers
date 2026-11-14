@@ -41,7 +41,52 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
     groups.set(key, list);
   }
 
-  for (const list of groups.values()) {
+  // Built-in templates have authored overlap and checkpoints. A duration edit may
+  // push their raw timeline past serving; in planning, re-anchor the flexible
+  // *whole path* backward instead of carrying that delay into dinner. The clock
+  // floor below still decides if this earlier start is actually feasible.
+  const backwardPlan = (list: PlannedTask[]): PlannedTask[] => {
+    if (target === null || list.some(t => t.userSequence)) return list;
+    const ends: number[] = [];
+    for (const task of list) {
+      const dish = meal.dishes.find(d => d.id === task.dishId);
+      const turkey = dish?.preset === 'turkey' ? turkeyPreparation(dish) : null;
+      if (turkey && (task.id === dish!.id + ':thaw' ||
+          task.id === dish!.id + ':brine' && turkey.brineHours === 0)) continue;
+      const start = stamp(task.scheduledAt);
+      const minutes = stepMinutes(meal, task) ??
+        (turkey && task.id === dish!.id + ':dry' ? turkey.dryHours * 60 : null) ??
+        (task.id.endsWith(':serve') || task.isCondition && !task.templateStage ? 0 : null);
+      if (start === null || minutes === null) return list; // Never invent unknown timing.
+      ends.push(start + minutes * 60000);
+    }
+    if (!ends.length) return list;
+    const overshoot = Math.max(...ends) - target;
+    if (overshoot <= 0) return list;
+    // A fixed early preparation step constrains its own interval, not every
+    // later flexible start. Move only the suffix after the last fixed anchor,
+    // bounded by the finishes before it. Keep overlaps/checkpoints intact by
+    // translating that suffix together; never squeeze across a known interval.
+    const ordered = list.filter(t => stamp(t.scheduledAt) !== null)
+      .sort((a,b) => stamp(a.scheduledAt)! - stamp(b.scheduledAt)!);
+    const lastFixed = ordered.findLastIndex(t => t.timingMode === 'fixed');
+    const movable = ordered.slice(lastFixed + 1);
+    if (!movable.length) return list;
+    let shift = overshoot;
+    if (lastFixed >= 0) {
+      const prefixFinish = Math.max(...ordered.slice(0,lastFixed + 1).map(t => {
+        const length = stepMinutes(meal,t) ?? (t.isCondition && !t.templateStage || t.id.endsWith(':serve') ? 0 : null);
+        return length === null ? Infinity : stamp(t.scheduledAt)! + length * 60000;
+      }));
+      shift = Math.max(0,Math.min(shift,stamp(movable[0].scheduledAt)! - prefixFinish));
+    }
+    if (!shift) return list;
+    const ids = new Set(movable.map(t => t.id));
+    return list.map(task => ids.has(task.id)
+      ? {...task,scheduledAt:iso(stamp(task.scheduledAt)! - shift)} : task);
+  };
+  for (const original of groups.values()) {
+    const list = backwardPlan(original);
     const sequential = list.some(t => t.userSequence);
     const tasks = [...list].sort((a, b) => sequential
       ? (a.recipeOrder ?? 0) - (b.recipeOrder ?? 0)

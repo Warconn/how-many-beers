@@ -155,3 +155,77 @@ or equipment fields. In the full editor, duration/equipment/temperature are unde
 More options; planned time remains outside. Dish settings follow the step list
 and contain brisket configuration in one layer, collapsed by default. These rules
 supersede the earlier separate delivery boundaries for #124/#125.
+
+
+### Personal recipe refinement (#114 owner review)
+
+Home keeps its existing cook content. Home, My recipes and Past cooks share a
+quiet text navigation within the existing header; My recipes is a full screen, never a modal overlay.
+Recipe names open the existing review editor, Use recipe opens an independent
+meal draft, and contextual trash controls retain records after confirmation.
+The method footer groups the two same-scope decisions, with one visually primary
+action. Show persistence choices only when reusable content has changed; merely
+opening an editor, editing meal dates or recording activity does not expose saves.
+Saved recipe editing uses Save changes plus immediately visible Save as copy.
+New authored review uses Add to meal plus Save to My recipes; untouched starter
+templates need only Add to meal. Linked recipe review uses Update original recipe
+plus Save as copy when changed, alongside Add to meal. Do not put these
+important actions under Recipe actions or another disclosure. Desktop controls
+share a row with 16px separation; phone controls occupy separate rows with 16px
+separation and 44px minimum targets. Back/Cancel uses top navigation. Acknowledged
+save/error state stays with the method action area. Add a step stays after the
+list, separate from persistence actions.
+
+Recipe authoring shows name, equipment, steps, durations and conditions. Hide the
+meal date/name form, schedule, other dishes and cooking controls during review;
+return to the same meal after Add/Back. Saved recipe editing remains on My recipes.
+Step fields edit a draft; Close retains those edits, method saving includes an
+open row, and top Cancel discards the method draft. Do not add another Save step
+workflow to recipe authoring. Existing meal step editors retain their save rules.
+
+Equipment is one compact summary selector opening a flat checkbox list for
+multiple choices and a contextual Other equipment field. Choices edit the draft
+immediately. Toggle the summary, tap outside or Escape to close; Escape returns
+focus. No Done button, repeated dropdown rows, Add equipment workflow or nested
+configuration. Preserve existing mixed/custom labels exactly until explicitly
+edited. Optional per-step equipment/temperature remains in one Step settings
+section using the same control. No equipment profiles or scheduling-mode changes.
+
+
+
+### Action and navigation hierarchy
+
+Keep the current Home typography, ivory surface, Upcoming cooks and Game Plan.
+Navigation belongs in the existing header, separate from save/sync status, with
+44px targets. It does not precede or interrupt Plan/Resume cook. My recipes uses
+full-screen semantics and browser Back; direct selection stays in planning.
+Use one visually primary action per decision area. Group same-scope secondary
+decisions visibly with it, with deliberate spacing and responsive stacking rather
+than hiding them or piling unrelated controls together. Back/Cancel stays in top
+navigation. Disclosures are for optional supporting detail, not core save choices.
+Keep step edits in the step editor and Add a step directly after the list.
+A meal's source reference may appear quietly near the dish heading. Its save
+controls belong AFTER the editable step list, with a divider and space from Add a
+step. A first save links only this dish; subsequent edits offer Update original
+recipe and Save as copy. Do not float a save control at the top. Copy opens one
+inline name field with Save copy / Cancel copy, replacing the normal save choices;
+suggest a distinct _1/_2 name and require uniqueness. No second review wizard. Add a step stays with the list. Recipe saving never sits beside
+Add a step and never hides inside equipment configuration. Retained Remove
+is contextual, visually separate and confirmed. Do not broadly change Cooking
+Mode or the Beerometer. A future standalone Equipment screen may manage favorites
+and settings; profiles/configuration are outside #114. Community #135 is deferred.
+
+Add dish has two entries: Choose a template and My recipes. Both use the same
+inline choice-box grid and visual styling. My recipes contains saved recipe
+choices plus an Add your own recipe box for the existing paste/.txt/.md path.
+Do not navigate to full My recipes management, change the URL/hash, or expose
+Edit/Remove/Save controls just to select a dish. Selecting a saved choice opens
+the accepted method review; Add to meal remains explicit. Back returns to the
+same choices. First and later dishes use the same switching controls. The
+header's My recipes remains a separate management screen. It has no creation/
+upload shortcut until independent recipe authoring exists; never redirect a
+library creation action into a meal plan. Templates
+remain immutable computed starters; saving creates a personal recipe. A linked
+meal is an independent snapshot, not a live reference. Explicit original updates
+never mutate other snapshots. Older unlinked dishes require an explicit original
+selection on name collision; never infer identity by title.

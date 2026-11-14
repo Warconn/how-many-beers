@@ -40,8 +40,8 @@ These desktop and mobile screenshots show the current dev workspace, including t
 
 ### Saving and recovery
 
-Production accounts support one saved active/planning cook, completed history and
-retrieval on another device. In account-enabled builds, new guests can try planning
+Production accounts support one active cook, multiple independent upcoming plans,
+completed history and retrieval on another device. In account-enabled builds, new guests can try planning
 and cooking without persistent saves. Existing legacy browser records and recovery
 mechanisms remain intact. Sign-in opens account cooks directly; the pre-1.0 Earlier
 cooks migration UI has been removed.
@@ -85,19 +85,17 @@ The build uses Next.js static export. The canonical production site is https://h
 
 ## Current work queue
 
-The post-brisket changes are approved and merged into **dev** through
-[PR #131](https://github.com/Warconn/how-many-beers/pull/131), alongside the delivered
-#117/#119/#121 fixes. Current work is **#118 meal-name persistence investigation
-and release readiness**, with [release PR #132](https://github.com/Warconn/how-many-beers/pull/132)
-targeting main for explicit owner approval. No production deployment is authorized.
+Release [PR #132](https://github.com/Warconn/how-many-beers/pull/132) is deployed
+at `ae12d36` and owner-accepted. #61/#83/#103/#118 are closed. Production supports
+multiple independent upcoming plans, retained cancellation and plan discard.
+Both November 5 migrations and the Browns Brisket import were completed manually.
 
-Keep #61/#83/#103 open until production is verified. The next feature candidate is
-#114 personal saved recipes, separate from this release and not started here.
-Both November 5 migrations are confirmed in dev; production schema readiness must
-be verified separately, with no automatic hosted migration or data changes.
-
-See [work queue](docs/work-queue.md), [roadmap](docs/roadmap.md) and
-[release readiness / acceptance](docs/releases/2026-11-09-readiness.md).
+Current work is **#114 personal saved recipes**, explicitly authorized in phases.
+The feature branch now implements the shared contract, compatibility adapters,
+retained recipe storage and explicit library UI. Full integration review and the
+owner-applied development migration remain pending; see [rollout notes](docs/recipes/rollout.md). See the [checkpoint](docs/implementation/issue-114-handoff.md),
+[work queue](docs/work-queue.md) and [roadmap](docs/roadmap.md).
+No automatic merge, hosted migration or production deployment is authorized.
 
 ## Account foundation work
 
@@ -177,3 +175,18 @@ check food done automatically.
 The consolidated post-brisket feature review covers direct planned-time editing,
 quiet planning settings, cooking cues, new brisket defaults and upcoming start
 times. See [behavior and real-cook evidence](docs/post-brisket-experience.md).
+
+
+Personal recipes (#114, feature review): My recipes is a dedicated screen beside
+Home and Past cooks. Explicit Save to My recipes stays independent of Add to meal;
+recipe edits and retained removal never rewrite existing cooks. Method saves are
+visible together in a spaced footer only for reusable changes; meal dates and
+actuals do not expose saves. First save links this dish; Update original recipe
+reuses that identity, while Save as copy asks for a distinct name. Planning save
+controls sit below the step list. Add dish offers Choose a template / My recipes;
+the latter is an inline picker with the same choice boxes and an Add your own
+recipe box for existing text/file creation. Header My recipes opens management.
+See the [manual regression plan](docs/recipes/manual-regression.md).
+Equipment uses one compact checklist and
+recipe authoring keeps calendar controls in meal planning. See the
+[review and migration notes](docs/recipes/rollout.md).

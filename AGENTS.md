@@ -10,24 +10,54 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current owner direction (November 9, 2026)
+## Current owner direction (#114, November 10, 2026)
 
-PR #131 is owner-approved and merged into dev at `62f4673`. Do not repeat the
-post-brisket implementation. The authorized work is now release readiness:
-investigate/fix #118 with deterministic WebKit regression coverage; preserve
-production fixes while comparing dev/main; run all regression suites; reconcile
-delivered issues and documentation; prepare one release PR targeting main.
-This explicit release instruction supersedes the usual feature-PR target of dev.
-Do not merge into main or deploy production without further approval. Do not apply
-hosted Supabase migrations. Keep #61/#83/#103 open until production verification.
-#114 is the next feature candidate, outside this session; do not implement it.
-The owner also found accidental empty upcoming plans could not be removed. Add
-a direct retained Discard plan action using the existing #83 RPC, with empty,
-populated, failure/retry/reload and active/history-isolation regressions. Keep this
-in release PR #132; no new migration or production merge is authorized. The
-owner requested a clean fresh Home: label the action Plan a cook, omit the empty
-Upcoming panel, and use a trash icon inside the planning card and on saved-plan
-cards rather than a loose Discard plan text link. Keep a 44px accessible target.
+Production release #132 at `ae12d36` is owner-accepted. #61/#83/#103/#118 are
+closed after owner verification. Both November 5 migrations and the Browns
+Brisket import were completed manually; do not rerun or reimport them.
+
+The owner now authorizes #114: explicit Save recipe with Add to meal primary,
+shared versioned recipe/meal JSON, independent snapshots and retained deletion.
+Read the entire current issue and `docs/implementation/issue-114-handoff.md`.
+Work in tested phases, commit and checkpoint between major phases. Stop cleanly
+at a safe boundary when the session budget is limited. No automatic dev/main
+merge, production release or hosted migration. The November 13 owner refinement requests a dedicated library screen, grouped
+review actions and simple equipment choice, with edited-step persistence first.
+Latest owner direction (November 13): the complete editor proposal in
+`docs/proposals/114-product-acceptance-review.md` is approved for implementation.
+When reusable content is changed, keep both same-scope save choices visible together with one visually primary
+button, top Back/Cancel, and a compact flat-checkbox equipment selector without
+Done or stacked selects. Recipe authoring hides meal dates/schedule/cook controls.
+Step fields are draft edits; Close retains them and method saving commits them.
+The earlier single-button-footer/Recipe actions disclosure rule was rejected.
+The early-fixed-step scheduling correction is independent; preserve all anchors,
+actuals, physical cooking and histories. Keep #134 draft for owner acceptance;
+no automatic merges, production changes or hosted migrations.
+November 14 source-aware refinement is approved: Add dish offers Choose a template
+and My recipes. In Add dish, My recipes stays INLINE as template-style choices
+plus an Add your own recipe box for the existing text/file path. It must not open
+the management page or expose Edit/Remove controls. Only the header's My recipes
+opens full library management. Management has no Add your own recipe shortcut:
+standalone library creation must not route into meal planning. Keep text/upload
+creation in Add dish until an independent library authoring flow is implemented.
+Preserve the accepted review/edit/save behavior. Templates are computed starters, never automatically personal library rows.
+Explicit first save links only this dish; changed linked methods offer Update
+original recipe / Save as copy (distinct editable _1/_2 name). Library editing uses
+Save changes / Save as copy. Hide saves for unchanged recipes and starter templates;
+dates/actuals/notes alone do not dirty a reusable method. Save controls belong after
+the step list, separated from Add a step, never at the dish heading. Source identity
+is owner-scoped provenance; snapshots remain independent. Do not guess legacy
+links by name or overwrite newer revisions. No new hosted schema requirement.
+
+Recipe-level saving includes open step edits. Production #137 is included on the
+feature branch. Do not bundle Plan time / Use plan timing removal. The original
+November 11 recipe migration may already be applied in dev; use only the new
+November 13 validator upgrade in that case, after owner review.
+Historical migration may be
+proposed only where lossless, with retained originals and rollback review.
+
+Earlier release-readiness directions below are historical. They do not prohibit
+this explicitly authorized feature or imply that production migrations are pending.
 
 Handoffs include the exact feature testing URL reported by Cloudflare's successful
 check/comment and a short owner test plan. Never infer the hostname from a branch
@@ -56,15 +86,12 @@ target or fabricate actual activity. Keep the accepted Beerometer and #101 live
 execution model. The read-only planning projection is not #3's resource optimizer.
 
 #117 is delivered in dev through #128. #119/#121 are delivered through #120/#122;
-#123 through #129; #124/#125/#126/#127 through #131. #118 is the current
-pre-production metadata-edit investigation. The release must preserve the accepted
+#123 through #129; #124/#125/#126/#127 through #131. #118 is delivered in the accepted production release. The release must preserve the accepted
 physical model and Hold → Finish, all actuals, sessions, guest/account boundaries
 and saving/history. See docs/work-queue.md and the current release notes.
 
 Both November 5 Supabase migrations are owner-confirmed applied and verified in
-dev. Do not reapply them or modify hosted database state in this work. The owner
-confirmed production is missing both and will apply the two files manually before
-release merge; keep that gate pending until success/verification is confirmed.
+dev. Do not reapply them or modify hosted database state in this work. Both were also owner-confirmed applied in production before release #132.
 
 ### Delivered UI and deferred capabilities
 

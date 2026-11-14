@@ -8,7 +8,7 @@ const server = base.webServer as {
 };
 export default defineConfig({
   ...base,
-  testMatch: ["**/account-cooks.spec.ts","**/cancel-account.spec.ts","**/upcoming-plans.spec.ts"],
+  testMatch: ["**/account-cooks.spec.ts","**/cancel-account.spec.ts","**/upcoming-plans.spec.ts","**/personal-recipes.spec.ts"],
   outputDir: "test-results-accounts",
   webServer: {
     ...server,

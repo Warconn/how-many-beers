@@ -211,3 +211,15 @@ rest gives 1:40 PM estimated doneness and 2 PM readiness, retaining the requeste
 1 PM serving target. Fixed/recorded anchors remain constraints. No actual event,
 archived snapshot or active-session projection is rewritten; explicit planning
 sequences retain their separate scheduling rules. Estimates never confirm doneness.
+
+## Flexible planning after an early fixed step
+
+An early fixed preparation step keeps its exact planned instant but no longer
+blocks backward correction of the later flexible template path. Only the suffix
+after the last fixed anchor moves, together, and only into known available slack
+following earlier intervals. Required durations and template overlap stay intact;
+a constraining fixed start or insufficient slack still reports lateness. Unknown
+intervals and explicit planning sequences retain their existing rules. This is a
+read-only planning projection, not a rewrite of saved anchors, actuals or history.
+The regression pins wings drying early, extends preparation from 30 to 40 minutes
+and still meets 1 PM; a second anchor and limited-slack cases preserve real delays.

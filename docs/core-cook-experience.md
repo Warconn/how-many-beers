@@ -12,13 +12,34 @@ accepted #101 physical model, checkbox-first progress, Beerometer and immutable
 actuals/history. Start preparing is the whole-checklist preparation time, distinct
 from smoker load. A timing estimate never confirms doneness or completes a step.
 
-The current release work investigates #118's post-add metadata-edit/focus race and
-validates the integrated candidate. Release PR #132 targets main, but production
-promotion requires explicit approval. #61/#83/#103 remain open release trackers
-until production verification. Both November 5 migrations are verified in dev;
-production readiness is a separate prerequisite, not permission to apply SQL.
-#114 personal recipes is the next feature candidate and is not part of this work.
-See [work queue](work-queue.md) and [release readiness](releases/2026-11-09-readiness.md).
+Release #132 is deployed at `ae12d36` and owner-accepted. #61/#83/#103/#118 are
+closed; both November 5 production migrations are complete. #114 is now authorized:
+explicit personal recipe saving independent from Add to meal, immutable meal
+snapshots and retained recipe deletion. See the [implementation checkpoint](implementation/issue-114-handoff.md).
+The #114 feature branch includes explicit Save to My recipes, a dedicated library
+screen with Home / My recipes / Past cooks navigation, retained removal,
+independent meal copies and existing-editor reuse. Reviews group the primary and visible secondary save decision in one spaced
+footer, with top Back/Cancel. Equipment uses a compact flat-checklist selector.
+Recipe authoring hides meal dates/schedule; method saves include open draft edits. Saving an
+existing meal method is direct and does not validate or rewrite unrelated meal
+metadata. Existing equipment choices preserve
+configuration and custom labels. It is not integrated
+or released; hosted use needs the reviewed additive migration.
+
+November 14 approved refinement: Add dish offers Choose a template / My recipes;
+My recipes in Add dish is an inline grid matching the template choice boxes,
+including an Add your own recipe box for the existing text/file entry path.
+It does not open library management; that remains in the header. Choosing a saved
+recipe opens the existing review and adds nothing until Add to meal. Back/Cancel
+retains the current meal and the same chooser. See the [manual regression plan](recipes/manual-regression.md).
+First explicit save associates only the selected dish with its personal recipe.
+Reusable changes offer Update original recipe / Save as copy below the step list;
+copy asks for a distinct name, defaulting to _1/_2. Saved library editing uses Save
+changes / Save as copy. Unchanged recipes/templates and calendar-only edits hide
+save controls. Library updates never propagate into other meal/history snapshots.
+Native source identity and protected pending intent survive reload; canonical
+Recipe JSON remains date-free and canonical Meal sourceRecipe is provenance only.
+No new schema migration is needed for this refinement.
 
 Historical implementation notes follow, with the latest explicit contract taking
 precedence where prior rollout/status notes differ.
