@@ -10,7 +10,7 @@ const stable=(v:unknown):unknown=>Array.isArray(v)?v.map(stable):v&&typeof v==='
 const equal=(a:unknown,b:unknown)=>JSON.stringify(stable(a))===JSON.stringify(stable(b));
 export type ReviewContext={
  meal:Omit<ExtendedMeal,'dishes'|'taskOverrides'|'customTasks'|'hiddenTaskIds'|'taskOrder'|'planningGeneralSequence'>;
- dishId:string;taskIds:Record<string,string>;
+ recipeLink?:Dish['recipeLink'];dishId:string;taskIds:Record<string,string>;
  fixedOverrides:Record<string,Pick<TaskOverride,'scheduledAt'|'recordedPlanAt'>>;
  customDates:Record<string,string|null>;
  present:string[];
@@ -31,7 +31,7 @@ export function convertRecipeReview(value:unknown,recipeId:string):ReviewConvers
   if(Object.keys(m).some(k=>!reviewKeys.includes(k)))return skip('Unsupported review or execution fields.');
   if(m.mode==='cooking'||m.dishes.length!==1||Object.keys(m.completed).length||m.events?.some(e=>e.kind!=='removed'))return skip('Only a single unstarted review is supported.');
   if(m.planningGeneralSequence?.length)return skip('General preparation is not owned by this recipe.');
-  const dish=m.dishes[0],{planningSequence,planningStepOrder,...base}=dish;
+  const dish=m.dishes[0],{planningSequence,planningStepOrder,recipeLink,...base}=dish;
   let result=convertDish(base,recipeId);if(result.status==='skipped')return skip(result.reason);
   // Selecting a wings sequence exposes the existing implicit rest allowance.
   // Compile its native rows before mapping review references. Added user steps
@@ -72,7 +72,7 @@ export function convertRecipeReview(value:unknown,recipeId:string):ReviewConvers
   if(Object.keys(r).length)document.recipe.review=r;
   const parsed=parseCookingDocument(json(document)) as RecipeDocument;
   const {dishes:_dishes,customTasks:_custom,taskOverrides:_overrides,hiddenTaskIds:_hidden,taskOrder:_order,planningGeneralSequence:_general,...meal}=m;
-  const context:ReviewContext={meal:clone(meal),dishId:dish.id,taskIds:ids,fixedOverrides,customDates,present:['customTasks','taskOverrides','hiddenTaskIds','taskOrder','planningGeneralSequence'].filter(k=>Object.hasOwn(m,k))};
+  const context:ReviewContext={...(recipeLink?{recipeLink:clone(recipeLink)}:{}),meal:clone(meal),dishId:dish.id,taskIds:ids,fixedOverrides,customDates,present:['customTasks','taskOverrides','hiddenTaskIds','taskOrder','planningGeneralSequence'].filter(k=>Object.hasOwn(m,k))};
   const restored=materialize(parsed,context.meal,context.dishId,context);
   if(!equal(restored,m))return skip('Review cannot round-trip safely.');
   return {status:'converted',document:parsed,context,original:clone(m)};
@@ -87,6 +87,7 @@ function materialize(doc:RecipeDocument,meal:ReviewContext['meal'],dishId:string
  const key=(k:string)=>{const id=task(k);return id.startsWith(dishId+':')?id.slice(dishId.length+1):id;};
  if(r.dishSequence!==undefined)dish.planningSequence=r.dishSequence.map(key);
  if(r.dishStepOrder!==undefined)dish.planningStepOrder=r.dishStepOrder.map(key);
+ if(context?.recipeLink)dish.recipeLink=clone(context.recipeLink);
  const result:ExtendedMeal={...clone(meal),dishes:[dish]};
  if(r.addedSteps!==undefined)result.customTasks=r.addedSteps.map(s=>{
   if(!s.nativeCustom)throw Error('Missing native custom step.');
@@ -121,6 +122,6 @@ export function instantiateRecipeReview(value:unknown,serveAt:string,dishId:stri
 /** Every accepted canonical field must survive the native bridge; reject optional
  * semantics the current app cannot execute instead of silently discarding them. */
 function assertRepresentable(review:ExtendedMeal,document:RecipeDocument):void{
- const round=document.recipe.review===undefined?convertDish(review.dishes[0],document.id):convertRecipeReview(review,document.id);
+ const round=document.recipe.review===undefined&&!review.dishes[0].recipeLink?convertDish(review.dishes[0],document.id):convertRecipeReview(review,document.id);
  if(round.status!=='converted'||!equal(round.document,document))throw Error('Recipe review semantics cannot round-trip through the native adapter.');
 }

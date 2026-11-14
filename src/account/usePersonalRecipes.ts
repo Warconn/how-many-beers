@@ -32,5 +32,5 @@ export function usePersonalRecipes(){
    if(operation==='save'&&result.state!=='active')throw Error('This recipe was removed on another device.');return result;
   }catch(e){if(version===generation.current)setState(s=>({...s,busy:false,error:e instanceof Error?e.message:'Could not save recipe.'}));throw e;}
  };
- return {recipes:state.owner===ownerId?state.recipes:[],error:state.owner===ownerId?state.error:'',loading:state.loading,busy:state.busy,authenticated,guest:phase==='guest',enabled:phase!=='disabled',reload,useSavedVersion,save:(doc:RecipeDocument,original?:PersonalRecipe,onProtected?:()=>void)=>mutate('save',doc,original,onProtected),remove:(r:PersonalRecipe)=>mutate('remove',null,r)};
+ return {ownerId:authenticated?ownerId:null,recipes:state.owner===ownerId?state.recipes:[],error:state.owner===ownerId?state.error:'',loading:state.loading,busy:state.busy,authenticated,guest:phase==='guest',enabled:phase!=='disabled',reload,useSavedVersion,save:(doc:RecipeDocument,original?:PersonalRecipe,onProtected?:()=>void)=>mutate('save',doc,original,onProtected),remove:(r:PersonalRecipe)=>mutate('remove',null,r)};
 }

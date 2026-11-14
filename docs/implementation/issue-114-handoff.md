@@ -354,3 +354,29 @@ rows, not only gaps. The added width assertion failed before correcting the
 shared responsive rule and passes afterward on desktop/phone (four affected
 layout/draft cases). The final default phone screenshot was inspected. No
 additional controls, design exceptions or data/schema changes were introduced.
+
+## Linked-recipe follow-up: domain checkpoint (owner-authorized)
+
+Latest owner direction supersedes the previous export-only meal save: Add a dish
+has Templates / My recipes; the library owns paste/upload. Remember the source
+recipe and revision. First save links a dish; later authored edits update that
+same original, or explicitly create a differently named copy. Copy names are
+editable with _1/_2 suggestions. No save controls at the dish heading. Show saves
+only for meaningful reusable changes, not dates/actuals or clean saved methods.
+Unchanged starter templates remain available without personal-library entries.
+
+Domain increment implemented and tested: optional native Dish.recipeLink carries
+owner, recipe ID/revision/name and SHA-256 of effective authored content. Pending
+save intent retains known IDs/revisions across workspace reload and ambiguous
+recipe replies; it never authorizes writes. Existing owner-scoped RPC/CAS and
+receipts remain authoritative. Whole review/meal/history adapters preserve this
+context and project existing canonical MealDocument.sourceRecipe; reusable recipe
+JSON is unchanged. Dates, actuals, notes and execution are excluded from content
+comparison. Legacy unlinked meals are not matched automatically by name.
+
+Typecheck and all **553 tests / 44 files** pass at this domain checkpoint. Native
+and canonical round trips, date/actual exclusion, unchanged editor forms, ordering,
+copy-name collisions and pending metadata have deterministic coverage. No hosted
+SQL/schema migration or merge. UI integration and expanded actual-browser tests
+are still in progress in the working tree; this is not a new review candidate.
+The previous accepted-for-testing head was bbbb75c, not this unfinished follow-up.

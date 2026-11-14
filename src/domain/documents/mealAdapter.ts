@@ -5,7 +5,7 @@ import {convertRecipeReview,restoreRecipeReview,type ReviewContext} from './revi
 import {parseCookingDocument,type MealDocument,type DocumentStep,type AuthoredOverride,type TaskReference} from './cookingDocument';
 
 export type ServingMetadata={timeZone:string;serveInstant:string|null};
-type DishContext={review:ReviewContext;brisketPlan?:Dish['brisketPlan'];executionAddedAt?:string};
+type DishContext={review:ReviewContext;brisketPlan?:Dish['brisketPlan'];executionAddedAt?:string;recipeLink?:Dish['recipeLink']};
 export type MealContext={
  envelope:Omit<ExtendedMeal,'dishes'|'taskOverrides'|'customTasks'|'hiddenTaskIds'|'taskOrder'|'planningGeneralSequence'>;
  dishes:Record<string,DishContext>;
@@ -57,7 +57,7 @@ export function convertMeal(value:unknown,metadata:ServingMetadata):MealConversi
   const context:MealContext={envelope:copy(envelope),dishes:Object.create(null),generalRuntime:Object.create(null),generalDates:Object.create(null),customExecution:Object.fromEntries((m.customTasks??[]).filter(t=>t.executionAddedAt!==undefined).map(t=>[t.id,t.executionAddedAt!])),customTaskOrder:(m.customTasks??[]).map(t=>t.id),present:['taskOverrides','customTasks','hiddenTaskIds','taskOrder','planningGeneralSequence'].filter(k=>Object.hasOwn(m,k)),serving:copy(metadata)};
   const refs=new Map<string,TaskReference>();
   const dishes=m.dishes.map(d=>{
-   const {executionAddedAt,brisketPlan,...base}=d;
+   const {executionAddedAt,brisketPlan,recipeLink,...base}=d;
    const native:Dish={...base,...(brisketPlan?{brisketPlan:{...brisketPlan,...(brisketPlan.applied?{applied:{...brisketPlan.applied,recommendedStart:null,latestStart:null,prepStart:null}}:{})}}:{})};
    const own=(id:string)=>id.startsWith(d.id+':')||(m.customTasks??[]).some(t=>t.id===id&&t.dishId===d.id);
    const review:ExtendedMeal={version:1,id:'extract',name:d.name,serveAt:m.serveAt,mode:'planning',completed:{},notes:{},dishes:[native],
@@ -67,8 +67,8 @@ export function convertMeal(value:unknown,metadata:ServingMetadata):MealConversi
    const result=convertRecipeReview(review,'snapshot');if(result.status!=='converted')throw Error(result.reason);
    // Custom execution-added markers stay outside reusable authored definitions.
    for(const [key,id] of Object.entries(result.context.taskIds))refs.set(id,{dishId:d.id,stepId:key});
-   context.dishes[d.id]={review:result.context,...(brisketPlan!==undefined?{brisketPlan:copy(brisketPlan)}:{}),...(executionAddedAt!==undefined?{executionAddedAt}:{})};
-   return {id:d.id,name:d.name,recipe:result.document.recipe};
+   context.dishes[d.id]={review:result.context,...(recipeLink?{recipeLink:copy(recipeLink)}:{}),...(brisketPlan!==undefined?{brisketPlan:copy(brisketPlan)}:{}),...(executionAddedAt!==undefined?{executionAddedAt}:{})};
+   return {id:d.id,name:d.name,recipe:result.document.recipe,...(recipeLink&&recipeLink.revision>0?{sourceRecipe:{id:recipeLink.id,revision:recipeLink.revision}}:{})};
   });
   const general=(m.customTasks??[]).filter(t=>t.dishId==='custom').map(t=>{
    if(refs.has(t.id))throw Error('Task identity collision.');
@@ -96,7 +96,7 @@ function restoreNativeMeal(conversion:MealConversion):ExtendedMeal{
  for(const d of doc.dishes){
   const ctx=c.dishes[d.id];if(!ctx)throw Error('Missing dish context.');
   const restored=restoreRecipeReview({status:'converted',document:{format:'how-many-beers',schemaVersion:1,type:'recipe',id:'snapshot',name:d.name,recipe:d.recipe},context:ctx.review,original:conversion.original});
-  const dish=restored.dishes[0];if(ctx.brisketPlan!==undefined)dish.brisketPlan=copy(ctx.brisketPlan);if(ctx.executionAddedAt!==undefined)dish.executionAddedAt=ctx.executionAddedAt;
+  const dish=restored.dishes[0];if(ctx.recipeLink)dish.recipeLink=copy(ctx.recipeLink);if(ctx.brisketPlan!==undefined)dish.brisketPlan=copy(ctx.brisketPlan);if(ctx.executionAddedAt!==undefined)dish.executionAddedAt=ctx.executionAddedAt;
   result.dishes.push(dish);tasks.push(...(restored.customTasks??[]));Object.assign(overrides,restored.taskOverrides);
  }
  for(const s of doc.generalSteps??[]){if(!s.nativeCustom||!c.generalRuntime[s.id])throw Error('Missing general context.');tasks.push({...copy(c.generalRuntime[s.id]),title:s.title,instructions:s.instructions??'',...s.nativeCustom});}

@@ -4,7 +4,7 @@ import type {ExtendedMeal} from '../cookState';
 export function dishReviewForRecipe(meal:ExtendedMeal,dishId:string):ExtendedMeal{
  if(meal.version!==1)throw Error('This meal version is not supported.');
  const dish=meal.dishes.find(d=>d.id===dishId);if(!dish)throw Error('This dish is no longer in the meal.');
- const {executionAddedAt:_added,...native}=structuredClone(dish);
+ const {executionAddedAt:_added,recipeLink:_link,...native}=structuredClone(dish);
  if(native.brisketPlan?.applied)native.brisketPlan.applied={...native.brisketPlan.applied,recommendedStart:null,latestStart:null,prepStart:null};
  const custom=meal.customTasks?.filter(t=>t.dishId===dishId).map(({executionAddedAt:_at,...t})=>structuredClone(t));
  const customIds=new Set(custom?.map(t=>t.id));

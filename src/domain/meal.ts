@@ -14,6 +14,7 @@ export type RecipeStep = {
 };
 
 export type Dish = {
+  recipeLink?: import("./recipeLink").RecipeLink; // Provenance only; meals keep independent authored snapshots.
   planningSequence?: string[]; // User-configured sequence, including added steps.
   planningStepOrder?: string[]; // Recipe-local keys; only explicit planning moves opt in.
   executionAddedAt?: string; // Creation during an active session; never a physical start.
