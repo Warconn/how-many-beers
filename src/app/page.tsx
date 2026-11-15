@@ -607,15 +607,17 @@ function CookExperience() {
             <p className="muted">{when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
             {meal.dishes.length > 0 && <p className="home-dishes">{meal.dishes.map(d=>d.name).join(" · ")}</p>}
             {!cookInProgress && <PlannedCookStart meal={meal} timeline={timeline}/>}
-            <div className="home-actions">
+            <div className={cookInProgress?"home-actions home-cook-actions":"home-actions"}>
               {cookInProgress ? <>
                 <button type="button" className="button primary" onClick={workspace.plansEnabled?()=>void continueCurrentCook():startCooking}>Continue cooking <Icon name="arrow-right"/></button>
-                <button type="button" className="button secondary" onClick={()=>setView("planning")}>View cook</button>
+                <div className="home-cook-secondary-actions">
+                  <button type="button" className="button secondary" onClick={()=>setView("planning")}>View cook</button>
+                  {workspace.canCancel&&<button type="button" className="button home-cook-cancel" disabled={workspace.locked} onClick={e=>{cancelTrigger.current=e.currentTarget;setShowCancel(true);}}>Cancel cook</button>}
+                </div>
               </> : <>
                 <button type="button" className="button primary" disabled={!!startBlockReason} aria-describedby={startBlockReason?"home-start-help":undefined} onClick={startCooking}>Start cooking</button>
                 <button type="button" className="button secondary" onClick={()=>{setPlanSaveResult(null);setView("planning");}}>Resume planning <Icon name="arrow-right"/></button>
               </>}
-              {cookInProgress&&workspace.canCancel&&<button type="button" className="button secondary" disabled={workspace.locked} onClick={e=>{cancelTrigger.current=e.currentTarget;setShowCancel(true);}}>Cancel cook</button>}
               {!cookInProgress && startBlockReason && <p id="home-start-help" className="muted small">{startBlockReason}</p>}
             </div>
           </section>}
