@@ -1,14 +1,17 @@
 # Work queue
 
-## P0: #139 account-plan recovery and first-dish persistence
+## Approved dev queue (November 15, 2026)
 
-The owner reports an empty remote upcoming list with an IndexedDB pending draft
-that cannot be discarded. The regression reproduces this after reload. Discard
-reads authoritative state without flushing unsent edits, reconciles absent plans
-locally after explicit user discard, and preserves revision checks and immutable
-receipts for server-backed plans. New planners stay in an owner-scoped tab draft
-until first Add to meal. Full verification and dev-only rollout are required.
-No new migration or hosted cleanup. #135 and other features remain deferred.
+Production release #151 is owner-verified stable. Dev contains the same production
+code. Implement and merge focused, green PRs to dev in this order:
+#152 Past cooks attribution/spacing → #154 step editor → #153 reusable fried turkey
+→ #145 Home next action. Production remains unchanged. #3, #138, #139 and #150
+are on hold; do not resume them as part of this queue.
+
+#152 implementation: display archived event attribution using stable task IDs from
+that cook's archived timeline only; preserve event sequence, values and timestamps.
+Past cooks card actions use a compact 12px gap and retain 44px targets. Verification
+and dev merge are tracked in the issue PR. No schema or stored history changes.
 
 ## Delivered: rejected personal-recipe save recovery
 

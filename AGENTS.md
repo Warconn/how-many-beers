@@ -32,6 +32,16 @@ offline cases, screenshots or SQL security. The pipeline skips expensive
 irrelevant suites in earlier stages, not at the release boundary. Fail-closed
 scope classification and aggregate checks must stay intact.
 
+## Current dev queue (November 15, 2026)
+
+Production #151 is owner-verified stable; dev contains its code. The owner authorizes
+focused PRs and green dev merges sequentially: #152, #154, #153, #145. Keep #3,
+#138, #139 and #150 on hold. No main merge, production deployment or hosted
+production migration. Use focused browser checks for increments and the full
+regression suite at the production release boundary. Preserve archived records,
+actual events, recipes and account isolation. The #114 directions below describe
+already delivered behavior, not an instruction to restart that feature.
+
 ## Current owner direction (#114, November 10, 2026)
 
 Production release #132 at `ae12d36` is owner-accepted. #61/#83/#103/#118 are

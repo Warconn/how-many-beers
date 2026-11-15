@@ -229,3 +229,11 @@ remain immutable computed starters; saving creates a personal recipe. A linked
 meal is an independent snapshot, not a live reference. Explicit original updates
 never mutate other snapshots. Older unlinked dishes require an explicit original
 selection on name collision; never infer identity by title.
+
+### Past cooks summaries and recorded activity (#152)
+
+Past cooks cards use 12px between the summary and compact action row, with 44px
+touch targets. Scope spacing to Past cooks; recipe-library cards retain their own
+layout. Recorded activity shows the original action/reading first, archived dish
+and step second, and a quieter local timestamp. On phones the timestamp stacks.
+Attribution uses archived IDs only; unavailable references have an honest fallback.
