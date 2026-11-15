@@ -308,7 +308,7 @@ jobs:
   # Partial screenshots survive a failed shard, but cannot turn its gate green.
   regression:
     if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && needs.scope.outputs.full == 'true'
-    needs: regression_shards
+    needs: [scope, regression_shards]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
