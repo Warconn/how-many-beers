@@ -2,21 +2,26 @@ import {openOwnRecipe} from '../helpers/recipeEntry';
 import {test,expect,type Page,type BrowserContext,type Locator} from '@playwright/test';
 import {backend,user} from './fixtures';
 import {newMeal} from '../../src/domain/meal';
+import {legacyDish} from '../../tests/fixtures/legacyDish';
+import {applyBrisketTiming,brisketDefaults} from '../../src/domain/brisketEstimate';
+import {archiveCook,emptyHistory} from '../../src/domain/cookHistory';
+import type {RawArchive} from '../../src/account/workspace';
 import type {ExtendedMeal} from '../../src/domain/cookState';
 test.use({timezoneId:'UTC'});
 const rpc='https://auth.example.test/rest/v1/rpc/';
 function server(){
  const meal:ExtendedMeal={...newMeal(),name:'Current dinner',serveAt:'2026-11-15T13:00'};
- const workspace={revision:1,writeId:null as string|null,active:{meal,serveInstant:'2026-11-15T13:00Z'},history:[]};
+ const workspace={revision:1,writeId:null as string|null,active:{meal,serveInstant:'2026-11-15T13:00Z'},history:[] as RawArchive[]};
  const rows=new Map<string,any>(),receipts=new Map<string,any>(),operations:string[]=[];
- let lose=false,fail=false,missing=false,workspaceFail=false;
- return {workspace,rows,operations,failWorkspace:(value:boolean)=>{workspaceFail=value;},lose:()=>{lose=true;},fail:(v:boolean)=>{fail=v;},missing:()=>{missing=true;},attach:async(context:BrowserContext)=>context.route(rpc+'**',async route=>{
+ let lose=false,fail=false,missing=false,workspaceFail=false,rejectSave=false;
+ return {workspace,rows,operations,rejectSave:(value:boolean)=>{rejectSave=value;},failWorkspace:(value:boolean)=>{workspaceFail=value;},lose:()=>{lose=true;},fail:(v:boolean)=>{fail=v;},missing:()=>{missing=true;},attach:async(context:BrowserContext)=>context.route(rpc+'**',async route=>{
   const b=route.request().postDataJSON(),name=route.request().url().slice(rpc.length);
   if(b.expected_owner!==user.id)return route.fulfill({status:403,json:{code:'42501'}});
   if(name==='list_personal_recipes')return missing?route.fulfill({status:404,json:{code:'PGRST202'}}):route.fulfill({json:{recipes:[...rows.values()].filter(r=>r.state==='active')}});
   if(name==='mutate_personal_recipe'){
    if(missing)return route.fulfill({status:404,json:{code:'PGRST202'}});
    if(fail)return route.fulfill({status:503,json:{code:'unavailable'}});
+   if(rejectSave)return route.fulfill({status:400,json:{code:'23514',message:'Invalid recipe document'}});
    operations.push(b.write_id);if(receipts.has(b.write_id))return route.fulfill({json:receipts.get(b.write_id)});
    const old=rows.get(b.target_recipe_id);if((old?.revision??0)!==b.expected_revision||old?.state==='deleted')return route.fulfill({status:409,json:{code:'40001'}});
    const row={id:b.target_recipe_id,state:b.operation==='remove'?'deleted':'active',document:b.document??old.document,revision:(old?.revision??0)+1,createdAt:old?.createdAt??'2026-11-11T00:00Z',updatedAt:'2026-11-11T01:00Z',deletedAt:b.operation==='remove'?'2026-11-11T01:00Z':null};rows.set(row.id,row);
@@ -261,4 +266,17 @@ test('header recipe management has no meal-creation shortcut from Home or planni
  for(const origin of ['Home','planning']){
   if(origin==='planning')await page.getByRole('button',{name:'Resume planning',exact:true}).click();const before=structuredClone(remote.workspace),recipes=structuredClone([...remote.rows.values()]);manage=await library(page);await expect(manage.getByRole('button',{name:'Add your own recipe',exact:true})).toHaveCount(0);await expect(page.getByRole('region',{name:'Serving plan',exact:true})).toHaveCount(0);await manage.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await manage.getByRole('button',{name:'Cancel',exact:true}).click();expect(remote.workspace).toEqual(before);expect([...remote.rows.values()]).toEqual(recipes);if(origin==='Home')await page.screenshot({path:info.outputPath('library-without-planning-shortcut.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});await manage.getByRole('button',{name:'Close My recipes',exact:true}).click();await expect(page.getByRole('region',{name:origin==='Home'?'Home':'Serving plan',exact:true})).toBeVisible();expect(remote.workspace).toEqual(before);
  }
+});
+
+test('a rejected protected recipe save does not hide existing recipes when the library reloads',async({page,context},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);await recipeAction(page,'Save to My recipes');await expect(page.getByText('Saved recipe',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);const meal=structuredClone(remote.workspace),original=structuredClone([...remote.rows.values()][0]);let manage=await library(page);await manage.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();await manage.getByLabel('Recipe name',{exact:true}).fill('My protected rejected edit');remote.rejectSave(true);await manage.getByRole('button',{name:'Save changes',exact:true}).click();await expect(manage.getByRole('alert').first()).toBeVisible();const journal=await page.evaluate(()=>Object.entries(localStorage).find(([key])=>key.endsWith(':operation')&&key.includes(':recipes:')));expect(journal).toBeDefined();
+ await page.reload();manage=await library(page);await expect(manage.getByRole('button',{name:'Edit Smoked brisket',exact:true})).toBeVisible();await expect(manage.getByRole('alert').first()).toBeVisible();expect(await page.evaluate(key=>localStorage.getItem(key),journal![0])).toBe(journal![1]);expect(remote.workspace).toEqual(meal);expect(remote.rows.get(original.id)).toEqual(original);expect(remote.rows.size).toBe(1);
+ await page.screenshot({path:info.outputPath('readable-library-pending-save.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ remote.rejectSave(false);await manage.getByRole('button',{name:'Reload My recipes',exact:true}).click();await expect(manage.getByRole('button',{name:'Edit My protected rejected edit',exact:true})).toBeVisible();expect(remote.rows.size).toBe(1);expect(remote.rows.get(original.id).revision).toBe(2);expect(await page.evaluate(key=>localStorage.getItem(key),journal![0])).toBeNull();expect(remote.workspace).toEqual(meal);
+});
+
+test('a synthetic older Browns Brisket can Cook Again and save its planned method without rewriting the 16-event archive',async({page,context})=>{
+ const remote=server(),serve='2026-11-08T13:00:00-05:00';const dish=applyBrisketTiming({...legacyDish('brisket'),brisketPlan:{mode:'manual',inputs:{...brisketDefaults,weightLb:7,holdBufferMinutes:60}}},serve);let cooked=startCookSession({...newMeal(),name:'Browns Brisket',serveAt:serve,dishes:[dish]},'2026-11-07T23:34:00-05:00');const start=cookTimeline(cooked).find(t=>t.id.endsWith(':start'))!;cooked=recordEvent(cooked,start.id,'completed','2026-11-07T23:34:00-05:00');for(let i=1;i<16;i++)cooked=recordEvent(cooked,start.id,'temperature',new Date(Date.parse('2026-11-08T05:00Z')+i*60000).toISOString(),150+i,'°F');const archive=archiveCook(cooked,emptyHistory(),'Synthetic regression, not the owner’s stored cook.','2026-11-08T18:00Z').cooks[0];expect(archive.meal.events).toHaveLength(16);remote.workspace.history=[{...archive,serveInstant:new Date(serve).toISOString()}];const before=structuredClone(remote.workspace.history);
+ await remote.attach(context);await signIn(page);await page.getByRole('navigation',{name:'Main navigation',exact:true}).getByRole('button',{name:'Past cooks',exact:true}).click();await page.getByRole('button',{name:'View cook',exact:true}).click();await expect(page.getByRole('region',{name:'Saved cook details',exact:true})).toContainText('Browns Brisket');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Cook again',exact:true}).click();await page.getByRole('button',{name:'Resume planning',exact:true}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-15T13:00');await expect.poll(()=>remote.workspace.active.meal.serveAt).toBe('2026-11-15T13:00');await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();const repeated=structuredClone(remote.workspace.active.meal);await recipeAction(page,'Save to My recipes');await expect.poll(()=>remote.rows.size).toBe(1);await expect.poll(()=>remote.workspace.active.meal.dishes[0].recipeLink?.revision).toBe(1);const saved=[...remote.rows.values()][0];expect(saved.document.recipe.configuration.brisketApplied).toBeDefined();expect(saved.document.recipe.configuration.brisketMode).toBe('estimate');expect(JSON.stringify(saved.document)).not.toContain('2026-11-');expect(withoutLinks(remote.workspace.active.meal)).toEqual(withoutLinks(repeated));expect(remote.workspace.active.meal.events).toEqual([]);expect(remote.workspace.active.meal.completed).toEqual({});expect(remote.workspace.history).toEqual(before);expect(remote.workspace.history[0].meal.events).toHaveLength(16);
+ await page.reload();const manage=await library(page);await expect(manage.getByRole('button',{name:'Edit Smoked brisket',exact:true})).toBeVisible();expect(remote.workspace.history).toEqual(before);
 });

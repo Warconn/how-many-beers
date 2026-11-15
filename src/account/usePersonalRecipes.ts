@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import {useAccount} from '@/auth/AccountProvider';
-import {personalRecipeAPI,PersonalRecipeStore,type PersonalRecipe,type RecipeOperation} from './personalRecipes';
+import {personalRecipeAPI,PersonalRecipeStore,RecipeConflict,loadPersonalRecipeLibrary,type PersonalRecipe,type RecipeOperation} from './personalRecipes';
 import type {RecipeDocument} from '@/domain/documents/cookingDocument';
 export function usePersonalRecipes(){
  const {phase,ownerId,client}=useAccount();
@@ -13,7 +13,9 @@ export function usePersonalRecipes(){
   if(!authenticated||!client||!ownerId){setState({owner:null,recipes:[],error:'',loading:false,busy:false});return;}
   const owner=ownerId;setState({owner,recipes:[],error:'',loading:true,busy:false});
   try{const api=personalRecipeAPI(client,owner),next=new PersonalRecipeStore(owner,api,window.localStorage);store.current=next;
-   if(next.pending())await next.write();const recipes=await api.list();if(version===generation.current)setState({owner,recipes,error:'',loading:false,busy:false});return recipes;
+   const {recipes,recoveryError}=await loadPersonalRecipeLibrary(next,api);
+   const error=recoveryError instanceof RecipeConflict?recoveryError.message:recoveryError?'Your pending recipe could not be saved. Your draft is retained.':'';
+   if(version===generation.current)setState({owner,recipes,error,loading:false,busy:false});return recipes;
   }catch(e){if(version===generation.current)setState({owner,recipes:[],error:e instanceof Error?e.message:'Could not load recipes.',loading:false,busy:false});return false;}
  };
  useEffect(()=>{void reload();return ()=>{generation.current++;store.current=null;};},[phase,ownerId,client]); // owner verification precedes every action

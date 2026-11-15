@@ -1,5 +1,17 @@
 # Work queue
 
+## Dev follow-up: rejected personal-recipe saves
+
+PR #134 merged into dev at `58119a2` after owner acceptance. The earlier
+pre-merge statuses below are historical. Dev subsequently rejected recipe writes
+with HTTP 400; the original rejection still needs its response JSON for diagnosis.
+A confirmed secondary defect let a rejected pending write prevent reading the
+recipe library. The feature follow-up reads saved recipes even when replay fails,
+retains the exact protected operation, and reports the pending failure. No hosted
+changes, schema changes, or automatic merges. Regression coverage includes rejected
+write recovery and a synthetic older brisket Cook Again → recipe save journey;
+the latter does not substitute for verifying the hosted backend.
+
 ## Now: #114 personal recipes
 
 Pre-dev acceptance follow-up: remove the header-library Add your own recipe
