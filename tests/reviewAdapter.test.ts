@@ -133,3 +133,15 @@ it('preserves added steps and hidden implicit wings rest through the same mappin
 it('rehydrates the real SQL reordered-wings fixture including its rest step',()=>{
  const doc=parseCookingDocument(JSON.parse(readFileSync('supabase/tests/personal-recipe-edits.sql','utf8').split('$wingsRecipe$')[1]));if(doc.type!=='recipe')throw Error();const fresh=instantiateRecipeReview(doc,date);const r=convertRecipeReview(fresh,doc.id);expect(r.status).toBe('converted');if(r.status==='converted')expect(r.document).toEqual(doc);expect(cookTimeline(fresh).find(t=>t.id.endsWith(':rest'))?.templateStage?.minutes).toBe(5);
 });
+
+it('ordinary recipe edits preserve hidden step metadata through validated JSON and reopen',async()=>{
+ const {editReviewedStep}=await import('../src/domain/recipeReview');
+ let review=recipeReview(createDish('turkey'),date);const step=cookTimeline(review)[0];
+ const equipment='  Original refrigerator  ';
+ review={...review,taskOverrides:{[step.id]:{equipment,targetTempF:165}}};
+ review=editReviewedStep(review,step.id,{title:'My advance preparation',instructions:step.instructions,durationMinutes:1320});
+ expect(review.taskOverrides![step.id]).toMatchObject({equipment,targetTempF:165,durationMinutes:1320});
+ const converted=conversion(review),document=parseCookingDocument(JSON.parse(JSON.stringify(converted.document)));if(document.type!=='recipe')throw Error('Expected a recipe');
+ const fresh=instantiateRecipeReview(document,nextDate,'reused');
+ expect(fresh.taskOverrides!['reused:'+step.id.split(':')[1]]).toMatchObject({equipment,targetTempF:165,durationMinutes:1320});
+});

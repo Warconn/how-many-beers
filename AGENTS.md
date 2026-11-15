@@ -39,7 +39,10 @@ focused PRs and green dev merges sequentially: #152, #154, #153, #145. Keep #3,
 #138, #139 and #150 on hold. No main merge, production deployment or hosted
 production migration. Use focused browser checks for increments and the full
 regression suite at the production release boundary. Preserve archived records,
-actual events, recipes and account isolation. The #114 directions below describe
+actual events, recipes and account isolation. #154 uses flat ordinary step fields,
+Start time/Duration together, and hidden per-step equipment/temperature metadata
+that must survive unrelated saves. See the current design-system section.
+The #114 directions below describe
 already delivered behavior, not an instruction to restart that feature.
 
 ## Current owner direction (#114, November 10, 2026)

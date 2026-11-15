@@ -34,8 +34,8 @@ async function combined(page:Page){await page.getByRole('button',{name:'Review M
 async function starts(row:Locator,time:string){await expect(row.locator('time').first()).toHaveAttribute('datetime',at(time));}
 async function edit(page:Page,name:string,minutes?:string,fixed?:string){
  await row(page,name).getByRole('button',{name:`Edit ${name}`,exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
- if(minutes!==undefined){if(!await form.locator('details').evaluate(el=>(el as HTMLDetailsElement).open))await form.getByText(/^More options/).click();await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);}
- if(fixed!==undefined){await form.locator('summary').click();await form.getByLabel('Planned date and time',{exact:true}).fill(`2026-11-08T${fixed}`);}
+ if(minutes!==undefined){await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill(minutes);}
+ if(fixed!==undefined){await form.getByLabel('Planned date and time',{exact:true}).fill(`2026-11-08T${fixed}`);}
  await form.getByRole('button',{name:'Save',exact:true}).click();
 }
 const pair=()=>meal(dish('Potatoes','Roast potatoes (75 minutes)'),dish('Brats','Grill brats (45 minutes)'));

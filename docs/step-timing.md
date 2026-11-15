@@ -2,14 +2,14 @@
 
 Edit a step in its dish, or select the matching item in Live Schedule. Both entry
 points open the same inline editor. General prep steps open in checklist review.
-Only one step editor is active; Save & Close applies the draft and Cancel/Escape
-leaves the saved cook unchanged. A successful save confirms the change and returns
-keyboard focus to Edit.
+Only one step editor is active; Save applies the draft and Cancel/Escape
+leaves the saved cook unchanged. A successful save returns keyboard focus to Edit.
 
-The editor supports name, instructions, planned date/time, estimated duration,
-equipment for that step and an optional target food temperature in °F. Targets
-are planning notes, not actual readings, verified doneness or equipment setpoints.
-Existing condition-driven safety checks remain visible.
+The normal editor shows name, instructions, Start time and Duration, with a
+compact unit selector. Time/duration share a row on desktop and stack on narrow
+phones. Equipment and target-food-temperature metadata are preserved but hidden
+from ordinary edits. Recipe authoring has no calendar fields and keeps equipment
+at dish level. Existing condition-driven checks and temperature recording remain.
 
 ## Timing rules
 
@@ -19,7 +19,8 @@ Existing condition-driven safety checks remain visible.
   serving time or the dish's total cook/rest settings change.
 - Clear the date/time to leave the step explicitly unscheduled. This remains untimed
   until changed or reset, even if its underlying recipe later gains timing.
-- Use plan timing restores the original/derived date and duration without resetting
+- Use plan timing appears for a manual/unscheduled override and restores the
+  original/derived date without resetting duration or
   edited title, instructions, equipment, target, IDs, notes or recorded events.
 - Estimated duration accepts minutes or hours, including fractional hours. Switching
   units preserves the duration; storage remains minutes. Limits are 0–43200 minutes

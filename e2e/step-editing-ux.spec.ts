@@ -3,7 +3,7 @@ import {createDish,newMeal} from '../src/domain/meal';
 import {cookTimeline} from '../src/domain/cookState';
 import {parseRecipeText} from '../src/domain/recipe';
 
-for (const kind of ['template','imported'] as const) test(`${kind} editor is compact and advanced options remain optional`,async({page},info)=>{
+for (const kind of ['template','imported'] as const) test(`${kind} editor keeps ordinary fields visible and advanced metadata hidden`,async({page},info)=>{
   const dish=kind==='template'?createDish('brats'):parseRecipeText('Soup','Chop vegetables\nSimmer gently');
   await page.goto('/');
   await page.evaluate(meal=>{localStorage.clear();localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(meal));},{...newMeal(),serveAt:'2026-11-01T18:00',dishes:[dish]});
@@ -14,10 +14,10 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   await row.getByRole('button',{name:/^Edit(?: |$)/}).click();
   const form=page.getByRole('form',{name:'Edit step',exact:true});
   await form.scrollIntoViewIfNeeded();
-  await page.screenshot({path:`docs/screenshots/issue-85-62-${process.env.HMB_CAPTURE??'after'}-${kind}-${info.project.name}.png`,fullPage:true});
-  const editorCapture=await form.screenshot({path:`docs/screenshots/issue-85-62-editor-${kind}-${info.project.name}.png`});
+  await page.screenshot({path:info.outputPath(`step-editor-${kind}.png`),fullPage:true});
+  const editorCapture=await form.screenshot({path:info.outputPath(`step-editor-detail-${kind}.png`)});
   await info.attach('compact-step-editor',{body:editorCapture,contentType:'image/png'});
-  await expect(form.getByText(/^More options/)).toBeVisible();
+  await expect(form.getByText(/^More options/)).toHaveCount(0);
   await expect(form.getByLabel('Planned date and time',{exact:true})).toBeVisible();
   await expect(form.locator('p')).toHaveCount(0);
   await form.getByLabel('Step name').fill('Edited step');
@@ -27,8 +27,8 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   const edited=region.getByRole('article',{name:'Edited step',exact:true});
   await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();
   await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('');
-  await form.getByText(/^More options/).click();
-  await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('0');
+
+  await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('0');
   await form.getByRole('button',{name:'Save',exact:true}).click();
   await edited.getByRole('button',{name:/^Edit(?: |$)/}).click();
   await expect(form.getByLabel('Estimated duration (minutes)',{exact:true})).toHaveValue('0');
@@ -36,7 +36,7 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor is com
   await expect(edited.getByRole('button',{name:/^Edit(?: |$)/})).toBeFocused();
 });
 
-test('advanced values survive a closed disclosure; add, move and remove stay aligned and persist',async({page})=>{
+test('hidden metadata survives ordinary edits; add, move and remove stay aligned and persist',async({page})=>{
   const dish=parseRecipeText('Soup','Chop\nSimmer'),other=createDish('brats');
   const id=dish.id+':'+dish.steps![0].id;
   const meal={...newMeal(),serveAt:'2026-11-01T18:00',dishes:[dish,other],taskOverrides:{[id]:{scheduledAt:'2026-11-01T12:00:34.567Z',durationMinutes:30,equipment:'Stockpot',targetTempF:165}}};
@@ -48,7 +48,7 @@ test('advanced values survive a closed disclosure; add, move and remove stay ali
   const controls=await row.locator('.step-drag-grip,.step-row-edit').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {y:r.y,height:r.height,width:r.width};}));
   expect(new Set(controls.map(c=>c.y)).size).toBe(1);expect(controls.every(c=>c.height>=44&&c.width>=44)).toBe(true);
   await row.getByRole('button',{name:/^Edit(?: |$)/}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});
-  await expect(form.getByLabel('Custom options set')).toBeVisible();await form.getByLabel('Step name').fill('Chop finely');await form.getByRole('button',{name:'Save',exact:true}).click();
+  await expect(form.getByLabel('Equipment for this step')).toHaveCount(0);await form.getByLabel('Step name').fill('Chop finely');await form.getByRole('button',{name:'Save',exact:true}).click();
   expect((await read()).taskOverrides[id]).toMatchObject(meal.taskOverrides[id]);
   await region.getByRole('button',{name:'Move Chop finely'}).press('ArrowDown');
   await expect(page.getByRole('status').filter({hasText:'position 2'})).toBeVisible();
@@ -59,8 +59,8 @@ test('advanced values survive a closed disclosure; add, move and remove stay ali
   await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Soup',exact:true}).click();
   await expect(region.getByRole('article').nth(1)).toHaveAttribute('aria-label','Chop finely');expect((await read()).dishes[1]).toEqual(other);
   await region.getByRole('article',{name:'Chop finely',exact:true}).getByRole('button',{name:/^Edit(?: |$)/}).click();
-  await form.getByText(/^More options/).click();await expect(form.getByLabel('Equipment for this step',{exact:true})).toHaveValue('Stockpot');
-  await form.getByLabel('Planned date and time',{exact:true}).fill('');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('');await form.getByRole('button',{name:'Save',exact:true}).click();
+  expect((await read()).taskOverrides[id]).toMatchObject({equipment:'Stockpot',targetTempF:165});
+  await form.getByLabel('Planned date and time',{exact:true}).fill('');await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('');await form.getByRole('button',{name:'Save',exact:true}).click();
   expect((await read()).taskOverrides[id]).toMatchObject({scheduledAt:null,equipment:'Stockpot',targetTempF:165});
   expect(cookTimeline(await read()).find(t=>t.id===id)?.durationMinutes).toBeNull();
 });

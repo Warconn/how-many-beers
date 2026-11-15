@@ -8,10 +8,17 @@ code. Implement and merge focused, green PRs to dev in this order:
 → #145 Home next action. Production remains unchanged. #3, #138, #139 and #150
 are on hold; do not resume them as part of this queue.
 
-#152 implementation: display archived event attribution using stable task IDs from
+#152 delivered through PR #155, merged to dev at `ad8ce83` after all required CI
+and desktop/mobile/iPhone screenshot review. Display archived attribution using stable IDs from
 that cook's archived timeline only; preserve event sequence, values and timestamps.
 Past cooks card actions use a compact 12px gap and retain 44px targets. Verification
-and dev merge are tracked in the issue PR. No schema or stored history changes.
+passed in the issue PR. No schema or stored history changes.
+
+#154 implementation: flat planning step fields with Start time/Duration together,
+compact actions, override-only reset and human duration units. Recipe authoring
+keeps dish equipment and removes per-step settings. Hidden metadata survives
+unrelated edits and validated recipe round trips. No scheduler or schema change;
+verification and merge are tracked in the issue PR.
 
 ## Delivered: rejected personal-recipe save recovery
 
@@ -26,7 +33,7 @@ changes, schema changes, or automatic merges. Regression coverage includes rejec
 write recovery and a synthetic older brisket Cook Again → recipe save journey;
 the latter does not substitute for verifying the hosted backend.
 
-## Now: #114 personal recipes
+## Historical #114 implementation notes (delivered)
 
 Pre-dev acceptance follow-up: remove the header-library Add your own recipe
 shortcut, which reused meal planning. Keep the working Add dish text/upload box.

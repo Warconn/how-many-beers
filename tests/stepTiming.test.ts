@@ -127,3 +127,12 @@ describe('local calendar timing and DST', () => {
     expect(estimatedFinish({scheduledAt:'2026-11-01T05:30:00.000Z',durationMinutes:90})).toBe('2026-11-01T07:00:00.000Z');
   });
 });
+
+ describe('hidden step metadata',()=>{
+  it('leaves explicit equipment and temperature overrides exact when omitted from the editor',()=>{
+   const meal=seed(),task=cookTimeline(meal)[0],equipment='  Original '+('equipment '.repeat(12));
+   const original={...meal,taskOverrides:{[task.id]:{equipment,targetTempF:165,scheduledAt:'2026-11-25T00:00:34.567Z'}}};
+   const edited=editStep(original,task.id,'Renamed',task.instructions,{timingMode:'fixed',scheduledAt:'2026-11-25T00:00:34.567Z',durationMinutes:45});
+   expect(edited.taskOverrides![task.id]).toMatchObject({equipment,targetTempF:165,scheduledAt:'2026-11-25T00:00:34.567Z',durationMinutes:45});
+  });
+ });

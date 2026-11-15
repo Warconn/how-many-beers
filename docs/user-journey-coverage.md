@@ -20,6 +20,17 @@ safeguards. `tests/planningDraft.test.ts` covers owner isolation, validation and
 storage failures for pre-dish tab drafts. These tests do not assert hosted schema
 health or erase/reproduce the owner's actual browser recovery records.
 
+## Minimal editors (#154)
+
+`step-editor-minimal` asserts flat controls, wide-screen timing alignment, phone
+stacking, touch targets, duration-only edits without pinning, manual/reset timing,
+unit switches without changing exact minutes, and hidden metadata/actuals after
+reload. `step-editing-ux`, `step-timing` and `duration-reflow` retain keyboard,
+unknown/zero, DST, fixed-anchor and history regressions using the flat controls.
+Account `account-cooks` and `personal-recipes` seed existing per-step equipment and
+temperature overrides, edit ordinary fields, save/reopen and verify exact metadata.
+Those account tests model the RPC contract; they do not mutate hosted accounts.
+
 ## Past cooks archived activity (#152)
 
 `history-activity.spec.ts` opens a synthetic 16-event Browns Brisket archive with
