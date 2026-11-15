@@ -40,7 +40,7 @@ export class SavedPlanStore{
  private retryAttempt=0;
  private inflight:Promise<void>|null=null;
  constructor(readonly owner:string,readonly planId:string,private api:SavedPlanAPI,private storage:RecoveryStorage,
-  private emit:(state:SavedPlanState)=>void,private maySend:()=>boolean=()=>true,private readonlyMode=false,seedMeal?:Meal,seedContext?:{serveInstant:string|null;timeZone:string}){
+  private emit:(state:SavedPlanState)=>void,private maySend:()=>boolean=()=>true,private readonlyMode=false,seedMeal?:Meal,seedContext?:{serveInstant:string|null;timeZone:string},knownPlan?:SavedPlan){
   this.key=savedPlanCacheKey(owner,planId);
   try{
    this.baseline=storage.getItem(this.key);
@@ -76,6 +76,10 @@ export class SavedPlanStore{
     }
     this.visible=this.desired?this.displayDraft():(this.base?planMeal(this.base):null);
     if(c.conflicted&&this.desired){this.phase='conflict';this.error='This plan has protected changes from another version. Your saved cooks have not been replaced.';}
+   }else if(knownPlan){
+    this.base=parseSavedPlan(knownPlan);
+    if(this.base.id!==planId)throw Error('Recovery plan mismatch.');
+    this.visible=planMeal(this.base);this.phase='saved';this.persist();
    }else if(seedMeal){
     this.desired=validatePlanMeal(seedMeal,planId);
     if(seedContext){

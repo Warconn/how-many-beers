@@ -22,7 +22,10 @@ discarded IDs, matching the SQL instead of permitting accidental resurrection.
 - Explicit discard opens without replaying a save. It waits for in-flight work,
   verifies owner/current server state, and durably journals its decision. A stopped
   background writer retains its lock until requests already sent settle; discard
-  cannot inspect an absent row while that worker is still creating it.
+  cannot inspect an absent row while that worker is still creating it. Confirmed
+  Home snapshots stay visible during the discard read; card removal is checked
+  only after the actual retained-deletion acknowledgement, including a gated
+  server-response regression. Selected writes own their Saving indicator.
 - An absent upcoming record resolves just that local plan/index entry. This does
   not assert whether it was discarded or promoted, and touches neither history
   nor the active workspace. A recovery entry sharing the promoted active cook ID

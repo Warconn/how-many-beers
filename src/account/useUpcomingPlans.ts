@@ -252,7 +252,7 @@ export function useUpcomingPlans(enabled:boolean){
           const visible=s.phase==='saved'?s.plan:{...s.plan,pending:true,meal:s.meal??s.plan.meal};
           setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),visible]));
         }
-      },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined);
+      },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined,forDiscard?plans.find(plan=>plan.id===id&&!plan.pending&&plan.revision>0):undefined);
       store.current=next;selectedRef.current={owner,id};setSelected({owner,id});setState(next.state());
       if(!forDiscard)await next.connect();
       if(recoveredSeed&&!forDiscard){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
@@ -424,7 +424,7 @@ export function useUpcomingPlans(enabled:boolean){
     // Resume reads the current guarded owner/store refs instead of a stale editor closure.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[enabled,ownerId,client,phase]);
-  const savingPhase:SavedPlanState['phase']=actionError||listPhase==='load-error'?'unsaved':automaticPhase==='conflict'?'conflict':automaticPhase==='syncing'?'syncing':automaticPhase==='unsaved'?'unsaved':plans.some(plan=>plan.pending)?'unsaved':listPhase==='loading'?'loading':'saved';
+  const savingPhase:SavedPlanState['phase']=actionError||listPhase==='load-error'?'unsaved':automaticPhase==='conflict'?'conflict':automaticPhase==='syncing'?'syncing':automaticPhase==='unsaved'?'unsaved':plans.some(plan=>plan.pending&&plan.id!==selected?.id)?'unsaved':listPhase==='loading'?'loading':'saved';
   const retry=async()=>{if(store.current)await store.current.retry();else await refresh();};
   return {
     plans:scope===ownerId?plans:[],
