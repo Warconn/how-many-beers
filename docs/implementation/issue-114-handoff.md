@@ -4,7 +4,10 @@
 
 PR #134 merged into dev at `58119a2` after owner acceptance. The earlier
 pre-merge statuses below are historical. Dev subsequently rejected recipe writes
-with HTTP 400; the original rejection still needs its response JSON for diagnosis.
+with HTTP 400; the owner has since confirmed the November 13 validator upgrade restored recipe
+writes (HTTP 200). Do not reapply that migration. PR #140 merged the independent
+library-read recovery into dev at `3e3f35a`. The current P0 is #139 plan recovery
+and first-dish persistence; neither changes the recipe JSON contract.
 A confirmed secondary defect let a rejected pending write prevent reading the
 recipe library. The feature follow-up reads saved recipes even when replay fails,
 retains the exact protected operation, and reports the pending failure. No hosted
