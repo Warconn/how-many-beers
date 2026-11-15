@@ -16,7 +16,6 @@ import {documentFingerprint,withRecipeLink} from '@/domain/recipeLink';
 type Props={
   onDraftChange:(open:boolean)=>void;
   recipes:ReturnType<typeof usePersonalRecipes>;
-  onClose:()=>void;
   onUse:(meal:ExtendedMeal)=>void;
   serveAt:string;
 };
@@ -27,7 +26,7 @@ function stepCount(recipe:PersonalRecipe):number{
   return definition.steps.length+(definition.review?.addedSteps?.length??0)-(definition.review?.hiddenStepIds?.length??0);
 }
 
-export default function MyRecipes({recipes,onClose,onUse,serveAt,onDraftChange}:Props){
+export default function MyRecipes({recipes,onUse,serveAt,onDraftChange}:Props){
   const heading=useRef<HTMLHeadingElement>(null);
   const detailHeading=useRef<HTMLHeadingElement>(null);
   const detailBack=useRef<HTMLButtonElement>(null);
@@ -92,7 +91,6 @@ export default function MyRecipes({recipes,onClose,onUse,serveAt,onDraftChange}:
         <span className="section-icon" aria-hidden="true"><Icon name="book"/></span>
         <div><p className="eyebrow">SAVED METHODS</p><h2 ref={heading} tabIndex={-1}>My recipes</h2></div>
       </div>
-      {!editing&&!preview&&<button type="button" className="back-link" aria-label="Close My recipes" disabled={recipes.busy} onClick={onClose}>Back to cook</button>}
     </div>
     {!recipes.authenticated?<p>{recipes.enabled?'Sign in to save and reuse your recipes.':'Personal recipes require an account.'}</p>
     :editing?<RecipeMethodReview
