@@ -1,15 +1,17 @@
+import {openOwnRecipe} from './helpers/recipeEntry';
 import {test,expect} from '@playwright/test';
 const source='# Smoky BBQ Pumpkin Seeds\n## Ingredients\n- 1.5 cups pumpkin seeds\n- 2 tsp olive oil\n- salt, garlic powder and paprika\n## Equipment\nPellet smoker\n## Source\nFamily recipe\n## Instructions\nClean seeds for 5 minutes.\nDry seeds for 5 minutes.\nSeason seeds for 2 minutes.\nPreheat pellet smoker to 425°F for 10 minutes.\nRoast for 10–15 minutes.\nStir halfway through.\nCool completely.';
 for(const input of ['paste','md','txt'])test(input+' retains editable recipe details through review and reload',async({page},info)=>{
  await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
- await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();
+ await openOwnRecipe(page);
  if(input==='paste')await page.getByLabel('Recipe instructions').fill(source);
  else await page.getByLabel('Upload .txt or .md',{exact:true}).setInputFiles({name:'Smoky BBQ Pumpkin Seeds.'+input,mimeType:'text/plain',buffer:Buffer.from(source)});
  await page.getByRole('button',{name:'Preview recipe steps'}).click();
  const preview=page.getByRole('region',{name:'Review your method',exact:true});
  await page.screenshot({path:info.outputPath('recipe-details-default.png'),fullPage:true,scale:'css'});
- await expect(preview.getByLabel('Equipment',{exact:true})).toHaveValue('Pellet Smoker');
- await preview.getByLabel('Equipment',{exact:true}).fill('Backyard pellet smoker');
+ await preview.getByRole('button',{name:/^Equipment:/}).click();
+ await expect(preview.getByLabel('Other equipment',{exact:true})).toHaveValue('Pellet Smoker');
+ await preview.getByRole('textbox',{name:'Other equipment',exact:true}).fill('Backyard pellet smoker');
  await preview.getByRole('button',{name:'Add to meal',exact:true}).click();
  await page.getByRole('button',{name:'Edit Smoky BBQ Pumpkin Seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
  const details=page.getByRole('article',{name:'Smoky BBQ Pumpkin Seeds',exact:true});
@@ -24,7 +26,7 @@ for(const input of ['paste','md','txt'])test(input+' retains editable recipe det
  await expect(page.getByRole('region',{name:'Smoky BBQ Pumpkin Seeds steps'})).toContainText('Preheat pellet smoker to 450°F');
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
  await page.getByRole('button',{name:'Edit Smoky BBQ Pumpkin Seeds',exact:true}).click();await page.getByText('Dish settings',{exact:true}).click();
- await expect(page.getByLabel('Equipment',{exact:true})).toHaveValue('Backyard pellet smoker');
+ await expect(page.getByRole('button',{name:'Equipment: Backyard pellet smoker',exact:true})).toBeVisible();
  await page.getByText('Ingredients & recipe reference',{exact:true}).click();await expect(page.getByLabel('Ingredients (one per line)')).toHaveValue('1.5 cups pumpkin seeds\n3 tsp olive oil\npaprika');await expect(page.getByLabel('Source / notes')).toHaveValue('Family recipe, adjusted');
  await page.getByText('Recipe temperatures',{exact:true}).click();await expect(page.getByRole('spinbutton',{name:'Step 4 temperature 1',exact:true})).toHaveValue('450');
  await page.screenshot({path:info.outputPath('recipe-details-saved.png'),fullPage:true,scale:'css'});

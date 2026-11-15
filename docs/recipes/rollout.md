@@ -1,0 +1,91 @@
+# Personal recipes (#114): development review and rollout
+
+This is an additive feature candidate, not an approved production rollout. Existing
+cooks/history/plans use unchanged persistence. There is no automatic conversion,
+historical import or My recipes population. Browns Brisket was not accessed.
+
+## Development preview prerequisite
+
+For a fresh project, review/apply `202611110001_personal_recipes.sql`, followed
+by `202611130001_personal_recipe_validation.sql`. If the November 11 migration
+is already installed (as it may be in the manually tested development project),
+apply **only the November 13 validator upgrade**. Do not rerun the original
+migration. The upgrade preserves all rows, ownership, receipts and revision/CAS
+behavior; it extends the embedded contract for date-free applied brisket settings.
+Both migrations are transactional and reload the PostgREST schema cache.
+
+The agent has run these only in disposable local PostgreSQL, including a seeded
+upgrade. Hosted migration status has not been independently inspected. Do not run
+test/bootstrap SQL in a hosted project. Production application needs separate
+owner approval; this PR does not authorize hosted changes.
+
+This creates owner-scoped personal_recipes and immutable operation receipts;
+it does not modify cook tables or saved plans. Normal removal retains document,
+identity, ownership, revision and a server-owned deleted_at. No direct client
+insert/update/delete grants exist. Existing meal snapshots remain independent.
+The per-owner mutation lock makes saves/removals serial and stale revisions fail.
+
+The canonical JSON Schema is embedded in server validation and pinned by a unit
+test against the checked-in schema. Server validation rejects unknown properties,
+execution fields, unsupported versions, malformed shape/references, invalid timing
+ranges and duplicate IDs. A separate authoring library boundary accepts only recipe
+documents, never the compatibility/history envelopes from Phase 2.
+
+After application, this read-only check in SQL Editor can confirm RPC installation:
+
+```sql
+select to_regprocedure('public.list_personal_recipes(uuid)'),
+       to_regprocedure('public.mutate_personal_recipe(uuid,uuid,bigint,uuid,text,jsonb)');
+```
+
+Missing migration is capability-gated with an honest unavailable message; no fake
+library success or browser-only substitute is used. Existing Add to meal still
+works. The feature URL is reported separately after Cloudflare confirms it.
+
+## Owner review
+
+1. Sign in on the feature preview. Plan a cook and review a template/custom method.
+   After a reusable edit, Save to My recipes is visible beside/below Add to meal in
+   the footer. No Recipe actions disclosure. Saving leaves the method open and
+   the meal unchanged.
+2. Add to meal independently. It must not create another library entry.
+3. In Add dish, choose My recipes: use the same inline boxes as templates,
+   including Add your own recipe. Select a saved box, review and Add to meal. The
+   header My recipes remains separate management; the original and target remain
+   unchanged. See the [complete regression checklist](manual-regression.md).
+4. Open a recipe by its name. Edit two steps (including duration and optional step
+   settings), reorder, and Save changes. The final open edit is included without
+   requiring Save step first. Reload and verify the edits. Save as copy creates an
+   independent recipe; Cancel leaves the saved version unchanged.
+5. Remove a recipe: dismiss to keep it, then confirm. Reload/sign in on another
+   device; it stays hidden. Existing dishes, actuals, plans and history stay intact.
+6. Save a changed meal-specific method in the action area after its step list.
+   First save links this dish; subsequent changes offer Update original recipe or
+   Save as copy with a distinct name. Unchanged methods/date-only edits hide saves.
+   Authored extraction excludes actuals/calendar history. No second review wizard;
+   only this dish's source metadata (and explicit copy name) changes.
+7. Guest Save recipe opens optional sign-in and preserves the review draft. Email and existing provider redirect returns preserve the tab-scoped draft. It does
+   not automatically import the guest meal or save the method after sign-in.
+
+## Failure and rollback boundaries
+
+Explicit saves/removals journal an immutable owner-scoped operation before RPC.
+Lost replies reuse the same operation ID across reload. An explicitly guest-authored
+review is protected across existing provider redirects, then handed to the durable
+owner journal before its temporary guest slot is released. Failure is not success;
+review inputs stay in place. Revision conflicts never become fresh overwrites or
+resurrect deleted recipes. Explicit Use saved version protects the pending change
+on the device before releasing its journal. Library review saves never modify the current workspace or history. A planning
+save first durably records an owner-scoped source intent in only the selected
+meal/dish using the existing acknowledged workspace API, then saves the recipe,
+then acknowledges the link. This prevents duplicate IDs across ambiguous replies.
+Copy relinks only that dish and conditionally updates its unchanged display name.
+Other dishes, meals and history stay independent. Source links never grant access;
+existing RPC ownership/CAS/receipts remain authoritative. No additional SQL or
+schema migration is needed for the November 14 source-link refinement.
+
+An application rollback should retain the additive tables and receipts. Do not drop
+recipe rows or reverse the existing cook migrations. Capability gating preserves
+ordinary planning when the recipe RPC is absent. Production migration and release
+need separate owner approval after development acceptance, full regression and
+actual desktop/mobile/iPhone WebKit screenshot review.

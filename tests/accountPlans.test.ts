@@ -1,6 +1,6 @@
 import {afterEach,describe,it,expect,vi} from 'vitest';
 import type {SupabaseClient} from '@supabase/supabase-js';
-import {SavedPlanStore,savedPlanCacheKey} from '../src/account/SavedPlanStore';
+import {SavedPlanStore,savedPlanCacheKey,retirePlanWriter} from '../src/account/SavedPlanStore';
 import {AccountCookStore} from '../src/account/AccountCookStore';
 import {AccountConflict,equal,parseRemote,type Remote,type WorkspaceAPI} from '../src/account/workspace';
 import {createDish,newMeal} from '../src/domain/meal';
@@ -279,4 +279,12 @@ describe('account atomic plan promotion',()=>{
   const f=promotionFixture(),s=f.store();await s.connect();await expect(s.promote(f.target.id,2)).rejects.toBeInstanceOf(AccountConflict);
   expect(s.state().phase).toBe('conflict');expect(s.state().snapshot!.active).toEqual(f.legacy);expect(s.recoveryExport()).toContain(f.target.id);
  });
+});
+
+it('holds the background writer lock until its delayed initial save settles, retaining the immutable recovery receipt',async()=>{
+ const meal=make('Pending first dish'),f=fixture();let finish!:()=>void,started!:()=>void;const began=new Promise<void>(r=>{started=r;}),gate=new Promise<void>(r=>{finish=r;});
+ const api={...f.api,write:async(...args:Parameters<SavedPlanAPI['write']>)=>{started();await gate;return f.api.write(...args);}};
+ const s=f.store(meal.id,meal,owner,false,api);await s.connect();const sending=s.flush();await began;const release=vi.fn();const retiring=retirePlanWriter({store:s,release});await Promise.resolve();expect(release).not.toHaveBeenCalled();expect(f.records.has(meal.id)).toBe(false);
+ finish();await sending;await retiring;expect(release).toHaveBeenCalledTimes(1);expect(f.records.get(meal.id)?.meal.name).toBe('Pending first dish');const raw=JSON.parse(f.values.get(savedPlanCacheKey(owner,meal.id))!);expect(raw.operation.id).toBe(f.calls[0].writeId);
+ const recovered=f.store(meal.id);await recovered.connect();expect(recovered.state().phase).toBe('saved');expect(recovered.dirty()).toBe(false);
 });

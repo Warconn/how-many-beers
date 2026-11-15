@@ -1,10 +1,11 @@
+import {openOwnRecipe} from './helpers/recipeEntry';
 import {changeStepDuration} from './helpers/stepEditing';
 import {test,expect} from '@playwright/test';
 test.use({timezoneId:'UTC'});
 test('serving target is the first planning decision and survives recipe review',async({page},info)=>{
  await page.clock.install({time:new Date('2026-11-08T16:00:00Z')});await page.clock.setFixedTime(new Date('2026-11-08T16:00:00Z'));await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();
  const serving=page.getByLabel('Serve date and time',{exact:true});await expect(serving).toBeVisible();await serving.fill('2026-11-08T18:00');await page.screenshot({path:info.outputPath('serving-first-empty.png'),fullPage:false,scale:'css',style:'nextjs-portal{display:none}'});
- await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await expect(serving).toHaveValue('2026-11-08T18:00');
+ await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await expect(serving).toHaveCount(0);
  await page.getByRole('region',{name:'Review your method',exact:true}).getByRole('button',{name:'Add to meal',exact:true}).click();await expect(serving).toHaveValue('2026-11-08T18:00');
  await page.screenshot({path:info.outputPath('serving-first-plan.png'),fullPage:true,style:'nextjs-portal{display:none}'});
 });
@@ -43,7 +44,7 @@ const grill=()=>meal(dish('Brats','Preheat grill (15 minutes)\nGrill brats (35 m
 test('independent dish windows overlap; target changes and short sauce preserve durations',async({page})=>{
  const m=pair();await open(page,m);await ready(page,'18:00');await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime',at('16:45'));await combined(page);await starts(row(page,'Roast potatoes (75 minutes)'),'16:45');await starts(row(page,'Grill brats (45 minutes)'),'17:15');
  await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 15m');
- await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add your own recipe',exact:true}).click();await page.getByLabel('Recipe title').fill('Sauce');await page.getByLabel('Recipe instructions').fill('Simmer sauce (15 minutes)');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await openOwnRecipe(page);await page.getByLabel('Recipe title').fill('Sauce');await page.getByLabel('Recipe instructions').fill('Simmer sauce (15 minutes)');await page.getByRole('button',{name:'Preview recipe steps'}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
  await ready(page,'18:00');await starts(row(page,'Simmer sauce (15 minutes)'),'17:45');await starts(row(page,'Roast potatoes (75 minutes)'),'16:45');
  await page.getByLabel('Serve date and time').fill('2026-11-08T18:45');await ready(page,'18:45');await starts(row(page,'Roast potatoes (75 minutes)'),'17:30');await starts(row(page,'Grill brats (45 minutes)'),'18:00');await starts(row(page,'Simmer sauce (15 minutes)'),'18:30');
  const saved=await stored(page);expect(saved.dishes[0]).toEqual(m.dishes[0]);expect(saved.dishes[1]).toEqual(m.dishes[1]);expect(saved.events).toEqual(m.events??[]);expect(saved.completed).toEqual({});

@@ -74,3 +74,12 @@ it('shorter imported review estimates reflow without a leftover original gap',as
  const steps=cookTimeline(addReviewedDish({...newMeal(),serveAt:review.serveAt},review));const roast=steps.find(t=>t.id===own[0].id)!,cool=steps.find(t=>t.id===own[1].id)!;
  expect(Date.parse(cool.scheduledAt!)-Date.parse(roast.scheduledAt!)).toBe(12*60000);expect(Date.parse(steps.find(t=>t.id.endsWith(':serve'))!.scheduledAt!)-Date.parse(roast.scheduledAt!)).toBe(20*60000);expect(dish).toEqual(source);
 });
+
+import {editReviewedStep} from '../src/domain/recipeReview';
+it('preserves long imported step text and fixed dates when saving a reviewed duration',()=>{
+ const title='A'.repeat(180),instructions='Useful instructions. '.repeat(40);
+ const dish=parseRecipeText('Long source',instructions);let review=recipeReview(dish,'2026-11-15T13:00');const task=cookTimeline(review)[0];
+ review.taskOverrides={[task.id]:{title,instructions,scheduledAt:'2026-11-15T10:00Z',recordedPlanAt:'2026-11-15T09:00Z'}};
+ const next=editReviewedStep(review,task.id,{title,instructions,durationMinutes:13,equipment:task.equipment??'',targetTempF:null});
+ expect(next.taskOverrides?.[task.id]).toMatchObject({title,instructions,durationMinutes:13,scheduledAt:'2026-11-15T10:00Z',recordedPlanAt:'2026-11-15T09:00Z'});expect(review.taskOverrides?.[task.id].durationMinutes).toBeUndefined();
+});

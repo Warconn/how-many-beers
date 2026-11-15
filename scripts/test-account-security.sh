@@ -49,6 +49,9 @@ for account_database in hmb_clean hmb_upgrade; do
  account_psql < supabase/tests/account-workspace.sql
  account_psql < supabase/tests/retained-cancellation.sql
  account_psql < supabase/tests/saved-upcoming-plans.sql
+ account_psql < supabase/tests/personal-recipes.sql
+ account_psql < supabase/tests/personal-recipe-edits.sql
  bash supabase/tests/cancellation-races.sh "$account_container" "$account_database"
+ bash supabase/tests/personal-recipe-races.sh "$account_container" "$account_database"
  bash supabase/tests/saved-plan-races.sh "$account_container" "$account_database"
 done

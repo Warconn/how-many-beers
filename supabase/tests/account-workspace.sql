@@ -61,4 +61,12 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001'
 select public.save_cook_workspace(auth.uid(),3,'30000000-0000-4000-8000-000000000004',pg_temp.doc('10000000-0000-4000-8000-000000000002'),'UTC');
 select pg_temp.ok(jsonb_array_length(public.load_cook_workspace(auth.uid())->'history')=0 and(select count(*)=0 from public.cook_events),'explicit archive deletion removes events and cannot resurrect on stale retry');
 select pg_temp.denied(format('select public.save_cook_workspace(auth.uid(),3,%L,jsonb_build_object(''active'',pg_temp.doc(''10000000-0000-4000-8000-000000000002'')->''active'',''history'',jsonb_build_array(%L::jsonb)),''UTC'')','30000000-0000-4000-8000-000000000005',:'archive'),'stale snapshot cannot resurrect deleted history');
+-- Optional recipe provenance/pending intent must round-trip through the existing
+-- native workspace schema. It is not an authorization pointer or a live recipe.
+create function pg_temp.linked_doc() returns jsonb language sql as $$
+ select jsonb_set(pg_temp.doc('10000000-0000-4000-8000-000000000002'),'{active,meal,dishes}',
+ '[{"id":"dish-link","name":"Wings","preset":"wings","equipment":"Smoker + fryer","cookMinutes":195,"restMinutes":5,"recipeLink":{"ownerId":"00000000-0000-4000-8000-000000000001","id":"a1400000-0000-4000-8000-000000000099","revision":1,"name":"Wings","fingerprint":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","pending":{"id":"a1400000-0000-4000-8000-000000000098","revision":0,"name":"Wings_1","fingerprint":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","renameFrom":"Wings"}}}]'::jsonb)
+$$;
+select public.save_cook_workspace(auth.uid(),4,'30000000-0000-4000-8000-000000000006',pg_temp.linked_doc(),'UTC');
+select pg_temp.ok(public.load_cook_workspace(auth.uid())->'active'->'meal'->'dishes'=pg_temp.linked_doc()->'active'->'meal'->'dishes','recipe source and pending copy intent persist losslessly without a new schema');
 rollback;

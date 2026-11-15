@@ -1,3 +1,4 @@
+import {openOwnRecipe} from './helpers/recipeEntry';
 import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -138,7 +139,7 @@ test("a recipe can be imported from the same Add Dish interface as templates", a
   await page.getByRole('button',{name:'Choose a template',exact:true}).click();
   await expect(page.getByRole("heading", { name: "Add a dish" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel adding", exact:true }).click();
-  await page.getByRole("button", { name: "Add your own recipe" }).click();
+  await openOwnRecipe(page);
   await expect(page.getByLabel("Recipe title")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Choose a template" })).toHaveCount(0);
   await page.getByLabel("Recipe title").fill("Mac and cheese");
