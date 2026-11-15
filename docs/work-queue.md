@@ -14,11 +14,19 @@ that cook's archived timeline only; preserve event sequence, values and timestam
 Past cooks card actions use a compact 12px gap and retain 44px targets. Verification
 passed in the issue PR. No schema or stored history changes.
 
-#154 implementation: flat planning step fields with Start time/Duration together,
+#154 delivered through PR #156 at `fc9d599`, with all required CI and reviewed
+planning/recipe iPhone screenshots. Flat planning step fields with Start time/Duration together,
 compact actions, override-only reset and human duration units. Recipe authoring
 keeps dish equipment and removes per-step settings. Hidden metadata survives
-unrelated edits and validated recipe round trips. No scheduler or schema change;
-verification and merge are tracked in the issue PR.
+unrelated edits and validated recipe round trips. No persistence, scheduler or
+schema change.
+
+#153 implementation: downloadable, owner-importable custom Deep-fried turkey
+method through the existing upload/review/save path. Separate electric-fryer
+equipment, editable 60-minute owner-specific preheat allowance and unknown frying
+duration. Real local PostgreSQL validates the exact shared JSON. Owner inputs are
+19–20 lb per bird provisionally, November 22 at 3 PM local; model capacity remains
+unconfirmed, so no final Thanksgiving schedule. See [review/import instructions](recipes/deep-fried-turkey.md).
 
 ## Delivered: rejected personal-recipe save recovery
 

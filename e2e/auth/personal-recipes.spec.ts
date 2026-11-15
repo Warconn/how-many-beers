@@ -1,7 +1,9 @@
 import {openOwnRecipe} from '../helpers/recipeEntry';
 import {test,expect,type Page,type BrowserContext,type Locator} from '@playwright/test';
 import {backend,user} from './fixtures';
-import {newMeal} from '../../src/domain/meal';
+import {newMeal,createDish} from '../../src/domain/meal';
+import {convertRecipeReview} from '../../src/domain/documents/reviewAdapter';
+import {recipeReview} from '../../src/domain/recipeReview';
 import {legacyDish} from '../../tests/fixtures/legacyDish';
 import {applyBrisketTiming,brisketDefaults} from '../../src/domain/brisketEstimate';
 import {archiveCook,emptyHistory} from '../../src/domain/cookHistory';
@@ -309,4 +311,33 @@ test('recipe library cards open an immediately visible detail view and return to
  await screen.getByRole('button',{name:'All recipes',exact:true}).click();
  await expect(screen.getByRole('button',{name:'View recipe',exact:true})).toBeVisible();
  expect(remote.rows.size).toBe(1);
+});
+
+
+test('fried turkey upload saves and reloads beside an independent oven recipe without changing history',async({page,context},info)=>{
+ test.setTimeout(90_000);
+ const remote=server(),serve='2026-11-22T15:00',ovenId='a1530000-0000-4000-8000-000000000002';
+ const converted=convertRecipeReview(recipeReview(createDish('turkey'),serve),ovenId);if(converted.status!=='converted')throw Error(converted.reason);
+ remote.rows.set(ovenId,{id:ovenId,state:'active',document:converted.document,revision:1,createdAt:'2026-11-15T00:00Z',updatedAt:'2026-11-15T00:00Z',deletedAt:null});
+ remote.workspace.active.meal.serveAt=serve;remote.workspace.active.serveInstant='2026-11-22T15:00Z';
+ const old=archiveCook({...newMeal(),name:'Existing history',serveAt:'2026-11-14T17:00:00Z',dishes:[createDish('brats')]},emptyHistory(),'Keep this cook','2026-11-14T18:00Z').cooks[0];
+ remote.workspace.history=[{...old,serveInstant:'2026-11-14T17:00:00.000Z'}];const history=structuredClone(remote.workspace.history),ovenDocument=structuredClone(converted.document);
+ await remote.attach(context);await signIn(page);await page.getByRole('button',{name:'Resume planning',exact:true}).click();
+ const choices=()=>page.getByRole('region',{name:'Choose a saved recipe',exact:true});
+ await page.getByRole('region',{name:'Cook overview'}).getByRole('button',{name:'My recipes',exact:true}).click();await choices().getByRole('button',{name:'Choose Turkey (oven)',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);const ovenMeal=structuredClone(remote.workspace.active.meal.dishes[0]);
+ await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await openOwnRecipe(page);
+ const response=await page.request.get('/recipes/deep-fried-turkey.md');expect(response.ok()).toBe(true);const source=await response.text();
+ await page.getByLabel('Upload .txt or .md',{exact:true}).setInputFiles({name:'deep-fried-turkey.md',mimeType:'text/markdown',buffer:Buffer.from(source)});await expect(page.getByLabel('Recipe instructions',{exact:true})).toHaveValue(source);await page.getByLabel('Recipe title',{exact:true}).fill('Deep-fried turkey');await page.getByRole('button',{name:'Preview recipe steps',exact:true}).click();
+ const method=page.getByRole('region',{name:'Review your method',exact:true});await expect(method.getByRole('button',{name:'Equipment: Electric Fryer',exact:true})).toBeVisible();
+ await method.getByRole('button',{name:/^Edit Begin warming oil/}).click();const form=method.getByRole('form',{name:'Edit recipe step',exact:true});await expect(form.getByLabel('Duration (minutes)',{exact:true})).toHaveValue('60');
+ await form.getByLabel('Duration (minutes)',{exact:true}).fill('55');await form.getByLabel('Step name',{exact:true}).fill('Begin warming oil');await form.getByRole('textbox',{name:'Instructions',exact:true}).fill('Warm oil to 350°F per my verified fryer manual; check the oil-ready indicator.');await method.getByRole('button',{name:'Close step',exact:true}).click();
+ await recipeAction(method,'Save to My recipes');await expect(method.getByText('Saved recipe',{exact:true})).toBeVisible();expect(remote.rows.size).toBe(2);expect(remote.workspace.active.meal.dishes).toEqual([ovenMeal]);
+ await method.screenshot({path:info.outputPath('fried-turkey-method.png'),scale:'css'});await method.getByRole('button',{name:'Back to choices',exact:true}).click();await page.getByRole('navigation',{name:'Main navigation'}).getByRole('button',{name:'Home',exact:true}).click();await page.reload();
+ await page.getByRole('button',{name:'Resume planning',exact:true}).click();await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('region',{name:'Cook overview'}).getByRole('button',{name:'My recipes',exact:true}).click();
+ await expect(choices().getByRole('button',{name:'Choose Turkey (oven)',exact:true})).toBeVisible();await choices().getByRole('button',{name:'Choose Deep-fried turkey',exact:true}).click();await expect(method).toContainText('Warm oil to 350°F');await expect(method).toContainText('55 min');await method.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(2);let meal=remote.workspace.active.meal;expect(meal.serveAt).toBe(serve);expect(meal.dishes[0]).toEqual(ovenMeal);expect(new Set(meal.dishes.map(d=>d.id)).size).toBe(2);expect(meal.dishes[1].equipment).toBe('Electric Fryer');expect(cookTimeline(meal).find(t=>t.title.startsWith('Fry turkey'))?.durationMinutes).toBeNull();
+ const before=structuredClone(remote.workspace),screen=await library(page);await screen.getByRole('button',{name:'Edit Deep-fried turkey',exact:true}).click();await screen.getByRole('button',{name:/^Edit Begin warming oil/}).click();await screen.getByRole('textbox',{name:'Instructions',exact:true}).fill('Use the manual setting; future recipe note.');await screen.getByRole('button',{name:'Save changes',exact:true}).click();
+ expect(remote.workspace).toEqual(before);expect(remote.rows.get(ovenId).document).toEqual(ovenDocument);expect(remote.workspace.history).toEqual(history);expect(remote.rows.size).toBe(2);
+ await page.reload();const reloaded=await library(page);await expect(reloaded.getByText('Deep-fried turkey',{exact:true})).toBeVisible();await reloaded.screenshot({path:info.outputPath('two-turkey-library.png'),scale:'css'});
 });
