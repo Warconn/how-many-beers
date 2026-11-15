@@ -10,28 +10,27 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priority: reliable, staged CI and release verification (#71)
+## Current priority: risk-based CI with full release regression (#71)
 
-The #139 account-plan recovery fix was merged into dev in PR #141. Do not
-reopen that work without a new reproduced failure. The current work focuses on
-reducing test feedback latency without reducing account, offline, iPhone WebKit,
-security or visual regression coverage.
+Fast validation is required on every PR commit: typechecking, unit tests and
+real-browser smoke tests. Ready PRs to dev additionally run auth/offline tests.
+Account-related files automatically require the full desktop/iPhone account
+matrix, including recovery, drafts, deletion and recipes. Treat src/account,
+src/auth, src/domain, global app code, relevant shared components, account tests
+and migrations as account-affecting. Do not opt out of those checks to save time.
 
-Keep feature PRs **draft** while iterating. Every draft commit runs typecheck,
-unit tests and a focused real-browser smoke suite. Run the affected Playwright
-files locally via `npm run test:fast -- <file> --config=<appropriate config>`
-before pushing a new candidate. When code is stable, mark the PR **ready for
-review** to trigger the entire Chromium/WebKit, account, auth, offline and
-regression CI suite. Full green aggregate `playwright` plus applicable security
-and build checks are mandatory before merging. If tests fail, change the code
-and rerun; never bypass or mark a skipped suite as green.
+Full multi-browser regression runs on every **dev -> main** release PR, main
+push or manual workflow dispatch. Keep feature PRs draft during development;
+run affected Playwright tests locally using test:fast. Mark ready only once
+the change is stable. A manual full run can be requested from Actions on
+dev. Do not merge a release without the successful aggregate playwright
+check and required build/security checks. GitHub branch-protection and the
+independent Cloudflare deployment gate must still be verified externally.
 
-Ready PRs targeting main receive the same complete browser gate; pushes to both
-dev and main rerun the full suite. Main's Cloudflare deployment is external to
-GitHub Actions, so successful GitHub CI alone does not prove that deployment
-waited for the checks. Protect main with required passing checks before
-merging release PRs. Do not deploy application changes to production in a
-CI-optimization task.
+Do not delete or weaken browser scenarios, iPhone WebKit, account ownership,
+offline cases, screenshots or SQL security. The pipeline skips expensive
+irrelevant suites in earlier stages, not at the release boundary. Fail-closed
+scope classification and aggregate checks must stay intact.
 
 ## Current owner direction (#114, November 10, 2026)
 
