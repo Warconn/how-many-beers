@@ -2,9 +2,11 @@ name: Browser regression tests
 
 on:
   push:
-    branches: [dev]
+    branches: [dev, main]
   pull_request:
     branches: [dev, main]
+    # Draft PRs get fast feedback. Ready PRs must run every release gate.
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
   workflow_dispatch:
 
 permissions:
@@ -34,7 +36,49 @@ jobs:
 
   # Keep browser dependency installs off the moving ubuntu-latest image.
   # Ubuntu 26 rollout runners have stalled on OS-package downloads before tests.
+  # Run these on every incremental commit, including draft PRs.
+  # They cover a real guest cook and the critical account recovery paths.
+  smoke:
+    name: Critical browser smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Chromium and OS dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Guest planning, Home and resume
+        run: >-
+          npx playwright test e2e/cook-flow.spec.ts
+          --project=desktop-chromium
+          --grep "home is a clean starting point with history access|resuming an in-progress cook preserves cooking status"
+      - name: Account recovery, discard and recipe library
+        run: >-
+          npx playwright test
+          --config=playwright.accounts.config.ts
+          --project=auth-desktop
+          --grep "orphaned Next cook recovery can be discarded after reload when no remote upcoming plan exists|a rejected protected recipe save does not hide existing recipes when the library reloads"
+      - name: Upload smoke screenshots and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: |
+            test-results/
+            test-results-accounts/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Full coverage is required for ready PRs and every dev/main branch push.
+  # While iterating, keep PRs in draft and use the smoke + unit checks.
   browsers:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: ${{ matrix.suite }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -45,9 +89,19 @@ jobs:
           - suite: auth
             browsers: chromium webkit
             command: npx playwright test --config playwright.auth.config.ts
-          - suite: accounts
-            browsers: chromium webkit
-            command: npx playwright test --config playwright.accounts.config.ts
+          # Keep one account worker per platform for deterministic account mocks,
+          # but run desktop Chromium and iPhone WebKit on separate runners.
+          - suite: accounts-desktop
+            browsers: chromium
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-desktop
+          # Keep WebKit workers isolated; two independent shards divide
+          # its measured 10m44s critical path without parallel fixture races.
+          - suite: accounts-iphone-1
+            browsers: webkit
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=1/2
+          - suite: accounts-iphone-2
+            browsers: webkit
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=2/2
           - suite: offline
             browsers: chromium webkit
             command: npm run test:offline
@@ -78,22 +132,43 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
       - name: Upload account review screenshots
-        if: always() && matrix.suite == 'accounts'
+        if: always() && startsWith(matrix.suite, 'accounts-')
         uses: actions/upload-artifact@v4
         with:
-          name: account-review-screenshots
+          name: account-review-${{ matrix.suite }}-screenshots
           path: test-results-accounts/**/*.png
           if-no-files-found: ignore
           retention-days: 14
 
+  # Retain the original combined screenshot artifact for visual review.
+  account_review:
+    name: Account review screenshots
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    needs: browsers
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: account-review-accounts-*-screenshots
+          path: account-review-screenshots
+          merge-multiple: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: account-review-screenshots
+          path: account-review-screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
   regression_shards:
-    name: regression (${{ matrix.shard }}/2)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    name: regression (${{ matrix.shard }}/3)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -104,10 +179,10 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Install Playwright browsers and OS dependencies
         run: npx playwright install --with-deps chromium webkit
-      - name: Run regression shard ${{ matrix.shard }}/2
+      - name: Run regression shard ${{ matrix.shard }}/3
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/raw-regression-results-${{ matrix.shard }}.json
-        run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --reporter=github,html,json
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/3 --reporter=github,html,json
       - name: Prepare compact timing report
         if: always()
         run: node scripts/compact-playwright-timings.mjs test-results/raw-regression-results-${{ matrix.shard }}.json test-results/regression-results-${{ matrix.shard }}.json
@@ -147,7 +222,7 @@ jobs:
   # Keep the existing regression check and combined screenshot artifact names.
   # Partial screenshots survive a failed shard, but cannot turn its gate green.
   regression:
-    if: always()
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     needs: regression_shards
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -174,14 +249,21 @@ jobs:
 
   # Preserve the existing required check name; skipped/canceled suites must fail it.
   playwright:
-    if: always()
-    needs: [checks, browsers, regression]
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    needs: [checks, smoke, browsers, account_review, regression]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Require every test suite
         env:
           CHECKS_RESULT: ${{ needs.checks.result }}
+          SMOKE_RESULT: ${{ needs.smoke.result }}
           BROWSERS_RESULT: ${{ needs.browsers.result }}
+          ACCOUNT_REVIEW_RESULT: ${{ needs.account_review.result }}
           REGRESSION_RESULT: ${{ needs.regression.result }}
-        run: test "$CHECKS_RESULT" = success && test "$BROWSERS_RESULT" = success && test "$REGRESSION_RESULT" = success
+        run: >-
+          test "$CHECKS_RESULT" = success &&
+          test "$SMOKE_RESULT" = success &&
+          test "$BROWSERS_RESULT" = success &&
+          test "$ACCOUNT_REVIEW_RESULT" = success &&
+          test "$REGRESSION_RESULT" = success
