@@ -237,3 +237,18 @@ touch targets. Scope spacing to Past cooks; recipe-library cards retain their ow
 layout. Recorded activity shows the original action/reading first, archived dish
 and step second, and a quieter local timestamp. On phones the timestamp stacks.
 Attribution uses archived IDs only; unavailable references have an honest fallback.
+
+### Minimal step editing (#154, November 15)
+
+The expanded planning editor is Name, Instructions, then Start time and Duration
+on one desktop row. Duration has a compact unit selector; the row stacks below
+650px. Save/Cancel stay together on the left and Remove stays quiet on the right.
+There is no normal timing badge, More options, equipment or temperature input.
+A small Use plan timing action appears only for a manual/unscheduled override.
+Unit selection changes display only; persistence remains exact minutes.
+
+Recipe step authoring uses Name, Instructions and Duration, without calendar dates
+or Step settings. Equipment stays at dish level. Both editors omit hidden metadata
+from unrelated submissions, retaining stored per-step equipment/temperature exactly.
+This supersedes the earlier optional step-settings presentation; the underlying
+metadata and future contextual resource UX remain available to #3.

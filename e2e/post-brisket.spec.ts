@@ -21,10 +21,10 @@ test('planning leads with steps, hides configuration, and edits time directly wi
  await steps.screenshot({path:info.outputPath('planning-steps.png')});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();expect(cookTimeline(await read(page)).find(t=>t.id==='brisket:start')?.scheduledAt).toBe('2026-11-08T04:00:00.000Z');
 });
-test('full editor exposes planned time and keeps duration/equipment optional',async({page})=>{
+test('full editor exposes planned time and duration without step equipment',async({page})=>{
  await open(page,seed());await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
  const row=page.getByRole('region',{name:'Smoked brisket steps',exact:true}).getByRole('article',{name:'Trim brisket',exact:true});await row.getByRole('button',{name:'Edit Trim brisket',exact:true}).click();
- const form=row.getByRole('form',{name:'Edit step',exact:true});await expect(form.getByLabel('Planned date and time',{exact:true})).toBeVisible();await expect(form.getByLabel('Duration unit',{exact:true})).toBeHidden();await expect(form.getByLabel('Equipment for this step',{exact:true})).toBeHidden();
+ const form=row.getByRole('form',{name:'Edit step',exact:true});await expect(form.getByLabel('Planned date and time',{exact:true})).toBeVisible();await expect(form.getByLabel('Duration unit',{exact:true})).toBeVisible();await expect(form.getByLabel('Equipment for this step',{exact:true})).toBeHidden();
 });
 test('cooking time editor opens from collapsed card and preserves recorded prep',async({page},info)=>{
  let m:ExtendedMeal=startCookSession(seed(),now);for(const t of cookTimeline(m).filter(t=>t.templateStage?.kind==='preparation'&&t.dishId==='brisket'))m=recordEvent(m,t.id,'completed',now);

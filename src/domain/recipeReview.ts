@@ -57,18 +57,18 @@ export {reorderPlannedStep as reorderReviewedStep} from './stepReorder';
 
 /** Authoring follows the RecipeDocument text limits, without touching calendar
  * overrides or execution. Older planning editors have shorter input limits. */
-export function editReviewedStep(meal:ExtendedMeal,id:string,values:{title:string;instructions:string;durationMinutes?:number|null;equipment:string;targetTempF:number|null}):ExtendedMeal{
+export function editReviewedStep(meal:ExtendedMeal,id:string,values:{title:string;instructions:string;durationMinutes?:number|null;equipment?:string;targetTempF?:number|null}):ExtendedMeal{
  const task=cookTimeline(meal).find(t=>t.id===id);
  if(!task||meal.mode==='cooking'||meal.startedAt||Object.keys(meal.completed).length||meal.events?.some(e=>e.kind!=='removed'))throw Error('Choose a step in an unstarted method.');
  const title=values.title===task.title?task.title:values.title.trim(),instructions=values.instructions===task.instructions?task.instructions:values.instructions.trim();
  if(!title.trim()||title.length>500)throw Error('Give the step a name (up to 500 characters).');
  if(instructions.length>16000)throw Error('Keep step instructions under 16,000 characters.');
- if(values.equipment.length>16000)throw Error('Shorten the equipment names.');
+ if(values.equipment!==undefined&&values.equipment.length>16000)throw Error('Shorten the equipment names.');
  const target=values.targetTempF;
- if(target!==null&&(!Number.isFinite(target)||target<=0||target>600))throw Error('Target food temperature must be between 1 and 600°F, or blank.');
+ if(target!==undefined&&target!==null&&(!Number.isFinite(target)||target<=0||target>600))throw Error('Target food temperature must be between 1 and 600°F, or blank.');
  const override={...meal.taskOverrides?.[id],title,instructions};
- if(values.equipment!==task.equipment)Object.assign(override,{equipment:values.equipment.trim()});
- if(target!==(task.targetTempF??null))Object.assign(override,{targetTempF:target});
+ if(values.equipment!==undefined&&values.equipment!==task.equipment)Object.assign(override,{equipment:values.equipment.trim()});
+ if(target!==undefined&&target!==(task.targetTempF??null))Object.assign(override,{targetTempF:target});
  let next:ExtendedMeal={...meal,taskOverrides:{...meal.taskOverrides,[id]:override}};
  if(values.durationMinutes!==undefined&&values.durationMinutes!==reviewDuration(meal,task))next=setStepDuration(next,id,values.durationMinutes);
  return next;

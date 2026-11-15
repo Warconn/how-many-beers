@@ -310,3 +310,15 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .cook-history .history-event-note {margin:var(--space-1) 0 0;font-size:var(--text-sm)}
 .cook-history .history-events time {color:var(--muted);font-size:var(--text-xs)}
 @media(max-width:650px){.cook-history .history-events > li {grid-template-columns:minmax(0,1fr);gap:var(--space-1)}}
+
+/* Minimal step editing: ordinary fields stay flat; metadata remains stored. */
+.step-timing-row {display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:var(--space-3);align-items:start}
+.step-start-field,.step-timing-row .duration-controls {min-width:0}
+.step-timing-row .duration-controls {grid-template-columns:minmax(0,1fr) 108px;margin:0}
+.step-timing-row input,.step-timing-row select {min-width:0;max-width:100%}
+.step-time-reset {margin:0;padding:0;color:var(--accent-dark);font-size:var(--text-xs)}
+.step-editor-actions {margin-top:var(--space-3)}
+.step-editor-actions .button {margin-top:0}
+@media(max-width:650px){.step-timing-row {grid-template-columns:minmax(0,1fr)}}
+.method-review .duration-controls {grid-template-columns:minmax(0,1fr) 120px}
+.method-review .duration-controls select {padding-inline:10px}
