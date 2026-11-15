@@ -19,7 +19,7 @@ export default function AccountControl({
   cookId: string;
   canReload: boolean;
   cookTools?: ReactNode;
-  savePhase?: "loading" | "load-error" | "saved" | "syncing" | "unsaved" | "conflict" | "saving" | "blocked";
+  savePhase?: "draft" | "loading" | "load-error" | "saved" | "syncing" | "unsaved" | "conflict" | "saving" | "blocked";
 }) {
   const { phase, user } = useAccount(),
     [open, setOpen] = useState(false),
@@ -51,12 +51,12 @@ export default function AccountControl({
     trigger.current?.focus();
   };
   const saving=savePhase==='saving'||savePhase==='syncing'||savePhase==='loading';
-  const saveLabel=savePhase==='saved'?'Cook saved':savePhase==='loading'?'Loading cooks':saving?'Saving cook':'Saving needs attention';
+  const saveLabel=savePhase==='draft'?'Draft, not saved to account':savePhase==='saved'?'Cook saved':savePhase==='loading'?'Loading cooks':saving?'Saving cook':'Saving needs attention';
   if (phase === "loading") return null;
   return (
     <div className="account-control">
       {savePhase&&<span className="account-save-indicator" data-state={savePhase} role="status" aria-live="polite" aria-label={saveLabel} title={saveLabel}>
-        <Icon name={savePhase==='saved'?'cloud-check':saving?'sync':'alert'} className={saving?'save-in-progress':undefined}/>
+        <Icon name={savePhase==='draft'?'edit':savePhase==='saved'?'cloud-check':saving?'sync':'alert'} className={saving?'save-in-progress':undefined}/>
         <span className="sr-only">{saveLabel}</span>
       </span>}
       <button

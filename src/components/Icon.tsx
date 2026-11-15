@@ -1,6 +1,7 @@
 import type {SVGProps} from 'react';
 /** One quiet, round-stroke family. Icons supplement visible text or a named control. */
 const paths={
+ edit:<path d="m15 4 5 5M4 20l5-1L20 8a3.5 3.5 0 0 0-5-5L4 14v6Z"/>,
  grip:<><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></>,
  history:<><path d="M3 11a9 9 0 1 1 2.6 7M3 4v7h7"/><path d="M12 7v5l3 2"/></>,
  'arrow-up':<path d="m6 10 6-6 6 6M12 4v16"/>,

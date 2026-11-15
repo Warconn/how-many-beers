@@ -48,6 +48,8 @@ cooks migration UI has been removed.
 
 Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, and exceptional recovery preserves backup tools. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
 
+In account planning, **Plan a cook** starts a tab-local draft. The first **Add to meal** creates the upcoming plan; changing serving time or saving a personal recipe alone does not. Reload in the same tab recovers the draft after sign-in.
+
 Empty plans ask **What do you want to cook?** with template and recipe-upload choices. Serving time stays editable; the schedule and cooking controls appear once there are steps.
 
 ## Run it locally

@@ -10,6 +10,18 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
+## Current priority: #139 dev account-plan recovery
+
+#114 is merged through #134; #140's library-read recovery is in dev at `3e3f35a`.
+The owner confirmed the November 13 validator upgrade is now applied in dev and
+recipe writes return HTTP 200. Do not reapply it. The current P0 is orphaned
+upcoming-plan recovery/discard, then deferring new empty cooks until first Add to
+meal. No other feature work. Preserve owner-scoped journals, revisions, receipts,
+actuals and history. The November 15 handoff explicitly authorizes this focused
+hotfix PR into dev after required CI and the exact regression pass. It does not
+authorize main/production, hosted migrations, resets, or clearing user records.
+Earlier draft/unmerged #134 directions below are historical.
+
 ## Current owner direction (#114, November 10, 2026)
 
 Production release #132 at `ae12d36` is owner-accepted. #61/#83/#103/#118 are

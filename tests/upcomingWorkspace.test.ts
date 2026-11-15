@@ -28,7 +28,7 @@ beforeEach(()=>{
  const snapshot={active,history:emptyHistory()};
  f.cloud={state:{snapshot,backup:snapshot,phase:'saved',error:'',canPlan:true,canCancel:true},store:{current:{owner:'owner-a',state:()=>({snapshot:f.cloud.state.snapshot}),save:vi.fn().mockResolvedValue(undefined),edit:vi.fn(),flush:vi.fn().mockResolvedValue(undefined),promote:vi.fn().mockResolvedValue(undefined),cancel:vi.fn().mockResolvedValue(undefined),retry:vi.fn().mockResolvedValue(undefined),recoveryExport:()=>'{"live":true}'}},restart:vi.fn()};
  f.local={meal:null,history:emptyHistory(),status:'saved',error:'',canceled:{version:1,cooks:[]}};
- f.plans={plans:[],selectedId:null,state:{meal:null,plan:null,phase:'loading',error:''},listPhase:'saved',listError:'',store:{current:null},open:vi.fn().mockResolvedValue(undefined),create:vi.fn().mockResolvedValue('created-plan'),flush:vi.fn().mockResolvedValue(undefined),close:vi.fn().mockResolvedValue(undefined),releaseSelection:vi.fn(),forgetSelected:vi.fn().mockResolvedValue(undefined),refresh:vi.fn().mockResolvedValue(undefined),retry:vi.fn().mockResolvedValue(undefined)};
+ f.plans={plans:[],selectedId:null,state:{meal:null,plan:null,phase:'loading',error:''},listPhase:'saved',listError:'',store:{current:null},open:vi.fn().mockResolvedValue(undefined),create:vi.fn().mockResolvedValue('created-plan'),flush:vi.fn().mockResolvedValue(undefined),close:vi.fn().mockResolvedValue(undefined),discard:vi.fn().mockResolvedValue(undefined),releaseSelection:vi.fn(),forgetSelected:vi.fn().mockResolvedValue(undefined),refresh:vi.fn().mockResolvedValue(undefined),retry:vi.fn().mockResolvedValue(undefined)};
 });
 describe('upcoming workspace document routing',()=>{
  it('editing/saving a selected plan never writes the physical cook',async()=>{
@@ -137,6 +137,8 @@ describe('existing account saving indicator for future plans',()=>{
   ['saved',null,'unsaved','unsaved'],
   ['saved',null,'syncing','syncing'],
   ['saved','saved','saved','saved'],
+  ['saved','loading','saved','loading'],
+  ['saved',null,'loading','loading'],
  ] as const)('combines current %s / selected %s / future %s as %s',(current,selected,future,expected)=>{
   expect(combinedSavePhase(current,selected,future)).toBe(expected);
  });
@@ -145,4 +147,10 @@ describe('existing account saving indicator for future plans',()=>{
   let w=render();expect(w.selectedSavePhase).toBe('syncing');expect(w.savePhase).toBe('syncing');
   f.cloud.state.phase='blocked';w=render();expect(w.savePhase).toBe('blocked');
  });
+});
+
+it('discarding orphaned recovery with the promoted current cook ID never cancels the physical cook',async()=>{
+ const active=structuredClone(f.cloud.state.snapshot.active),id=active.id;
+ f.plans.plans=[{id,meal:migrateMeal({...newMeal(),id}),revision:0,serveInstant:null,timeZone:'UTC',pending:true}];
+ await render().discardPlan(id);expect(f.plans.discard).toHaveBeenCalledWith(id);expect(f.cloud.store.current.cancel).not.toHaveBeenCalled();expect(f.cloud.state.snapshot.active).toEqual(active);
 });

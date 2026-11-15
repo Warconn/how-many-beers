@@ -1,10 +1,21 @@
 # Work queue
 
-## Dev follow-up: rejected personal-recipe saves
+## P0: #139 account-plan recovery and first-dish persistence
+
+The owner reports an empty remote upcoming list with an IndexedDB pending draft
+that cannot be discarded. The regression reproduces this after reload. Discard
+reads authoritative state without flushing unsent edits, reconciles absent plans
+locally after explicit user discard, and preserves revision checks and immutable
+receipts for server-backed plans. New planners stay in an owner-scoped tab draft
+until first Add to meal. Full verification and dev-only rollout are required.
+No new migration or hosted cleanup. #135 and other features remain deferred.
+
+## Delivered: rejected personal-recipe save recovery
 
 PR #134 merged into dev at `58119a2` after owner acceptance. The earlier
 pre-merge statuses below are historical. Dev subsequently rejected recipe writes
-with HTTP 400; the original rejection still needs its response JSON for diagnosis.
+with HTTP 400; the owner has since confirmed the November 13 validator upgrade restored writes.
+PR #140 merged the separate library-read recovery into dev at `3e3f35a`.
 A confirmed secondary defect let a rejected pending write prevent reading the
 recipe library. The feature follow-up reads saved recipes even when replay fails,
 retains the exact protected operation, and reports the pending failure. No hosted
