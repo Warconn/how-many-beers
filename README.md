@@ -192,3 +192,7 @@ See the [manual regression plan](docs/recipes/manual-regression.md).
 Equipment uses one compact checklist and
 recipe authoring keeps calendar controls in meal planning. See the
 [review and migration notes](docs/recipes/rollout.md).
+
+Active-cook Home now includes a compact read-only next action from canonical
+guidance/forecasts, with honest condition/unknown cues and the existing Continue /
+View / Cancel controls. See [the core experience](docs/core-cook-experience.md#home-current-cook-next-action-145).

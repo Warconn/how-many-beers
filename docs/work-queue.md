@@ -21,12 +21,21 @@ keeps dish equipment and removes per-step settings. Hidden metadata survives
 unrelated edits and validated recipe round trips. No persistence, scheduler or
 schema change.
 
-#153 implementation: downloadable, owner-importable custom Deep-fried turkey
+#153 delivered through PR #157 at `9e4cc27`, after required CI, real PostgreSQL
+and desktop/mobile/iPhone review. Downloadable, owner-importable Deep-fried turkey
 method through the existing upload/review/save path. Separate electric-fryer
 equipment, editable 60-minute owner-specific preheat allowance and unknown frying
 duration. Real local PostgreSQL validates the exact shared JSON. Owner inputs are
 19–20 lb per bird provisionally, November 22 at 3 PM local; model capacity remains
 unconfirmed, so no final Thanksgiving schedule. See [review/import instructions](recipes/deep-fried-turkey.md).
+
+#145 implementation: compact read-only Next up in the existing active-cook Home
+card, preserving Continue / View / Cancel layout. Canonical guidance/projections
+supply ordering and times; conditional/uncertain work stays neutral. Completion,
+reopen, edits, resume, simultaneous steps and passive waiting are covered, with
+one existing page clock and no additional timer/service or persistence field.
+Exact CI/merge evidence is in the issue PR. #3 remains a separately authorized next
+phase; #138/#139/#150 remain on hold. Full regression remains the release gate.
 
 ## Delivered: rejected personal-recipe save recovery
 

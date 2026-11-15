@@ -20,6 +20,23 @@ safeguards. `tests/planningDraft.test.ts` covers owner isolation, validation and
 storage failures for pre-dish tab drafts. These tests do not assert hosted schema
 health or erase/reproduce the owner's actual browser recovery records.
 
+## Home next action (#145)
+
+`homeNextAction.test.ts` covers exact minute boundaries, canonical global ordering,
+completion/reopen (including a real late fixed-step forecast), equal-time dishes,
+estimated vs planned starts, conditions, missing/blocked projections and passive
+waiting without input mutation. V1 shows one canonical action, not a readiness
+count or another scheduler.
+
+`home-next-action.spec.ts` checks real Home clock updates, unchanged three-button
+layout/44px targets, completion, UI reopening, planned-time edits with immutable
+actuals, condition-only cues, no inactive summary, and actual rest beyond its
+estimate without auto-finishing. Timer instrumentation verifies repeated navigation
+returns to one Home page clock (Cooking retains its existing Beerometer clock).
+The account journey covers acknowledged completion, rapid reload, read-only clock
+ticks and sign-out isolation. It uses RPC fixtures, not a hosted owner session.
+Desktop/mobile Chromium and iPhone WebKit capture the Home summary and waiting state.
+
 ## Two-turkey recipe input (#153)
 
 `fried-turkey-import` downloads the public Markdown method, uploads/reviews it and

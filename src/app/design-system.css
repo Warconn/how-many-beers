@@ -322,3 +322,9 @@ label { font-size:var(--text-sm); line-height:1.5; }
 @media(max-width:650px){.step-timing-row {grid-template-columns:minmax(0,1fr)}}
 .method-review .duration-controls {grid-template-columns:minmax(0,1fr) 120px}
 .method-review .duration-controls select {padding-inline:10px}
+
+/* Read-only next action inside the existing current-cook summary. */
+.home-next-action {margin-top:var(--space-4);overflow-wrap:anywhere}
+.home-next-action > p {margin:var(--space-1) 0}
+.home-next-action .home-next-title {font-size:var(--text-body);line-height:1.5}
+.home-next-waiting {margin-top:var(--space-4)}
