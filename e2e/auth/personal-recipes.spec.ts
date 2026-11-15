@@ -101,6 +101,7 @@ test('an adjusted meal dish can be saved as a new method without changing that m
 test('a guest review survives an actual provider redirect without being saved automatically',async({page,context})=>{
  const remote=server();await remote.attach(context);await backend(page);await page.goto('/');await page.getByRole('button',{name:'Plan a cook',exact:true}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add smoked brisket',exact:true}).click();await page.getByLabel('Recipe name',{exact:true}).fill('Preserve across return');await recipeAction(page,'Save to My recipes');
  const account=page.getByRole('dialog',{name:'Your account'});await account.getByRole('button',{name:'Continue with Google',exact:true}).click();
+ await page.waitForURL('**/account/callback/',{waitUntil:'domcontentloaded'});
  await expect(page.getByText('Signed in as '+user.email,{exact:true})).toBeVisible();await page.getByRole('link',{name:'← Back to cook',exact:true}).click();
  await expect(page.getByLabel('Recipe name',{exact:true})).toHaveValue('Preserve across return');expect(remote.rows.size).toBe(0);expect(remote.workspace.active.meal.dishes).toHaveLength(0);await recipeAction(page,'Save to My recipes');await expect(page.getByText('Saved recipe',{exact:true})).toBeVisible();expect(remote.workspace.active.meal.dishes).toHaveLength(0);
 });
