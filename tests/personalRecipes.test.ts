@@ -51,3 +51,25 @@ it('hands an authoring draft over only after the immutable recipe operation is p
  const local=storage(),steps:string[]=[];const store=new PersonalRecipeStore(owner,{list:async()=>[],mutate:async()=>{steps.push('rpc');throw Error('offline');}},local);
  await expect(store.write(op,()=>{expect(JSON.parse(local.getItem(recipePendingKey(owner))!)).toEqual(op);steps.push('protected');})).rejects.toThrow('offline');expect(steps).toEqual(['protected','rpc']);expect(store.pending()).toEqual(op);
 });
+
+import {loadPersonalRecipeLibrary} from '../src/account/personalRecipes';
+it('loads saved recipes despite a rejected pending write and retains the exact protected operation',async()=>{
+ const local=storage();local.setItem(recipePendingKey(owner),JSON.stringify(op));const before=local.getItem(recipePendingKey(owner)),failure=new Error('Server rejected recipe');const calls:string[]=[];
+ const api={list:async()=>{calls.push('list');return [saved];},mutate:async()=>{calls.push('save');throw failure;}};
+ const result=await loadPersonalRecipeLibrary(new PersonalRecipeStore(owner,api,local),api);expect(result.recipes).toEqual([saved]);expect(result.recoveryError).toBe(failure);expect(calls).toEqual(['save','list']);expect(local.getItem(recipePendingKey(owner))).toBe(before);
+});
+it('successful recovery reuses its operation and acknowledges it before reading the current library',async()=>{
+ const local=storage();local.setItem(recipePendingKey(owner),JSON.stringify(op));const calls:string[]=[];
+ const api={list:async()=>{calls.push('list');return [saved];},mutate:async(value:RecipeOperation)=>{expect(value).toEqual(op);calls.push('save');return saved;}};
+ expect(await loadPersonalRecipeLibrary(new PersonalRecipeStore(owner,api,local),api)).toEqual({recipes:[saved],recoveryError:null});expect(calls).toEqual(['save','list']);expect(local.getItem(recipePendingKey(owner))).toBeNull();
+});
+it('does not claim a successful list when both recovery and reading fail',async()=>{
+ const local=storage();local.setItem(recipePendingKey(owner),JSON.stringify(op));const readFailure=new Error('Library unavailable');
+ const api={list:async()=>{throw readFailure;},mutate:async()=>{throw Error('Save unavailable');}};
+ await expect(loadPersonalRecipeLibrary(new PersonalRecipeStore(owner,api,local),api)).rejects.toBe(readFailure);expect(local.getItem(recipePendingKey(owner))).toBe(JSON.stringify(op));
+});
+it('allows read-only access around an unreadable journal without dropping it or making a write',async()=>{
+ const local=storage();local.setItem(recipePendingKey(owner),'protected unreadable data');let writes=0;
+ const api={list:async()=>[saved],mutate:async()=>{writes++;return saved;}};
+ const result=await loadPersonalRecipeLibrary(new PersonalRecipeStore(owner,api,local),api);expect(result.recipes).toEqual([saved]);expect(result.recoveryError).toBeInstanceOf(Error);expect(writes).toBe(0);expect(local.getItem(recipePendingKey(owner))).toBe('protected unreadable data');
+});

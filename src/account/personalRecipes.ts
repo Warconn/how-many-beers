@@ -20,6 +20,13 @@ export function personalRecipeAPI(client:SupabaseClient,owner:string):RecipeAPI{
  }};
 }
 export const recipePendingKey=(owner:string)=>`how-many-beers:recipes:v1:${owner}:operation`;
+/** A protected write may fail without making the owner's readable library
+ * unavailable. Never clear/replace that operation just to load saved recipes. */
+export async function loadPersonalRecipeLibrary(store:PersonalRecipeStore,api:RecipeAPI):Promise<{recipes:PersonalRecipe[];recoveryError:Error|null}>{
+ let recoveryError:Error|null=null;
+ try{if(store.pending())await store.write();}catch(e){recoveryError=e instanceof Error?e:new Error('Could not recover the pending recipe.');}
+ return {recipes:await api.list(),recoveryError};
+}
 /** Immutable write-ahead operation, owner-scoped and replayed after lost replies. */
 export class PersonalRecipeStore{
  private running=false;
