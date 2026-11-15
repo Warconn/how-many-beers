@@ -4,7 +4,7 @@ import Icon from './Icon';
 import Beerometer from './Beerometer';
 import {useEffect,useRef,useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
-import type {CookEvent} from "@/domain/cookState";
+import {archivedActivity} from "@/domain/historyActivity";
 
 type Props = {
   history:HistoryLibrary;
@@ -17,11 +17,6 @@ function fmt(date:string):string {
   return Number.isFinite(d.getTime()) ? d.toLocaleString([], {month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}) : date;
 }
 
-function eventDetail(e:CookEvent):string{
-  const names={started:"Started",completed:"Completed",reopened:"Reopened",temperature:"Food temp",equipment:"Equipment change",removed:"Removed"};
-  return names[e.kind]+(e.value===undefined?"":" "+e.value+(e.unit??""))+(e.note?" · "+e.note:"");
-}
-
 export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
   const [search,setSearch]=useState("");
   const [selected,setSelected]=useState<string|null>(null);
@@ -29,7 +24,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
   const detailBack=useRef<HTMLButtonElement>(null);
   const shown=history.cooks.filter(c=>(c.meal.name+" "+c.meal.dishes.map(d=>d.name).join(" ")).toLowerCase().includes(search.trim().toLowerCase()));
   const detailed=history.cooks.find(c=>c.id===selected);
-  const events=(detailed?.meal.events??[]).slice().sort((a,b)=>a.occurredAt.localeCompare(b.occurredAt));
+  const events=detailed?.meal.events??[];
   useEffect(()=>{
     if(!detailed)return;
     detailHeading.current?.focus({preventScroll:true});
@@ -68,7 +63,13 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
         </ol>
         <h4>Recorded activity ({events.length})</h4>
         {events.length===0?<p className="muted small">No event readings or activity were recorded.</p>:<ol className="history-events">
-          {events.map(event=><li key={event.id}><time>{fmt(event.occurredAt)}</time> · {eventDetail(event)}</li>)}
+          {events.map(event=>{
+            const activity=archivedActivity(event,detailed.plannedTimeline);
+            return <li key={event.id} data-event-id={event.id}>
+              <div><strong>{activity.action}</strong><span className="history-event-context">{activity.context}</span>{event.note&&<p className="history-event-note">{event.note}</p>}</div>
+              <time dateTime={event.occurredAt}>{fmt(event.occurredAt)}</time>
+            </li>;
+          })}
         </ol>}
       </section>
     </> : <>

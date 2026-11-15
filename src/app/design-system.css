@@ -298,3 +298,15 @@ label { font-size:var(--text-sm); line-height:1.5; }
   .history-detail.library-detail,.recipe-library-detail.library-detail { padding:var(--space-4); }
   .library-detail-heading h3 { font-size:22px; }
 }
+
+/* Past cooks only: compact summary/actions, retaining shared library controls. */
+.cook-history .history-list > .history-item > .between {align-items:flex-start}
+.cook-history .history-list > .history-item > .between > div {min-width:0;overflow-wrap:anywhere}
+.cook-history .history-list > .history-item .history-actions {margin-top:var(--space-3)}
+.cook-history .history-list > .history-item .history-actions .button {margin-top:0}
+.cook-history .history-events > li {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.cook-history .history-events strong {font-size:var(--text-sm)}
+.cook-history .history-event-context {display:block;font-size:var(--text-sm);color:var(--muted)}
+.cook-history .history-event-note {margin:var(--space-1) 0 0;font-size:var(--text-sm)}
+.cook-history .history-events time {color:var(--muted);font-size:var(--text-xs)}
+@media(max-width:650px){.cook-history .history-events > li {grid-template-columns:minmax(0,1fr);gap:var(--space-1)}}

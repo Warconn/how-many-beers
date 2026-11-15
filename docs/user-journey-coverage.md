@@ -20,6 +20,16 @@ safeguards. `tests/planningDraft.test.ts` covers owner isolation, validation and
 storage failures for pre-dish tab drafts. These tests do not assert hosted schema
 health or erase/reproduce the owner's actual browser recovery records.
 
+## Past cooks archived activity (#152)
+
+`history-activity.spec.ts` opens a synthetic 16-event Browns Brisket archive with
+166°F, 180°F and 195°F readings, duplicate step titles across two dishes, and
+missing/deleted step references. It verifies stable archived attribution, exact
+original event sequence/timestamps/notes and byte-identical persisted history.
+Desktop/mobile Chromium and iPhone WebKit check compact card spacing, 44px targets,
+filter/back navigation and overflow. Existing history-actions tests retain Cook
+Again/delete/backup behavior. This does not inspect the owner's hosted cook.
+
 ## Whole journeys added for this review
 
 `e2e/cook-journeys.spec.ts` creates plans from an empty Home through the UI,
