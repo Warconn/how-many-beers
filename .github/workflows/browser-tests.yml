@@ -94,9 +94,14 @@ jobs:
           - suite: accounts-desktop
             browsers: chromium
             command: npx playwright test --config playwright.accounts.config.ts --project=auth-desktop
-          - suite: accounts-iphone
+          # Keep WebKit workers isolated; two independent shards divide
+          # its measured 10m44s critical path without parallel fixture races.
+          - suite: accounts-iphone-1
             browsers: webkit
-            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=1/2
+          - suite: accounts-iphone-2
+            browsers: webkit
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=2/2
           - suite: offline
             browsers: chromium webkit
             command: npm run test:offline
@@ -157,13 +162,13 @@ jobs:
 
   regression_shards:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    name: regression (${{ matrix.shard }}/2)
+    name: regression (${{ matrix.shard }}/3)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -174,10 +179,10 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Install Playwright browsers and OS dependencies
         run: npx playwright install --with-deps chromium webkit
-      - name: Run regression shard ${{ matrix.shard }}/2
+      - name: Run regression shard ${{ matrix.shard }}/3
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/raw-regression-results-${{ matrix.shard }}.json
-        run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --reporter=github,html,json
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/3 --reporter=github,html,json
       - name: Prepare compact timing report
         if: always()
         run: node scripts/compact-playwright-timings.mjs test-results/raw-regression-results-${{ matrix.shard }}.json test-results/regression-results-${{ matrix.shard }}.json

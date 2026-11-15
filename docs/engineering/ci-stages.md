@@ -26,13 +26,14 @@ change is **CI-only**: no migrations, production deploys, or application behavio
   type/unit, smoke, all browser suites, screenshot collection, and regression
   shards to succeed. A failed or canceled shard fails the aggregate; skipped
   full jobs are never represented as a completed green aggregate.
-- **Account Chromium** and **account iPhone WebKit** run concurrently in separate
-  GitHub Actions jobs, one Playwright worker per browser. All four account test
-  files run on both projects unchanged. The account screenshot artifacts are
+- **Account Chromium** and **account iPhone WebKit** run concurrently: one
+  desktop job plus two independent iPhone WebKit shards, with one Playwright
+  worker per job. All four account test files and their cases run on both
+  projects unchanged, with iPhone cases partitioned across its two jobs. The account screenshot artifacts are
   independently available and combined into the existing
   `account-review-screenshots` artifact.
-- Authentication, offline browser tests, and both existing regression shards
-  keep their previous coverage and runner OS. Account SQL ownership/RLS tests
+- Authentication and offline browser tests keep previous coverage and runner
+  OS; general regression is spread over three shards rather than two. Account SQL ownership/RLS tests
   remain in `account-security.yml` for relevant changes and branch pushes.
 - Ready PRs into **dev or main** trigger this stage. Full regression also runs
   on pushes to **dev and main** to record integration/release results.
@@ -64,3 +65,13 @@ verify live Supabase account state or a real user's browser IndexedDB.
   release PR must not merge before every required check is green.
 - Compare at least three, ideally five, comparable green full runs to compute
   median and p90, and track the slowest shard/runner minute overhead.
+
+## Iteration 2 measured decision
+
+The first staged-CI ready-PR run, #43676779271, passed every check in
+**11m 03s** (31.5% faster than the 16m 08s baseline). Desktop account tests
+finished in 7m 14s, but iPhone account tests took 10m 44s and the slowest
+regression shard 9m 08s. This exposed two new critical paths. The second
+candidate splits only iPhone into two shards and regression into three,
+without changing test fixtures, workers per runner, or coverage. Measure
+its actual runtime and ensure every shard and aggregate check is green.
