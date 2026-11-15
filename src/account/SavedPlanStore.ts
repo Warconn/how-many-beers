@@ -264,7 +264,8 @@ export class SavedPlanStore{
      if(remote){
       const acknowledged=this.operation&&remote.revision===this.operation.revision+1&&(remote.writeId===this.operation.id||remote.writeReceipt?.operationId===this.operation.id&&remote.writeReceipt.planId===this.planId);
       const revision=expectedRevision||this.base?.revision;
-      if(!acknowledged&&(!revision||remote.revision!==revision))throw new AccountConflict('This plan changed on another device. Review its saved version before discarding it.');
+      const protectedRevision=this.desired||this.operation?this.base?.revision??0:revision;
+      if(!acknowledged&&(!revision||remote.revision!==revision||remote.revision!==protectedRevision))throw new AccountConflict('This plan changed on another device. Review its saved version before discarding it.');
       this.base=remote;this.visible=this.desired?this.displayDraft():planMeal(remote);
      }
      this.discardDraft=this.desired;

@@ -34,7 +34,8 @@ discarded IDs, matching the SQL instead of permitting accidental resurrection.
 - A server-backed plan requires its known revision (or this operation's exact
   acknowledged next revision), then reuses one immutable discard receipt across
   retries. Newer-device changes, owner changes, locks and storage conflicts block
-  unsafe removal. A local terminal marker also survives reload.
+  unsafe removal. A refreshed Home revision cannot override the base revision of
+  protected older edits or authorize deleting an unreviewed newer method. A local terminal marker also survives reload.
 - Old empty, absent local drafts are not automatically saved merely to recover
   them. Existing genuine empty saved plans still use normal retained deletion.
 - New Plan a cook drafts use owner-scoped session storage in their originating

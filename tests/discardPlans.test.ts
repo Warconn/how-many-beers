@@ -86,3 +86,8 @@ it('keeps an acknowledged Home snapshot visible before the discard read while pr
  const f=fixture();const s=new SavedPlanStore(owner,f.original.id,{list:async()=>[f.original],read:async()=>f.original,write:async()=>{throw Error('No save');},import:async()=>{throw Error('unused');},discard:async()=>{}},{getItem:k=>f.data.get(k)??null,setItem:(k,v)=>{f.data.set(k,v);}},()=>{},()=>true,false,undefined,undefined,f.original);stores.push(s);
  expect(s.state().meal).toEqual(f.original.meal);expect(s.state().plan?.revision).toBe(1);expect(s.dirty()).toBe(false);await s.discard(1);expect(s.state().discarded).toBe(true);
 });
+
+it('a refreshed Home revision does not authorize discarding a newer method hidden behind a protected older draft',async()=>{
+ const f=fixture(),s=f.create();await s.connect();s.edit(m=>({...m,name:'Protected older method'}));f.advance();await s.connect();
+ await expect(s.discard(2)).rejects.toBeInstanceOf(AccountConflict);expect(f.remote()?.revision).toBe(2);expect(f.calls).toEqual([]);expect(s.recoveryExport()).toContain('Protected older method');
+});
