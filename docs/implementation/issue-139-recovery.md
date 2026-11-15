@@ -25,7 +25,9 @@ discarded IDs, matching the SQL instead of permitting accidental resurrection.
   cannot inspect an absent row while that worker is still creating it. Confirmed
   Home snapshots stay visible during the discard read; card removal is checked
   only after the actual retained-deletion acknowledgement, including a gated
-  server-response regression. Selected writes own their Saving indicator.
+  server-response regression. Selected writes own their Saving indicator. Home discard uses an independently
+  locked command store, preserving the actual current-cook card and editor
+  selection throughout the request.
 - An absent upcoming record resolves just that local plan/index entry. This does
   not assert whether it was discarded or promoted, and touches neither history
   nor the active workspace. A recovery entry sharing the promoted active cook ID

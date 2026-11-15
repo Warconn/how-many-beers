@@ -217,11 +217,11 @@ export function useUpcomingPlans(enabled:boolean){
       }).catch(()=>resolve({readonly:false,release:()=>{}}));
     });
   };
-  const open=async(id:string,seed?:Meal,forDiscard=false)=>{
+  const open=async(id:string,seed?:Meal)=>{
     if(!enabled||!api||!ownerId||!allowed.current)throw Error('Confirm your account before opening an upcoming plan.');
     if(opening.current)throw Error('Wait for the current plan to finish opening.');
     if(selectedRef.current?.id===id&&selectedRef.current.owner===ownerId){
-      try{if(!forDiscard)await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
+      try{await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
       return store.current;
     }
     opening.current=true;await stopBackground();
@@ -252,11 +252,11 @@ export function useUpcomingPlans(enabled:boolean){
           const visible=s.phase==='saved'?s.plan:{...s.plan,pending:true,meal:s.meal??s.plan.meal};
           setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),visible]));
         }
-      },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined,forDiscard?plans.find(plan=>plan.id===id&&!plan.pending&&plan.revision>0):undefined);
+      },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined);
       store.current=next;selectedRef.current={owner,id};setSelected({owner,id});setState(next.state());
-      if(!forDiscard)await next.connect();
-      if(recoveredSeed&&!forDiscard){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
-      if(!next.state().meal&&!forDiscard)throw Error(next.state().error||'This plan could not be opened safely.');
+      await next.connect();
+      if(recoveredSeed){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
+      if(!next.state().meal)throw Error(next.state().error||'This plan could not be opened safely.');
       setActionError('');return next;
     }catch(error){
       if(!store.current){release.current?.();release.current=null;setActionError(error instanceof Error?error.message:'This plan has not been saved.');}
@@ -283,14 +283,45 @@ export function useUpcomingPlans(enabled:boolean){
     requestAutomatic(true);
   };
   const discard=async(id:string)=>{
-    const owner=ownerId;
-    if(!owner||!allowed.current)throw Error('Verify your account before discarding a plan.');
-    const expectedRevision=plans.find(plan=>plan.id===id)?.revision;
-    const current=await open(id,undefined,true);
-    if(!current||!isCurrent(owner))throw Error('Reopen the plan before discarding it.');
-    if(!current.state().discarded)await current.discard(expectedRevision);
-    if(!current.state().discarded)throw Error('Discarding this plan has not been confirmed.');
-    await completeDiscard(owner,id);
+    const owner=ownerId,version=generation.current;
+    if(!enabled||!api||!owner||!allowed.current)throw Error('Verify your account before discarding a plan.');
+    if(opening.current)throw Error('Wait for the current plan action to finish.');
+    opening.current=true;
+    let temporary:SavedPlanStore|undefined,unlock:(()=>void)|undefined;
+    const valid=()=>isCurrent(owner)&&allowed.current&&version===generation.current;
+    try{
+      await stopBackground();
+      if(!valid())throw Error('Your account changed before discarding the plan.');
+      const target=plans.find(plan=>plan.id===id);
+      let current=selectedRef.current?.owner===owner&&selectedRef.current.id===id?store.current:null;
+      if(!current){
+        // A Home command must not select the editor document or replace the
+        // current-cook card while its independent discard is pending.
+        const lock=await acquire('how-many-beers:account-plan-writer:'+owner+':'+id);unlock=lock.release;
+        if(!valid())throw Error('Your account changed before discarding the plan.');
+        if(lock.readonly)throw new AccountConflict('Another tab is editing this plan. Close it and reload here.');
+        const pending=await getIndex(owner);
+        const known=target&&!target.pending&&target.revision>0?target:undefined;
+        if(!pending.list().some(plan=>plan.id===id)&&known)await pending.add(planMeal(known),known.revision);
+        const draft=pending.list().find(plan=>plan.id===id);
+        if(!draft&&!known)throw Error('This plan is no longer upcoming. Reload your current plans.');
+        const recovery=await recoveryStorage(savedPlanCacheKey(owner,id));
+        if(!valid()){recovery.close?.();throw Error('Your account changed before discarding the plan.');}
+        temporary=new SavedPlanStore(owner,id,api,recovery,s=>{
+          if(valid())setAutomaticPhase(s.phase==='load-error'?'unsaved':s.phase);
+        },valid,false,draft&&(draft.sourceRevision??0)===0?planMeal(draft):undefined,draft?{serveInstant:draft.serveInstant,timeZone:draft.timeZone}:undefined,known);
+        current=temporary;
+      }
+      setAutomaticPhase('syncing');
+      if(!current.state().discarded)await current.discard(target?.revision);
+      if(!current.state().discarded)throw Error('Discarding this plan has not been confirmed.');
+      await completeDiscard(owner,id);
+    }catch(error){
+      if(valid())setAutomaticPhase(error instanceof AccountConflict?'conflict':'unsaved');
+      throw error;
+    }finally{
+      temporary?.dispose();unlock?.();opening.current=false;requestAutomatic(true);
+    }
   };
   useEffect(()=>{
     if(!state.discarded||!selected||selected.owner!==ownerId)return;
