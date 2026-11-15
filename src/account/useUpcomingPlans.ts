@@ -424,7 +424,7 @@ export function useUpcomingPlans(enabled:boolean){
     // Resume reads the current guarded owner/store refs instead of a stale editor closure.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[enabled,ownerId,client,phase]);
-  const savingPhase:SavedPlanState['phase']=actionError||listPhase==='load-error'?'unsaved':automaticPhase==='conflict'?'conflict':automaticPhase==='syncing'?'syncing':automaticPhase==='unsaved'?'unsaved':plans.some(plan=>plan.pending)?'unsaved':listPhase==='loading'?'syncing':'saved';
+  const savingPhase:SavedPlanState['phase']=actionError||listPhase==='load-error'?'unsaved':automaticPhase==='conflict'?'conflict':automaticPhase==='syncing'?'syncing':automaticPhase==='unsaved'?'unsaved':plans.some(plan=>plan.pending)?'unsaved':listPhase==='loading'?'loading':'saved';
   const retry=async()=>{if(store.current)await store.current.retry();else await refresh();};
   return {
     plans:scope===ownerId?plans:[],

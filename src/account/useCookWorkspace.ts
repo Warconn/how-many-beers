@@ -24,7 +24,8 @@ export function combinedSavePhase(current:SavePhase,selected:SavePhase|null,futu
   if(['loading','load-error','saving','blocked','conflict'].includes(current))return current;
   for(const phase of [selected,future])if(phase==='conflict'||phase==='load-error')return phase;
   if(current==='unsaved'||selected==='unsaved'||future==='unsaved')return 'unsaved';
-  if(current==='syncing'||selected==='syncing'||selected==='loading'||future==='syncing'||future==='loading')return 'syncing';
+  if(selected==='loading'||future==='loading')return 'loading';
+  if(current==='syncing'||selected==='syncing'||future==='syncing')return 'syncing';
   return current;
 }
 const LEGACY_OWNER = "how-many-beers:legacy-owner:v1";
@@ -221,7 +222,7 @@ export function useCookWorkspace() {
     if(!plansEnabled||!owner||!cloud.store.current)throw Error('Upcoming plans are not available for this account yet.');
     if(draftRef.current?.owner===owner&&draftRef.current.meal.id===id){clearDraft();setTransitionError('');return;}
     const current=currentMeal();
-    if(current?.id===id){
+    if(current?.id===id&&!upcoming.plans.some(plan=>plan.id===id)){
       if(currentHasActuals(current))throw Error('Use Cancel cook for an active cook.');
       await upcoming.close();await cloud.store.current.cancel(id);assertOwner(owner);selectLegacy(null);
     }else{

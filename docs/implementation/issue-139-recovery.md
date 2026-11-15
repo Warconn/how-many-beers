@@ -23,7 +23,8 @@ discarded IDs, matching the SQL instead of permitting accidental resurrection.
   verifies owner/current server state, and durably journals its decision.
 - An absent upcoming record resolves just that local plan/index entry. This does
   not assert whether it was discarded or promoted, and touches neither history
-  nor the active workspace. Dirty recovery remains protected until explicit
+  nor the active workspace. A recovery entry sharing the promoted active cook ID
+  is routed to the plan store, never active-cook cancellation. Dirty recovery remains protected until explicit
   discard. Failed remote discards retain authoring data in the recovery journal.
 - A server-backed plan requires its known revision (or this operation's exact
   acknowledged next revision), then reuses one immutable discard receipt across
