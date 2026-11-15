@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {useAccount} from '@/auth/AccountProvider';
 import {recoveryStorage,type RecoveryStorage} from './recoveryStorage';
-import {SavedPlanStore,savedPlanCacheKey,readPlanDiscard,type SavedPlanState} from './SavedPlanStore';
+import {SavedPlanStore,savedPlanCacheKey,readPlanDiscard,retirePlanWriter,type SavedPlanState} from './SavedPlanStore';
 import {savedPlanAPI,orderPlans,validatePlanMeal,planDocument,planMeal,parseSavedPlan,type SavedPlan} from './savedPlans';
 import {AccountConflict} from './workspace';
 import {newMeal,type Meal} from '../domain/meal';
@@ -178,7 +178,7 @@ export function useUpcomingPlans(enabled:boolean){
     }
   };
   const stopBackground=()=>{
-    backgroundGeneration.current++;worker.current?.store?.dispose();worker.current?.release();worker.current=null;
+    backgroundGeneration.current++;const entry=worker.current;worker.current=null;return retirePlanWriter(entry);
   };
   const requestAutomatic=(restart=false)=>{
     if(restart){retryAttempt.current=0;resumeSelected.current=true;if(retryTimer.current)clearTimeout(retryTimer.current);retryTimer.current=null;}
@@ -224,7 +224,7 @@ export function useUpcomingPlans(enabled:boolean){
       try{if(!forDiscard)await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
       return store.current;
     }
-    opening.current=true;stopBackground();
+    opening.current=true;await stopBackground();
     const owner=ownerId,version=generation.current;
     try{
       await close();

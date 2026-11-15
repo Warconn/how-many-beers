@@ -281,5 +281,14 @@ export class SavedPlanStore{
  dirty(){return !!this.desired||!!this.operation||!!this.discardOperation&&!this.discardOperation.confirmed;}
  recoveryExport(){return JSON.stringify({format:'how-many-beers-plan-recovery',version:1,owner:this.owner,planId:this.planId,
   cache:this.recoveryRawAllowed?this.baseline:null,pending:this.recoveryRawAllowed?this.desired:null},null,2);}
+ /** Release a writer lock only after requests already sent have settled. */
+ async waitForRequests(){await this.inflight?.catch(()=>{});await this.discarding?.catch(()=>{});}
  dispose(){this.disposed=true;if(this.timer)clearTimeout(this.timer);this.clearRetry();this.storage.close?.();}
+}
+
+/** A stopped worker must not release its lock while a save can still complete. */
+export async function retirePlanWriter(entry:{store?:SavedPlanStore;release:()=>void}|null|undefined):Promise<void>{
+ if(!entry)return;
+ entry.store?.dispose();
+ try{await entry.store?.waitForRequests();}finally{entry.release();}
 }
