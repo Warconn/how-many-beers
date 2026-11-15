@@ -51,3 +51,12 @@ configured. Ensure the `main` branch requires the successful aggregate
 prevent a bad release from deploying.
 
 No tests were removed, and this is a workflow/docs change only.
+
+### Classification verification
+
+The initial risk-based workflow update ran in PR #146 with account-related
+workflow files changed: all desktop and iPhone account shards passed, while
+general regression was deliberately skipped and the required aggregate
+`playwright` check passed. This docs-only follow-up provides a second,
+non-account fixture to verify that unrelated documentation changes skip
+account shards as well. That does not replace release-gate verification.
