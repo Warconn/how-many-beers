@@ -10,17 +10,28 @@ Prioritize usable architecture, intuitive interaction and reliability over compl
 
 Visual direction: calm, polished cooking utility with warm neutrals, restrained burnt-orange accents, readable typography, modest borders and useful whitespace. Avoid generic AI-generated dashboard visuals, excessive cards, loud decorative emoji, long walls of settings and unnecessary modes. Make desktop responsive and phone use practical. Favor the visible action the cook needs next.
 
-## Current priority: #139 dev account-plan recovery
+## Current priority: reliable, staged CI and release verification (#71)
 
-#114 is merged through #134; #140's library-read recovery is in dev at `3e3f35a`.
-The owner confirmed the November 13 validator upgrade is now applied in dev and
-recipe writes return HTTP 200. Do not reapply it. The current P0 is orphaned
-upcoming-plan recovery/discard, then deferring new empty cooks until first Add to
-meal. No other feature work. Preserve owner-scoped journals, revisions, receipts,
-actuals and history. The November 15 handoff explicitly authorizes this focused
-hotfix PR into dev after required CI and the exact regression pass. It does not
-authorize main/production, hosted migrations, resets, or clearing user records.
-Earlier draft/unmerged #134 directions below are historical.
+The #139 account-plan recovery fix was merged into dev in PR #141. Do not
+reopen that work without a new reproduced failure. The current work focuses on
+reducing test feedback latency without reducing account, offline, iPhone WebKit,
+security or visual regression coverage.
+
+Keep feature PRs **draft** while iterating. Every draft commit runs typecheck,
+unit tests and a focused real-browser smoke suite. Run the affected Playwright
+files locally via `npm run test:fast -- <file> --config=<appropriate config>`
+before pushing a new candidate. When code is stable, mark the PR **ready for
+review** to trigger the entire Chromium/WebKit, account, auth, offline and
+regression CI suite. Full green aggregate `playwright` plus applicable security
+and build checks are mandatory before merging. If tests fail, change the code
+and rerun; never bypass or mark a skipped suite as green.
+
+Ready PRs targeting main receive the same complete browser gate; pushes to both
+dev and main rerun the full suite. Main's Cloudflare deployment is external to
+GitHub Actions, so successful GitHub CI alone does not prove that deployment
+waited for the checks. Protect main with required passing checks before
+merging release PRs. Do not deploy application changes to production in a
+CI-optimization task.
 
 ## Current owner direction (#114, November 10, 2026)
 
