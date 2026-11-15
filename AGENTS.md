@@ -42,6 +42,11 @@ regression suite at the production release boundary. Preserve archived records,
 actual events, recipes and account isolation. #154 uses flat ordinary step fields,
 Start time/Duration together, and hidden per-step equipment/temperature metadata
 that must survive unrelated saves. See the current design-system section.
+#152/#154/#153 are delivered through dev PRs #155/#156/#157. #153's final
+Thanksgiving timetable still needs measured weights and confirmed fryer limits.
+#145 adds read-only Home guidance from canonical projections, with neutral unknown
+cues and the existing page clock. Its PR tracks final verification/merge. This
+four-issue dev approval does not authorize #3 or other subsequent features.
 The #114 directions below describe
 already delivered behavior, not an instruction to restart that feature.
 

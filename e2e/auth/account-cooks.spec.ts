@@ -792,3 +792,17 @@ test('leaving a temporary guest cook returns to an empty trial without creating 
   await page.getByRole('button', {name: /Past cooks/}).click();
   await expect(page.getByRole('button', {name: 'View cook', exact: true})).toHaveCount(0);
 });
+
+import {homeActiveCook} from '../../tests/fixtures/homeActiveCook';
+test.describe('Home next action',()=>{
+ test.use({timezoneId:'UTC'});
+ test('account completion and rapid resume update Home without changing data on clock ticks',async({page,context},info)=>{
+  const {meal,first}=homeActiveCook(),remote=server();remote.state.active={meal,serveInstant:'2026-11-22T15:00:00.000Z'};remote.state.revision=1;
+  await page.clock.install({time:new Date('2026-11-22T11:59:00Z')});await remote.attach(context);await signIn(page);await page.clock.pauseAt(new Date('2026-11-22T12:00:00Z'));
+  const card=page.locator('.home-current'),summary=card.getByRole('group',{name:'Next up',exact:true});await expect(summary).toContainText('Heat oil');await expect(summary).toContainText('In 1 min');
+  const original=JSON.stringify(remote.state),revision=remote.state.revision;await page.clock.fastForward(60000);await expect(summary).toContainText('Now');expect(JSON.stringify(remote.state)).toBe(original);expect(remote.state.revision).toBe(revision);
+  await card.getByRole('button',{name:'Continue cooking',exact:true}).click();await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox',{name:'Complete Heat oil',exact:true}).click();await page.clock.runFor(1000);await expect.poll(()=>(remote.state.active as {meal:typeof meal}).meal.completed[first]).toBeTruthy();await page.getByRole('button',{name:'Home',exact:true}).click();await expect(summary).toContainText('Check potatoes');
+  const saved=structuredClone(remote.state);await page.clock.resume();await page.reload();await expect(summary).toContainText('Check potatoes');expect(remote.state).toEqual(saved);await card.screenshot({path:info.outputPath('account-home-next-up.png'),scale:'css',style:'nextjs-portal{display:none}'});
+  await page.getByRole('button',{name:'Account',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Your account'});await dialog.getByRole('button',{name:'Sign out on this device',exact:true}).click();await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeVisible();await expect(page.getByRole('group',{name:'Next up',exact:true})).toHaveCount(0);expect(remote.state).toEqual(saved);
+ });
+});

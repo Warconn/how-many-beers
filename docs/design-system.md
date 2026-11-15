@@ -252,3 +252,14 @@ or Step settings. Equipment stays at dish level. Both editors omit hidden metada
 from unrelated submissions, retaining stored per-step equipment/temperature exactly.
 This supersedes the earlier optional step-settings presentation; the underlying
 metadata and future contextual resource UX remain available to #3.
+
+### Home current-cook next action (#145)
+
+Place the read-only Next up text inside the existing current-cook card, after the
+serving/dish summary and before its existing actions. Use a quiet eyebrow, strong
+action title, dish name for multi-dish cooks and one useful timing/condition cue.
+No additional card, border, button or nested disclosure. Planned and estimated
+starts stay explicitly distinct; uncertain/conditional work has no false countdown.
+Passive waiting uses quiet text rather than a new action. Keep the full-width
+Continue cooking primary and the compact View cook / Cancel cook second row with
+44px targets. The summary itself has no completion or navigation control.
