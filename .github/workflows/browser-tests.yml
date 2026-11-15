@@ -17,6 +17,52 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # A small, fail-closed path detector. Full validation always runs at the
+  # dev -> main release boundary or by manual dispatch.
+  scope:
+    name: Select test scope
+    runs-on: ubuntu-latest
+    outputs:
+      account: ${{ steps.classify.outputs.account }}
+      full: ${{ steps.classify.outputs.full }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: classify
+        name: Classify changed files
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_BRANCH: ${{ github.base_ref || github.ref_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          account=false
+          full=false
+          if [[ "$EVENT_NAME" == "workflow_dispatch" || "$TARGET_BRANCH" == "main" ]]; then
+            account=true
+            full=true
+          else
+            # A missing comparison must fail closed to the complete suite.
+            if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]] ||
+               ! changes=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA"); then
+              account=true
+              full=true
+            else
+              # Account-related source, shared persistence and global UI changes
+              # receive full desktop + iPhone account coverage automatically.
+              # Unknown non-account features still get mandatory real UI smoke.
+              if printf '%s\n' "$changes" | grep -Eq '^(src/account/|src/auth/|src/domain/|src/app/|src/components/(Account|MyRecipes|Recipe|DishRecipe|UpcomingCooks)|supabase/|e2e/auth/|tests/(account|personalRecipes|discardPlans|upcomingWorkspace|planningDraft)|playwright[.]accounts[.]config[.]ts$|playwright[.]auth[.]config[.]ts$|package(-lock)?[.]json$|[.]github/workflows/|scripts/test-account-security[.]sh$)'; then
+                account=true
+              fi
+            fi
+          fi
+          echo "account=$account" >> "$GITHUB_OUTPUT"
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+          echo "Selected scope: account=$account full=$full"
+
   checks:
     name: Types and unit tests
     runs-on: ubuntu-latest
@@ -75,8 +121,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Full coverage is required for ready PRs and every dev/main branch push.
-  # While iterating, keep PRs in draft and use the smoke + unit checks.
+  # Short authentication/offline verification remains on ready PRs and pushes.
+  # Expensive account and general regression work is selected below.
   browsers:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: ${{ matrix.suite }}
@@ -89,19 +135,6 @@ jobs:
           - suite: auth
             browsers: chromium webkit
             command: npx playwright test --config playwright.auth.config.ts
-          # Keep one account worker per platform for deterministic account mocks,
-          # but run desktop Chromium and iPhone WebKit on separate runners.
-          - suite: accounts-desktop
-            browsers: chromium
-            command: npx playwright test --config playwright.accounts.config.ts --project=auth-desktop
-          # Keep WebKit workers isolated; two independent shards divide
-          # its measured 10m44s critical path without parallel fixture races.
-          - suite: accounts-iphone-1
-            browsers: webkit
-            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=1/2
-          - suite: accounts-iphone-2
-            browsers: webkit
-            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=2/2
           - suite: offline
             browsers: chromium webkit
             command: npm run test:offline
@@ -131,8 +164,59 @@ jobs:
             playwright-offline-report/
           if-no-files-found: ignore
           retention-days: 14
+
+  # Relevant account edits run all desktop/iPhone account tests; other Dev PRs skip them.
+  account_browsers:
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && needs.scope.outputs.account == 'true'
+    name: ${{ matrix.suite }}
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Keep one account worker per platform for deterministic account mocks,
+          # but run desktop Chromium and iPhone WebKit on separate runners.
+          - suite: accounts-desktop
+            browsers: chromium
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-desktop
+          # Keep WebKit workers isolated; two independent shards divide
+          # its measured 10m44s critical path without parallel fixture races.
+          - suite: accounts-iphone-1
+            browsers: webkit
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=1/2
+          - suite: accounts-iphone-2
+            browsers: webkit
+            command: npx playwright test --config playwright.accounts.config.ts --project=auth-iphone --shard=2/2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright browsers and OS dependencies
+        run: npx playwright install --with-deps ${{ matrix.browsers }}
+      - name: Run ${{ matrix.suite }} tests
+        run: ${{ matrix.command }}
+      - name: Upload browser report, screenshots and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.suite }}-report
+          path: |
+            test-results/
+            test-results-offline/
+            test-results-auth/
+            test-results-accounts/
+            playwright-report/
+            playwright-offline-report/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Upload account review screenshots
-        if: always() && startsWith(matrix.suite, 'accounts-')
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: account-review-${{ matrix.suite }}-screenshots
@@ -143,8 +227,8 @@ jobs:
   # Retain the original combined screenshot artifact for visual review.
   account_review:
     name: Account review screenshots
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    needs: browsers
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && needs.scope.outputs.account == 'true' && needs.account_browsers.result == 'success'
+    needs: [scope, account_browsers]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -161,7 +245,8 @@ jobs:
           retention-days: 14
 
   regression_shards:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && needs.scope.outputs.full == 'true'
+    needs: scope
     name: regression (${{ matrix.shard }}/3)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -222,8 +307,8 @@ jobs:
   # Keep the existing regression check and combined screenshot artifact names.
   # Partial screenshots survive a failed shard, but cannot turn its gate green.
   regression:
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    needs: regression_shards
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && needs.scope.outputs.full == 'true'
+    needs: [scope, regression_shards]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -250,20 +335,33 @@ jobs:
   # Preserve the existing required check name; skipped/canceled suites must fail it.
   playwright:
     if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    needs: [checks, smoke, browsers, account_review, regression]
+    needs: [scope, checks, smoke, browsers, account_browsers, account_review, regression]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Require every test suite
+        shell: bash
         env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
           CHECKS_RESULT: ${{ needs.checks.result }}
           SMOKE_RESULT: ${{ needs.smoke.result }}
           BROWSERS_RESULT: ${{ needs.browsers.result }}
+          ACCOUNT_REQUIRED: ${{ needs.scope.outputs.account }}
+          ACCOUNT_RESULT: ${{ needs.account_browsers.result }}
           ACCOUNT_REVIEW_RESULT: ${{ needs.account_review.result }}
+          FULL_REQUIRED: ${{ needs.scope.outputs.full }}
           REGRESSION_RESULT: ${{ needs.regression.result }}
-        run: >-
-          test "$CHECKS_RESULT" = success &&
-          test "$SMOKE_RESULT" = success &&
-          test "$BROWSERS_RESULT" = success &&
-          test "$ACCOUNT_REVIEW_RESULT" = success &&
-          test "$REGRESSION_RESULT" = success
+        run: |
+          set -euo pipefail
+          [[ "$SCOPE_RESULT" == success && "$CHECKS_RESULT" == success &&
+             "$SMOKE_RESULT" == success && "$BROWSERS_RESULT" == success ]]
+          if [[ "$ACCOUNT_REQUIRED" == true ]]; then
+            [[ "$ACCOUNT_RESULT" == success && "$ACCOUNT_REVIEW_RESULT" == success ]]
+          else
+            [[ "$ACCOUNT_RESULT" == skipped && "$ACCOUNT_REVIEW_RESULT" == skipped ]]
+          fi
+          if [[ "$FULL_REQUIRED" == true ]]; then
+            [[ "$REGRESSION_RESULT" == success ]]
+          else
+            [[ "$REGRESSION_RESULT" == skipped ]]
+          fi
