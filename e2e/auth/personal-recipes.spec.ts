@@ -280,3 +280,28 @@ test('a synthetic older Browns Brisket can Cook Again and save its planned metho
  await remote.attach(context);await signIn(page);await page.getByRole('navigation',{name:'Main navigation',exact:true}).getByRole('button',{name:'Past cooks',exact:true}).click();await page.getByRole('button',{name:'View cook',exact:true}).click();await expect(page.getByRole('region',{name:'Saved cook details',exact:true})).toContainText('Browns Brisket');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Cook again',exact:true}).click();await page.getByRole('button',{name:'Resume planning',exact:true}).click();await page.getByLabel('Serve date and time',{exact:true}).fill('2026-11-15T13:00');await expect.poll(()=>remote.workspace.active.meal.serveAt).toBe('2026-11-15T13:00');await page.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();const repeated=structuredClone(remote.workspace.active.meal);await recipeAction(page,'Save to My recipes');await expect.poll(()=>remote.rows.size).toBe(1);await expect.poll(()=>remote.workspace.active.meal.dishes[0].recipeLink?.revision).toBe(1);const saved=[...remote.rows.values()][0];expect(saved.document.recipe.configuration.brisketApplied).toBeDefined();expect(saved.document.recipe.configuration.brisketMode).toBe('estimate');expect(JSON.stringify(saved.document)).not.toContain('2026-11-');expect(withoutLinks(remote.workspace.active.meal)).toEqual(withoutLinks(repeated));expect(remote.workspace.active.meal.events).toEqual([]);expect(remote.workspace.active.meal.completed).toEqual({});expect(remote.workspace.history).toEqual(before);expect(remote.workspace.history[0].meal.events).toHaveLength(16);
  await page.reload();const manage=await library(page);await expect(manage.getByRole('button',{name:'Edit Smoked brisket',exact:true})).toBeVisible();expect(remote.workspace.history).toEqual(before);
 });
+
+
+test('recipe library cards open an immediately visible detail view and return to the list',async({page,context},info)=>{
+ const remote=server();await remote.attach(context);await signIn(page);await review(page);
+ await recipeAction(page,'Save to My recipes');
+ await expect(page.getByText('Saved recipe',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ const screen=await library(page);
+ await expect(screen.getByText('SAVED METHODS',{exact:true})).toBeVisible();
+ await expect(screen.getByLabel('Find a recipe')).toBeVisible();
+ await expect(screen.locator('.history-item')).toHaveCount(1);
+ await screen.getByRole('button',{name:'View recipe',exact:true}).click();
+ const detail=screen.getByRole('region',{name:'Saved recipe details'});
+ await expect(detail).toBeVisible();
+ await expect(detail).toContainText('Personal method.');
+ await expect(screen.getByRole('button',{name:'All recipes',exact:true})).toBeInViewport();
+ await expect(screen.locator('.personal-recipe-list')).toHaveCount(0);
+ await page.screenshot({path:info.outputPath('recipe-library-detail.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ await detail.getByRole('button',{name:'Edit recipe',exact:true}).click();
+ await expect(screen.getByRole('region',{name:'Review your method'})).toBeVisible();
+ await screen.getByRole('button',{name:'Cancel',exact:true}).click();
+ await screen.getByRole('button',{name:'All recipes',exact:true}).click();
+ await expect(screen.getByRole('button',{name:'View recipe',exact:true})).toBeVisible();
+ expect(remote.rows.size).toBe(1);
+});
