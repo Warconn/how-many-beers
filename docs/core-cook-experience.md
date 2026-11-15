@@ -1,5 +1,23 @@
 # Core cook experience
 
+## New account planning and discard (#139)
+
+Plan a cook opens a tab-local, owner-scoped draft. Serving/name edits, choosing or
+reviewing a recipe, and Save to My recipes do not create an Upcoming cooks entry.
+First Add to meal hands the composed plan to existing versioned account saving;
+a failed acknowledgement keeps the recoverable plan and authoring review. Later
+edits autosave normally. Cook Again already has dishes and still saves directly.
+Reload restores the pre-dish draft in the same tab after verifying its owner.
+Discard/return Home confirms meaningful authoring work; empty drafts need no
+confirmation. The existing header indicator distinguishes a draft from an
+acknowledged account save. Real loading keeps the normal brand and static content
+placeholders without a forced delay or decorative animation.
+
+Explicit discard does not save the plan first. Absent server records resolve only
+the selected local recovery entry; dirty orphaned drafts remain protected until
+that explicit discard. Saved plans still use their exact revision and an immutable
+discard receipt. Neither route changes the current cook, other plans or history.
+
 ## Current approved experience · November 9, 2026
 
 PR #131 is approved and merged into dev at `62f4673`. It completes the post-brisket

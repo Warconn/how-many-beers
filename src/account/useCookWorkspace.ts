@@ -14,9 +14,10 @@ import { migrateMeal,cookTimeline,startCookSession } from "@/domain/cookState";
 import {buildPhasePlan} from '../domain/cookingPhases';
 import { useAccountCook } from "./useAccountCook";
 import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
-import { meaningful, mergeHistory } from "./workspace";
+import { meaningful, mergeHistory, equal } from "./workspace";
 import {useUpcomingPlans,currentHasActuals,hasUpcomingContent,type UpcomingPlan} from './useUpcomingPlans';
 import {savedPlanAPI,planMeal,exportSavedPlans,validateSavedPlansBackup} from './savedPlans';
+import {planningDraftKey,readPlanningDraft,protectPlanningDraft,type PlanningDraft} from './planningDraft';
 type SavePhase='loading'|'load-error'|'saved'|'syncing'|'unsaved'|'conflict'|'saving'|'blocked';
 /** A current critical transition always owns the existing account saving indicator. */
 export function combinedSavePhase(current:SavePhase,selected:SavePhase|null,future:SavePhase='saved'):SavePhase{
@@ -41,7 +42,23 @@ export function useCookWorkspace() {
   const [legacySelection,setLegacySelection]=useState<{owner:string;id:string}|null>(null);
   const legacyRef=useRef<{owner:string;id:string}|null>(null);
   const selectLegacy=(value:{owner:string;id:string}|null)=>{legacyRef.current=value;setLegacySelection(value);};
-  const selectedPlanId=upcoming.selectedId??(legacySelection?.owner===account.ownerId?legacySelection.id:null);
+  const [draft,setDraft]=useState<PlanningDraft|null>(null);
+  const draftRef=useRef<PlanningDraft|null>(null);
+  const draftOwner=useRef<string|null>(null);
+  const [draftReadyOwner,setDraftReadyOwner]=useState<string|null>(null);
+  const transient=account.phase==='authenticated'&&draft?.owner===account.ownerId?draft:null;
+  const keepDraft=(meal:Meal,edited:boolean)=>{
+    const owner=account.ownerId;if(!owner||ownerScope.current!==owner)throw Error('Verify your account before drafting a cook.');
+    const next=protectPlanningDraft(window.sessionStorage,owner,meal,edited);draftRef.current=next;setDraft(next);return next;
+  };
+  const clearDraft=()=>{const current=draftRef.current;if(current){window.sessionStorage.removeItem(planningDraftKey(current.owner));draftRef.current=null;setDraft(null);}};
+  useEffect(()=>{
+    if(!plansEnabled||account.phase!=='authenticated'||!account.ownerId||cloud.state.phase!=='saved'||draftOwner.current===account.ownerId)return;
+    draftOwner.current=account.ownerId;
+    try{const restored=readPlanningDraft(window.sessionStorage,account.ownerId);draftRef.current=restored;setDraft(restored);}catch(error){setTransitionError(error instanceof Error?error.message:'Could not recover the new planning draft.');}
+    setDraftReadyOwner(account.ownerId);
+  },[plansEnabled,account.ownerId,account.phase,cloud.state.phase]);
+  const selectedPlanId=transient?.meal.id??upcoming.selectedId??(legacySelection?.owner===account.ownerId?legacySelection.id:null);
   const isSelectedPlan=selectedPlanId!==null;
   const [legacyScope, setLegacyScope] = useState<string | null>(null),
     [legacyAllowed, setLegacyAllowed] = useState(false),
@@ -164,7 +181,8 @@ export function useCookWorkspace() {
   const currentCook=data?.active??null;
   const selectedDocument=!!upcoming.selectedId;
   const selectedPhase=upcoming.state.phase;
-  const savePhase=combinedSavePhase(cloud.state.phase,selectedDocument?selectedPhase:null,plansEnabled?(upcoming.savingPhase??'saved'):'saved');
+  const combined=combinedSavePhase(cloud.state.phase,selectedDocument?selectedPhase:null,plansEnabled?(upcoming.savingPhase??'saved'):'saved');
+  const savePhase=transient&&combined==='saved'?'draft' as const:combined;
   const status=selectedDocument?(selectedPhase==='saved'?currentStatus:selectedPhase==='loading'?'loading':selectedPhase==='load-error'?'recovery':selectedPhase==='conflict'?'conflict':'unsaved'):currentStatus;
   const locked=currentLocked||(selectedDocument&&['loading','load-error','conflict'].includes(selectedPhase));
   const selectedStore=()=>upcoming.store.current?.owner===account.ownerId?upcoming.store.current:null;
@@ -184,12 +202,14 @@ export function useCookWorkspace() {
   const upcomingPlans:UpcomingPlan[]=[...upcoming.plans.map(plan=>({...plan,meal:planMeal(plan)})),...(plansEnabled&&legacyPlan&&!upcoming.plans.some(p=>p.id===legacyPlan.id)?[legacyPlan]:[])].sort((a,b)=>(a.serveInstant??'9999').localeCompare(b.serveInstant??'9999')||a.id.localeCompare(b.id));
   const createPlan=async(seed?:Meal)=>{
     if(!plansEnabled)throw Error('Upcoming plans are not available for this account yet.');
-    await flushCurrent();selectLegacy(null);
-    return upcoming.create(seed);
+    await flushCurrent();await upcoming.close();selectLegacy(null);
+    if(!seed&&draftRef.current?.owner===account.ownerId)return draftRef.current.meal.id;
+    if(!seed){const fresh=keepDraft(newMeal(),false);return fresh.meal.id;}
+    clearDraft();return upcoming.create(seed);
   };
   const openPlan=async(id:string)=>{
     if(!plansEnabled||!account.ownerId)throw Error('Upcoming plans are not available for this account yet.');
-    await flushCurrent();
+    await flushCurrent();clearDraft();
     const current=currentMeal();
     if(current?.id===id&&hasUpcomingContent(current)){
       await upcoming.close();selectLegacy({owner:account.ownerId,id});return;
@@ -199,6 +219,7 @@ export function useCookWorkspace() {
   const discardPlan=async(id:string)=>{
     const owner=account.ownerId;
     if(!plansEnabled||!owner||!cloud.store.current)throw Error('Upcoming plans are not available for this account yet.');
+    if(draftRef.current?.owner===owner&&draftRef.current.meal.id===id){clearDraft();setTransitionError('');return;}
     const current=currentMeal();
     if(current?.id===id){
       if(currentHasActuals(current))throw Error('Use Cancel cook for an active cook.');
@@ -211,7 +232,7 @@ export function useCookWorkspace() {
     setTransitionError('');setSelection(v=>v+1);
   };
   const returnToCurrent=async()=>{
-    await flushCurrent();await upcoming.close();selectLegacy(null);
+    await flushCurrent();await upcoming.close();clearDraft();selectLegacy(null);
   };
   const startSelectedPlan=async(id?:string)=>{
     if(id)await openPlan(id);
@@ -266,6 +287,14 @@ export function useCookWorkspace() {
   const save = async (change: { active?: Meal; history?: HistoryLibrary; canceled?: LocalSnapshot["canceled"] }) => {
     if (enabled && account.ownerId) {
       if (!cloud.store.current) throw Error("Account cooks are loading.");
+      if(draftRef.current?.owner===account.ownerId&&change.active){
+        const pending=keepDraft(change.active,true);
+        if(!pending.meal.dishes.length)return;
+        await upcoming.create(pending.meal);assertOwner(pending.owner);
+        const selected=selectedStore();if(!selected)throw Error('Reopen your protected plan before saving.');
+        if(!equal(selected.state().meal,pending.meal))selected.edit(()=>pending.meal);clearDraft();await selected.flush(true);
+        if(change.history)await cloud.store.current.save({history:change.history});return;
+      }
       const selected=selectedStore();
       if(selected){
         if(change.active)await selected.save(change.active);
@@ -301,7 +330,7 @@ export function useCookWorkspace() {
   };
   const patch = (fn: (m: Meal) => Meal) => {
     try {
-      if (enabled && account.ownerId){const selected=selectedStore();if(selected)selected.edit(fn);else cloud.store.current?.edit(fn);}
+      if (enabled && account.ownerId){if(draftRef.current?.owner===account.ownerId){keepDraft(fn(draftRef.current.meal),true);return;}const selected=selectedStore();if(selected)selected.edit(fn);else cloud.store.current?.edit(fn);}
       else if (mode === "disabled" || legacyAllowed) local.patch(fn);
       else if (mode === "guest") {
         const next = {
@@ -469,14 +498,16 @@ export function useCookWorkspace() {
     else await save(snapshot);
   };
   return {
-    meal: selectedDocument?upcoming.state.meal:currentCook,
+    meal: plansEnabled&&!selectedDocument&&draftReadyOwner!==account.ownerId?null:transient?.meal??(selectedDocument?upcoming.state.meal:currentCook),
+    transientPlanId:transient?.meal.id??null,
+    transientEdited:transient?.edited??false,
     currentCook,
     currentCookInProgress:currentHasActuals(currentCook),
     plansEnabled,
     upcomingPlans,
     selectedPlanId,
     isSelectedPlan,
-    hasSelectedPlan:()=>upcoming.hasSelection()||(legacyRef.current?.owner===account.ownerId&&!!legacyRef.current),
+    hasSelectedPlan:()=>!!draftRef.current&&draftRef.current.owner===account.ownerId||upcoming.hasSelection()||(legacyRef.current?.owner===account.ownerId&&!!legacyRef.current),
     selectedPlanPhase:selectedDocument?selectedPhase:null,
     selectedSavePhase:selectedDocument?selectedPhase:null,
     savePhase,

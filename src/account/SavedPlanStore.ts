@@ -5,22 +5,23 @@ import type {RecoveryStorage} from './recoveryStorage';
 import {parseSavedPlan,planDocument,planMeal,planTimeZone,validatePlanMeal,type SavedPlan,type SavedPlanAPI} from './savedPlans';
 
 type PlanOperation={id:string;revision:number;document:RawCook;timeZone:string;snapshot:ExtendedMeal};
-type DiscardOperation={id:string;revision:number;confirmed?:boolean};
+type DiscardOperation={id:string;revision:number;confirmed?:boolean;local?:true};
 /** Validate terminal recovery before dropping any protected pending-plan entry. */
 export function readPlanDiscard(cache:{planId?:unknown;discard?:unknown;base?:unknown;desired?:unknown;operation?:unknown}):DiscardOperation|undefined{
  if(cache.discard===undefined)return;
- const op=cache.discard as DiscardOperation,base=parseSavedPlan(cache.base);
- if(base.id!==cache.planId||!op||typeof op.id!=='string'||!op.id||!Number.isSafeInteger(op.revision)||op.revision<1||op.revision!==base.revision||op.confirmed!==undefined&&typeof op.confirmed!=='boolean'||cache.desired||cache.operation)
+ const op=cache.discard as DiscardOperation,base=cache.base?parseSavedPlan(cache.base):null;
+ if(base&&base.id!==cache.planId||!op||typeof op.id!=='string'||!op.id||!Number.isSafeInteger(op.revision)||op.revision<(op.local?0:1)||op.revision!==(base?.revision??0)||op.local!==undefined&&op.local!==true||op.local&&!op.confirmed||op.confirmed!==undefined&&typeof op.confirmed!=='boolean'||cache.desired||cache.operation)
   throw Error('Invalid plan discard recovery.');
  return op;
 }
-type PlanCache={discard?:DiscardOperation;version:1;owner:string;planId:string;base:SavedPlan|null;desired:ExtendedMeal|null;desiredServeInstant?:string|null;desiredTimeZone?:string;conflicted?:boolean;operation:PlanOperation|null};
+type PlanCache={discardDraft?:ExtendedMeal|null;discard?:DiscardOperation;version:1;owner:string;planId:string;base:SavedPlan|null;desired:ExtendedMeal|null;desiredServeInstant?:string|null;desiredTimeZone?:string;conflicted?:boolean;operation:PlanOperation|null};
 export type SavedPlanState={discarded?:boolean;meal:ExtendedMeal|null;plan:SavedPlan|null;phase:'loading'|'load-error'|'saved'|'syncing'|'unsaved'|'conflict';error:string};
 export const savedPlanCacheKey=(owner:string,id:string)=>`how-many-beers:account:v1:${owner}:plan:${id}`;
 /** One document's recoverable edit; never writes the current cook or another plan. */
 export class SavedPlanStore{
  readonly key:string;
  private discardOperation:DiscardOperation|undefined;
+ private discardDraft:ExtendedMeal|null=null;
  private discarding:Promise<void>|null=null;
  private base:SavedPlan|null=null;
  private desired:ExtendedMeal|null=null;
@@ -50,6 +51,7 @@ export class SavedPlanStore{
     this.base=c.base?parseSavedPlan(c.base):null;
     if(this.base&&this.base.id!==planId)throw Error('Recovery plan mismatch.');
     this.discardOperation=readPlanDiscard(c);
+    if(c.discardDraft){if(!this.discardOperation)throw Error('Invalid discard draft.');this.discardDraft=validatePlanMeal(c.discardDraft,planId);}
     this.desired=c.desired?validatePlanMeal(c.desired,planId):null;
     this.desiredServeInstant=c.desiredServeInstant;
     this.desiredTimeZone=c.desiredTimeZone;
@@ -96,11 +98,11 @@ export class SavedPlanStore{
   if(this.readonlyMode)throw new AccountConflict('Another tab is editing this plan. Close it and reload here.');
   if(this.blocked)throw Error(this.error);
   if(this.storage.getItem(this.key)!==this.baseline)throw new AccountConflict('Another tab changed this plan. Download your draft before reloading.');
-  const raw=JSON.stringify({version:1,owner:this.owner,planId:this.planId,...(this.discardOperation?{discard:this.discardOperation}:{}),base:this.base,desired:this.desired,desiredServeInstant:this.desiredServeInstant,desiredTimeZone:this.desiredTimeZone,conflicted:this.phase==='conflict',operation:this.operation} satisfies PlanCache);
+  const raw=JSON.stringify({version:1,owner:this.owner,planId:this.planId,...(this.discardOperation?{discard:this.discardOperation}:{}),discardDraft:this.discardDraft,base:this.base,desired:this.desired,desiredServeInstant:this.desiredServeInstant,desiredTimeZone:this.desiredTimeZone,conflicted:this.phase==='conflict',operation:this.operation} satisfies PlanCache);
   this.storage.setItem(this.key,raw);this.baseline=raw;
  }
  private clearRetry(){if(this.retryTimer)clearTimeout(this.retryTimer);this.retryTimer=undefined;}
- private canRetryAutomatically(){return !this.disposed&&!this.blocked&&!this.readonlyMode&&this.maySend()&&this.phase!=='conflict';}
+ private canRetryAutomatically(){return !this.discarding&&!this.disposed&&!this.blocked&&!this.readonlyMode&&this.maySend()&&this.phase!=='conflict';}
  private scheduleRetry(){
   if(!this.canRetryAutomatically()||!this.dirty()||this.retryTimer||this.retryAttempt>=4)return;
   const delay=1000*2**this.retryAttempt++;
@@ -244,27 +246,37 @@ export class SavedPlanStore{
  }
  async discard(expectedRevision?:number):Promise<void>{
   if(this.discarding)return this.discarding;
-  if(this.disposed||this.blocked||this.readonlyMode||this.phase==='conflict'||!this.maySend()||!this.api.discard)
+  if(this.disposed||this.blocked||this.readonlyMode||!this.maySend()||!this.api.discard)
    throw Error('Resolve plan saving and verify your account before discarding this plan.');
   const work=(async()=>{
    try{
-    if(!this.discardOperation){
-     if(expectedRevision&&this.base?.revision!==expectedRevision)throw new AccountConflict('This plan changed on another device. Review its saved version before discarding it.');
-     await this.flush(true);
-     if(this.disposed||!this.base||!this.maySend())throw Error('Save this plan before discarding it.');
-     this.discardOperation={id:crypto.randomUUID(),revision:this.base.revision};
-    }
     if(this.timer)clearTimeout(this.timer);this.timer=undefined;this.clearRetry();
+    if(!this.discardOperation){
+     // Explicit discard supersedes unsent edits, never a remote revision. Wait
+     // for a request already in flight, then read instead of flushing the draft.
+     if(this.inflight)await this.inflight.catch(()=>{});
+     const remote=await this.api.read(this.planId);
+     if(this.disposed||!this.maySend())throw Error('Your account changed before discarding this plan.');
+     if(remote){
+      const acknowledged=this.operation&&remote.revision===this.operation.revision+1&&(remote.writeId===this.operation.id||remote.writeReceipt?.operationId===this.operation.id&&remote.writeReceipt.planId===this.planId);
+      const revision=expectedRevision||this.base?.revision;
+      if(!acknowledged&&(!revision||remote.revision!==revision))throw new AccountConflict('This plan changed on another device. Review its saved version before discarding it.');
+      this.base=remote;this.visible=this.desired?this.displayDraft():planMeal(remote);
+     }
+     this.discardDraft=this.desired;
+     this.discardOperation={id:crypto.randomUUID(),revision:this.base?.revision??0,...(!remote?{local:true as const,confirmed:true}:{})};
+     this.desired=null;this.desiredServeInstant=undefined;this.desiredTimeZone=undefined;this.operation=null;
+    }
     this.phase='syncing';this.error='';this.persist();await this.storage.settled?.();this.publish();
     if(this.disposed||!this.maySend())throw Error('Your account changed before discarding this plan.');
     const op=this.discardOperation;
     if(!op.confirmed)await this.api.discard!(this.planId,op.revision,op.id);
     if(this.disposed)return;
-    op.confirmed=true;this.persist();await this.storage.settled?.();
+    op.confirmed=true;this.discardDraft=null;this.persist();await this.storage.settled?.();
     this.phase='saved';this.error='';this.publish();
    }catch(error){if(!this.disposed)this.failed(error);throw error;}
   })();
-  this.discarding=work;try{await work;}finally{if(this.discarding===work)this.discarding=null;}
+  this.discarding=work;try{await work;}finally{if(this.discarding===work)this.discarding=null;this.scheduleRetry();}
  }
  dirty(){return !!this.desired||!!this.operation||!!this.discardOperation&&!this.discardOperation.confirmed;}
  recoveryExport(){return JSON.stringify({format:'how-many-beers-plan-recovery',version:1,owner:this.owner,planId:this.planId,

@@ -217,11 +217,11 @@ export function useUpcomingPlans(enabled:boolean){
       }).catch(()=>resolve({readonly:false,release:()=>{}}));
     });
   };
-  const open=async(id:string,seed?:Meal)=>{
+  const open=async(id:string,seed?:Meal,forDiscard=false)=>{
     if(!enabled||!api||!ownerId||!allowed.current)throw Error('Confirm your account before opening an upcoming plan.');
     if(opening.current)throw Error('Wait for the current plan to finish opening.');
     if(selectedRef.current?.id===id&&selectedRef.current.owner===ownerId){
-      try{await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
+      try{if(!forDiscard)await store.current?.retryAutomatic();}catch{/* The existing saving indicator retains the unsaved phase. */}
       return store.current;
     }
     opening.current=true;stopBackground();
@@ -249,13 +249,14 @@ export function useUpcomingPlans(enabled:boolean){
         setState(s);
         if(s.plan&&!s.discarded){
           if(acknowledgedRevisions.current.get(s.plan.id)!==s.plan.revision){acknowledgedRevisions.current.set(s.plan.id,s.plan.revision);localAcknowledgements.current++;}
-          setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),s.plan!]));
+          const visible=s.phase==='saved'?s.plan:{...s.plan,pending:true,meal:s.meal??s.plan.meal};
+          setPlans(previous=>orderPlans([...previous.filter(p=>p.id!==s.plan!.id),visible]));
         }
       },()=>allowed.current&&isCurrent(owner),lock.readonly,recoveredSeed,recovered?{serveInstant:recovered.serveInstant,timeZone:recovered.timeZone}:undefined);
       store.current=next;selectedRef.current={owner,id};setSelected({owner,id});setState(next.state());
-      await next.connect();
-      if(recoveredSeed){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
-      if(!next.state().meal)throw Error(next.state().error||'This plan could not be opened safely.');
+      if(!forDiscard)await next.connect();
+      if(recoveredSeed&&!forDiscard){try{await next.retryAutomatic();}catch{/* Keep the editable private draft and let autosave retry. */}}
+      if(!next.state().meal&&!forDiscard)throw Error(next.state().error||'This plan could not be opened safely.');
       setActionError('');return next;
     }catch(error){
       if(!store.current){release.current?.();release.current=null;setActionError(error instanceof Error?error.message:'This plan has not been saved.');}
@@ -279,12 +280,13 @@ export function useUpcomingPlans(enabled:boolean){
     localAcknowledgements.current++;setActionError('');
     setPlans(previous=>previous.filter(plan=>plan.id!==id));
     if(selectedRef.current?.owner===owner&&selectedRef.current.id===id)releaseSelection();
+    requestAutomatic(true);
   };
   const discard=async(id:string)=>{
     const owner=ownerId;
     if(!owner||!allowed.current)throw Error('Verify your account before discarding a plan.');
     const expectedRevision=plans.find(plan=>plan.id===id)?.revision;
-    const current=await open(id);
+    const current=await open(id,undefined,true);
     if(!current||!isCurrent(owner))throw Error('Reopen the plan before discarding it.');
     if(!current.state().discarded)await current.discard(expectedRevision);
     if(!current.state().discarded)throw Error('Discarding this plan has not been confirmed.');
@@ -364,6 +366,9 @@ export function useUpcomingPlans(enabled:boolean){
             if(cached?.conflicted&&(cached.desired||cached.operation)){conflicted=true;continue;}
             const document=backupPendingPlan(draft,raw,owner,new Set());
             if(!document)continue;
+            // Older builds journaled empty drafts before a dish was added. Keep
+            // them recoverable, but do not create a server plan merely to recover.
+            if(!document.meal.dishes.length&&!await api.read(draft.id)){unsaved=true;continue;}
             if(raw===null&&(draft.sourceRevision??0)>0){conflicted=true;continue;}
             setAutomaticPhase('syncing');
             const current=new SavedPlanStore(owner,draft.id,api,recovery,s=>{

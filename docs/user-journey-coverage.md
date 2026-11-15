@@ -4,6 +4,22 @@ November 9, 2026 release review. These are Playwright tests that interact with t
 real rendered app, using its buttons, inputs, navigation and saving paths. Unit
 coverage supplements them; passing unit tests alone is not user-journey evidence.
 
+## #139 orphaned plans and empty drafts
+
+`e2e/auth/upcoming-plans.spec.ts` seeds actual owner-keyed IndexedDB recovery,
+reloads with no server saved plans and a retained discarded tombstone, then
+exercises trash and verifies card removal, saved status, reload persistence and
+unchanged active/history data. The mock rejects saves to discarded IDs, matching
+the existing SQL instead of accidentally recreating a deleted record. The exact
+orphan regression failed before the fix. Receipt loss, stale revisions, failed
+writes, tab locks and first-dish commit remain separate assertions.
+
+`tests/discardPlans.test.ts` covers no-flush discard, local-only/absent server
+reconciliation, protected failed discard, receipts, revisions and ownership/lock
+safeguards. `tests/planningDraft.test.ts` covers owner isolation, validation and
+storage failures for pre-dish tab drafts. These tests do not assert hosted schema
+health or erase/reproduce the owner's actual browser recovery records.
+
 ## Whole journeys added for this review
 
 `e2e/cook-journeys.spec.ts` creates plans from an empty Home through the UI,

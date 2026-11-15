@@ -731,3 +731,11 @@ button.recipe-title-link:hover { color:var(--accent-dark); }
  .recipe-save-buttons { flex-direction:column; align-items:stretch; }
  .recipe-save-buttons > .button { width:100%; }
 }
+
+/* Static placeholders retain the cook layout during genuine account reads. */
+.cook-loading { min-height:18rem; }
+.cook-loading-lines { display:grid; gap:1.25rem; margin-top:2rem; }
+.cook-loading-lines > div { height:1rem; background:var(--line, #e9e4dd); border-radius:.35rem; }
+.cook-loading-lines > div:nth-child(2) { width:75%; }
+.cook-loading-lines > div:nth-child(3) { width:50%; }
+.account-save-indicator[data-state="draft"] { color:var(--muted); }
