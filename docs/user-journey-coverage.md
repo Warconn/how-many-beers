@@ -20,6 +20,16 @@ safeguards. `tests/planningDraft.test.ts` covers owner isolation, validation and
 storage failures for pre-dish tab drafts. These tests do not assert hosted schema
 health or erase/reproduce the owner's actual browser recovery records.
 
+## Two-turkey recipe input (#153)
+
+`fried-turkey-import` downloads the public Markdown method, uploads/reviews it and
+adds it alongside oven turkey with separate equipment and the same serving target.
+The account `personal-recipes` turkey journey saves/reloads/selects both owned
+recipes, edits method notes/temperature instructions and verifies independent meal,
+oven and history snapshots. Unit plus real PostgreSQL RPC tests validate the exact
+JSON. The fryer warm-up is an editable owner observation; frying time stays unknown
+until reviewed. These tests are not #3's parallel scheduling or a hosted owner seed.
+
 ## Minimal editors (#154)
 
 `step-editor-minimal` asserts flat controls, wide-screen timing alignment, phone

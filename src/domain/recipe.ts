@@ -73,7 +73,7 @@ export function reviewRecipeTemperature(step:RecipeStep,index:number,next:Recipe
 }
 export const temperatureF=(t:RecipeTemperature)=>Math.round((t.unit==='C'?t.value*9/5+32:t.value)*10)/10;
 function recipeEquipment(text:string){
- const match=text.match(/\b(pellet\s+smoker|pellet\s+grill|smoker|oven|grill|air\s+fryer|slow\s+cooker|stovetop)\b/i);
+ const match=text.match(/\b(pellet\s+smoker|pellet\s+grill|smoker|oven|grill|electric\s+(?:turkey\s+)?fryer|air\s+fryer|slow\s+cooker|stovetop)\b/i);
  return match?match[0].toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):'Kitchen';
 }
 
