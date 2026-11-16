@@ -1,5 +1,17 @@
 # User journey regression map
 
+For #161, `history-activity` checks collapsed-by-default activity, keyboard opening
+and closing, actual completion display, archived dish/step attribution, all 16
+events/temperature values, saved and orphaned notes, original event ordering and
+byte-for-byte unchanged browser history. `history-actions` covers empty activity,
+delete confirmation/recovery and Cook again. Desktop/mobile/iPhone screenshots
+capture both the default checklist and expanded history. These are synthetic data.
+
+`recipeTiming.test.ts` and `imported-duration-ux.spec.ts` cover #162's exact
+"as directed" turkey examples, keeping 3/2-minute durations through file import,
+automatic planning and reload without manually pinned dates. Written quantities
+require a separator; compact numeric units and existing ambiguity rules remain.
+
 November 9, 2026 release review. These are Playwright tests that interact with the
 real rendered app, using its buttons, inputs, navigation and saving paths. Unit
 coverage supplements them; passing unit tests alone is not user-journey evidence.
@@ -19,6 +31,62 @@ reconciliation, protected failed discard, receipts, revisions and ownership/lock
 safeguards. `tests/planningDraft.test.ts` covers owner isolation, validation and
 storage failures for pre-dish tab drafts. These tests do not assert hosted schema
 health or erase/reproduce the owner's actual browser recovery records.
+
+## Home next action (#145)
+
+`homeNextAction.test.ts` covers exact minute boundaries, canonical global ordering,
+completion/reopen (including a real late fixed-step forecast), equal-time dishes,
+estimated vs planned starts, conditions, missing/blocked projections and passive
+waiting without input mutation. V1 shows one canonical action, not a readiness
+count or another scheduler.
+
+`home-next-action.spec.ts` checks real Home clock updates, unchanged three-button
+layout/44px targets, completion, UI reopening, planned-time edits with immutable
+actuals, condition-only cues, no inactive summary, and actual rest beyond its
+estimate without auto-finishing. Timer instrumentation verifies repeated navigation
+returns to one Home page clock (Cooking retains its existing Beerometer clock).
+The account journey covers acknowledged completion, rapid reload, read-only clock
+ticks and sign-out isolation. It uses RPC fixtures, not a hosted owner session.
+Desktop/mobile Chromium and iPhone WebKit capture the Home summary and waiting state.
+
+## Two-turkey recipe input (#153)
+
+`fried-turkey-import` downloads the public Markdown method, uploads/reviews it and
+adds it alongside oven turkey with separate equipment and the same serving target.
+The account `personal-recipes` turkey journey saves/reloads/selects both owned
+recipes, edits method notes/temperature instructions and verifies independent meal,
+oven and history snapshots. Unit plus real PostgreSQL RPC tests validate the exact
+JSON. The fryer warm-up is an editable owner observation; frying time stays unknown
+until reviewed. These tests are not #3's parallel scheduling or a hosted owner seed.
+
+## Minimal editors (#154)
+
+`step-editor-minimal` asserts flat controls, wide-screen timing alignment, phone
+stacking, touch targets, duration-only edits without pinning, manual/reset timing,
+unit switches without changing exact minutes, and hidden metadata/actuals after
+reload. `step-editing-ux`, `step-timing` and `duration-reflow` retain keyboard,
+unknown/zero, DST, fixed-anchor and history regressions using the flat controls.
+Account `account-cooks` and `personal-recipes` seed existing per-step equipment and
+temperature overrides, edit ordinary fields, save/reopen and verify exact metadata.
+Those account tests model the RPC contract; they do not mutate hosted accounts.
+
+## Past cooks archived activity (#152)
+
+The shared `compactLibraryCard` browser assertions also cover #159: top-right
+named trash icon, 44px targets, count placement and bounded summary/action gap.
+The account `personal-recipes` cross-library journey verifies identical spacing,
+a compact short card and wrapping long titles, confirmation cancellation,
+keyboard-confirmed recipe removal, unchanged active/other records, matching
+detail removal placement, cook deletion and reload. Desktop/mobile/iPhone review
+screenshots cover both lists. It uses controlled account fixtures, not hosted data.
+
+`history-activity.spec.ts` opens a synthetic 16-event Browns Brisket archive with
+166°F, 180°F and 195°F readings, duplicate step titles across two dishes, and
+missing/deleted step references. It verifies stable archived attribution, exact
+original event sequence/timestamps/notes and byte-identical persisted history.
+Desktop/mobile Chromium and iPhone WebKit check compact card spacing, 44px targets,
+filter/back navigation and overflow. Existing history-actions tests retain Cook
+Again/delete/backup behavior. This does not inspect the owner's hosted cook.
 
 ## Whole journeys added for this review
 

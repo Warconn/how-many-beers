@@ -32,6 +32,42 @@ offline cases, screenshots or SQL security. The pipeline skips expensive
 irrelevant suites in earlier stages, not at the release boundary. Fail-closed
 scope classification and aggregate checks must stay intact.
 
+## Current dev queue (November 15, 2026)
+
+Latest approved queue: #162 narrow duration-parser fix, then #161 small Past cook
+detail simplification. Separate feature PRs to dev; merge after appropriate checks.
+Use focused local checks and existing required CI, no full production regression.
+Stop after both. No #3/#150, schema, hosted mutation or production work. #159 is
+owner-approved and delivered through PR #160 at `82963de`.
+#162 is delivered through PR #163 at `385331f`. #161 keeps the checklist primary,
+actual completion/planned fallback cues, and one initially closed native activity
+disclosure for all events and step notes. Preserve archives and stop after its
+green dev PR merge; no additional issue is authorized by this queue.
+
+Latest owner follow-up #159: My recipes and Past cooks must use one compact
+configurable list/card component, with contextual upper-right trash controls in
+lists and details, not floating bottom Delete/Remove labels. Preserve existing
+confirmation and persistence semantics. Prepare a feature PR/preview for owner
+review; the previous four-issue merge approval does not authorize this merge.
+Document the shared placement in the design system. #145 is delivered through
+PR #158 at `2db8e93`. Do not start the excluded scheduling work.
+
+Production #151 is owner-verified stable; dev contains its code. The owner authorizes
+focused PRs and green dev merges sequentially: #152, #154, #153, #145. Keep #3,
+#138, #139 and #150 on hold. No main merge, production deployment or hosted
+production migration. Use focused browser checks for increments and the full
+regression suite at the production release boundary. Preserve archived records,
+actual events, recipes and account isolation. #154 uses flat ordinary step fields,
+Start time/Duration together, and hidden per-step equipment/temperature metadata
+that must survive unrelated saves. See the current design-system section.
+#152/#154/#153 are delivered through dev PRs #155/#156/#157. #153's final
+Thanksgiving timetable still needs measured weights and confirmed fryer limits.
+#145 adds read-only Home guidance from canonical projections, with neutral unknown
+cues and the existing page clock. Its PR tracks final verification/merge. This
+four-issue dev approval does not authorize #3 or other subsequent features.
+The #114 directions below describe
+already delivered behavior, not an instruction to restart that feature.
+
 ## Current owner direction (#114, November 10, 2026)
 
 Production release #132 at `ae12d36` is owner-accepted. #61/#83/#103/#118 are

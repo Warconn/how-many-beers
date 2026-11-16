@@ -2,6 +2,7 @@
 import {hasUpcomingContent} from '@/account/useUpcomingPlans';
 
 import ServingPlan from '@/components/ServingPlan';
+import HomeNextAction from '@/components/HomeNextAction';
 import {planningReadiness} from '@/domain/planningReadiness';
 import {formatLocalDateTime} from '@/domain/stepTiming';
 import {useRecipeFirst} from '@/components/RecipeFirstContext';
@@ -225,11 +226,11 @@ function CookExperience() {
   },[methodReview,editingStep,newStepDishId,cookReadingOpen,addStepDraftOpen,showFinish,outcome,showDishSetup,addMethod,recipeText]);
 
   useEffect(()=>{
-    if(view!=='planning')return;
+    if(view!=='planning'&&!(view==='home'&&(meal?.mode==='cooking'||meal?.startedAt)))return;
     const update=()=>{if(!document.activeElement?.matches('input,textarea,select'))setClockNow(Date.now());};
     update();const timer=window.setInterval(update,30000);window.addEventListener('focus',update);document.addEventListener('visibilitychange',update);
     return ()=>{window.clearInterval(timer);window.removeEventListener('focus',update);document.removeEventListener('visibilitychange',update);};
-  },[view]);
+  },[view,meal?.mode,meal?.startedAt]);
 
   const rawTimeline = useMemo(() => meal ? cookTimeline(meal) : [], [meal]);
   const plan=useMemo(()=>meal&&view==='planning'?planningReadiness(meal,rawTimeline,clockNow):null,[meal,rawTimeline,clockNow,view]);
@@ -606,7 +607,7 @@ function CookExperience() {
             <h3>{meal.name || "Your cook"}</h3>
             <p className="muted">{when(meal.serveAt || null)} · {meal.dishes.length} {meal.dishes.length === 1 ? "dish" : "dishes"}</p>
             {meal.dishes.length > 0 && <p className="home-dishes">{meal.dishes.map(d=>d.name).join(" · ")}</p>}
-            {!cookInProgress && <PlannedCookStart meal={meal} timeline={timeline}/>}
+            {!cookInProgress && <PlannedCookStart meal={meal} timeline={timeline}/>}{cookInProgress&&<HomeNextAction meal={meal} tasks={cookingTasks} projection={projection} now={clockNow} formatWhen={when}/>}
             <div className={cookInProgress?"home-actions home-cook-actions":"home-actions"}>
               {cookInProgress ? <>
                 <button type="button" className="button primary" onClick={workspace.plansEnabled?()=>void continueCurrentCook():startCooking}>Continue cooking <Icon name="arrow-right"/></button>

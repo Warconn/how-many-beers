@@ -10,6 +10,7 @@ import {reviewDuration} from '@/domain/recipeReview';
 import {formatDuration} from '@/domain/stepTiming';
 import RecipeMethodReview from './RecipeMethodReview';
 import Icon from './Icon';
+import LibraryList,{LibraryItemHeading} from './LibraryList';
 import RecipeSaveButton from './RecipeSaveButton';
 import {documentFingerprint,withRecipeLink} from '@/domain/recipeLink';
 
@@ -108,18 +109,14 @@ export default function MyRecipes({recipes,onUse,serveAt,onDraftChange}:Props){
     :preview?<>
       <button type="button" className="back-link library-detail-back" ref={detailBack} onClick={()=>setPreview(null)}><Icon name="arrow-left"/>All recipes</button>
       <section className="recipe-library-detail library-detail" aria-label="Saved recipe details">
-        <div className="between library-detail-heading">
-          <div>
+        <LibraryItemHeading title={<>
             <p className="eyebrow">RECIPE DETAILS</p>
             <h3 ref={detailHeading} tabIndex={-1}>{preview.recipe.document.name}</h3>
-            <p className="muted small">{preview.recipe.document.recipe.equipment.join(' · ')||'Custom method'}</p>
-          </div>
-          <span className="history-count">{previewTasks.length} steps</span>
-        </div>
+          </>} metadata={preview.recipe.document.recipe.equipment.join(' · ')||'Custom method'} count={previewTasks.length}
+          remove={{label:'Remove '+preview.recipe.document.name,disabled:recipes.busy,onClick:()=>remove(preview.recipe)}}/>
         <div className="history-actions library-detail-actions">
           <button type="button" className="button primary" disabled={recipes.busy} onClick={()=>useRecipe(preview.recipe)}>Use recipe</button>
           <button type="button" className="button secondary" disabled={recipes.busy} onClick={()=>void open(preview.recipe)}>Edit recipe</button>
-          <button type="button" className="button history-delete" disabled={recipes.busy} onClick={()=>remove(preview.recipe)}>Remove</button>
         </div>
         {(preview.recipe.document.recipe.ingredients?.length??0)>0&&<>
           <h4>Ingredients</h4>
@@ -144,23 +141,15 @@ export default function MyRecipes({recipes,onUse,serveAt,onDraftChange}:Props){
       {recipes.recipes.length>0&&<>
         <label htmlFor="recipe-library-search">Find a recipe</label>
         <input id="recipe-library-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search recipe or equipment"/>
-        <ul className="personal-recipe-list history-list">
-          {shown.map(r=><li key={r.id} className="history-item">
-            <div className="between">
-              <div className="recipe-library-copy">
-                <button type="button" className="recipe-title-link" disabled={recipes.busy} aria-label={'Edit '+r.document.name} onClick={()=>void open(r)}>{r.document.name}</button>
-                <p className="muted small">{r.document.recipe.equipment.join(' · ')||'Custom method'}</p>
-              </div>
-              <span className="history-count">{stepCount(r)} steps</span>
-            </div>
-            <div className="history-actions">
+        <LibraryList label="Saved recipes" className="personal-recipe-list" emptyMessage="No matching recipes." items={shown.map(r=>({
+          id:r.id,title:<button type="button" className="recipe-title-link" disabled={recipes.busy} aria-label={'Edit '+r.document.name} onClick={()=>void open(r)}>{r.document.name}</button>,
+          metadata:r.document.recipe.equipment.join(' · ')||'Custom method',count:stepCount(r),
+          remove:{label:'Remove '+r.document.name,disabled:recipes.busy,onClick:()=>remove(r)},
+          actions:<>
               <button type="button" className="button primary" disabled={recipes.busy} onClick={()=>showPreview(r)}>View recipe</button>
               <button type="button" className="button secondary" disabled={recipes.busy} onClick={()=>useRecipe(r)}>Use recipe</button>
-              <button type="button" className="button history-delete" disabled={recipes.busy} title="Remove recipe" aria-label={'Remove '+r.document.name} onClick={()=>remove(r)}>Remove</button>
-            </div>
-          </li>)}
-          {!shown.length&&<li className="muted small">No matching recipes.</li>}
-        </ul>
+          </>
+        }))}/>
       </>}
     </>}
     {(error||recipes.error)&&<p role="alert" className="form-error">{error||recipes.error} <button type="button" className="link" disabled={recipes.busy} onClick={()=>{setError('');void recipes.reload();}}>Reload My recipes</button>{/changed|removed|pending recipe/.test(error||recipes.error)&&<button type="button" className="link" disabled={recipes.busy} onClick={()=>{if(window.confirm('Use the saved recipes? Your pending recipe change will be retained on this device.'))void recipes.useSavedVersion().then(()=>{setEditing(null);setPreview(null);setError('');}).catch(e=>setError(e.message));}}>Use saved version</button>}</p>}

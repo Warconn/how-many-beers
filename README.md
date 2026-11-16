@@ -1,194 +1,118 @@
 # How Many Beers?
 
-![How Many Beers? beer-clock mark](public/brand/wordmark.svg)
+![How Many Beers beer-clock wordmark](public/brand/wordmark.svg)
 
 **From First Beer to First Bite.**
 
-Plan every dish. Time your dinner. Enjoy the cook.
+### Dinner has a finish line. Your recipes should work together to reach it.
 
-Cooking dinner is easier when everything works toward the same finish line. **How Many Beers** helps you plan a meal, coordinate multiple dishes in one schedule, and follow a guided checklist when it's time to cook. Less juggling recipes and timelines. More enjoying the cook.
+Cooking one dish is easy to plan. Cooking a whole meal means juggling prep, heat, resting time, and the question everyone eventually asks: *When are we eating?*
 
-**[Launch How Many Beers](https://howmanybeers.app)** · [Dev preview for QA](https://dev.how-many-beers.pages.dev/) · [Share feedback or report a bug](https://github.com/Warconn/how-many-beers/issues)
+**How Many Beers** is a cooking companion that brings your dishes into **one meal plan**, works backward from when you want to serve, and helps you follow the next action when it's time to cook.
 
-## One dinner. One game plan.
+Brisket on the smoker, brats on the grill, turkey in the oven, or a few things going at once. Less mental math. More enjoying the cook.
 
-1. **Set serving time.** Pick when you want to eat. Build your plan around dinner, not a pile of separate recipes.
-2. **Add dishes.** Choose a starter cooking method or add your own instructions. Put brisket, brats, wings, turkey, or other dishes into the same cook.
-3. **Adjust the plan.** See every dish together in the **Live Schedule**. Fine-tune steps, dates, estimated durations, and equipment notes without losing sight of the whole meal.
-4. **Cook.** Follow the current step in **Cooking Mode**, preview what's next, or open the full checklist. Check off progress, add notes, and log temperature readings as you go.
+**[Try How Many Beers](https://howmanybeers.app/)** · [Share feedback](https://github.com/Warconn/how-many-beers/issues)
 
-## A look at the app
+## One meal. One game plan.
 
-These desktop and mobile screenshots show the current dev workspace, including the prominent Beerometer. Dev changes receive final QA before promotion to production.
+1. **Tell us when you're eating.** Choose a serving date and time. Start with dinner, then build the plan around it.
+2. **Bring your recipes together.** Choose a starter method, pick from **My recipes**, or paste/upload your own instructions.
+3. **Make it yours.** Adjust the steps, estimated times, equipment, and order. Review a combined meal schedule instead of bouncing between separate recipes.
+4. **Follow the cook.** Cooking Mode keeps the next action close, with a full checklist, temperature readings, notes, and room for adjustments.
+5. **Remember the good ones.** Save meals for later, revisit past cooks, and reuse or refine your recipes for the next round.
 
-| Plan your dinner | Follow the cook |
+## See it in action
+
+| Plan the meal | Follow the cook |
 | --- | --- |
-| ![Desktop meal planner showing a cooking plan and save-for-later controls](docs/screenshots/beerometer-planning-desktop.png) | ![Guided cooking experience on desktop](docs/screenshots/beerometer-cooking-desktop.png) |
-| ![Mobile meal planner](docs/screenshots/beerometer-planning-mobile.png) | ![Guided cooking experience on mobile](docs/screenshots/beerometer-cooking-mobile.png) |
+| ![Meal planning with the Beerometer and combined schedule on desktop](docs/screenshots/beerometer-planning-desktop.png) | ![Guided Cooking Mode with next steps on desktop](docs/screenshots/beerometer-cooking-desktop.png) |
+| ![Meal planning on a phone](docs/screenshots/beerometer-planning-mobile.png) | ![Guided cooking on a phone](docs/screenshots/beerometer-cooking-mobile.png) |
 
-## What works today
+*Screenshots are snapshots of the app in development. The interface continues to evolve.*
 
-- **A meal with multiple dishes.** Add several dishes to one cook and see a combined chronological schedule.
-- **Personal cooking templates.** Concise overnight brisket with flexible rest/holding reserve, brined oven turkey with advance thawing preparation, and covered beer-bath brats finished on the Blackstone. All seven built-in methods include editable preparation, cooking and relevant finishing/rest allowances. Brats split covered cooking from searing; condition checks still require verification. See [method notes](docs/personal-templates.md).
-- **Starter recipes and your own instructions.** Start from built-in methods, paste recipe text, or import a `.txt` or `.md` file. Recipe preview fills in explicit durations from the text, including hours and ranges. Review or adjust estimates before adding; ranges visibly use the longer planning estimate and unknown times stay blank. Planned times open a focused editor; duration and advanced settings remain optional.
-- **An adjustable cooking plan.** Edit dish steps, timing, durations, and planning notes. Changes appear in the shared schedule. Some duration changes move later timed steps in the same dish, but this is not a full automatic dependency or equipment optimizer.
-- **Guided Cooking Mode.** Timed imported recipes show live step finishes and upcoming estimates as you make progress, while preserving the original plan and recorded starts. Work through the current step, preview the next, check the complete list, record temperatures and notes, and resume a cook in progress.
-- **Save, finish, and repeat.** Save a plan for later, keep a cook in progress, and explicitly finish and archive completed cooks. Review history, repeat a past cook, or Cook Again. Exceptional recovery retains JSON backup/restore.
-- **The Beerometer.** Measures the whole multi-dish cook, including advance prep, with estimated beers remaining during cooking, passive countdowns and uncertainty for overrunning heat; actual physical work governs remaining time, while duplicate projected/elapsed totals stay out of the main display.
+## Made for the way people actually cook
 
-**Timing is guidance, not a food-safety decision.** Estimated step times and recipe templates cannot confirm that food is cooked or held safely. Use actual checks and appropriate food-safety guidance.
+### 🕒 Plan around serving time
 
-### Saving and recovery
+Pick when you want everyone at the table. How Many Beers combines the steps from multiple dishes into one chronological schedule, including prep, cooking, and rest where the recipe calls for them.
 
-Production accounts support one active cook, multiple independent upcoming plans,
-completed history and retrieval on another device. In account-enabled builds, new guests can try planning
-and cooking without persistent saves. Existing legacy browser records and recovery
-mechanisms remain intact. Sign-in opens account cooks directly; the pre-1.0 Earlier
-cooks migration UI has been removed.
+Edit the plan as you go. Times are **estimates**, not promises. You stay in charge of when food is actually ready.
 
-Account edits save automatically. A compact header icon shows saved, saving or attention states, with accessible labels; failures offer retry/export. Keep the tab open when saving needs attention. Stale devices cannot silently overwrite newer account data. Offline files still prepare in the background after an online visit; there are no install/offline help panels or routine device-save labels. Browser data can be cleared or evicted, and exceptional recovery preserves backup tools. Private account cache requires verified sign-in after a cold reload; extended concurrent/offline synchronization remains future work. See [account saving and recovery](docs/account-cooks.md) and [existing offline behavior](docs/offline-reliability.md).
+### 📖 Bring your own recipes
 
-In account planning, **Plan a cook** starts a tab-local draft. The first **Add to meal** creates the upcoming plan; changing serving time or saving a personal recipe alone does not. Reload in the same tab recovers the draft after sign-in.
+Start with an editable cooking template or create a dish from pasted recipe instructions or a `.txt` / `.md` file. Review the steps and durations before adding them to your meal.
 
-Empty plans ask **What do you want to cook?** with template and recipe-upload choices. Serving time stays editable; the schedule and cooking controls appear once there are steps.
+With **My recipes**, you can keep your favorite methods, update the original, or save a separate variation. A saved recipe stays independent from the specific meal you used it in.
 
-## Run it locally
+### 🍺 Meet the Beerometer
 
-The project uses **Next.js, React, and TypeScript**. Use Node.js 22 or newer.
+*How many beers until dinner?*
+
+The **Beerometer** turns the estimated time for your whole cook into a playful beer-sized countdown. It stays part of the experience as you move from planning into Cooking Mode, alongside the estimated serving time.
+
+It's a little personality in a tool that's really about **time, timing, and getting dinner on the table**.
+
+### ✅ Cook with a checklist, not a spreadsheet
+
+When cooking starts, you get a focused next action and an accessible full checklist. Check off steps, record actual progress, log food or equipment temperatures, and add notes when something changes.
+
+A sticky next-action guide helps you keep your place. Head home, come back later, and continue the cook rather than starting over.
+
+### 🔁 Save it, cook it, improve it
+
+Keep multiple **upcoming plans** ready while working on one active cook. Finish a meal to preserve its history, including completed steps and recorded activity.
+
+Browse **Past cooks**, see what happened, and choose **Cook again** to build on a previous meal. With a signed-in account, saved cooks and recipes can be retrieved across devices.
+
+## Start with something familiar
+
+The built-in starter methods cover practical favorites such as **smoked brisket, oven turkey, beer-bath brats, smoked-and-fried wings, and more**. They're starting points, not rigid instructions.
+
+Want a different approach? Edit a method, import your own, or keep several variations in My recipes.
+
+## What How Many Beers is (and isn't)
+
+This is a **hands-on cooking companion**, not an autopilot for food safety or a guarantee that dinner will be ready at an exact minute.
+
+- Cooking estimates help with planning; actual temperatures, doneness, and safe holding still require your judgment and appropriate food-safety guidance.
+- You can add multiple dishes to one meal today. Advanced automatic cross-dish dependency scheduling, equipment conflict handling, and fully independent overlapping cooking phases are **still being designed**, not features to rely on yet.
+- You can try the experience as a guest. Persistent, cross-device saved cooks and personal recipes use the account experience; guest work should not be treated as a permanent backup.
+
+We're keeping the interface deliberately simple: **plan, cook, repeat**, with the detailed controls available when you need them.
+
+## Have an idea?
+
+How Many Beers grows out of actual cooks, the things that worked, the steps that got confusing, and the recipes worth making again.
+
+[**Try the app**](https://howmanybeers.app/) · [**Suggest a feature or report a bug**](https://github.com/Warconn/how-many-beers/issues)
+
+---
+
+<details>
+<summary><strong>For developers and contributors</strong></summary>
+
+The app is built with Next.js, React, and TypeScript, with a mobile-first interface and account-backed saving.
+
+To run locally with Node.js 22+:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Then visit [http://localhost:3000](http://localhost:3000).
 
-For focused iteration, run `npm run test:fast -- e2e/home-cleanup.spec.ts` (typecheck, unit tests and desktop/mobile browsers). Use the affected spec or account config. Before integration/release, run `npm run test:full` to include auth, account recovery, full regression and production-built offline checks. See [CI testing and timing evidence](docs/ci-testing.md) and the [user-journey coverage map](docs/user-journey-coverage.md).
+- [Development and agent guidance](AGENTS.md)
+- [Core cooking experience](docs/core-cook-experience.md)
+- [Design system](docs/design-system.md)
+- [Testing and release workflow](docs/ci-testing.md)
+- [Current roadmap and work queue](docs/work-queue.md)
+- [Account saving and recovery](docs/account-cooks.md)
 
-To validate a change:
+Production: [howmanybeers.app](https://howmanybeers.app/)  
+Dev preview: [dev.how-many-beers.pages.dev](https://dev.how-many-beers.pages.dev/)
 
-```bash
-npm run typecheck
-npm run test
-npm run build
-```
+</details>
 
-For browser regression tests, install Playwright’s Chromium and WebKit browsers and run:
-
-```bash
-npx playwright install chromium webkit
-npm run test:e2e
-npm run test:offline
-npx playwright test --config playwright.auth.config.ts
-npx playwright test --config playwright.accounts.config.ts
-```
-
-The build uses Next.js static export. The canonical production site is https://howmanybeers.app on Cloudflare. `dev` is the integration and QA branch; `main` is the stable release branch. GitHub Pages is a legacy deployment target. Set `DEPLOY_TARGET=cloudflare` for a domain-root build; the legacy build uses `/how-many-beers/`. See [agent/development guidance](AGENTS.md) for the branch and review workflow.
-
-## Current work queue
-
-Release [PR #132](https://github.com/Warconn/how-many-beers/pull/132) is deployed
-at `ae12d36` and owner-accepted. #61/#83/#103/#118 are closed. Production supports
-multiple independent upcoming plans, retained cancellation and plan discard.
-Both November 5 migrations and the Browns Brisket import were completed manually.
-
-Current work is **#114 personal saved recipes**, explicitly authorized in phases.
-The feature branch now implements the shared contract, compatibility adapters,
-retained recipe storage and explicit library UI. Full integration review and the
-owner-applied development migration remain pending; see [rollout notes](docs/recipes/rollout.md). See the [checkpoint](docs/implementation/issue-114-handoff.md),
-[work queue](docs/work-queue.md) and [roadmap](docs/roadmap.md).
-No automatic merge, hosted migration or production deployment is authorized.
-
-## Account foundation work
-
-The #19/#20 delivery merged into dev adds verified email-code sign-in, owner-only transactional account saving and searchable completed history. The shared account dialog preserves cooking drafts. Google/Apple remain optional and unconfigured in dev. Accounts and cloud cooks default to disabled; enable only after applying the reviewed migrations and configuring the preview. The owner has verified production sign-in, cloud saving and cross-device history.
-
-See [account setup and security gates](docs/account-foundation.md) and [account cooks setup, architecture and limits](docs/account-cooks.md). Run `bash scripts/test-account-security.sh` to test both migrations against isolated PostgreSQL with Docker. The account foundation is released and working in production. Follow [dev versus feature account setup](docs/dev-account-testing.md) to configure Preview variables and Supabase URLs, including automatic access for future `feat/*` previews.
-
-
-Brisket planning now puts the recommended start first; open **Timing details** for
-profile settings, buffers, evidence and limitations. Applying remains explicit.
-
-## Documentation
-
-- [Work queue](docs/work-queue.md): tonight’s priority and the prepared implementation order
-- [Core cooking experience](docs/core-cook-experience.md): product flows and interaction principles
-- [Cooking Mode](docs/cooking-mode.md): guided steps, progress, and finishing
-- [Step timing](docs/step-timing.md): edits, duration handling, and schedule limitations
-- [Saved plans](docs/saved-plans.md): browser-local persistence and resuming
-- [Offline reliability](docs/offline-reliability.md): installation, offline use, recovery and regression tests
-- [Brisket estimates](docs/brisket-estimates.md): method assumptions and uncertainty
-- [GitHub Issues](https://github.com/Warconn/how-many-beers/issues): bugs, enhancements, release work, and planned capabilities
-
-This repository is public, but no open-source license has been selected. Public visibility does not grant general permission to reuse the code.
-
-Cooking Mode keeps the current action, a short instruction and its live duration/finish estimate in view. Condition checks say **Check when ready**. Open **Step details** for the full recipe, original plan, notes and activity. Open **Step details** to optionally record or correct meaningful physical starts; entering the session and checking prep do not start those phase clocks. Planning retains detailed timing controls.
-
-Step editing opens a short form for name, instructions and duration. **More options**
-keeps exact start times, equipment and target food temperatures available. Dish rows
-use aligned Edit, Move and Remove controls; Add a step stays below the list.
-
-
-Cooking Mode now uses one progress treatment and a single content column. Completed
-cooks have one primary Finish action and checklist review, while Finish cook early
-is available under Cook details & tools. The Beerometer retains the accepted design and calculations while hiding duplicate initial totals and zero elapsed.
-
-Retained **Cancel cook** is implemented for review in #61: Home and Cooking Mode
-provide a confirmation, completed history stays untouched, and account cancellation
-waits for a server receipt. Install the additive dev migration before the capability-
-gated account control appears. Guest trials remain temporary; legacy local canceled
-records remain retained and backup-compatible. See [rollout details](docs/account-cooks.md).
-
-Multiple upcoming account plans are implemented for review in #83, dependent on #61.
-Home separates future meals from the single current cook. Each future plan saves
-independently, and starting it is acknowledged atomically. Current cook/history and
-upcoming plans have explicitly separate backup files; keep both for a full account
-backup. Guest behavior and the accepted Cooking Mode/Beerometer stay unchanged.
-See [upcoming cooks, compatibility and dev rollout](docs/upcoming-cooks.md).
-
-## Approved meal planning (#103)
-
-The approved recipe-first planner now lives at `/`, including on the ordinary dev
-URL. Older `/recipe-first/` bookmarks redirect to `/`. Feature branches may still
-use isolated review URLs, but reviewed dev work uses the normal entry point. See
-[scope and test path](docs/recipe-first-preview.md). Personal recipe persistence
-remains a later slice; no hosted schema change is required for this flow.
-
-The approved planner shows short step instructions inline, expands longer
-text on demand, and labels the combined schedule **Review Meal Plan**. Generic
-review guidance and method-reference chrome are omitted; saved recipe/source data
-and existing cooks remain intact.
-
-Recipe review and prototype meal-planning rows share drag grips, upper-right Edit
-and editor-contained Remove. The reusable action placement standard lives in
-[the design system](docs/design-system.md#reusable-step-rows-and-actions-103-review).
-
-Cooking Mode keeps notes, readings, actual-time correction, activity and supported
-estimate adjustments optional within Step details. The checkbox and existing
-Hold/Finish flow remain unchanged.
-Built-in cooking-start edits keep estimated checkpoints within their cooking
-allowance, with rest/readiness following the estimated finish. Requested serving
-time and recorded actuals stay intact. See [step timing](docs/step-timing.md).
-
-Cooking Mode shows planned starts and useful approximate check/condition cues on
-the collapsed card and Up Next. Actual starts stay distinct; estimates never
-check food done automatically.
-
-The consolidated post-brisket feature review covers direct planned-time editing,
-quiet planning settings, cooking cues, new brisket defaults and upcoming start
-times. See [behavior and real-cook evidence](docs/post-brisket-experience.md).
-
-
-Personal recipes (#114, feature review): My recipes is a dedicated screen beside
-Home and Past cooks. Explicit Save to My recipes stays independent of Add to meal;
-recipe edits and retained removal never rewrite existing cooks. Method saves are
-visible together in a spaced footer only for reusable changes; meal dates and
-actuals do not expose saves. First save links this dish; Update original recipe
-reuses that identity, while Save as copy asks for a distinct name. Planning save
-controls sit below the step list. Add dish offers Choose a template / My recipes;
-the latter is an inline picker with the same choice boxes and an Add your own
-recipe box for existing text/file creation. Header My recipes opens management.
-See the [manual regression plan](docs/recipes/manual-regression.md).
-Equipment uses one compact checklist and
-recipe authoring keeps calendar controls in meal planning. See the
-[review and migration notes](docs/recipes/rollout.md).
+This repository is publicly visible, but no open-source license has been selected. Public visibility does not grant permission to reuse the code.

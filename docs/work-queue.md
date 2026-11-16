@@ -1,14 +1,63 @@
 # Work queue
 
-## P0: #139 account-plan recovery and first-dish persistence
+## Current approved queue: #162 then #161
 
-The owner reports an empty remote upcoming list with an IndexedDB pending draft
-that cannot be discarded. The regression reproduces this after reload. Discard
-reads authoritative state without flushing unsent edits, reconciles absent plans
-locally after explicit user discard, and preserves revision checks and immutable
-receipts for server-backed plans. New planners stay in an owner-scoped tab draft
-until first Add to meal. Full verification and dev-only rollout are required.
-No new migration or hosted cleanup. #135 and other features remain deferred.
+#162 delivered through PR #163 at `385331f`: word quantities require a separator
+before units; numeric shorthand and ambiguity protections remain. #161 uses the
+existing detail component and one native activity disclosure; its PR records final
+CI and screenshot evidence. Stop after that verified dev merge.
+
+Owner authorizes two small, separate, verified dev PRs and merges: word/unit
+separation in recipe duration parsing, then a collapsed Recorded activity section
+in Past cook details. Preserve ambiguity handling and archived data. No full
+production regression, #3/#150, hosted/schema or main changes. Stop after both.
+Shared-list #159 is delivered through PR #160 at `82963de`.
+
+## Current owner refinement: shared library cards (#159)
+
+Owner requests matching compact My recipes/Past cooks cards and contextual trash.
+Implement on an isolated feature branch and PR to dev for preview/review; no
+automatic merge is authorized for this follow-up. Shared list/header presentation
+preserves existing confirmation, data and account boundaries. #3/#138/#139/#150
+remain on hold. The prior four-item dev queue below is delivered, including #145
+through PR #158 at `2db8e93`; #153 still awaits final physical cooking inputs.
+
+## Approved dev queue (November 15, 2026)
+
+Production release #151 is owner-verified stable. Dev contains the same production
+code. Implement and merge focused, green PRs to dev in this order:
+#152 Past cooks attribution/spacing → #154 step editor → #153 reusable fried turkey
+→ #145 Home next action. Production remains unchanged. #3, #138, #139 and #150
+are on hold; do not resume them as part of this queue.
+
+#152 delivered through PR #155, merged to dev at `ad8ce83` after all required CI
+and desktop/mobile/iPhone screenshot review. Display archived attribution using stable IDs from
+that cook's archived timeline only; preserve event sequence, values and timestamps.
+Past cooks card actions use a compact 12px gap and retain 44px targets. Verification
+passed in the issue PR. No schema or stored history changes.
+
+#154 delivered through PR #156 at `fc9d599`, with all required CI and reviewed
+planning/recipe iPhone screenshots. Flat planning step fields with Start time/Duration together,
+compact actions, override-only reset and human duration units. Recipe authoring
+keeps dish equipment and removes per-step settings. Hidden metadata survives
+unrelated edits and validated recipe round trips. No persistence, scheduler or
+schema change.
+
+#153 delivered through PR #157 at `9e4cc27`, after required CI, real PostgreSQL
+and desktop/mobile/iPhone review. Downloadable, owner-importable Deep-fried turkey
+method through the existing upload/review/save path. Separate electric-fryer
+equipment, editable 60-minute owner-specific preheat allowance and unknown frying
+duration. Real local PostgreSQL validates the exact shared JSON. Owner inputs are
+19–20 lb per bird provisionally, November 22 at 3 PM local; model capacity remains
+unconfirmed, so no final Thanksgiving schedule. See [review/import instructions](recipes/deep-fried-turkey.md).
+
+#145 implementation: compact read-only Next up in the existing active-cook Home
+card, preserving Continue / View / Cancel layout. Canonical guidance/projections
+supply ordering and times; conditional/uncertain work stays neutral. Completion,
+reopen, edits, resume, simultaneous steps and passive waiting are covered, with
+one existing page clock and no additional timer/service or persistence field.
+Exact CI/merge evidence is in the issue PR. #3 remains a separately authorized next
+phase; #138/#139/#150 remain on hold. Full regression remains the release gate.
 
 ## Delivered: rejected personal-recipe save recovery
 
@@ -23,7 +72,7 @@ changes, schema changes, or automatic merges. Regression coverage includes rejec
 write recovery and a synthetic older brisket Cook Again → recipe save journey;
 the latter does not substitute for verifying the hosted backend.
 
-## Now: #114 personal recipes
+## Historical #114 implementation notes (delivered)
 
 Pre-dev acceptance follow-up: remove the header-library Add your own recipe
 shortcut, which reused meal planning. Keep the working Add dish text/upload box.

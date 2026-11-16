@@ -17,6 +17,9 @@ export function extractRecipeTiming(source:string):RecipeTiming{
  const pattern=new RegExp('\\b('+quantity+')(?:\\s*(?:[-–—]|to)\\s*('+quantity+'))?\\s*-?\\s*('+units+')\\b','g');
  const matches=[] as {low:number;high:number;start:number;end:number}[];
  for(const match of text.matchAll(pattern)){
+  // Written quantities need a separator: ordinary "as"/"am" are not a second/minute.
+  // Numeric shorthand such as 3m and 30s remains valid, including range endpoints.
+  if(/^[a-z]/.test(match[2]??match[1])&&!/[\s-]$/.test(match[0].slice(0,-match[3].length)))continue;
   const start=match.index!,prefix=text.slice(0,start),suffix=text.slice(start+match[0].length);
   if(/[\d./-]$/.test(prefix))return {minutes:null};
   if(/\b(?:every|after|at)\s*$/.test(prefix)||/^\s*(?:intervals?|increments?|remaining)\b/.test(suffix))continue;
@@ -73,7 +76,7 @@ export function reviewRecipeTemperature(step:RecipeStep,index:number,next:Recipe
 }
 export const temperatureF=(t:RecipeTemperature)=>Math.round((t.unit==='C'?t.value*9/5+32:t.value)*10)/10;
 function recipeEquipment(text:string){
- const match=text.match(/\b(pellet\s+smoker|pellet\s+grill|smoker|oven|grill|air\s+fryer|slow\s+cooker|stovetop)\b/i);
+ const match=text.match(/\b(pellet\s+smoker|pellet\s+grill|smoker|oven|grill|electric\s+(?:turkey\s+)?fryer|air\s+fryer|slow\s+cooker|stovetop)\b/i);
  return match?match[0].toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):'Kitchen';
 }
 

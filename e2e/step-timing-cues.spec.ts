@@ -67,7 +67,7 @@ test('actual load anchors approximate cues across current and Up next; elapsed c
 test('editing only the planned load updates the collapsed cue without changing duration or actual events',async({page})=>{
  const m=seed();await open(page,m);const current=page.getByRole('region',{name:'Current step',exact:true});
  await current.getByText('Step details',{exact:true}).click();await current.getByRole('button',{name:'Edit',exact:true}).click();
- const form=current.getByRole('form',{name:'Edit step',exact:true});await form.getByText(/^More options/).click();
+ const form=current.getByRole('form',{name:'Edit step',exact:true});
  await form.getByLabel('Planned date and time',{exact:true}).fill('2026-11-07T23:45');
  await form.getByRole('button',{name:'Save',exact:true}).click();
  await expect(current.getByLabel('Planned start',{exact:true})).toHaveAttribute('datetime','2026-11-08T04:45:00.000Z');

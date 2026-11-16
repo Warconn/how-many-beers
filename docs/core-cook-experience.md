@@ -1,5 +1,23 @@
 # Core cook experience
 
+## Past cook detail refinement (#161)
+
+Original checklist remains primary, with recorded completion times and planned
+times as the fallback for other steps. Recorded activity starts collapsed and
+contains all event readings/history plus saved step notes. Preserve archived
+IDs, sequence, exact timestamps and orphaned notes; opening the view never writes
+the archive. Empty activity/outcome placeholders and the duplicate saved timestamp
+are removed. Existing View, Back, Cook again and trash behavior stay intact.
+
+## Consistent saved-item lists (#159)
+
+My recipes and Past cooks share one compact `LibraryList` and header. Title and
+metadata sit left; count and a named 44px trash icon sit at the upper right in both
+lists and details. View and Use/Cook again remain together below. Existing
+confirmations, recipe retained removal, history deletion, independent snapshots
+and error handling are unchanged. Inline Add dish recipe choices remain separate
+from management. This refinement has no account/schema or cooking changes.
+
 ## New account planning and discard (#139)
 
 Plan a cook opens a tab-local, owner-scoped draft. Serving/name edits, choosing or
@@ -655,3 +673,25 @@ and remain collapsed. New brisket dishes use concise steps and a 6-hour total
 rest/hold reserve (8 hours via the existing optional inputs); old recipes remain
 unchanged. Home upcoming plans show derived Start preparing and Serve times.
 See [the consolidated contract and cook evidence](post-brisket-experience.md).
+
+## Home current-cook next action (#145)
+
+An active cook's existing Home card shows one read-only Next up summary between
+its serving/dish summary and the unchanged Continue cooking / View cook / Cancel
+cook controls. It uses canonical guided ordering and cook projections; there is
+no second scheduler, stored next-action field or Home completion control.
+
+Supported planned/estimated starts show the existing local date/time plus In N min,
+Now or whole minutes overdue. Conditional work shows its observable condition;
+untimed, blocked or uncertain work has a neutral cue instead of a readiness claim.
+Recorded starts are not relabeled as forecasts. Completed actions leave guidance,
+reopened actions return, and edits/resume refresh
+the derived view. Running phase starts are not presented as instructions to start
+again; in-phase checkpoints remain available. With no required manual action,
+Home shows quiet cooking/holding or all-steps-checked text, not automatic doneness.
+
+The existing page clock also runs on active-cook Home, including focus/resume;
+it stops on inactive Home and does not add a separate timer to the summary.
+V1 shows one canonical action for simultaneous work. It does not claim other
+steps are unavailable or invent serialized timestamps / +N readiness. #3 can
+supply improved priority and projections through the same presentation later.

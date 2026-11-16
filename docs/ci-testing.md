@@ -183,3 +183,10 @@ is **6.00MB**, both below the workspace 32MiB transfer limit. The core regressio
 collector includes cancellation; the separate account collector automatically
 includes new account specs. Full shard reports retain all other PNGs, videos,
 traces and raw JSON. Final docs-head full CI is recorded in PR #102 before it is declared review-ready.
+
+Ready feature PRs also run changed top-level `e2e/*.spec.ts` files on their
+configured desktop/mobile/iPhone projects. The `Changed UI regressions` check and
+its `changed-ui-review` screenshot/trace artifact supplement mandatory smoke,
+auth/offline and path-selected account coverage. Its result is included in the
+aggregate gate. Full release regression remains unchanged. New relevant phone
+specs must be included in the iPhone project's match list.

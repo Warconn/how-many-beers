@@ -20,8 +20,8 @@ test('planning wings oil duration reflows earlier while keeping the serving targ
   const oil=region.getByRole('article',{name:'Prepare fryer and heat oil',exact:true});
   await oil.getByRole('button',{name:/^Edit(?: |$)/}).click();
   const form=page.getByRole('form',{name:'Edit step',exact:true});
-  await form.getByText(/^More options/).click();
-  await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('45');
+
+  await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('45');
   await form.getByRole('button',{name:'Save',exact:true}).click();
   const earlier=Date.parse((await dry.locator('time[datetime]').first().getAttribute('datetime'))!);
   expect(earlier).toBeLessThan(first);
@@ -52,8 +52,8 @@ test('early fixed drying allows flexible preparation to meet 1 PM after reload',
   const prep=region.getByRole('article',{name:'Season and set out cooking equipment',exact:true});
   await prep.getByRole('button',{name:/^Edit(?: |$)/}).click();
   const form=page.getByRole('form',{name:'Edit step',exact:true});
-  await form.getByText(/^More options/).click();
-  await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('40');
+
+  await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('40');
   await form.getByRole('button',{name:'Save',exact:true}).click();
   await expect(page.getByRole('region',{name:'Plan notes'})).not.toContainText('10 min past');
   await expect(page.getByRole('region',{name:'Serving plan'})).not.toContainText('Estimated meal ready');

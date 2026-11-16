@@ -229,3 +229,61 @@ remain immutable computed starters; saving creates a personal recipe. A linked
 meal is an independent snapshot, not a live reference. Explicit original updates
 never mutate other snapshots. Older unlinked dishes require an explicit original
 selection on name collision; never infer identity by title.
+
+### Past cooks summaries and recorded activity (#152)
+
+Recorded activity shows the original action/reading first, archived dish
+and step second, and a quieter local timestamp. On phones the timestamp stacks.
+Attribution uses archived IDs only; unavailable references have an honest fallback.
+
+Past cook details (#161) keep Original checklist primary. Each row shows actual
+completion when recorded, otherwise its planned time when available; avoid paired
+planned/actual lines and repeated "Not recorded" placeholders. The archive date
+already appears in the header and is not repeated below. Nonempty outcome notes
+stay visible. One native, initially closed Recorded activity disclosure contains
+temperature readings, event history and saved step notes, with archived attribution.
+Omit the disclosure when empty. Do not infer timestamps for notes or modify archives.
+
+### Saved-item lists and removal (#159)
+
+My recipes and Past cooks use `LibraryList` with configured title, metadata, step
+count, primary/secondary actions and a removal callback. Keep the shared geometry:
+12px card padding, 12px between summary and actions, 8px between action buttons,
+and 44px minimum action targets. Titles and metadata wrap; count and trash remain
+together at the upper right. Metadata spans the full row below the title, so long
+dates/equipment are not trapped beside those controls. Do not give one library
+independent card margins.
+
+Use the existing quiet trash icon, never a floating Delete/Remove label in the
+bottom action row. Its accessible name and tooltip identify the item (Remove
+recipe name / Delete cook name). `LibraryItemHeading` places the same control in
+detail views. Keep View and Use/Cook again grouped below the summary. The recipe
+title's existing Edit shortcut remains accessible. Callers own confirmation,
+busy/error handling and deletion semantics; the component does not write data.
+Inline Add dish choices keep their existing selection-only grid.
+
+### Minimal step editing (#154, November 15)
+
+The expanded planning editor is Name, Instructions, then Start time and Duration
+on one desktop row. Duration has a compact unit selector; the row stacks below
+650px. Save/Cancel stay together on the left and Remove stays quiet on the right.
+There is no normal timing badge, More options, equipment or temperature input.
+A small Use plan timing action appears only for a manual/unscheduled override.
+Unit selection changes display only; persistence remains exact minutes.
+
+Recipe step authoring uses Name, Instructions and Duration, without calendar dates
+or Step settings. Equipment stays at dish level. Both editors omit hidden metadata
+from unrelated submissions, retaining stored per-step equipment/temperature exactly.
+This supersedes the earlier optional step-settings presentation; the underlying
+metadata and future contextual resource UX remain available to #3.
+
+### Home current-cook next action (#145)
+
+Place the read-only Next up text inside the existing current-cook card, after the
+serving/dish summary and before its existing actions. Use a quiet eyebrow, strong
+action title, dish name for multi-dish cooks and one useful timing/condition cue.
+No additional card, border, button or nested disclosure. Planned and estimated
+starts stay explicitly distinct; uncertain/conditional work has no false countdown.
+Passive waiting uses quiet text rather than a new action. Keep the full-width
+Continue cooking primary and the compact View cook / Cancel cook second row with
+44px targets. The summary itself has no completion or navigation control.
