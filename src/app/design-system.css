@@ -251,12 +251,11 @@ label { font-size:var(--text-sm); line-height:1.5; }
 /* One saved-item list geometry for recipes and past cooks. */
 .library-list { display:grid; gap:var(--space-3); list-style:none; padding:0; margin:var(--space-4) 0 0; }
 .library-list > .library-card { padding:var(--space-3); border:1px solid var(--line); border-radius:var(--radius-control); background:#fff; }
-.library-item-heading { align-items:flex-start; gap:var(--space-3); }
-.library-item-copy { min-width:0; flex:1; overflow-wrap:anywhere; }
-.library-item-title { min-height:44px; display:flex; flex-direction:column; justify-content:center; }
+.library-item-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:var(--space-3); row-gap:0; align-items:start; }
+.library-item-title { min-width:0; overflow-wrap:anywhere; min-height:44px; display:flex; flex-direction:column; justify-content:center; }
 .library-item-title strong,.library-item-title .recipe-title-link { font-size:var(--text-body); line-height:1.5; }
 .library-item-title .recipe-title-link { min-height:44px; margin:0; }
-.library-item-copy > .muted { margin:0; }
+.library-item-heading > .library-item-metadata { grid-column:1/-1; margin:0; min-width:0; overflow-wrap:anywhere; }
 .library-item-tools { display:flex; align-items:center; gap:var(--space-1); flex:none; }
 .library-item-tools .library-trash { margin:0; border-radius:var(--radius-control); }
 .library-trash:disabled { opacity:.5; }

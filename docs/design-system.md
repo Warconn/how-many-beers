@@ -242,7 +242,9 @@ My recipes and Past cooks use `LibraryList` with configured title, metadata, ste
 count, primary/secondary actions and a removal callback. Keep the shared geometry:
 12px card padding, 12px between summary and actions, 8px between action buttons,
 and 44px minimum action targets. Titles and metadata wrap; count and trash remain
-together at the upper right. Do not give one library independent card margins.
+together at the upper right. Metadata spans the full row below the title, so long
+dates/equipment are not trapped beside those controls. Do not give one library
+independent card margins.
 
 Use the existing quiet trash icon, never a floating Delete/Remove label in the
 bottom action row. Its accessible name and tooltip identify the item (Remove

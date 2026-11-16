@@ -8,14 +8,12 @@ export type LibraryItem=ItemHeading&{id:string;actions:ReactNode};
 /** Shared summary and contextual removal placement for lists and their details. */
 export function LibraryItemHeading({title,metadata,count,remove}:ItemHeading){
   return <div className="between library-item-heading">
-    <div className="library-item-copy">
-      <div className="library-item-title">{title}</div>
-      <p className="muted small">{metadata}</p>
-    </div>
+    <div className="library-item-title">{title}</div>
     <div className="library-item-tools">
       <span className="history-count">{count} steps</span>
       <button type="button" className="plan-trash library-trash" aria-label={remove.label} title={remove.label} disabled={remove.disabled} onClick={remove.onClick}><Icon name="trash"/></button>
     </div>
+    <p className="muted small library-item-metadata">{metadata}</p>
   </div>;
 }
 

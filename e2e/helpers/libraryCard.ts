@@ -19,6 +19,9 @@ export async function compactLibraryCard(card:Locator,removeName:string){
   expect(remove!.x+remove!.width).toBeLessThanOrEqual(outer!.x+outer!.width);
   expect(remove!.y-head!.y).toBeLessThanOrEqual(1);
   expect(count!.x+count!.width).toBeLessThanOrEqual(remove!.x);
+  // Dates/equipment get the whole row, rather than wrapping beside the tools.
+  const metadata=await heading.locator('.library-item-metadata').boundingBox();
+  expect(metadata!.width).toBeGreaterThanOrEqual(head!.width-1);
   expect(actions!.y-(head!.y+head!.height)).toBeGreaterThanOrEqual(8);
   expect(actions!.y-(head!.y+head!.height)).toBeLessThanOrEqual(13);
   for(const button of await actionRow.getByRole('button').all()){
