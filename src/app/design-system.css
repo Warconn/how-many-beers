@@ -90,7 +90,6 @@ label { font-size:var(--text-sm); line-height:1.5; }
   .dish-select .dish-toggle .ui-icon { width:22px; height:22px; }
   .guide-next-button strong { font-size:var(--text-sm); }
   .history-actions .button { min-height:44px; white-space:nowrap; }
-  .history-actions .history-delete { margin-left:auto; }
 }
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; }
@@ -249,25 +248,20 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .recipe-library-heading { align-items:flex-start; margin-bottom:0; }
 .recipe-library-heading .section-title { margin-bottom:var(--space-4); }
 .recipe-library-screen > .muted { margin-bottom:var(--space-5); }
-.recipe-library-screen .personal-recipe-list { list-style:none; padding:0; margin:var(--space-4) 0 0; }
-.recipe-library-screen .personal-recipe-list > li.history-item {
-  display:block;
-  padding:var(--space-4);
-  border:1px solid var(--line);
-  border-radius:var(--radius-control);
-  background:#fff;
-}
-.recipe-library-screen .personal-recipe-list .history-actions {
-  display:flex;
-  align-items:center;
-  gap:var(--space-2);
-  margin-top:var(--space-4);
-}
-.recipe-library-screen .recipe-title-link {
-  font-size:var(--text-body);
-  line-height:1.5;
-}
-.recipe-library-screen .recipe-library-copy { min-width:0; }
+/* One saved-item list geometry for recipes and past cooks. */
+.library-list { display:grid; gap:var(--space-3); list-style:none; padding:0; margin:var(--space-4) 0 0; }
+.library-list > .library-card { padding:var(--space-3); border:1px solid var(--line); border-radius:var(--radius-control); background:#fff; }
+.library-item-heading { align-items:flex-start; gap:var(--space-3); }
+.library-item-copy { min-width:0; flex:1; overflow-wrap:anywhere; }
+.library-item-title { min-height:44px; display:flex; flex-direction:column; justify-content:center; }
+.library-item-title strong,.library-item-title .recipe-title-link { font-size:var(--text-body); line-height:1.5; }
+.library-item-title .recipe-title-link { min-height:44px; margin:0; }
+.library-item-copy > .muted { margin:0; }
+.library-item-tools { display:flex; align-items:center; gap:var(--space-1); flex:none; }
+.library-item-tools .library-trash { margin:0; border-radius:var(--radius-control); }
+.library-trash:disabled { opacity:.5; }
+.library-card .library-card-actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2); margin-top:var(--space-3); }
+.library-card-actions > .button { margin:0; min-height:44px; }
 .library-detail-back { margin:0 0 var(--space-4); scroll-margin-top:var(--space-4); }
 .history-detail.library-detail,.recipe-library-detail.library-detail {
   background:#fff;
@@ -277,9 +271,7 @@ label { font-size:var(--text-sm); line-height:1.5; }
   padding:var(--space-5);
   overflow-wrap:anywhere;
 }
-.library-detail-heading { align-items:flex-start; }
-.library-detail-heading h3 { margin:4px 0 8px; font-size:24px; letter-spacing:-.5px; }
-.library-detail-heading .muted { margin:0; }
+.library-item-title h3 { margin:4px 0 8px; font-size:24px; letter-spacing:-.5px; }
 .library-detail-actions { margin:var(--space-4) 0 var(--space-5); }
 .library-detail-actions .button { margin-top:0; }
 .recipe-library-detail h4 { font-size:var(--text-body); margin:var(--space-5) 0 var(--space-3); }
@@ -293,17 +285,11 @@ label { font-size:var(--text-sm); line-height:1.5; }
 @media(max-width:600px) {
   .recipe-library-heading { flex-wrap:wrap; gap:var(--space-2); }
   .recipe-library-heading .section-title { margin-bottom:0; }
-  .recipe-library-screen .personal-recipe-list > li.history-item { display:block; }
-  .recipe-library-screen .personal-recipe-list .history-actions { width:100%; }
   .history-detail.library-detail,.recipe-library-detail.library-detail { padding:var(--space-4); }
-  .library-detail-heading h3 { font-size:22px; }
+  .library-item-title h3 { font-size:22px; }
 }
 
-/* Past cooks only: compact summary/actions, retaining shared library controls. */
-.cook-history .history-list > .history-item > .between {align-items:flex-start}
-.cook-history .history-list > .history-item > .between > div {min-width:0;overflow-wrap:anywhere}
-.cook-history .history-list > .history-item .history-actions {margin-top:var(--space-3)}
-.cook-history .history-list > .history-item .history-actions .button {margin-top:0}
+/* Immutable archived activity, independent from shared library cards. */
 .cook-history .history-events > li {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
 .cook-history .history-events strong {font-size:var(--text-sm)}
 .cook-history .history-event-context {display:block;font-size:var(--text-sm);color:var(--muted)}

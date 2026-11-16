@@ -60,6 +60,14 @@ Those account tests model the RPC contract; they do not mutate hosted accounts.
 
 ## Past cooks archived activity (#152)
 
+The shared `compactLibraryCard` browser assertions also cover #159: top-right
+named trash icon, 44px targets, count placement and bounded summary/action gap.
+The account `personal-recipes` cross-library journey verifies identical spacing,
+a compact short card and wrapping long titles, confirmation cancellation,
+keyboard-confirmed recipe removal, unchanged active/other records, matching
+detail removal placement, cook deletion and reload. Desktop/mobile/iPhone review
+screenshots cover both lists. It uses controlled account fixtures, not hosted data.
+
 `history-activity.spec.ts` opens a synthetic 16-event Browns Brisket archive with
 166°F, 180°F and 195°F readings, duplicate step titles across two dishes, and
 missing/deleted step references. It verifies stable archived attribution, exact

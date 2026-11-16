@@ -232,11 +232,25 @@ selection on name collision; never infer identity by title.
 
 ### Past cooks summaries and recorded activity (#152)
 
-Past cooks cards use 12px between the summary and compact action row, with 44px
-touch targets. Scope spacing to Past cooks; recipe-library cards retain their own
-layout. Recorded activity shows the original action/reading first, archived dish
+Recorded activity shows the original action/reading first, archived dish
 and step second, and a quieter local timestamp. On phones the timestamp stacks.
 Attribution uses archived IDs only; unavailable references have an honest fallback.
+
+### Saved-item lists and removal (#159)
+
+My recipes and Past cooks use `LibraryList` with configured title, metadata, step
+count, primary/secondary actions and a removal callback. Keep the shared geometry:
+12px card padding, 12px between summary and actions, 8px between action buttons,
+and 44px minimum action targets. Titles and metadata wrap; count and trash remain
+together at the upper right. Do not give one library independent card margins.
+
+Use the existing quiet trash icon, never a floating Delete/Remove label in the
+bottom action row. Its accessible name and tooltip identify the item (Remove
+recipe name / Delete cook name). `LibraryItemHeading` places the same control in
+detail views. Keep View and Use/Cook again grouped below the summary. The recipe
+title's existing Edit shortcut remains accessible. Callers own confirmation,
+busy/error handling and deletion semantics; the component does not write data.
+Inline Add dish choices keep their existing selection-only grid.
 
 ### Minimal step editing (#154, November 15)
 

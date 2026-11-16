@@ -1,5 +1,14 @@
 # Core cook experience
 
+## Consistent saved-item lists (#159)
+
+My recipes and Past cooks share one compact `LibraryList` and header. Title and
+metadata sit left; count and a named 44px trash icon sit at the upper right in both
+lists and details. View and Use/Cook again remain together below. Existing
+confirmations, recipe retained removal, history deletion, independent snapshots
+and error handling are unchanged. Inline Add dish recipe choices remain separate
+from management. This refinement has no account/schema or cooking changes.
+
 ## New account planning and discard (#139)
 
 Plan a cook opens a tab-local, owner-scoped draft. Serving/name edits, choosing or

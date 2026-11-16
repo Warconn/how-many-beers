@@ -1,3 +1,4 @@
+import {compactLibraryCard} from '../helpers/libraryCard';
 import {openOwnRecipe} from '../helpers/recipeEntry';
 import {test,expect,type Page,type BrowserContext,type Locator} from '@playwright/test';
 import {backend,user} from './fixtures';
@@ -341,4 +342,42 @@ test('fried turkey upload saves and reloads beside an independent oven recipe wi
  const before=structuredClone(remote.workspace),screen=await library(page);await screen.getByRole('button',{name:'Edit Deep-fried turkey',exact:true}).click();await screen.getByRole('button',{name:/^Edit Begin warming oil/}).click();await screen.getByRole('textbox',{name:'Instructions',exact:true}).fill('Use the manual setting; future recipe note.');await screen.getByRole('button',{name:'Save changes',exact:true}).click();
  expect(remote.workspace).toEqual(before);expect(remote.rows.get(ovenId).document).toEqual(ovenDocument);expect(remote.workspace.history).toEqual(history);expect(remote.rows.size).toBe(2);
  await page.reload();const reloaded=await library(page);await expect(reloaded.getByText('Deep-fried turkey',{exact:true})).toBeVisible();await reloaded.screenshot({path:info.outputPath('two-turkey-library.png'),scale:'css'});
+});
+
+test('recipes and past cooks share compact cards with contextual header trash and independent retained removal',async({page,context},info)=>{
+ test.setTimeout(60_000);
+ const remote=server(),recipeIds=['a1590000-0000-4000-8000-000000000001','a1590000-0000-4000-8000-000000000002'];
+ for(const [index,name] of ['Turkey (oven)','A long personal recipe title that must wrap without displacing the trash control'].entries()){
+  const converted=convertRecipeReview(recipeReview(createDish('turkey'),'2026-11-22T15:00'),recipeIds[index]);if(converted.status!=='converted')throw Error(converted.reason);
+  remote.rows.set(recipeIds[index],{id:recipeIds[index],state:'active',document:{...converted.document,name},revision:1,createdAt:'2026-11-15T00:00Z',updatedAt:'2026-11-15T00:00Z',deletedAt:null});
+ }
+ let archives=emptyHistory();for(const name of ['Sunday turkey','Other saved cook'])archives=archiveCook({...newMeal(),name,dishes:[createDish('turkey')],serveAt:'2026-11-15T15:00Z'},archives,'Keep these notes','2026-11-15T16:00Z');
+ remote.workspace.history=archives.cooks.map(c=>({...c,serveInstant:'2026-11-15T15:00:00.000Z'}));
+ const active=startCookSession({...newMeal(),name:'Active cook',dishes:[createDish('brats')],serveAt:'2026-11-15T13:00'},'2026-11-15T10:00:00.000Z');
+ remote.workspace.active={meal:JSON.parse(JSON.stringify(recordEvent(active,cookTimeline(active)[0].id,'temperature','2026-11-15T10:01:00.000Z',145,'°F'))),serveInstant:'2026-11-15T13:00:00.000Z'};
+ const original=structuredClone(remote.workspace),savedRecipe=structuredClone(remote.rows.get(recipeIds[0]));
+ await remote.attach(context);await signIn(page);let screen=await library(page);
+ const card=screen.locator('.library-card').filter({has:page.getByRole('button',{name:'Edit Turkey (oven)',exact:true})});
+ const recipeStyle=await compactLibraryCard(card,'Remove Turkey (oven)');
+ expect((await card.boundingBox())!.height).toBeLessThanOrEqual(160);
+ await compactLibraryCard(screen.locator('.library-card').last(),'Remove A long personal recipe title that must wrap without displacing the trash control');
+ await page.screenshot({path:info.outputPath('compact-recipes.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.once('dialog',d=>d.dismiss());await card.getByRole('button',{name:'Remove Turkey (oven)',exact:true}).click();expect(remote.rows.get(recipeIds[0])).toEqual(savedRecipe);expect(remote.workspace).toEqual(original);
+ await card.getByRole('button',{name:'View recipe',exact:true}).click();const detail=screen.getByRole('region',{name:'Saved recipe details'});
+ await expect(detail.locator('.library-item-heading').getByRole('button',{name:'Remove Turkey (oven)',exact:true})).toBeVisible();
+ await page.screenshot({path:info.outputPath('recipe-header-trash.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.once('dialog',d=>d.accept());const remove=detail.getByRole('button',{name:'Remove Turkey (oven)',exact:true});await remove.focus();await page.keyboard.press('Enter');
+ await expect(card).toHaveCount(0);expect(remote.rows.get(recipeIds[0]).state).toBe('deleted');expect(remote.rows.get(recipeIds[0]).document).toEqual(savedRecipe.document);expect(remote.rows.get(recipeIds[1]).state).toBe('active');expect(remote.workspace).toEqual(original);
+ await page.reload();screen=await library(page);await expect(screen.locator('.library-card')).toHaveCount(1);
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('button',{name:'Past cooks',exact:true}).click();
+ const cook=page.locator('.library-card').filter({hasText:'Sunday turkey'}),other=original.history.find(c=>c.meal.name==='Other saved cook');
+ expect(await compactLibraryCard(cook,'Delete Sunday turkey')).toEqual(recipeStyle);
+ await page.screenshot({path:info.outputPath('compact-past-cooks.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ page.once('dialog',d=>d.dismiss());await cook.getByRole('button',{name:'Delete Sunday turkey',exact:true}).click();expect(remote.workspace).toEqual(original);
+ await cook.getByRole('button',{name:'View cook',exact:true}).click();const cookDetail=page.getByRole('region',{name:'Saved cook details'});
+ await expect(cookDetail.locator('.library-item-heading').getByRole('button',{name:'Delete Sunday turkey',exact:true})).toBeVisible();
+ page.once('dialog',d=>d.accept());await cookDetail.getByRole('button',{name:'Delete Sunday turkey',exact:true}).click();
+ await expect.poll(()=>remote.workspace.history.length).toBe(1);expect(remote.workspace.history[0]).toEqual(other);expect(remote.workspace.active).toEqual(original.active);expect(remote.rows.get(recipeIds[1]).state).toBe('active');
+ await page.reload();await page.getByRole('navigation',{name:'Main navigation'}).getByRole('button',{name:'Past cooks',exact:true}).click();await expect(page.locator('.library-card')).toHaveCount(1);await expect(page.locator('.library-card')).toContainText('Other saved cook');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });

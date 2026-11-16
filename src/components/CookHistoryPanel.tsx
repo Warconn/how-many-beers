@@ -5,6 +5,7 @@ import Beerometer from './Beerometer';
 import {useEffect,useRef,useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
 import {archivedActivity} from "@/domain/historyActivity";
+import LibraryList,{LibraryItemHeading} from './LibraryList';
 
 type Props = {
   history:HistoryLibrary;
@@ -38,17 +39,13 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
     {detailed ? <>
       <button type="button" className="back-link library-detail-back" ref={detailBack} onClick={()=>setSelected(null)}><Icon name="arrow-left"/>All past cooks</button>
       <section className="history-detail library-detail" aria-label="Saved cook details">
-        <div className="between library-detail-heading">
-          <div>
+        <LibraryItemHeading title={<>
             <p className="eyebrow">COOK DETAILS</p>
             <h3 ref={detailHeading} tabIndex={-1}>{detailed.meal.name || "Saved cook"}</h3>
-            <p className="muted small">{fmt(detailed.archivedAt)} · {detailed.meal.dishes.map(d=>d.name).join(", ")||"General prep"}</p>
-          </div>
-          <span className="history-count">{detailed.plannedTimeline.length} steps</span>
-        </div>
+          </>} metadata={<>{fmt(detailed.archivedAt)} · {detailed.meal.dishes.map(d=>d.name).join(", ")||"General prep"}</>}
+          count={detailed.plannedTimeline.length} remove={{label:'Delete '+(detailed.meal.name||'Saved cook'),onClick:()=>onDelete(detailed)}}/>
         <div className="history-actions library-detail-actions">
           <button type="button" className="button primary" onClick={()=>onRepeat(detailed)}>Cook again</button>
-          <button type="button" className="button history-delete" onClick={()=>onDelete(detailed)}>Delete</button>
         </div>
         <Beerometer meal={detailed.meal} timeline={detailed.plannedTimeline} finishedAt={detailed.archivedAt}/>
         <p className="muted small">Planned serving: {fmt(detailed.meal.serveAt)} · Saved: {fmt(detailed.archivedAt)}</p>
@@ -79,23 +76,15 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
         : <>
             <label htmlFor="history-search">Find a past cook</label>
             <input id="history-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search dish or meal"/>
-            <div className="history-list">
-              {shown.map(entry=><article className="history-item" key={entry.id}>
-                <div className="between">
-                  <div>
-                    <strong>{entry.meal.name || "Saved cook"}</strong>
-                    <p className="muted small">{fmt(entry.archivedAt)} · {entry.meal.dishes.map(d=>d.name).join(", ")||"General prep"}</p>
-                  </div>
-                  <span className="history-count">{entry.plannedTimeline.length} steps</span>
-                </div>
-                <div className="history-actions">
+            <LibraryList label="Past cooks" emptyMessage="No matching cooks." items={shown.map(entry=>({
+              id:entry.id,title:<strong>{entry.meal.name||'Saved cook'}</strong>,
+              metadata:<>{fmt(entry.archivedAt)} · {entry.meal.dishes.map(d=>d.name).join(", ")||"General prep"}</>,
+              count:entry.plannedTimeline.length,remove:{label:'Delete '+(entry.meal.name||'Saved cook'),onClick:()=>onDelete(entry)},
+              actions:<>
                   <button type="button" className="button primary" onClick={()=>setSelected(entry.id)}>View cook</button>
                   <button type="button" className="button secondary" onClick={()=>onRepeat(entry)}>Cook again</button>
-                  <button type="button" className="button history-delete" onClick={()=>onDelete(entry)}>Delete</button>
-                </div>
-              </article>)}
-              {!shown.length && <p className="muted small">No matching cooks.</p>}
-            </div>
+              </>
+            }))}/>
           </>}
     </>}
   </section>;
