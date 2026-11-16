@@ -1,5 +1,10 @@
 # User journey regression map
 
+`recipeTiming.test.ts` and `imported-duration-ux.spec.ts` cover #162's exact
+"as directed" turkey examples, keeping 3/2-minute durations through file import,
+automatic planning and reload without manually pinned dates. Written quantities
+require a separator; compact numeric units and existing ambiguity rules remain.
+
 November 9, 2026 release review. These are Playwright tests that interact with the
 real rendered app, using its buttons, inputs, navigation and saving paths. Unit
 coverage supplements them; passing unit tests alone is not user-journey evidence.

@@ -7,6 +7,28 @@ import {isStoredMeal} from '../src/domain/storageValidation';
 
 describe('explicit recipe timing',()=>{
  it.each([
+  ['Lower turkey slowly (3 minutes). Use the basket and protective gloves as directed by the manual.',3],
+  ['Lift turkey to drain (2 minutes). Turn off and unplug as directed.',2],
+  ['Season as desired.',null],
+  ['I am ready to cook.',null],
+  ['Rest 2h.',120],
+  ['Stir 30s.',0.5],
+  ['Wait a second.',1/60],
+  ['Rest one hr.',60],
+  ['Wait half-hour.',30],
+  ['Rest two–three minutes.',3],
+  ['Rest 3–4m as directed.',4],
+ ])('keeps real units separate from ordinary prose: %s',(text,minutes)=>{
+  const actual=extractRecipeTiming(text).minutes;
+  if(minutes===null)expect(actual).toBeNull();else expect(actual).toBeCloseTo(minutes,6);
+ });
+ it('retains the exact turkey examples through import and automatic planning',()=>{
+  const dish=parseRecipeText('Turkey','Lower turkey slowly (3 minutes). Use the basket and protective gloves as directed by the manual.\nLift turkey to drain (2 minutes). Turn off and unplug as directed.');
+  expect(dish.steps!.map(s=>s.minutes)).toEqual([3,2]);
+  const meal={...newMeal(),serveAt:'2026-11-22T15:00Z',dishes:[dish]};
+  expect(cookTimeline(meal).slice(0,2).map(t=>t.scheduledAt)).toEqual(['2026-11-22T14:55:00.000Z','2026-11-22T14:58:00.000Z']);
+ });
+ it.each([
   ['Clean seeds (5 minutes). Remove pulp.',5],
   ['Preheat pellet smoker to 425 F (about 10 minutes).',10],
   ['Rest for 1 hour 30 minutes.',90],

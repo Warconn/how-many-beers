@@ -1,5 +1,13 @@
 # Work queue
 
+## Current approved queue: #162 then #161
+
+Owner authorizes two small, separate, verified dev PRs and merges: word/unit
+separation in recipe duration parsing, then a collapsed Recorded activity section
+in Past cook details. Preserve ambiguity handling and archived data. No full
+production regression, #3/#150, hosted/schema or main changes. Stop after both.
+Shared-list #159 is delivered through PR #160 at `82963de`.
+
 ## Current owner refinement: shared library cards (#159)
 
 Owner requests matching compact My recipes/Past cooks cards and contextual trash.
