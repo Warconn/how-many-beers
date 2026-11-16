@@ -2,6 +2,16 @@ import {openOwnRecipe} from './helpers/recipeEntry';
 import {test,expect} from '@playwright/test';
 import {changeStepDuration} from './helpers/stepEditing';
 test.use({timezoneId:'UTC'});
+test('ordinary as-directed prose preserves uploaded durations without date pins',async({page})=>{
+ const source='Lower turkey slowly (3 minutes). Use the basket and protective gloves as directed by the manual.\nLift turkey to drain (2 minutes). Turn off and unplug as directed.';
+ await page.goto('/');await page.getByRole('button',{name:'Plan a cook',exact:true}).click();await page.getByLabel('Serve date and time').fill('2026-11-22T15:00');await openOwnRecipe(page);
+ await page.getByLabel('Upload .txt or .md',{exact:true}).setInputFiles({name:'Turkey.txt',mimeType:'text/plain',buffer:Buffer.from(source)});
+ await page.getByRole('button',{name:'Preview recipe steps',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
+ await expect(page.getByText(/Some steps have no timing/)).toHaveCount(0);
+ const read=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
+ const meal=await read();expect(meal.dishes[0].steps.map((s:any)=>s.minutes)).toEqual([3,2]);expect(meal.serveAt).toBe('2026-11-22T15:00');expect(Object.values(meal.taskOverrides??{}).some((o:any)=>o.scheduledAt!==undefined)).toBe(false);
+ await page.reload();await page.getByRole('button',{name:'Resume planning',exact:true}).click();expect((await read()).dishes[0].steps.map((s:any)=>s.minutes)).toEqual([3,2]);await expect(page.getByText(/Some steps have no timing/)).toHaveCount(0);
+});
 test('uploaded steps lead with planned time and keep duration editing optional',async({page},info)=>{
  test.setTimeout(60_000);
  await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await openOwnRecipe(page);

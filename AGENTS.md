@@ -34,6 +34,12 @@ scope classification and aggregate checks must stay intact.
 
 ## Current dev queue (November 15, 2026)
 
+Latest approved queue: #162 narrow duration-parser fix, then #161 small Past cook
+detail simplification. Separate feature PRs to dev; merge after appropriate checks.
+Use focused local checks and existing required CI, no full production regression.
+Stop after both. No #3/#150, schema, hosted mutation or production work. #159 is
+owner-approved and delivered through PR #160 at `82963de`.
+
 Latest owner follow-up #159: My recipes and Past cooks must use one compact
 configurable list/card component, with contextual upper-right trash controls in
 lists and details, not floating bottom Delete/Remove labels. Preserve existing
