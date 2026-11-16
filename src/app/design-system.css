@@ -289,6 +289,8 @@ label { font-size:var(--text-sm); line-height:1.5; }
 }
 
 /* Immutable archived activity, independent from shared library cards. */
+.history-recorded-activity {margin-top:var(--space-4);border-top:1px solid var(--line)}
+.history-recorded-activity > summary {min-height:44px;padding-block:var(--space-3);cursor:pointer;color:var(--accent-dark);font-size:var(--text-sm);font-weight:600}
 .cook-history .history-events > li {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
 .cook-history .history-events strong {font-size:var(--text-sm)}
 .cook-history .history-event-context {display:block;font-size:var(--text-sm);color:var(--muted)}

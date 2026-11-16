@@ -39,6 +39,10 @@ detail simplification. Separate feature PRs to dev; merge after appropriate chec
 Use focused local checks and existing required CI, no full production regression.
 Stop after both. No #3/#150, schema, hosted mutation or production work. #159 is
 owner-approved and delivered through PR #160 at `82963de`.
+#162 is delivered through PR #163 at `385331f`. #161 keeps the checklist primary,
+actual completion/planned fallback cues, and one initially closed native activity
+disclosure for all events and step notes. Preserve archives and stop after its
+green dev PR merge; no additional issue is authorized by this queue.
 
 Latest owner follow-up #159: My recipes and Past cooks must use one compact
 configurable list/card component, with contextual upper-right trash controls in

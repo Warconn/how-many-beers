@@ -1,5 +1,12 @@
 # User journey regression map
 
+For #161, `history-activity` checks collapsed-by-default activity, keyboard opening
+and closing, actual completion display, archived dish/step attribution, all 16
+events/temperature values, saved and orphaned notes, original event ordering and
+byte-for-byte unchanged browser history. `history-actions` covers empty activity,
+delete confirmation/recovery and Cook again. Desktop/mobile/iPhone screenshots
+capture both the default checklist and expanded history. These are synthetic data.
+
 `recipeTiming.test.ts` and `imported-duration-ux.spec.ts` cover #162's exact
 "as directed" turkey examples, keeping 3/2-minute durations through file import,
 automatic planning and reload without manually pinned dates. Written quantities

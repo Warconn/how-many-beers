@@ -26,6 +26,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
   const shown=history.cooks.filter(c=>(c.meal.name+" "+c.meal.dishes.map(d=>d.name).join(" ")).toLowerCase().includes(search.trim().toLowerCase()));
   const detailed=history.cooks.find(c=>c.id===selected);
   const events=detailed?.meal.events??[];
+  const notes=Object.entries(detailed?.meal.notes??{}).filter(([,note])=>note.trim());
   useEffect(()=>{
     if(!detailed)return;
     detailHeading.current?.focus({preventScroll:true});
@@ -48,18 +49,20 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
           <button type="button" className="button primary" onClick={()=>onRepeat(detailed)}>Cook again</button>
         </div>
         <Beerometer meal={detailed.meal} timeline={detailed.plannedTimeline} finishedAt={detailed.archivedAt}/>
-        <p className="muted small">Planned serving: {fmt(detailed.meal.serveAt)} · Saved: {fmt(detailed.archivedAt)}</p>
-        <p className="muted small">{detailed.feedback || "No outcome notes recorded."}</p>
+        <p className="muted small">Planned serving: {fmt(detailed.meal.serveAt)}</p>
+        {detailed.feedback&&<p className="muted small">{detailed.feedback}</p>}
         <h4>Original checklist</h4>
         <ol className="history-tasks">
           {detailed.plannedTimeline.map(step=><li key={step.id}>
             <strong>{step.title}</strong><span>{step.dishName}</span>
-            <small>Planned: {step.scheduledAt?fmt(step.scheduledAt):"Unscheduled"} · Actual completion: {detailed.meal.completed[step.id]?fmt(detailed.meal.completed[step.id]):"Not recorded"}</small>
-            {detailed.meal.notes[step.id] && <p>{detailed.meal.notes[step.id]}</p>}
+            {detailed.meal.completed[step.id]
+              ? <small>Completed <time dateTime={detailed.meal.completed[step.id]}>{fmt(detailed.meal.completed[step.id])}</time></small>
+              : step.scheduledAt&&<small>Planned <time dateTime={step.scheduledAt}>{fmt(step.scheduledAt)}</time></small>}
           </li>)}
         </ol>
-        <h4>Recorded activity ({events.length})</h4>
-        {events.length===0?<p className="muted small">No event readings or activity were recorded.</p>:<ol className="history-events">
+        {(events.length>0||notes.length>0)&&<details className="history-recorded-activity">
+        <summary>Recorded activity ({events.length+notes.length})</summary>
+        <ol className="history-events">
           {events.map(event=>{
             const activity=archivedActivity(event,detailed.plannedTimeline);
             return <li key={event.id} data-event-id={event.id}>
@@ -67,7 +70,15 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
               <time dateTime={event.occurredAt}>{fmt(event.occurredAt)}</time>
             </li>;
           })}
-        </ol>}
+          {notes.map(([taskId,note])=>{
+            const matches=detailed.plannedTimeline.filter(step=>step.id===taskId),step=matches.length===1?matches[0]:undefined;
+            return <li key={'note:'+taskId} data-note-task-id={taskId}><div>
+              <strong>Step note</strong><span className="history-event-context">{step?[step.dishName,step.title].filter(Boolean).join(' · '):'Archived step unavailable'}</span>
+              <p className="history-event-note">{note}</p>
+            </div></li>;
+          })}
+        </ol>
+        </details>}
       </section>
     </> : <>
       <p className="muted small">Your finished cooks, notes and actual times.</p>
