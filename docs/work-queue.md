@@ -1,5 +1,14 @@
 # Work queue
 
+## Current owner refinement: shared library cards (#159)
+
+Owner requests matching compact My recipes/Past cooks cards and contextual trash.
+Implement on an isolated feature branch and PR to dev for preview/review; no
+automatic merge is authorized for this follow-up. Shared list/header presentation
+preserves existing confirmation, data and account boundaries. #3/#138/#139/#150
+remain on hold. The prior four-item dev queue below is delivered, including #145
+through PR #158 at `2db8e93`; #153 still awaits final physical cooking inputs.
+
 ## Approved dev queue (November 15, 2026)
 
 Production release #151 is owner-verified stable. Dev contains the same production

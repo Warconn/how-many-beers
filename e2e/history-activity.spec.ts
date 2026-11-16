@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 import {newMeal,createDish} from '../src/domain/meal';
 import {archiveCook,emptyHistory,HISTORY_KEY} from '../src/domain/cookHistory';
 import {migrateMeal,type CookEvent} from '../src/domain/cookState';
+import {compactLibraryCard} from './helpers/libraryCard';
 
 test('Past cooks cards stay compact and recorded activity uses only immutable archived steps',async({page},info)=>{
  const dishes=[createDish('brisket'),createDish('brats')],meal=migrateMeal({...newMeal(),name:'Browns Brisket',dishes,serveAt:'2026-11-08T13:00',startedAt:'2026-11-07T23:34Z'});
@@ -11,7 +12,7 @@ test('Past cooks cards stay compact and recorded activity uses only immutable ar
  cook.meal.events=Array.from({length:16},(_,i):CookEvent=>({id:'saved-event-'+i,taskId:i===15?'missing-archived-step':i===14?'':i%2?other.id:cook.plannedTimeline[0].id,kind:([ 'temperature','started','completed','reopened','equipment','removed'] as const)[i%6],occurredAt:`2026-11-08T${String(8-Math.floor(i/2)).padStart(2,'0')}:03:00.000Z`,...(i%6===0?{value:([166,180,195] as const)[Math.floor(i/6)],unit:'°F' as const}:{}),...(i===4?{note:'Changed to pellet smoker'}:{})}));
  const original=JSON.stringify(history);await page.goto('/');await page.evaluate(({key,raw})=>localStorage.setItem(key,raw),{key:HISTORY_KEY,raw:original});await page.reload();await page.getByRole('button',{name:'Past cooks',exact:true}).click();
  const card=page.locator('.cook-history .history-item').first(),summary=card.locator('.between').first(),actions=card.locator('.history-actions');
- await expect(card).toBeVisible();await page.screenshot({path:info.outputPath('history-cards.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+ await expect(card).toBeVisible();await compactLibraryCard(card,'Delete Browns Brisket');await page.screenshot({path:info.outputPath('history-cards.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
  const box=await summary.boundingBox(),buttons=await actions.getByRole('button').all();for(const b of buttons){const r=await b.boundingBox();expect(r!.height).toBeGreaterThanOrEqual(44);}
  const first=await buttons[0].boundingBox();expect(first!.y-(box!.y+box!.height)).toBeLessThanOrEqual(13);expect(first!.y-(box!.y+box!.height)).toBeGreaterThanOrEqual(7);
  const count=await card.locator('.history-count').boundingBox();expect(count!.x+count!.width).toBeLessThanOrEqual((await card.boundingBox())!.x+(await card.boundingBox())!.width);

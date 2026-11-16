@@ -34,6 +34,14 @@ scope classification and aggregate checks must stay intact.
 
 ## Current dev queue (November 15, 2026)
 
+Latest owner follow-up #159: My recipes and Past cooks must use one compact
+configurable list/card component, with contextual upper-right trash controls in
+lists and details, not floating bottom Delete/Remove labels. Preserve existing
+confirmation and persistence semantics. Prepare a feature PR/preview for owner
+review; the previous four-issue merge approval does not authorize this merge.
+Document the shared placement in the design system. #145 is delivered through
+PR #158 at `2db8e93`. Do not start the excluded scheduling work.
+
 Production #151 is owner-verified stable; dev contains its code. The owner authorizes
 focused PRs and green dev merges sequentially: #152, #154, #153, #145. Keep #3,
 #138, #139 and #150 on hold. No main merge, production deployment or hosted
