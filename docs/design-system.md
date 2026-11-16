@@ -236,6 +236,14 @@ Recorded activity shows the original action/reading first, archived dish
 and step second, and a quieter local timestamp. On phones the timestamp stacks.
 Attribution uses archived IDs only; unavailable references have an honest fallback.
 
+Past cook details (#161) keep Original checklist primary. Each row shows actual
+completion when recorded, otherwise its planned time when available; avoid paired
+planned/actual lines and repeated "Not recorded" placeholders. The archive date
+already appears in the header and is not repeated below. Nonempty outcome notes
+stay visible. One native, initially closed Recorded activity disclosure contains
+temperature readings, event history and saved step notes, with archived attribution.
+Omit the disclosure when empty. Do not infer timestamps for notes or modify archives.
+
 ### Saved-item lists and removal (#159)
 
 My recipes and Past cooks use `LibraryList` with configured title, metadata, step

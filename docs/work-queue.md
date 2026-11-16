@@ -2,6 +2,11 @@
 
 ## Current approved queue: #162 then #161
 
+#162 delivered through PR #163 at `385331f`: word quantities require a separator
+before units; numeric shorthand and ambiguity protections remain. #161 uses the
+existing detail component and one native activity disclosure; its PR records final
+CI and screenshot evidence. Stop after that verified dev merge.
+
 Owner authorizes two small, separate, verified dev PRs and merges: word/unit
 separation in recipe duration parsing, then a collapsed Recorded activity section
 in Past cook details. Preserve ambiguity handling and archived data. No full

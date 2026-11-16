@@ -1,5 +1,14 @@
 # Core cook experience
 
+## Past cook detail refinement (#161)
+
+Original checklist remains primary, with recorded completion times and planned
+times as the fallback for other steps. Recorded activity starts collapsed and
+contains all event readings/history plus saved step notes. Preserve archived
+IDs, sequence, exact timestamps and orphaned notes; opening the view never writes
+the archive. Empty activity/outcome placeholders and the duplicate saved timestamp
+are removed. Existing View, Back, Cook again and trash behavior stay intact.
+
 ## Consistent saved-item lists (#159)
 
 My recipes and Past cooks share one compact `LibraryList` and header. Title and
