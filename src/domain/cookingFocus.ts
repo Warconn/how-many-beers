@@ -24,7 +24,10 @@ export function guidedCookingSteps(tasks:PlannedTask[],completed:Record<string,s
   // completions change. Only the global primary/next-action priority is live.
   const ordered=chronologicalTasks(tasks);
   const priority=forecasts?chronologicalTasks(tasks.map(t=>({...t,scheduledAt:forecasts[t.id]?.start??t.scheduledAt}))).map(t=>byId.get(t.id)!):ordered;
-  const unfinished=priority.filter(t=>!completed[t.id]);
+  const unfinished=priority.filter(t=>{
+    const f=forecasts?.[t.id];
+    return !completed[t.id]&&!(f?.physicalActive&&f.template?.basis==='actual'&&f.template.kind!=='checkpoint');
+  });
   let first=unfinished[0]??null;
   // An imported recipe may have only a serving time. Review its untimed work first.
   if(first?.id.endsWith(':serve'))first=unfinished.find(t=>instant(t)===Infinity)??first;

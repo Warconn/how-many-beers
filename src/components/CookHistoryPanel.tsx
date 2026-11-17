@@ -6,6 +6,8 @@ import {useEffect,useRef,useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
 import {archivedActivity} from "@/domain/historyActivity";
 import LibraryList,{LibraryItemHeading} from './LibraryList';
+import {activityStatus,activityStages,phaseStage} from '@/domain/activities';
+import {phaseObservations} from '@/domain/cookingPhases';
 
 type Props = {
   history:HistoryLibrary;
@@ -55,6 +57,11 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
         <ol className="history-tasks">
           {detailed.plannedTimeline.map(step=><li key={step.id}>
             <strong>{step.title}</strong><span>{step.dishName}</span>
+            {detailed.meal.phasePlan?.phases.filter(p=>p.startTaskId===step.id).map(p=>{
+              const actual=phaseObservations(detailed.meal,p.id),stage=phaseStage(p);
+              if(!actual.start||!stage)return null;
+              return <small key={p.id}>{actual.end?activityStatus({...p,actualStart:actual.start.occurredAt,actualEnd:actual.end.occurredAt,elapsed:(Date.parse(actual.end.occurredAt)-Date.parse(actual.start.occurredAt))/60000}):activityStages[stage]+' · End not recorded'}</small>;
+            })}
             {detailed.meal.completed[step.id]
               ? <small>Completed <time dateTime={detailed.meal.completed[step.id]}>{fmt(detailed.meal.completed[step.id])}</time></small>
               : step.scheduledAt&&<small>Planned <time dateTime={step.scheduledAt}>{fmt(step.scheduledAt)}</time></small>}

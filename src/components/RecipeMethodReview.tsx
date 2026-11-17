@@ -10,24 +10,27 @@ import {formatDuration} from '@/domain/stepTiming';
 import {useStepReorder} from './useStepReorder';
 import {StepGrip,StepEditButton,StepInstructions,StepReorderHelp} from './StepListControls';
 import {reorderPlannedStep} from '@/domain/stepReorder';
-import {reviewDuration,editReviewedStep} from '@/domain/recipeReview';
+import {reviewDuration,editReviewedStep,prepareRecipeActivities} from '@/domain/recipeReview';
+import RecipeActivities from './RecipeActivities';
 
 export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveAction,hidePrimary=false,busy=false,primaryLabel='Add to meal'}:{hidePrimary?:boolean;busy?:boolean;saveAction?:(prepare:()=>ExtendedMeal,hasOpenEdit:boolean,onCopying:(open:boolean)=>void)=>ReactNode;primaryLabel?:string;meal:ExtendedMeal;onChange:(meal:ExtendedMeal)=>void;onAdd:(draft:ExtendedMeal)=>Promise<void>;onBack:()=>void}){
  const dish=meal.dishes[0],tasks=cookTimeline(meal),heading=useRef<HTMLHeadingElement>(null);
  const [editing,setEditing]=useState<string|null>(null),[title,setTitle]=useState(''),[instructions,setInstructions]=useState(''),[minutes,setMinutes]=useState(''),[error,setError]=useState(''),[adding,setAdding]=useState(false),[committing,setCommitting]=useState(false);
  const [copying,setCopying]=useState(false);
+ const [activityEditing,setActivityEditing]=useState(false);
  const editDirty=adding||editing!==null&&(()=>{const t=tasks.find(t=>t.id===editing);return !!t&&(title!==t.title||instructions!==(t.instructions??'')||minutes!==(reviewDuration(meal,t)==null?'':String(reviewDuration(meal,t))));})();
  const reorder=useStepReorder(editing!==null||adding||committing,(id,target,after)=>onChange(reorderPlannedStep(meal,id,target,after)));
  useEffect(()=>{heading.current?.focus({preventScroll:true});heading.current?.closest('.method-review')?.scrollIntoView({block:'start',behavior:'instant'});},[]);
  const prepare=()=>{
+  if(activityEditing)throw Error('Save or cancel the open activity edit first.');
   if(adding){
    let next=addStep(meal,title,instructions);const id=next.customTasks!.at(-1)!.id;
    next={...next,customTasks:next.customTasks?.map(t=>t.id===id?{...t,dishId:dish.id,dishName:dish.name}:t)};
-   next=setStepDuration(next,id,minutes===''?null:Number(minutes));onChange(next);setAdding(false);return next;
+   next=prepareRecipeActivities(setStepDuration(next,id,minutes===''?null:Number(minutes)));onChange(next);setAdding(false);return next;
   }
-  if(!editing)return meal;
+  if(!editing)return prepareRecipeActivities(meal);
   const task=tasks.find(t=>t.id===editing);if(!task)throw Error('Choose an existing step.');
-  const next=editReviewedStep(meal,task.id,{title,instructions,...(!task.isCondition&&!task.id.endsWith(':serve')?{durationMinutes:minutes===''?null:Number(minutes)}:{})});
+  const next=prepareRecipeActivities(editReviewedStep(meal,task.id,{title,instructions,...(!task.isCondition&&!task.id.endsWith(':serve')?{durationMinutes:minutes===''?null:Number(minutes)}:{})}));
   onChange(next);setEditing(null);return next;
  };
  const back=()=>onBack();
@@ -57,6 +60,7 @@ export default function RecipeMethodReview({meal,onChange,onAdd,onBack,saveActio
    <label>Step name<input required maxLength={160} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Instructions<textarea rows={3} maxLength={500} value={instructions} onChange={e=>setInstructions(e.target.value)}/></label><DurationInput label="Duration" minutes={minutes===''?null:Number(minutes)} onChange={value=>setMinutes(value===null?'':String(value))}/>
    <div className="method-review-actions"><button className="link" type="submit" aria-label="Close new step">Close</button><button className="link danger" type="button" onClick={()=>{setAdding(false);setError('');}}>Remove new step</button></div>
   </form>:<button type="button" className="link method-add-step" disabled={editing!==null} onClick={()=>{setTitle('');setInstructions('');setMinutes('');setAdding(true);}}>Add a step</button>}
+  <RecipeActivities meal={meal} dishId={dish.id} onChange={onChange} disabled={editing!==null||adding} onEditingChange={setActivityEditing}/>
   {dish.recipeSource&&<details><summary>Original recipe</summary><pre>{dish.recipeSource}</pre></details>}
   {error&&<p className="form-error" role="alert">{error}</p>}
   

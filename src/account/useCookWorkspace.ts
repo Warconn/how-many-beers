@@ -11,6 +11,7 @@ import {
 } from "@/domain/cookHistory";
 import { newMeal, type Meal } from "@/domain/meal";
 import { migrateMeal,cookTimeline,startCookSession } from "@/domain/cookState";
+import {prepareRecipeActivities} from '../domain/recipeReview';
 import {buildPhasePlan} from '../domain/cookingPhases';
 import { useAccountCook } from "./useAccountCook";
 import {retainCanceled,emptyCanceled} from '../domain/canceledCooks';
@@ -251,7 +252,7 @@ export function useCookWorkspace() {
     if(selected){
       // The existing atomic promotion preserves this reviewed plan payload and
       // supplies the authoritative session start. No schema/RPC change required.
-      selected.edit(m=>({...m,phasePlan:buildPhasePlan(m,cookTimeline(m))}));
+      selected.edit(m=>{const prepared=prepareRecipeActivities(m);return {...prepared,phasePlan:buildPhasePlan(prepared,cookTimeline(prepared))};});
       await selected.flush(true);
       const plan=selected.state().plan;
       if(!plan)throw Error('Save the upcoming plan before starting it.');

@@ -287,3 +287,27 @@ starts stay explicitly distinct; uncertain/conditional work has no false countdo
 Passive waiting uses quiet text rather than a new action. Keep the full-width
 Continue cooking primary and the compact View cook / Cancel cook second row with
 44px targets. The summary itself has no completion or navigation control.
+# Parallel activity feedback (#3)
+
+Keep the existing Beerometer and flat chronological rows. Place a readable quiet
+14px `Cooking · 4h 20m elapsed` line beneath its start action; actual duration is
+shown only when both physical boundaries exist. Use the shared four-stage formatter
+for new activity metadata. Do not guess a stage for an ambiguous legacy passive
+record. Technique/equipment remains in the authored instructions and step name.
+
+Record reading / Record another reading is a quiet 44px text action in that same
+row. The inline form supports food/equipment readings and timestamped notes, with
+an activity choice only when association is ambiguous. Readings stay on that row
+under one native disclosure. The checked milestone remains checked. Use explicit
+native label/for associations and 16px inputs/selects.
+
+Recipe correction lives in one optional Review activities disclosure after the
+step list and separate from recipe saving. Its compact editor has Activity stage,
+Start at, End at and Save/Cancel; No activity is a stage-selector choice. Preserve
+method drafts and the existing save-original/copy hierarchy. Editing an activity
+does not reorder the activity rows underneath the user's pointer.
+
+The sticky guide names the owning dish and offers the same checkbox action as the
+list. Its selection remains meal-wide while another step is inspected. Preserve
+phone wrapping, keyboard focus and 44px targets; introduce no dashboard, tabs,
+nested steps, technique-specific stages or additional progress bars.

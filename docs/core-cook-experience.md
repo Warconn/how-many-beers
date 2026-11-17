@@ -695,3 +695,32 @@ it stops on inactive Home and does not add a separate timer to the summary.
 V1 shows one canonical action for simultaneous work. It does not claim other
 steps are unavailable or invent serialized timestamps / +N readiness. #3 can
 supply improved priority and projections through the same presentation later.
+# Parallel Cooking (#3)
+
+Cooking retains its existing step/details view, flat chronological full checklist,
+prominent Beerometer and sticky meal-wide guide. A checkbox performs an authored
+action: start a bounded activity, confirm a milestone, or end the linked activity.
+Only explicit observed boundaries create actual intervals. Checking an ordinary
+step, recording a reading, or reaching a duration estimate never invents physical
+cooking or confirms readiness. Multiple independent activities can run inside a
+dish or across dishes. The guide checkbox and list row call the same handler.
+Inspecting another row does not change activity or meal-wide action selection.
+
+Preparing, Preheating, Cooking and Holding are the shared stage labels. Started
+rows show a quiet stage/elapsed line, then actual duration once both boundaries
+are recorded. A checked checkpoint keeps Record another reading available inline;
+each temperature or note retains its own timestamp and task/activity association.
+Oil-ready gates can log readings before the user explicitly confirms readiness.
+
+Recipe review/planning has an optional Review activities disclosure with stage,
+Start at, End at and No activity. Clear pairs are accepted while authoring;
+ambiguous instructions remain ordinary until resolved. Confirmed links and explicit
+rejections persist through recipe saving/copying and independent meal snapshots.
+Activity links are frozen for execution. Actual start/end corrections append facts;
+checkbox reopen never erases or restarts physical activity.
+
+Old active phase plans upgrade once upon deliberate Cooking Mode entry, keeping
+the original plan and every event. Missing relationships acquire no historical
+timestamps from old completions. Home and archived reads do not run this upgrade.
+Legacy sessions without a phase plan retain their existing execution path.
+See [implementation and validation](implementation/issue-3-parallel-cooking.md).

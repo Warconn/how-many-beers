@@ -2,10 +2,12 @@ import {presets,type Meal,type PlannedTask,type Dish} from './meal';
 import type {CookEvent,ExtendedMeal} from './cookState';
 import {stepsForDish} from '../data/cookTemplates';
 import {turkeyPreparation} from './turkeyPrep';
+import {activityIssue,activityTask,type ActivityStage} from './activities';
 
-export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string;leadMinutes?:number};
-export type PhaseAction={starts?:string[];ends?:string[];checkpoint?:{phaseId:string;fraction:number}};
-export type PhasePlan={version:1;phases:CookingPhase[];actions:Record<string,PhaseAction>;order:Record<string,string[]>;suppressed:string[]};
+export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string;leadMinutes?:number;stage?:ActivityStage;independent?:boolean};
+export type PhaseAction={starts?:string[];ends?:string[];checkpoint?:{phaseId:string;fraction:number};observes?:string[]};
+type PhaseRelationships={version:1;phases:CookingPhase[];actions:Record<string,PhaseAction>;order:Record<string,string[]>;suppressed:string[]};
+export type PhasePlan=PhaseRelationships & {activityVersion?:1;originalPlan?:PhaseRelationships};
 export type PhaseObservation={phaseId:string;boundary:'start'|'end'};
 
 /** Strict suggestions at import review only. Ambiguous multi-action text stays a
@@ -19,7 +21,7 @@ export function recipeCookingKind(title:string,minutes:number|null):'heating'|'p
 /** Persist authored relationships once when starting a fresh session. No title
  * heuristics during a cook and no reinterpretation of legacy activity/history. */
 export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
- const plan:PhasePlan={version:1,phases:[],actions:{},order:{},suppressed:[]};
+ const plan:PhasePlan={version:1,activityVersion:1,phases:[],actions:{},order:{},suppressed:[]};
  const visible=new Map(tasks.map(t=>[t.id,t]));
  const action=(id:string)=>plan.actions[id]??(plan.actions[id]={});
  const phase=(d:Dish,key:string,start:string,ends:string[],kind:CookingPhase['kind'],minutes:number|null,after?:string,upperMinutes?:number)=>{
@@ -32,6 +34,27 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
  for(const d of meal.dishes){
   const own=tasks.filter(t=>t.dishId===d.id).sort((a,b)=>(a.recipeOrder??0)-(b.recipeOrder??0));
   plan.order[d.id]=own.map(t=>t.id);
+  if(d.activities){
+   const definitions=[...d.activities.definitions].sort((a,b)=>(activityTask(d,own,a.startStepId)?own.indexOf(activityTask(d,own,a.startStepId)!):Infinity)-(activityTask(d,own,b.startStepId)?own.indexOf(activityTask(d,own,b.startStepId)!):Infinity));
+   for(const a of definitions){
+    if(activityIssue(d,own,a))continue;
+    const start=activityTask(d,own,a.startStepId)!,end=activityTask(d,own,a.endStepId!)!;
+    const duration=activityTask(d,own,a.durationStepId??a.startStepId)??start;
+    const kind=a.stage==='cooking'||a.stage==='preheating'?'heating':'passive';
+    const startIndex=own.findIndex(t=>t.id===start.id),previous=own[startIndex-1];
+    const prior=definitions.find(p=>p.id!==a.id&&(p.endStepId===a.startStepId||previous&&activityTask(d,own,p.endStepId??'')?.id===previous.id));
+    let minutes=duration.durationMinutes??duration.templateStage?.minutes??null;
+    if(d.preset==='wings')minutes=a.id==='heat'?Math.max(15,d.cookMinutes)-15:a.id==='oil'?10:a.id==='fry'?3:a.id==='dry'?480:a.id==='rest'?d.restMinutes:minutes;
+    const p:CookingPhase={id:d.id+':'+a.id,dishId:d.id,kind,stage:a.stage,independent:true,startTaskId:start.id,endTaskIds:[end.id],durationTaskId:duration.id,minutes,...(prior?{after:d.id+':'+prior.id}:{}),...(d.preset==='wings'&&a.id==='rest'?{leadMinutes:2}:{})};
+    plan.phases.push(p);(action(start.id).starts??=[]).push(p.id);(action(end.id).ends??=[]).push(p.id);
+    for(const key of a.checkpointStepIds){const step=activityTask(d,own,key);if(step){(action(step.id).observes??=[]).push(p.id);action(step.id).checkpoint??={phaseId:p.id,fraction:1/2};}}
+   }
+   // Only the generated final serving row is replaced by the explicit Finish
+   // cook action. An authored serve/carve/safety instruction remains visible.
+   const last=own.filter(t=>!t.id.endsWith(':serve')).at(-1);
+   if(plan.phases.some(p=>p.dishId===d.id&&p.stage==='holding'&&p.startTaskId===last?.id&&p.endTaskIds.includes(d.id+':serve'))&&!(meal as ExtendedMeal).taskOverrides?.[d.id+':serve'])plan.suppressed.push(d.id+':serve');
+   continue;
+  }
   if(d.preset==='custom'){
    let previous:CookingPhase|undefined;
    for(const t of own){
@@ -103,7 +126,32 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
   if(a.checkpoint&&unsupported.has(a.checkpoint.phaseId))delete a.checkpoint;
  }
  for(const p of plan.phases)if(p.after&&unsupported.has(p.after))delete p.after;
+ for(const [index,p] of plan.phases.entries())if(p.after&&!plan.phases.slice(0,index).some(prior=>prior.id===p.after))delete p.after;
  return plan;
+}
+
+/** Read-only ownership filtering: preserve stored originals/history, but never
+ * execute an orphan or a cross-dish action. Active hidden boundaries retain facts. */
+export function effectivePhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan|undefined {
+ const plan=meal.phasePlan;if(!plan)return;
+ const dishes=new Set(meal.dishes.map(d=>d.id)),byId=new Map(tasks.map(t=>[t.id,t]));
+ const phases=plan.phases.filter(p=>dishes.has(p.dishId)&&(!byId.has(p.startTaskId)||byId.get(p.startTaskId)?.dishId===p.dishId)
+   &&p.endTaskIds.every(id=>!byId.has(id)||byId.get(id)?.dishId===p.dishId));
+ const known=new Map(phases.map(p=>[p.id,p]));
+ const actions:Record<string,PhaseAction>={};
+ for(const [id,a] of Object.entries(plan.actions)){
+  const task=byId.get(id);if(!task)continue;
+  const owns=(phaseId:string)=>known.get(phaseId)?.dishId===task.dishId;
+  actions[id]={...(a.starts?{starts:a.starts.filter(p=>owns(p)&&known.get(p)?.startTaskId===id)}:{}),
+   ...(a.ends?{ends:a.ends.filter(p=>owns(p)&&known.get(p)?.endTaskIds.includes(id))}:{}),
+   ...(a.observes?{observes:a.observes.filter(owns)}:{}),...(a.checkpoint&&owns(a.checkpoint.phaseId)?{checkpoint:a.checkpoint}:{})};
+ }
+ return {...plan,phases,actions,order:Object.fromEntries(Object.entries(plan.order).filter(([id])=>dishes.has(id)).map(([id,ids])=>[id,ids.filter(k=>byId.get(k)?.dishId===id)])),suppressed:plan.suppressed.filter(id=>byId.has(id)&&phases.some(p=>p.dishId===byId.get(id)!.dishId&&p.kind==='passive'))};
+}
+
+export function taskActivityIds(meal:Meal,taskId:string,tasks:PlannedTask[]):string[]{
+ const a=effectivePhasePlan(meal,tasks)?.actions[taskId];
+ return [...new Set([...(a?.starts??[]),...(a?.ends??[]),...(a?.observes??[]),...(a?.checkpoint?[a.checkpoint.phaseId]:[])])];
 }
 
 export function phaseObservations(meal:Meal,phaseId:string){

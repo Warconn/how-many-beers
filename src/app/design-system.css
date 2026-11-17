@@ -315,3 +315,30 @@ label { font-size:var(--text-sm); line-height:1.5; }
 .home-next-action > p {margin:var(--space-1) 0}
 .home-next-action .home-next-title {font-size:var(--text-body);line-height:1.5}
 .home-next-waiting {margin-top:var(--space-4)}
+.flat-cook-list>li { display:grid; grid-template-columns:44px minmax(0,1fr); column-gap:6px; }
+.flat-cook-list>li>.flat-step-check { grid-column:1; grid-row:1; }
+.flat-cook-list>li>button { grid-column:2; grid-row:1; width:100%; }
+.flat-step-reading { grid-column:2; min-width:0; }
+.flat-step-reading>.link { min-height:44px; text-align:left; }
+.flat-step-copy>.inline-activity-status,.inline-activity-status { color:var(--text-secondary); font-size:14px; line-height:1.5; font-weight:500; margin:4px 0; }
+.checkpoint-readings { margin:0 0 8px; }
+.checkpoint-readings>summary { min-height:44px; display:list-item; align-content:center; color:var(--text-secondary); font-size:14px; cursor:pointer; }
+.checkpoint-readings ul { padding-left:18px; font-size:14px; line-height:1.6; }
+.flat-cook-list .checkpoint-readings li { display:list-item; padding:4px 0; border:0; }
+.inline-activity-reading { max-width:560px; padding:8px 0 16px; }
+.guide-action-check { margin:0; min-width:44px; display:grid; place-items:center; cursor:pointer; }
+.guide-action-check input { width:28px; height:28px; margin:0; accent-color:var(--accent); }
+.cook-guide-bar .guide-next-button>strong { white-space:normal; overflow-wrap:anywhere; }
+.activity-review { margin:16px 0; border-top:1px solid var(--line); }
+.activity-review>summary { min-height:44px; align-content:center; cursor:pointer; font-size:14px; color:var(--accent-dark); }
+.activity-review-body { padding:8px 0 16px; }
+.recipe-activity { padding:12px 0; border-bottom:1px solid var(--line); }
+.activity-summary { display:flex; gap:16px; justify-content:space-between; align-items:flex-start; }
+.activity-summary>div { min-width:0; }
+.activity-summary p { margin:4px 0; overflow-wrap:anywhere; }
+.activity-summary>.link { flex-shrink:0; min-height:44px; }
+.activity-review-warning { color:#79521B; }
+.activity-editor { margin-top:16px; max-width:600px; }
+.activity-editor label { display:grid; gap:8px; margin:12px 0; }
+.activity-editor select { min-height:44px; width:100%; }
+@media(max-width:600px) { .cook-guide-bar { gap:6px; } .activity-summary { gap:8px; flex-wrap:wrap; } }

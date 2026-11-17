@@ -14,6 +14,7 @@ export type RecipeStep = {
 };
 
 export type Dish = {
+  activities?: import('./activities').ActivityMetadata;
   recipeLink?: import("./recipeLink").RecipeLink; // Provenance only; meals keep independent authored snapshots.
   planningSequence?: string[]; // User-configured sequence, including added steps.
   planningStepOrder?: string[]; // Recipe-local keys; only explicit planning moves opt in.
@@ -141,7 +142,14 @@ export const presets: Record<Exclude<PresetId, "custom">, { label: string; equip
 
 export function createDish(preset: Exclude<PresetId, "custom">): Dish {
   const p = presets[preset];
-  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: preset === "brisket" ? undefined : p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: preset === "brisket" ? 360 : p.restMinutes, ...(preset === "brisket" ? {brisketTemplateVersion:2 as const,pitTempF:200,brisketPlan:{mode:"manual" as const,inputs:{...brisketDefaults}}}: {}) };
+  return { id: crypto.randomUUID(), name: p.label, preset, equipment: p.equipment, pitTempF: p.pitTempF, weightLb: preset === "brisket" ? undefined : p.referenceWeightLb, cookMinutes: p.cookMinutes, restMinutes: preset === "brisket" ? 360 : p.restMinutes, ...(preset === "brisket" ? {brisketTemplateVersion:2 as const,pitTempF:200,brisketPlan:{mode:"manual" as const,inputs:{...brisketDefaults}}}: {}),
+    ...(preset==='wings'?{activities:{version:1 as const,templateVersion:2 as const,definitions:[
+      {id:'dry',stage:'preparing' as const,startStepId:'dry',endStepId:'prep',checkpointStepIds:[],provenance:'template' as const},
+      {id:'heat',stage:'cooking' as const,startStepId:'start',endStepId:'smoke-end',checkpointStepIds:['check'],provenance:'template' as const},
+      {id:'oil',stage:'preheating' as const,startStepId:'oil',endStepId:'oil-ready',checkpointStepIds:[],provenance:'template' as const},
+      {id:'fry',stage:'cooking' as const,startStepId:'fry',endStepId:'finish',checkpointStepIds:[],provenance:'template' as const},
+      {id:'rest',stage:'holding' as const,startStepId:'finish',endStepId:'serve',checkpointStepIds:[],provenance:'template' as const},
+    ]}}:{}) };
 }
 
 export function localDateTime(date: Date): string {

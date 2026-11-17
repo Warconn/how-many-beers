@@ -1,4 +1,5 @@
 import type {Meal} from './meal';
+import {isActivityMetadata,activityStages} from './activities';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const text=(v:unknown)=>typeof v==='string';
@@ -11,9 +12,10 @@ const strings=(v:unknown)=>Array.isArray(v)&&v.every(text);
 const record=(v:unknown,check:(v:unknown)=>boolean)=>object(v)&&Object.values(v).every(check);
 function phasePlan(v:unknown):boolean{
  return object(v)&&v.version===1&&Array.isArray(v.phases)&&v.phases.length<=1000
-  &&v.phases.every(p=>object(p)&&['id','dishId','startTaskId','durationTaskId'].every(k=>text(p[k]))&&['heating','passive'].includes(String(p.kind))&&strings(p.endTaskIds)&&duration(p.minutes)&&optional(p.upperMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.leadMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.after,text))
+  &&v.phases.every(p=>object(p)&&['id','dishId','startTaskId','durationTaskId'].every(k=>text(p[k]))&&['heating','passive'].includes(String(p.kind))&&strings(p.endTaskIds)&&duration(p.minutes)&&optional(p.upperMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.leadMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.after,text)&&optional(p.stage,s=>text(s)&&Object.hasOwn(activityStages,String(s)))&&optional(p.independent,x=>typeof x==='boolean'))
   &&new Set(v.phases.map(p=>p.id)).size===v.phases.length
-  &&record(v.order,strings)&&strings(v.suppressed)&&record(v.actions,a=>object(a)&&optional(a.starts,strings)&&optional(a.ends,strings)&&optional(a.checkpoint,c=>object(c)&&text(c.phaseId)&&number(c.fraction)&&c.fraction>=0&&c.fraction<=100));
+  &&record(v.order,strings)&&strings(v.suppressed)&&record(v.actions,a=>object(a)&&optional(a.starts,strings)&&optional(a.ends,strings)&&optional(a.observes,strings)&&optional(a.checkpoint,c=>object(c)&&text(c.phaseId)&&number(c.fraction)&&c.fraction>=0&&c.fraction<=100))
+  &&optional(v.activityVersion,x=>x===1)&&optional(v.originalPlan,p=>object(p)&&p.originalPlan===undefined&&phasePlan(p));
 }
 
 export function isRecipeLink(v:unknown):boolean{
@@ -61,7 +63,7 @@ export function isStoredMeal(v:unknown):v is Meal{
     &&optional(d.turkeyPrep,t=>object(t)&&['frozen','thawing','thawed'].includes(String(t.state))
       &&number(t.thawDays)&&(t.thawDays as number)>=0&&(t.thawDays as number)<=14
       &&['brineHours','dryHours'].every(k=>number(t[k])&&(t[k] as number)>=0&&(t[k] as number)<=48))
-    &&optional(d.recipeLink,isRecipeLink)&&optional(d.brisketTemplateVersion,x=>x===2)&&optional(d.brisketPlan,brisket)))return false;
+    &&optional(d.activities,isActivityMetadata)&&optional(d.recipeLink,isRecipeLink)&&optional(d.brisketTemplateVersion,x=>x===2)&&optional(d.brisketPlan,brisket)))return false;
   return new Set(v.dishes.map(d=>(d as {id:string}).id)).size===v.dishes.length
     &&optional(v.mode,m=>m==='planning'||m==='cooking')&&optional(v.startedAt,text)&&optional(v.phasePlan,phasePlan)
     &&optional(v.customTasks,t=>Array.isArray(t)&&t.every(isStoredTask))
@@ -71,5 +73,5 @@ export function isStoredMeal(v:unknown):v is Meal{
       &&['started','completed','reopened','temperature','equipment','removed'].includes(String(t.kind))
       &&optional(t.phaseObservations,o=>Array.isArray(o)&&o.length<=100&&o.every(p=>object(p)&&text(p.phaseId)&&['start','end'].includes(String(p.boundary))))
       &&optional(t.phaseEstimate,e=>object(e)&&text(e.phaseId)&&number(e.minutes)&&e.minutes>=0&&e.minutes<=43200)
-      &&optional(t.value,number)&&optional(t.note,text)&&optional(t.unit,u=>u==='°F'||u==='°C')));
+      &&optional(t.activityId,text)&&optional(t.observationType,x=>x==='note')&&optional(t.value,number)&&optional(t.note,text)&&optional(t.unit,u=>u==='°F'||u==='°C')));
 }

@@ -19,7 +19,7 @@ Brisket on the smoker, brats on the grill, turkey in the oven, or a few things g
 1. **Tell us when you're eating.** Choose a serving date and time. Start with dinner, then build the plan around it.
 2. **Bring your recipes together.** Choose a starter method, pick from **My recipes**, or paste/upload your own instructions.
 3. **Make it yours.** Adjust the steps, estimated times, equipment, and order. Review a combined meal schedule instead of bouncing between separate recipes.
-4. **Follow the cook.** Cooking Mode keeps the next action close, with a full checklist, temperature readings, notes, and room for adjustments.
+4. **Follow the cook.** Cooking Mode keeps the next meal-wide action close. Independent activities can run together, and checked checkpoints keep accepting timestamped readings without stopping cooking.
 5. **Remember the good ones.** Save meals for later, revisit past cooks, and reuse or refine your recipes for the next round.
 
 ## See it in action

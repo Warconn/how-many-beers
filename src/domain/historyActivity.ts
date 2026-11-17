@@ -7,7 +7,7 @@ export function archivedActivity(event:CookEvent,timeline:readonly PlannedTask[]
   const matches=event.taskId ? timeline.filter(step=>step.id===event.taskId) : [];
   const step=matches.length===1 ? matches[0] : undefined;
   return {
-    action:names[event.kind]+(event.value===undefined?'':` ${event.value}${event.unit??''}`),
+    action:(event.observationType==='note'?'Observation':names[event.kind])+(event.value===undefined?'':` ${event.value}${event.unit??''}`),
     context:step ? [step.dishName,step.title].filter(Boolean).join(' · ') : event.taskId ? 'Archived step unavailable' : 'No step recorded',
   };
 }

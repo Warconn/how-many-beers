@@ -5,6 +5,7 @@ import {formatDuration} from '@/domain/stepTiming';
 import {stepTimingCue} from '@/domain/stepTimingCue';
 import StepForecastTime from './StepForecastTime';
 import type {LivePhase} from '@/domain/phaseForecast';
+import {activityStatus} from '@/domain/activities';
 /** Display-only shortening; remaining authored instructions stay available in Step details. */
 export function cookingTitle(title:string):string{
  const first=title.match(/^.*?[.!?](?:\s|$)/)?.[0].trim()??title;
@@ -33,7 +34,8 @@ export default function CookingStepSummary({task,forecast,activePhase,now=Date.n
  const timing:StepForecast=forecast??{start:task.scheduledAt,finish:null,status:"planned"};
  return <>
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
-  <p className="task-dish">{task.dishName}{activePhase?.active&&task.title!=='Hold until serving'&&<> · {activePhase.elapsed<1?'just started':formatDuration(Math.floor(activePhase.elapsed))+' '+(activePhase.kind==='heating'?'cooking':'resting/cooling')}{activePhase.overrun?' · over estimate':''}</>}</p>
+  <p className="task-dish">{task.dishName}</p>
+  {activePhase?.startTaskId===task.id&&activityStatus(activePhase)&&<p className="inline-activity-status">{activityStatus(activePhase)}</p>}
   <p className="cooking-step-when">{onEditTime&&stepTimingCue(task,forecast,now).label==='Planned start'?<button type="button" className="link planned-time-button" aria-label={'Change planned time: '+task.title} onClick={onEditTime}><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/></button>:<><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/>{onEditTime&&<button type="button" className="link edit-planned-time" onClick={onEditTime}>Change planned time</button>}</>}</p>
   {!condition&&instruction&&<p className="muted small">{instruction}</p>}
   {!condition&&task.title!=='Hold until serving'&&<p className="cooking-step-timing">
