@@ -30,7 +30,7 @@ import {cookingTitle} from "@/components/CookingStepSummary";
 import TaskRow from "@/components/TaskRow";
 import {physicalPhase} from "@/domain/physicalPhase";
 import StepForecastTime from "@/components/StepForecastTime";
-import {recordRemainingEstimate,effectivePhasePlan,taskActivityIds} from '@/domain/cookingPhases';
+import {recordRemainingEstimate,effectivePhasePlan,taskActivityIds,activityBoundaryWarnings} from '@/domain/cookingPhases';
 import RecipeActivities from '@/components/RecipeActivities';
 import {upgradeActivityLinks} from '@/domain/activityMigration';
 import {cookProjection} from "@/domain/cookProjection";
@@ -248,7 +248,7 @@ function CookExperience() {
     const late = plan?.lateMinutes && plan.readyAt ? [
       `Estimated ready ${when(plan.readyAt)}, ${plan.lateMinutes} min past your ${when(meal.serveAt)} target. ${plan.startAt && Date.parse(plan.startAt) <= clockNow ? 'The earliest preparation is now; review optional preparation or change serving time.' : 'Review fixed starts or adjust serving time.'}`
     ] : [];
-    return [...equipmentWarnings(meal), ...timing, ...(plan?.conflicts ?? []), ...late];
+    return [...equipmentWarnings(meal), ...timing, ...activityBoundaryWarnings(meal,timeline), ...(plan?.conflicts ?? []), ...late];
   }, [meal,plan,clockNow]);
   const livePhasePlan=meal?effectivePhasePlan(meal,timeline):undefined;
   const cookingTasks=livePhasePlan?timeline.filter(t=>!livePhasePlan.suppressed.includes(t.id)):timeline;

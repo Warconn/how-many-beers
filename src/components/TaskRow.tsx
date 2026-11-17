@@ -72,7 +72,7 @@ export default function TaskRow({
   const [startTime,setStartTime]=useState("");
   const [timeBoundary,setTimeBoundary]=useState<'start'|'end'>('start');
   const [startError,setStartError]=useState("");
-  const [readingType,setReadingType]=useState<"temperature"|"equipment"|"note">("temperature");
+  const [readingType,setReadingType]=useState<"temperature"|"equipment"|"note">(activePhase&&phaseStage(activePhase)==='preheating'?'equipment':'temperature');
   const [readingActivity,setReadingActivity]=useState('');
   const [reading,setReading]=useState("");
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
@@ -203,7 +203,7 @@ export default function TaskRow({
     {isCooking && <>
       {logging && <div className="reading-form">
         <div>
-          {activityOptions.length>1&&<label>Activity<select value={readingActivity} onChange={e=>setReadingActivity(e.target.value)}><option value="">Choose activity</option>{activityOptions.map(p=><option key={p.id} value={p.id}>{activityStages[phaseStage(p)??'cooking']} · {p.id.split(':').at(-1)}</option>)}</select></label>}
+          {activityOptions.length>1&&<label htmlFor={editorId+'-reading-activity'}>Activity</label>}{activityOptions.length>1&&<select id={editorId+'-reading-activity'} value={readingActivity} onChange={e=>setReadingActivity(e.target.value)}><option value="">Choose activity</option>{activityOptions.map(p=><option key={p.id} value={p.id}>{activityStages[phaseStage(p)??'cooking']} · {p.startTitle??'Activity start'}</option>)}</select>}
           <label htmlFor={"reading-kind-"+task.id}>Reading type</label>
           <select id={"reading-kind-"+task.id} value={readingType} onChange={e=>setReadingType(e.target.value as "temperature"|"equipment")}>
             <option value="temperature">Meat / food temperature</option>

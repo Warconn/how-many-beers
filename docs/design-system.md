@@ -287,7 +287,7 @@ starts stay explicitly distinct; uncertain/conditional work has no false countdo
 Passive waiting uses quiet text rather than a new action. Keep the full-width
 Continue cooking primary and the compact View cook / Cancel cook second row with
 44px targets. The summary itself has no completion or navigation control.
-# Parallel activity feedback (#3)
+## Parallel activity feedback (#3)
 
 Keep the existing Beerometer and flat chronological rows. Place a readable quiet
 14px `Cooking · 4h 20m elapsed` line beneath its start action; actual duration is

@@ -30,5 +30,5 @@ test('uploaded steps lead with planned time and keep duration editing optional',
  await rows.first().screenshot({path:info.outputPath('step-duration-timed.png'),scale:'css'});await page.screenshot({path:info.outputPath('upload-timed.png'),fullPage:true});
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Pumpkin seeds',exact:true}).click();await expect(clean).toContainText('Estimated 5 min');await expect(rows.last()).toHaveAccessibleName('Serve');
  await changeStepDuration(steps.getByRole('article',{name:'Cool completely',exact:true}),'');await expect(meter.locator('strong')).toHaveText('—');await expect(rows.first()).toHaveAccessibleName(preheat);await expect(rows.last()).toHaveAccessibleName('Serve');
- await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(page.locator('.guided-step').getByRole('article')).toHaveAccessibleName(preheat);await expect(page.getByRole('button',{name:'Preview next step: Clean pumpkin seeds'})).toBeVisible();
+ await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(page.locator('.guided-step').getByRole('article')).toHaveAccessibleName(preheat);await expect(page.getByRole('button',{name:'Preview next step: '+preheat})).toBeVisible();
 });

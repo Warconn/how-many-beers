@@ -35,7 +35,7 @@ test('two turkeys show independent inline elapsed states while keeping the meal 
   await list.getByRole('checkbox',{name:'Complete Preheat fryer to the manual setting (60 minutes). for Deep-Fried Turkey',exact:true}).check();
   await expect(page.getByRole('region',{name:'Cook duration in beers'})).toBeVisible();
   await expect(page.getByRole('navigation',{name:'Cooking guide'})).toBeVisible();
-  await page.screenshot({path:info.outputPath('two-turkey-cooking.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:info.outputPath('two-turkey-cooking.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
   const oven=list.locator('li').filter({has:page.getByRole('button',{name:'Open step: Begin roasting turkey for Turkey (oven)',exact:true})});
   const oil=list.locator('li').filter({has:page.getByRole('button',{name:/Open step: Preheat fryer to the manual setting/})});
   await expect(oil).toContainText(/Preheating · .*elapsed/);
@@ -52,7 +52,7 @@ test('a checked brisket checkpoint keeps Record another reading directly availab
   const list=page.getByRole('region',{name:'Full cook checklist'});
   const checkpoint=list.locator('li').filter({has:page.getByRole('button',{name:/Open step: .*spritz/i})});
   await expect(checkpoint.getByRole('checkbox')).toBeChecked();
-  await page.screenshot({path:info.outputPath('checkpoint-repeat-reading.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:info.outputPath('checkpoint-repeat-reading.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
   await expect(checkpoint.getByRole('button',{name:'Record another reading',exact:true})).toBeVisible();
   await reading(checkpoint,162);
   await page.clock.fastForward(15*60000);
@@ -81,7 +81,7 @@ test('wings smoking, oil readiness and frying have independent physical boundari
   await expect(oil).toContainText('Preheating · 0m elapsed');await expect(smoke).toContainText('Cooking · 1h elapsed');
   await ready.getByRole('button',{name:'Record reading',exact:true}).click();await ready.getByLabel('Reading type',{exact:true}).selectOption('equipment');await ready.getByLabel('Equipment temperature (optional)',{exact:true}).fill('300');await ready.getByRole('button',{name:'Save timestamped reading',exact:true}).click();
   await expect(ready.getByRole('checkbox')).not.toBeChecked();await expect(oil).toContainText('elapsed');
-  await page.screenshot({path:info.outputPath('wings-parallel-activities.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:info.outputPath('wings-parallel-activities.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
   await page.clock.fastForward(15*60000);await ready.getByRole('checkbox').check();await expect(oil).toContainText('Preheating · 15m actual');await expect(smoke).toContainText('elapsed');
   await row(list,'Remove wings from smoker').getByRole('checkbox').check();await expect(smoke).toContainText('Cooking · 1h 15m actual');
   await row(list,'Flash-fry wings for crisp skin').getByRole('checkbox').check();await page.clock.fastForward(3*60000);await row(list,'Drain and season or sauce').getByRole('checkbox').check();
@@ -124,7 +124,7 @@ test('recipe activity correction stays compact and carries stage, boundaries and
   await editor.getByLabel('Activity stage',{exact:true}).selectOption('cooking');await editor.getByRole('button',{name:'Save activity',exact:true}).click();
   await activities.getByRole('button',{name:'Review activity',exact:true}).last().click();await editor.getByLabel('Activity stage',{exact:true}).selectOption('none');await editor.getByRole('button',{name:'Save activity',exact:true}).click();
   await activities.getByRole('button',{name:'Review activity',exact:true}).first().click();await editor.getByLabel('Activity stage',{exact:true}).selectOption('preparing');await editor.getByLabel('Start at',{exact:true}).selectOption('step-1');await editor.getByLabel('End at',{exact:true}).selectOption('step-2');
-  await page.screenshot({path:info.outputPath('recipe-activity-correction.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
+  await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:info.outputPath('recipe-activity-correction.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   await editor.getByRole('button',{name:'Save activity',exact:true}).click();await method.getByRole('button',{name:'Add to meal',exact:true}).click();
   await page.getByRole('button',{name:'Start cooking',exact:true}).click();

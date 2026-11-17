@@ -59,8 +59,8 @@ function isEnd(stage:ActivityStage,start:SourceStep,end:SourceStep):boolean {
   const a=text(start),b=text(end),t=end.title.trim();
   if(stage==='preheating'){
     const resource=preheatResource(a),target=preheatResource(b);
-    if(resource&&target&&resource!==target)return false;
-    return /^(?:verify|confirm|check)\b.*\b(?:ready|temperature|setting)\b|^(?:oil|oven|smoker|grill|fryer)\b.*\bready\b/i.test(t)
+    if(resource&&target&&resource!==target||food(b).length&&!target)return false;
+    return /^(?:verify|confirm|check)\b.*\bready\b|^(?:oil|oven|smoker|grill|fryer)\b.*\bready\b/i.test(t)
       ||startStage(end)==='cooking'&&(resource==='oil'?/\b(?:oil|fryer)\b/i.test(b):!!resource&&b.toLowerCase().includes(resource));
   }
   if(!matchesFood(a,b))return false;
@@ -68,7 +68,9 @@ function isEnd(stage:ActivityStage,start:SourceStep,end:SourceStep):boolean {
   if(stage==='holding')return /^(?:serve|slice|carve|end\b.*\b(?:rest|hold)|remove\b.*\bhold)/i.test(t);
   const resource=cookingResource(a),target=cookingResource(b);
   if(/^(?:remove|lift|take)\b/i.test(t)&&resource&&target&&resource!==target)return false;
-  return /^(?:remove|lift|take)\b/i.test(t)||startStage(end)==='holding';
+  const removal=/^(?:remove|lift)\b/i.test(t)||/^take\b.*\b(?:out|off|from)\b/i.test(t);
+  if(removal&&/\b(?:lid|thermometer|probe|foil)\b/i.test(t))return false;
+  return removal&&(food(b).length>0||!!resource&&target===resource)||startStage(end)==='holding';
 }
 
 /** Proposals are made only while authoring. No execution event is inferred. */

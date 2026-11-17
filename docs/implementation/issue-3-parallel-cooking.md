@@ -22,6 +22,9 @@ task/dish IDs and existing account RPCs remain the identity/persistence boundary
 
 - Stage, lifecycle and action are separate. Stages are Preparing, Preheating,
   Cooking and Holding; lifecycle comes from explicit actual boundary events.
+- Checking an explicitly linked loading/removal row confirms that physical action
+  now. Ordinary check-offs and old completion events do not invent activity time.
+  Reopening appends checklist evidence without erasing physical observations.
 - Activities have distinct IDs and authored start/end/checkpoint links. Multiple
   instances can run within one dish and across dishes. A compound transition
   appends both boundaries on one event. Repeated completion is idempotent.
@@ -38,13 +41,17 @@ task/dish IDs and existing account RPCs remain the identity/persistence boundary
   It matches explicit loading/removal, heating/readiness and brining boundaries;
   durations can be unknown. Multiple plausible methods/foods or absent boundaries
   remain ordinary with a Review activity suggestion. Oil and food checkpoints are
-  associated separately. Confirmed corrections and No activity rejections persist.
+  associated separately. Lid/probe removal and ordinary temperature checks are
+  never terminal gates. Confirmed corrections and No activity rejections persist.
 - New wings opt into versioned template boundaries for oil-ready, smoker removal
   and frying. Existing saved wings retain their original template and facts.
 - Actual start corrections and optional end corrections append evidence without
   changing old events or checklist timestamps. Reopen never resets an activity.
   Explicit Finish records the generated endpoint of a suppressed new Holding
   interval; elapsed estimates alone never finish or archive it.
+- Recorded start/end steps cannot be deleted out from under their physical
+  observations. Unstarted broken links remain ordinary, retain their definitions
+  and get a specific review warning instead of creating an unfinishable timer.
 - Independent intervals share the existing whole-meal projection. Parallel work
   is not summed. Unknown work retains lower-bound/uncertain timing and the serving
   target remains unchanged. This is not a resource/dependency optimizer.
@@ -109,6 +116,34 @@ configs retain screenshots/traces and disable video because managed ffmpeg was
 also unavailable. Repository browser projects and CI checks remain intact.
 Do not count mobile Chromium emulation as iPhone WebKit coverage. Final local/CI
 counts and any remaining limitation are recorded in the PR.
+
+Architecture/UI checkpoint: typecheck, 632 unit checks and all 12 new desktop/mobile
+acceptance journeys passed. The isolated PostgreSQL harness passed clean-install,
+seeded-upgrade, ownership, immutable-event and concurrency tests, including new
+activity/observation round trips. Later UI refinement additionally limits direct
+reading controls to relevant checkpoints, readiness gates, active starts and rows
+with existing observations, keeping ordinary rows quiet.
+
+## Final local verification
+
+Typecheck and all 635 unit checks pass. All 12 desktop/mobile Chromium acceptance
+executions pass, followed by three focused browser journeys after tightening the
+terminal-gate detector. The 38 existing guidance, minimal-tools, imported-duration
+and fixed-timing browser checks pass. All 18 built-shell Android Chromium offline
+checks pass across the suite and the final explicit-Holding-end rerun. The account
+recipe correction/save/reload/isolation journey passes. The production export and
+local PostgreSQL clean/seeded-upgrade security harness pass.
+
+The detector now excludes lid/probe/thermometer/foil removal, ordinary oil
+temperature checks and food readiness from an equipment-ready boundary. A linked
+sequential interval projects from the preceding activity's finish, rather than
+adding an obsolete frozen planned offset. Keyboard/native scroll targets reserve
+space for the fixed meter and guide. These refinements have focused regressions.
+
+Required CI additionally runs desktop/iPhone account, auth, offline and changed UI
+projects using pinned browsers. Final CI outcomes and the exact successful feature
+preview URL are recorded in PR #167. Local system Chromium cannot substitute for
+that WebKit coverage.
 
 ## Screenshots and product review
 

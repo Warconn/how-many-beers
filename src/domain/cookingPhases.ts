@@ -2,7 +2,7 @@ import {presets,type Meal,type PlannedTask,type Dish} from './meal';
 import type {CookEvent,ExtendedMeal} from './cookState';
 import {stepsForDish} from '../data/cookTemplates';
 import {turkeyPreparation} from './turkeyPrep';
-import {activityIssue,activityTask,type ActivityStage} from './activities';
+import {activityIssue,activityTask,activityStages,type ActivityStage} from './activities';
 
 export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string;leadMinutes?:number;stage?:ActivityStage;independent?:boolean};
 export type PhaseAction={starts?:string[];ends?:string[];checkpoint?:{phaseId:string;fraction:number};observes?:string[]};
@@ -135,8 +135,10 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
 export function effectivePhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan|undefined {
  const plan=meal.phasePlan;if(!plan)return;
  const dishes=new Set(meal.dishes.map(d=>d.id)),byId=new Map(tasks.map(t=>[t.id,t]));
+ const observed=new Set(((meal as ExtendedMeal).events??[]).flatMap(e=>(e.phaseObservations??[]).map(o=>o.phaseId)));
  const phases=plan.phases.filter(p=>dishes.has(p.dishId)&&(!byId.has(p.startTaskId)||byId.get(p.startTaskId)?.dishId===p.dishId)
-   &&p.endTaskIds.every(id=>!byId.has(id)||byId.get(id)?.dishId===p.dishId));
+   &&p.endTaskIds.every(id=>!byId.has(id)||byId.get(id)?.dishId===p.dishId)
+   &&(!p.independent||observed.has(p.id)||byId.has(p.startTaskId)&&p.endTaskIds.length>0&&p.endTaskIds.every(id=>byId.has(id))));
  const known=new Map(phases.map(p=>[p.id,p]));
  const actions:Record<string,PhaseAction>={};
  for(const [id,a] of Object.entries(plan.actions)){
@@ -152,6 +154,12 @@ export function effectivePhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan|unde
 export function taskActivityIds(meal:Meal,taskId:string,tasks:PlannedTask[]):string[]{
  const a=effectivePhasePlan(meal,tasks)?.actions[taskId];
  return [...new Set([...(a?.starts??[]),...(a?.ends??[]),...(a?.observes??[]),...(a?.checkpoint?[a.checkpoint.phaseId]:[])])];
+}
+
+export function activityBoundaryWarnings(meal:Meal,tasks:PlannedTask[]):string[]{
+ const known=new Set(tasks.map(t=>t.id));
+ return (meal.phasePlan?.phases??[]).filter(p=>p.independent&&meal.dishes.some(d=>d.id===p.dishId)&&(!known.has(p.startTaskId)||p.endTaskIds.some(id=>!known.has(id))))
+  .map(p=>`${meal.dishes.find(d=>d.id===p.dishId)!.name}: ${p.stage?activityStages[p.stage]:'Activity'} needs review because its ${!known.has(p.startTaskId)?'start':'end'} step was removed. Recorded observations are retained.`);
 }
 
 export function phaseObservations(meal:Meal,phaseId:string){

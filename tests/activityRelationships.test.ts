@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {parseRecipeText} from '../src/domain/recipe';
 import {newMeal,createDish} from '../src/domain/meal';
-import {cookTimeline,startCookSession,recordEvent,correctActivityBoundary,finishSuppressedHolding,addStep,setStepDuration} from '../src/domain/cookState';
+import {cookTimeline,startCookSession,recordEvent,correctActivityBoundary,finishSuppressedHolding,addStep,removeStep} from '../src/domain/cookState';
 import {phaseObservations,buildPhasePlan,effectivePhasePlan} from '../src/domain/cookingPhases';
 import {detectedActivities,activityIssue,suggestActivities,ACTIVITY_PARAMETER} from '../src/domain/activities';
 import {recipeReview,setRecipeActivity} from '../src/domain/recipeReview';
@@ -34,6 +34,16 @@ describe('authored activity boundaries and compatibility',()=>{
   const dish=parseRecipeText('Wings','Start smoking wings\nStart heating fryer oil\nCheck wing temperature\nVerify oil is ready\nRemove wings from smoker');
   expect(dish.activities!.definitions.find(a=>a.stage==='preheating')!.checkpointStepIds).toEqual([]);
   expect(dish.activities!.definitions.find(a=>a.stage==='cooking')!.checkpointStepIds).toEqual(['step-3']);
+ });
+ it('does not use utensil removal or food-temperature checks as physical end gates',()=>{
+  for(const check of ['Remove smoker lid','Remove wing thermometer','Take wing temperature']){
+   const dish=parseRecipeText('Wings','Start smoking wings\n'+check+'\nRemove wings from smoker');
+   expect(dish.activities!.definitions.find(a=>a.stage==='cooking')?.endStepId).toBe('step-3');
+  }
+  for(const check of ['Check turkey temperature','Check oil temperature','Check turkey is ready']){
+   const fryer=parseRecipeText('Fryer','Preheat fryer\n'+check+'\nVerify oil is ready');
+   expect(fryer.activities!.definitions.find(a=>a.stage==='preheating')?.endStepId).toBe('step-3');
+  }
  });
  it('keeps both wings activities, attributes observations, and does not confuse a reading with readiness',()=>{
   const d={...createDish('wings'),id:'wings'};let m=startCookSession({...newMeal(),serveAt:at('20:00'),dishes:[d]},at('12:00'));
@@ -79,6 +89,15 @@ describe('authored activity boundaries and compatibility',()=>{
   expect(projected.minimumRemaining).toBe(40);
   expect(projected.phases!.find(p=>p.stage==='preheating')!.finish).toBe('2026-11-22T12:30:00.000Z');
  });
+ it('projects sequential Holding from cooking finish despite an older frozen planned position',()=>{
+  const dish={...parseRecipeText('Seeds','Roast seeds (15 minutes)\nRemove seeds and leave to cool (10 minutes)'),id:'seeds'};
+  let meal=startCookSession({...newMeal(),serveAt:at('13:00'),dishes:[dish]},at('12:00'));
+  meal=recordEvent(meal,'seeds:step-1','completed',at('12:00'));
+  meal={...meal,taskOverrides:{...meal.taskOverrides,'seeds:step-1':{...meal.taskOverrides?.['seeds:step-1'],recordedPlanAt:at('07:35')}}};
+  const projected=cookProjection(meal,cookTimeline(meal),Date.parse(at('12:05')));
+  expect(projected.phases!.find(p=>p.stage==='holding')!.finish).toBe(new Date(at('12:25')).toISOString());
+  expect(projected.minimumRemaining).toBe(20);
+ });
  it('keeps No activity and stage/boundary corrections through original/copy/save/reuse',()=>{
   let review=recipeReview(parseRecipeText('Brine','Start refrigerated brine\nEnd brine and pat dry\nRoast turkey (60 minutes)\nRemove turkey'),at('20:00'));
   const d=review.dishes[0],first=d.activities!.definitions[0];
@@ -103,6 +122,16 @@ describe('authored activity boundaries and compatibility',()=>{
   const hidden={...review,hiddenTaskIds:[d.id+':'+a.endStepId]};
   expect(activityIssue(d,cookTimeline(hidden),a)).toContain('end step');
   expect(d.activities!.definitions[0]).toEqual(a);
+ });
+ it('protects recorded boundaries and leaves a broken unstarted relationship ordinary',()=>{
+  const dish={...parseRecipeText('Roast','Roast turkey (60 minutes)\nRemove turkey from oven'),id:'roast'};
+  const fresh=startCookSession({...newMeal(),serveAt:at('20:00'),dishes:[dish]},at('12:00'));
+  const hidden=removeStep(fresh,'roast:step-2',at('12:01'));
+  expect(effectivePhasePlan(hidden,cookTimeline(hidden))!.phases).toEqual([]);
+  expect(recordEvent(hidden,'roast:step-1','completed',at('12:10')).events!.at(-1)!.phaseObservations).toBeUndefined();
+  const active=recordEvent(fresh,'roast:step-1','completed',at('12:10')),before=structuredClone(active);
+  expect(()=>removeStep(active,'roast:step-2',at('12:20'))).toThrow('bounds recorded activity');
+  expect(active).toEqual(before);
  });
  it('keeps an activity linked to an added step across independent recipe reuse',()=>{
   let review=recipeReview(parseRecipeText('Manual','Start refrigerated brine\nSeason turkey'),at('20:00'));

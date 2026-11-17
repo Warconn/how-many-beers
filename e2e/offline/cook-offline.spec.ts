@@ -14,7 +14,7 @@ async function ready(page:Page){
 
 test.beforeEach(async({request})=>{await request.post('/__test__/worker-mode?mode=original');});
 
-test('physical roast/cool observations resume and finish offline without inventing Serve',async({page,context},info)=>{
+test('physical roast/cool observations resume offline and end Holding only on explicit Finish',async({page,context},info)=>{
  await page.clock.install({time:new Date('2026-11-08T16:05:00Z')});await page.goto('/');await ready(page);
  const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nRemove seeds and leave to cool (10 minutes)');
  let meal=startCookSession({...newMeal(),name:'Offline seeds',serveAt:'2026-11-08T12:00',dishes:[dish]},'2026-11-08T15:55:00Z');
@@ -23,8 +23,8 @@ test('physical roast/cool observations resume and finish offline without inventi
  await page.getByRole('button',{name:/Continue cooking/}).click();const meter=page.getByRole('region',{name:'Cook duration in beers'});await expect(meter).toContainText('0h 20m');
  await page.clock.fastForward(5*60000);await page.getByRole('region',{name:'Current step',exact:true}).getByRole('checkbox',{name:/Complete Remove seeds/}).click({noWaitAfter:true});await expect(meter).toContainText('0h 10m');
  const observed=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),ACTIVE_KEY);expect(observed.events.slice(0,meal.events!.length)).toEqual(JSON.parse(JSON.stringify(meal.events)));expect(observed.completed[dish.id+':serve']).toBeUndefined();
- await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(meter).toContainText('0h 10m');await page.clock.fastForward(10*60000);await expect(meter).toContainText('0.0');await page.getByRole('button',{name:'Finish cook',exact:true}).click();await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
- const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY);expect(saved.cooks[0].meal.events).toEqual(observed.events);expect(saved.cooks[0].meal.serveAt).toBe(meal.serveAt);
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(meter).toContainText('0h 10m');await page.clock.fastForward(10*60000);await expect(meter).toContainText('0.0');await page.getByRole('button',{name:'Finish cook',exact:true}).click();await page.clock.pauseAt(new Date('2026-11-08T16:21:00Z'));await page.getByRole('button',{name:'Save finished cook',exact:true}).click();
+ const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!),HISTORY_KEY);expect(saved.cooks[0].meal.events.slice(0,observed.events.length)).toEqual(observed.events);expect(saved.cooks[0].meal.events.slice(observed.events.length)).toEqual([expect.objectContaining({taskId:dish.id+':serve',kind:'completed',occurredAt:'2026-11-08T16:21:00.000Z',phaseObservations:[{phaseId:dish.id+':activity-step-3',boundary:'end'}]})]);expect(saved.cooks[0].meal.serveAt).toBe(meal.serveAt);
  await page.screenshot({path:info.outputPath('physical-offline-finished.png'),fullPage:true});await context.setOffline(false);
 });
 

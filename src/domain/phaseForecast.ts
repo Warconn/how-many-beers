@@ -7,7 +7,7 @@ import type {ActivityStage} from './activities';
 const minute=60000;
 const stamp=(s:string|null|undefined)=>s&&Number.isFinite(Date.parse(s))?Date.parse(s):null;
 const iso=(n:number)=>new Date(n).toISOString();
-export type LivePhase={id:string;dishId:string;kind:CookingPhase['kind'];stage?:ActivityStage;startTaskId:string;actualStart:string|null;actualEnd:string|null;start:string;finish:string;minutes:number|null;elapsed:number;active:boolean;overrun:boolean;uncertain:boolean};
+export type LivePhase={id:string;dishId:string;kind:CookingPhase['kind'];stage?:ActivityStage;startTaskId:string;startTitle?:string;actualStart:string|null;actualEnd:string|null;start:string;finish:string;minutes:number|null;elapsed:number;active:boolean;overrun:boolean;uncertain:boolean};
 export type PhaseProjection={forecasts:Record<string,StepForecast>;phases:LivePhase[];finish:string|null;earliestFinish:string;remaining:number|null;minimumRemaining:number;projected:number|null;elapsed:number;provisional:boolean;reason:string;provisionalTiming?:{offSmoker:string;readyAfterRest:string;basedOn:'planned'|'actual'}};
 
 /** A single read-only projection feeds the meter, current action and upcoming
@@ -55,7 +55,7 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
      const loaded=plan.phases.find(q=>q.dishId===dishId&&q.stage==='cooking'&&phaseObservations(meal,q.id).start);
      const origin=loaded?stamp(byId.get(loaded.startTaskId)?.scheduledAt):null;
      const aligned=loaded&&origin!==null&&planned!==null?Date.parse(phaseObservations(meal,loaded.id).start!.occurredAt)+planned-origin:anchor;
-     const earliest=Math.max(now,p.independent?aligned:preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor)+(p.leadMinutes??0)*minute;
+     const earliest=Math.max(now,p.independent?(prior?Date.parse(prior.finish):aligned):preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor)+(p.leadMinutes??0)*minute;
      const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
      const start=actualStart??Math.max(earliest,fixed??earliest);
      const nominal=minutes===null?null:start+minutes*minute;
@@ -71,7 +71,7 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
      const precedingUnknown:boolean=actualStart===null&&((!p.independent&&unknown)||!!prior?.uncertain);
      const unresolved:boolean=actualEnd===null&&(expired||minutes===null||unscheduled||conflict||precedingUnknown);
      const finish=actualEnd??Math.max(start,predicted??start,expired?now:start);
-     const state:LivePhase={id:p.id,dishId,kind:p.kind,...(p.stage?{stage:p.stage}:{}),startTaskId:p.startTaskId,actualStart:actual.start?.occurredAt??null,actualEnd:actual.end?.occurredAt??null,start:iso(start),finish:iso(finish),minutes,elapsed:actualStart===null?0:Math.max(0,((actualEnd??now)-actualStart)/minute),active:actualStart!==null&&actualEnd===null,overrun,uncertain:unresolved};
+     const state:LivePhase={id:p.id,dishId,kind:p.kind,...(p.stage?{stage:p.stage}:{}),startTaskId:p.startTaskId,startTitle:byId.get(p.startTaskId)?.title,actualStart:actual.start?.occurredAt??null,actualEnd:actual.end?.occurredAt??null,start:iso(start),finish:iso(finish),minutes,elapsed:actualStart===null?0:Math.max(0,((actualEnd??now)-actualStart)/minute),active:actualStart!==null&&actualEnd===null,overrun,uncertain:unresolved};
      states.set(p.id,state);
      forecasts[t.id]={start:state.start,finish:state.finish,status:unresolved?'unknown':'estimated',phaseId:p.id,elapsedMinutes:state.elapsed,physicalActive:state.active,overEstimate:overrun,lowerBound:unresolved,retainDuration:state.active,template:{kind:p.kind==='passive'?'rest':'cook',at:state.start,basis:actualStart===null?'estimated':'actual',...(minutes!==null?{minutes}:{})},...(unresolved?{reason:expired?'Cooking is still active; the finish is an earliest estimate.':conflict?'Fixed start conflicts with unfinished work.':'Some remaining timing is unknown.'}:{})};
      if(p.independent){end=Math.max(end,finish);uncertain ||= unresolved;cursor=Math.max(cursor,finish);unknown ||= unresolved;}else{cursor=finish;unknown=unresolved;}

@@ -695,7 +695,7 @@ it stops on inactive Home and does not add a separate timer to the summary.
 V1 shows one canonical action for simultaneous work. It does not claim other
 steps are unavailable or invent serialized timestamps / +N readiness. #3 can
 supply improved priority and projections through the same presentation later.
-# Parallel Cooking (#3)
+## Parallel Cooking (#3)
 
 Cooking retains its existing step/details view, flat chronological full checklist,
 prominent Beerometer and sticky meal-wide guide. A checkbox performs an authored

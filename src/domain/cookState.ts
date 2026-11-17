@@ -221,6 +221,8 @@ export function setStepDuration(meal:Meal,taskId:string,durationMinutes:number|n
 export function removeStep(meal: Meal, taskId: string, occurredAt: string): ExtendedMeal {
   if (!cookTimeline(meal).some(t=>t.id===taskId)) throw new Error("Task not found.");
   const m = migrateMeal(meal);
+  const phase=effectivePhasePlan(m,cookTimeline(m))?.phases.find(p=>(p.startTaskId===taskId||p.endTaskIds.includes(taskId))&&((m.events??[]).some(e=>e.phaseObservations?.some(o=>o.phaseId===p.id))));
+  if(phase)throw Error('This step bounds recorded activity. Keep the step and correct its actual time instead.');
   return {
     ...m,
     hiddenTaskIds: [...(m.hiddenTaskIds ?? []), taskId],

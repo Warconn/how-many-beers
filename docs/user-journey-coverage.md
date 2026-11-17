@@ -16,6 +16,26 @@ November 9, 2026 release review. These are Playwright tests that interact with t
 real rendered app, using its buttons, inputs, navigation and saving paths. Unit
 coverage supplements them; passing unit tests alone is not user-journey evidence.
 
+## Parallel Cooking (#3)
+
+`parallel-cooking.spec.ts` exercises the synthetic two-turkey overlap and stored
+six-phase defect, brisket readings 145/162/181, simultaneous wings smoking/oil heat
+with separate readiness/removal/frying boundaries, and brats readings 130/150/165
+on one checked row after reload. It also corrects stage/start/end and No activity
+through real recipe review controls before cooking. Desktop/mobile Chromium and
+iPhone WebKit projects retain screenshots. These fixtures contain no exported
+owner records.
+
+`auth/personal-recipes.spec.ts` saves/reloads reviewed relationships through the
+account library, retains rejected suggestions, and verifies independent active
+meal/history snapshots after library edits. `activityRelationships.test.ts` and
+`parallelCooking.test.ts` cover immutable actuals, compound boundaries, overlap
+bounds, metadata round trips, protected recorded boundaries and idempotent
+migration/rollback. Disposable PostgreSQL `parallel-activities.sql` verifies the
+same payloads through existing RPCs and owner isolation; no hosted migration is
+required. `focused-cooking` checks that selecting another row does not change the
+meal-wide footer action or saved state.
+
 ## #139 orphaned plans and empty drafts
 
 `e2e/auth/upcoming-plans.spec.ts` seeds actual owner-keyed IndexedDB recovery,
@@ -122,6 +142,7 @@ sleeping through a cook. Screenshots join the existing review artifact.
 | Fixed ribs 8:10 AM → 1:40 PM heat finish → 2 PM ready (#117) | `step-timing`, `serving-first` | Literal template fixture, actual UI edits and target preservation |
 | Late target, fixed/manual anchors, overnight/DST edits | `serving-first`, `step-timing`, `duration-reflow` | Deterministic exact clocks, invalid/ambiguous date validation |
 | Prominent collapsed current/Up Next cues and optional tools | `step-timing-cues`, `cooking-simplicity`, `post-brisket`, `cooking-layout` | Guided cards, flat checklist, cues without opening details |
+| Independent same-dish activities, repeatable checked checkpoints, recipe corrections | `parallel-cooking`, `auth/personal-recipes`; units `activityRelationships`, `parallelCooking` | Synthetic turkey/brisket/wings/brats, real controls and reload, exact activity IDs and immutable observations |
 | Actual cook starts, parallel dishes, overruns and changed estimates | `physical-cooking`, `live-cook-start`, `live-step-estimates`, `remaining-cook` | Seeded physical boundaries plus real actions/corrections/ticks/reload; never auto-doneness |
 | New 6-hour / optional 8-hour brisket reserve; saved methods unchanged | `post-brisket`, `cook-journeys`; units `postBrisket`, `brisketEstimate` | UI reserve controls, full new cook; unit snapshot/default compatibility |
 | Hold until serving → existing Finish; early/cancelled/complete finish | `cook-journeys`, `cooking-simplicity`, `cooking-layout`, `focused-cooking`, `auth/account-cooks` | New full journey plus targeted hold and finish confirmations, immutable history |
