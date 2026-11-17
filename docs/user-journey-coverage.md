@@ -18,6 +18,15 @@ coverage supplements them; passing unit tests alone is not user-journey evidence
 
 ## Parallel Cooking (#3)
 
+`servingTimeSynchronization.test.ts` and the Planning → Cooking Mode journey in
+`serving-first.spec.ts` cover 75-minute potatoes plus 45-minute brats for 6 PM.
+The browser checks both individual finishes, the shorter dish's 5:15 start,
+an actual potato start, reload and byte-identical retained events. Checking only
+the whole-meal Beerometer would miss the former 5:30 brat finish. Unit cases cover
+stable offsets on later clocks, early/late sessions, late actuals, early actuals
+that must remain early, duration edits, fixed paths, unknown duration and built-in
+brisket/ribs with different preparation and holding allowances.
+
 `parallel-cooking.spec.ts` exercises the synthetic two-turkey overlap and stored
 six-phase defect, brisket readings 145/162/181, simultaneous wings smoking/oil heat
 with separate readiness/removal/frying boundaries, and brats readings 130/150/165

@@ -39,6 +39,9 @@ Pick when you want everyone at the table. How Many Beers combines the steps from
 
 Edit the plan as you go. Times are **estimates**, not promises. You stay in charge of when food is actually ready.
 
+Cooking Mode keeps known-duration, unstarted dishes aligned to one estimated meal
+finish, while preserving recorded starts and explicit fixed times.
+
 ### 📖 Bring your own recipes
 
 Start with an editable cooking template or create a dish from pasted recipe instructions or a `.txt` / `.md` file. Review the steps and durations before adding them to your meal.

@@ -13,6 +13,52 @@ export type PhaseProjection={forecasts:Record<string,StepForecast>;phases:LivePh
 /** A single read-only projection feeds the meter, current action and upcoming
  * times. Only tagged actual observations anchor physical intervals. */
 export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):PhaseProjection{
+ const current=projectPhases(meal,timeline,now);
+ const anchor=stamp(meal.startedAt)??now;
+ const originals=meal.dishes.filter(d=>(stamp(d.executionAddedAt)??anchor)<=anchor);
+ if(originals.length<2)return current;
+ const originalIds=new Set(originals.map(d=>d.id)),originalTasks=timeline.filter(t=>originalIds.has(t.dishId));
+ // Compare authored work budgets at the session's fixed origin. Using the live
+ // clock here would keep postponing an unstarted shorter dish on every tick.
+ const nominalMeal:ExtendedMeal={...meal,dishes:originals,completed:{},events:[]};
+ const nominal=projectPhases(nominalMeal,originalTasks,anchor);
+ const finish=(projection:PhaseProjection,dishId:string)=>{
+  const rows=originalTasks.filter(t=>t.dishId===dishId).map(t=>projection.forecasts[t.id]).filter(Boolean);
+  if(!rows.length||rows.some(f=>f.lowerBound||['unknown','blocked','overdue'].includes(f.status)))return null;
+  const ends=rows.map(f=>stamp(f.finish??f.start)).filter((n):n is number=>n!==null);
+  return ends.length?Math.max(...ends):null;
+ };
+ const budgets=new Map(originals.map(d=>[d.id,finish(nominal,d.id)]));
+ const known=[...budgets.values()].filter((n):n is number=>n!==null);
+ if(known.length<2)return current;
+ let ready=Math.max(...known);
+ const events=(meal as ExtendedMeal).events??[];
+ const taskOwners=new Map(originalTasks.map(t=>[t.id,t.dishId]));
+ const phaseOwners=new Map(meal.phasePlan?.phases.map(p=>[p.id,p.dishId]));
+ const observed=new Set(events.flatMap(e=>(e.phaseObservations??[]).map(o=>phaseOwners.get(o.phaseId))));
+ const progressed=new Set([
+  ...Object.keys(meal.completed).map(id=>taskOwners.get(id)),
+  ...events.filter(e=>e.kind==='started'||e.phaseObservations?.length).map(e=>taskOwners.get(e.taskId)),
+ ]);
+ for(const dish of originals){
+  if(!progressed.has(dish.id))continue;
+  const actualFinish=finish(current,dish.id);
+  if(actualFinish!==null)ready=Math.max(ready,actualFinish);
+ }
+ const starts=new Map<string,number>();
+ for(const dish of originals){
+  const budget=budgets.get(dish.id);
+  // Never shift an actual interval or an explicitly fixed path to make a target
+  // look achievable. New dishes retain their own recorded creation anchor.
+  if(budget===null||budget===undefined||observed.has(dish.id)
+    ||originalTasks.some(t=>t.dishId===dish.id&&t.timingMode==='fixed'))continue;
+  const start=anchor+ready-budget;
+  if(start>anchor)starts.set(dish.id,start);
+ }
+ return starts.size?projectPhases(meal,timeline,now,starts):current;
+}
+
+function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:ReadonlyMap<string,number>=new Map()):PhaseProjection{
  const plan=effectivePhasePlan(meal,timeline)!,events=(meal as ExtendedMeal).events??[],forecasts:Record<string,StepForecast>={},states=new Map<string,LivePhase>();
  const byId=new Map(timeline.map(t=>[t.id,t]));
  let end=now,uncertain=false;
@@ -37,7 +83,7 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
   const independent=!dish&&!(meal as ExtendedMeal).planningGeneralSequence;
   const generalPositions=own.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
   const generalOrigin=generalPositions.length?Math.min(...generalPositions):anchor;
-  let cursor=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor),unknown=false;
+  let cursor=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor),unknown=false;
   let previousPrep:{planned:number;start:number;minutes:number}|undefined;
   for(const t of own){
    if(plan.suppressed.includes(t.id))continue;

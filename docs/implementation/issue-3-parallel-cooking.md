@@ -152,6 +152,25 @@ that WebKit coverage.
 
 ## Screenshots and product review
 
+November 17 serving synchronization follow-up: planning correctly gave 75-minute
+potatoes a 4:45 start and 45-minute brats a 5:15 start for 6 PM. Cooking Mode used
+the session origin separately for both dishes, showing a 5:30 brat finish while
+the overall Beerometer still showed 6 PM. Transition/reload unit regressions and
+a real browser test reproduced that gap before the fix.
+
+The projection now compares nominal execution budgets at the fixed session
+origin and delays eligible unstarted dishes to the common estimated meal finish.
+Known progress can extend that finish; recorded physical boundaries and fixed
+paths remain authoritative. Unknown work is never assigned an invented duration.
+Newly added dishes retain their creation anchor, and the existing single-dish
+early-start behavior is preserved. This is a pure view projection, with no JSON
+format change, migration, account write or historical rewrite.
+
+All 649 unit tests pass, including 13 synchronization cases. The new browser
+journey verifies the individual start/finish times before and after entering
+Cooking Mode and reload, with unchanged actual events. Final desktop/mobile
+checks, pinned-browser CI and the deployed commit are recorded in PR #167.
+
 Before screenshots come from an isolated checkout of dev `e1b21f0`; after screenshots
 come from the feature code. Both use synthetic cooks, desktop and phone sizes.
 Cooking and recipe-correction images are included in the feature PR.

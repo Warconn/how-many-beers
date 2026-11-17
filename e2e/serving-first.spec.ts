@@ -41,6 +41,32 @@ async function edit(page:Page,name:string,minutes?:string,fixed?:string){
 const pair=()=>meal(dish('Potatoes','Roast potatoes (75 minutes)'),dish('Brats','Grill brats (45 minutes)'));
 const grill=()=>meal(dish('Brats','Preheat grill (15 minutes)\nGrill brats (35 minutes)\nRest brats (10 minutes)'));
 
+test('two dishes retain their shared serving finish when planning becomes Cooking Mode',async({page},info)=>{
+ const potatoes=dish('Potatoes','Roast potatoes (75 minutes)\nRemove potatoes from oven (0 minutes)');
+ const brats=dish('Brats','Grill brats (45 minutes)\nRemove brats from grill (0 minutes)');
+ await open(page,meal(potatoes,brats),'16:45');await combined(page);
+ await starts(row(page,'Roast potatoes (75 minutes)'),'16:45');
+ await starts(row(page,'Grill brats (45 minutes)'),'17:15');
+ await page.getByRole('button',{name:'Start cooking',exact:true}).click();
+ await page.getByRole('button',{name:'Full checklist',exact:true}).click();
+ const list=page.getByRole('region',{name:'Full cook checklist',exact:true});
+ const cookingRow=(title:string,name:string)=>list.getByRole('button',{name:`Open step: ${title} for ${name}`,exact:true});
+ await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime',at('18:00'));
+ await expect(cookingRow('Roast potatoes (75 minutes)','Potatoes').getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime',at('18:00'));
+ await page.evaluate(()=>window.scrollTo(0,0));
+ await page.screenshot({path:info.outputPath('two-dish-cooking-sync.png'),fullPage:true,style:'nextjs-portal{display:none}'});
+ await expect(cookingRow('Grill brats (45 minutes)','Brats').getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime',at('17:15'));
+ await expect(cookingRow('Grill brats (45 minutes)','Brats').getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime',at('18:00'));
+ await list.getByRole('checkbox',{name:'Complete Roast potatoes (75 minutes) for Potatoes',exact:true}).check();
+ const recorded=await stored(page);
+ expect(recorded.events?.flatMap(e=>e.phaseObservations??[])).toHaveLength(1);
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();
+ await page.getByRole('button',{name:'Full checklist',exact:true}).click();
+ await expect(cookingRow('Grill brats (45 minutes)','Brats').getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime',at('17:15'));
+ await expect(cookingRow('Grill brats (45 minutes)','Brats').getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime',at('18:00'));
+ expect((await stored(page)).events).toEqual(recorded.events);
+});
+
 test('independent dish windows overlap; target changes and short sauce preserve durations',async({page})=>{
  const m=pair();await open(page,m);await ready(page,'18:00');await expect(page.getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime',at('16:45'));await combined(page);await starts(row(page,'Roast potatoes (75 minutes)'),'16:45');await starts(row(page,'Grill brats (45 minutes)'),'17:15');
  await expect(page.getByRole('region',{name:'Cook duration in beers'})).toContainText('1h 15m');

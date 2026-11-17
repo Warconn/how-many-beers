@@ -697,6 +697,15 @@ steps are unavailable or invent serialized timestamps / +N readiness. #3 can
 supply improved priority and projections through the same presentation later.
 ## Parallel Cooking (#3)
 
+Cooking Mode keeps known-duration, unstarted dishes aligned to one estimated
+meal finish. It compares each original dish's preparation/cooking/holding budget
+at the fixed session origin, preserving the shorter dish's later start across
+clock ticks and reload. A known late actual can move guidance for the unstarted
+dishes; recorded activity, fixed times and the requested serving target stay
+unchanged. Unknown work remains uncertain, and dishes added during cooking keep
+their existing creation anchor. The existing session-based behavior still avoids
+inventing idle days of holding when cooking starts well before a calendar target.
+
 Cooking retains its existing step/details view, flat chronological full checklist,
 prominent Beerometer and sticky meal-wide guide. A checkbox performs an authored
 action: start a bounded activity, confirm a milestone, or end the linked activity.
