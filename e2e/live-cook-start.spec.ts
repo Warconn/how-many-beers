@@ -16,6 +16,7 @@ test('Sunday brisket started Thursday uses execution work, with the original tar
 });
 test('5+15+10 live finish follows actual roast and cooling transitions without extra Start controls',async({page},info)=>{
  const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nCool (10 minutes)'),meal={...newMeal(),name:'Seeds',serveAt:'2026-11-01T13:00Z',dishes:[dish]};await load(page,meal);const guide=page.getByRole('region',{name:'Current step',exact:true}),finish=page.getByLabel('Cook estimated finish',{exact:true}),meter=page.getByRole('region',{name:'Cook duration in beers'});
+ const initial=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(initial.events??[]).toEqual([]);
  await expect(finish).toHaveAttribute('datetime','2026-10-29T23:13:00.000Z');await page.clock.fastForward(60000);await guide.getByRole('checkbox').click({noWaitAfter:true});await expect(finish).toHaveAttribute('datetime','2026-10-29T23:09:00.000Z');
  await guide.getByRole('checkbox').click({noWaitAfter:true});await page.clock.fastForward(20*60000);await expect(meter).toContainText('Earliest serving');await expect(meter).toContainText('0h 10m+');
  await guide.getByRole('checkbox').click({noWaitAfter:true});await expect(finish).toHaveAttribute('datetime','2026-10-29T23:14:00.000Z');await page.clock.fastForward(2*60000);await expect(finish).toHaveAttribute('datetime','2026-10-29T23:14:00.000Z');await expect(meter).toContainText('0h 08m');await expect(meter).not.toContainText('Projected cook');

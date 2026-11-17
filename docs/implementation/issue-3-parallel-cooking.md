@@ -126,18 +126,23 @@ with existing observations, keeping ordinary rows quiet.
 
 ## Final local verification
 
-Typecheck and all 635 unit checks pass. All 12 desktop/mobile Chromium acceptance
+Typecheck and all 636 unit checks pass. All 12 desktop/mobile Chromium acceptance
 executions pass, followed by three focused browser journeys after tightening the
-terminal-gate detector. The 38 existing guidance, minimal-tools, imported-duration
-and fixed-timing browser checks pass. All 18 built-shell Android Chromium offline
+terminal-gate detector. The 84 existing guidance, import, history, physical cooking, minimal-tools and
+fixed-timing browser cases pass across the targeted runs and repaired timing
+regression rerun. A final 20-execution desktop/mobile run covers all six acceptance
+journeys and the four live cook-start journeys. All 18 built-shell Android Chromium offline
 checks pass across the suite and the final explicit-Holding-end rerun. The account
-recipe correction/save/reload/isolation journey passes. The production export and
-local PostgreSQL clean/seeded-upgrade security harness pass.
+recipe correction/save/reload/isolation journey passes. All 13 desktop auth cases pass, including warm callback reruns after cold
+compilation delays. The production export and local PostgreSQL clean/seeded-upgrade security harness pass.
 
 The detector now excludes lid/probe/thermometer/foil removal, ordinary oil
 temperature checks and food readiness from an equipment-ready boundary. A linked
 sequential interval projects from the preceding activity's finish, rather than
-adding an obsolete frozen planned offset. Keyboard/native scroll targets reserve
+adding an obsolete frozen planned offset. Initial ordinary preparation remains
+part of the estimate: 5-minute prep + 15-minute roast + 10-minute cooling gives
+30 minutes, then reforecasts to 25 after prep is checked without inventing a
+physical start. Keyboard/native scroll targets reserve
 space for the fixed meter and guide. These refinements have focused regressions.
 
 Required CI additionally runs desktop/iPhone account, auth, offline and changed UI

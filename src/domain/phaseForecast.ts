@@ -54,7 +54,7 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
      const prior=p.after?states.get(p.after):undefined;
      const loaded=plan.phases.find(q=>q.dishId===dishId&&q.stage==='cooking'&&phaseObservations(meal,q.id).start);
      const origin=loaded?stamp(byId.get(loaded.startTaskId)?.scheduledAt):null;
-     const aligned=loaded&&origin!==null&&planned!==null?Date.parse(phaseObservations(meal,loaded.id).start!.occurredAt)+planned-origin:anchor;
+     const aligned=loaded&&origin!==null&&planned!==null?Date.parse(phaseObservations(meal,loaded.id).start!.occurredAt)+planned-origin:cursor;
      const earliest=Math.max(now,p.independent?(prior?Date.parse(prior.finish):aligned):preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor)+(p.leadMinutes??0)*minute;
      const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
      const start=actualStart??Math.max(earliest,fixed??earliest);

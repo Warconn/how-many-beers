@@ -89,6 +89,13 @@ describe('authored activity boundaries and compatibility',()=>{
   expect(projected.minimumRemaining).toBe(40);
   expect(projected.phases!.find(p=>p.stage==='preheating')!.finish).toBe('2026-11-22T12:30:00.000Z');
  });
+ it('includes ordinary preparation before the first independent physical activity',()=>{
+  const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nCool (10 minutes)');
+  let meal=startCookSession({...newMeal(),serveAt:at('20:00'),dishes:[dish]},at('12:00'));
+  expect(cookProjection(meal,cookTimeline(meal),Date.parse(at('12:00'))).minimumRemaining).toBe(30);
+  meal=recordEvent(meal,dish.id+':step-1','completed',at('12:01'));
+  expect(cookProjection(meal,cookTimeline(meal),Date.parse(at('12:01'))).minimumRemaining).toBe(25);
+ });
  it('projects sequential Holding from cooking finish despite an older frozen planned position',()=>{
   const dish={...parseRecipeText('Seeds','Roast seeds (15 minutes)\nRemove seeds and leave to cool (10 minutes)'),id:'seeds'};
   let meal=startCookSession({...newMeal(),serveAt:at('13:00'),dishes:[dish]},at('12:00'));
