@@ -133,7 +133,14 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
     // changes the phase; rapid check-offs cannot manufacture cooked minutes.
     continue;
    }
-   if(done!==null){if(independent)continue;cursor=Math.max(cursor,done);if(preparation&&planned!==null)previousPrep={planned,start:done,minutes:0};continue;}
+   if(done!==null){
+    if(independent)continue;
+    cursor=Math.max(cursor,done);
+    // An early prep completion must not reset the next prep to its actual time
+    // when this dish's remaining forecast has a later shared-serving window.
+    if(preparation&&planned!==null)previousPrep={planned,start:cursor,minutes:0};
+    continue;
+   }
    const minutes=length(t),actual=events.filter(e=>e.taskId===t.id&&e.kind==='started'&&!e.phaseEstimate&&!e.phaseObservations).at(-1);
    const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
    // Ordinary preparation estimates can run from the session/creation anchor.

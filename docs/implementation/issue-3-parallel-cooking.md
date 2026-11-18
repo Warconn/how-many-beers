@@ -275,3 +275,35 @@ run repeats typechecking and all units. Current desktop/mobile screenshots were
 reviewed. CI retains real iPhone WebKit, full accounts/auth/offline/security and
 the aggregate gate. Local WebKit download remains blocked by the environment's
 browser-download endpoint; Chromium mobile checks do not claim WebKit coverage.
+
+## Brisket/turkey guided-order regression (November 18)
+
+Completing an ordinary built-in prep step early carried its actual completion
+time into the next prep calculation, discarding the later cursor assigned to
+that dish for the shared serving window. The next brisket prep actions jumped
+to now while turkey's 22-hour brine stayed correctly in the future. The reported
+29h45 meal estimate and next-day brine endpoint reproduce with synthetic native
+brisket/turkey templates.
+
+The completed-prep transition now carries the current forecast cursor forward.
+Actual completion/event times, recorded physical intervals, fixed times and the
+original plan are unchanged. This is a single read-only projection correction,
+not a new scheduler or a data migration. An actually early cooking start still
+wins over a later estimate; recorded brisket completions are never undone.
+
+Six native-template regressions cover early prep/season/preheat completion,
+shared finish/reload, chronological meal guidance, preserved early actuals, and
+six days of recorded thawing before brining. The old code fails the intermediate
+prep window assertions. Browser regressions reproduce early Trim completion
+followed by the correct later Season date across reload, and follow the actual
+meal-wide guide with the clock advanced to its displayed action times. Turkey
+brine end and roasting occur before brisket serving.
+
+Verification passes typechecking and all **665 units**, plus **40 distinct local
+desktop/mobile Chromium browser cases** across the guided native meal, parallel
+activities, serving alignment and Beerometer countdown. The new browser fixture's
+clock setup and action selectors were corrected, then its four desktop/mobile
+cases passed a clean rerun. Reviewed screenshots are
+`desktop-brine-aligned-guidance.png` and `mobile-brine-aligned-guidance.png`.
+Existing early actuals remain facts: a clean order walkthrough uses a fresh meal
+and advances to the displayed estimates, rather than recording future work now.

@@ -307,3 +307,10 @@ remaining-cook Beerometer journey keeps its precise countdown assertions. Accoun
 lifecycle and mixed-meal Finish/Cook Again tests act by stable accessible step
 identity while rows re-sort, assert all actions completed, preserve prior facts,
 and verify only explicit Finish adds the generated holding-end observation.
+
+`cookingOrderRegression.test.ts` and `guided-meal-order.spec.ts` cover native
+brisket plus oven turkey with a 22-hour brine. Early completion of a prep action
+must preserve the next prep action's shared-serving window rather than jump to
+now. Coverage includes reload, real-clock guided interleaving, six-day thawing,
+shared finish and immutable actuals. The browser walkthrough advances the clock
+to estimated action times; ordinary check-offs continue to record actual time.

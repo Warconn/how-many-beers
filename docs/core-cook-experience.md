@@ -743,4 +743,6 @@ actual events and historical snapshots.
 The shared Cooking finish also follows remaining work after ordinary preparation
 is completed. Unstarted dishes align to that current estimate; already observed
 activities and fixed paths keep their anchors. Missing starts can move estimates
-later, and recorded preparation can move them earlier, without changing any fact.
+later, and recorded preparation can move them earlier, without changing any fact. Subsequent native-template prep actions retain their
+assigned window after an early prep completion; their forecast does not jump back
+to the completed step’s actual timestamp.
