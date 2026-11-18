@@ -224,3 +224,11 @@ history. The corrected selectors and all new ordering cases passed a clean
 10-case rerun; the final planning screenshot run passed both device projects.
 Reviewed screenshots are `desktop-chronological-plan-after.png` and
 `mobile-chronological-plan-after.png` in `docs/screenshots/3/`.
+
+CI on `d959ec6` passed 129 changed-UI cases, including the new chronological
+journeys on desktop/mobile Chromium and iPhone WebKit. One older imported-duration
+scenario still expected untimed source steps ahead of the sole dated Serve row.
+Its assertions now explicitly cover timed-first display both before estimates
+are supplied and after one is cleared, while retaining every duration, editor,
+reload and safe guided-preparation assertion. The corrected scenario passes both
+local Chromium device projects, with typechecking and all 653 units rerun.
