@@ -2,6 +2,7 @@ import {legacyDish as createDish} from '../tests/fixtures/legacyDish';
 import {test,expect,type Page} from '@playwright/test';
 import {newMeal} from '../src/domain/meal';
 import {parseRecipeText} from '../src/domain/recipe';
+import {cookTimeline} from '../src/domain/cookState';
 const now='2026-10-29T22:43:00Z';
 async function load(page:Page,meal= {...newMeal(),name:'Sunday brisket',serveAt:'2026-11-01T13:00Z',dishes:[createDish('brisket')]}){
  await page.clock.install({time:new Date(Date.parse(now)-1000)});await page.clock.pauseAt(new Date(now));await page.goto('/');await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();return meal;
@@ -14,8 +15,8 @@ test('Sunday brisket started Thursday uses execution work, with the original tar
  await page.clock.fastForward(60000);await expect(meter).toContainText('16h 54m');await expect(meter).not.toContainText('Projected cook');await page.getByText('Cook details & tools',{exact:true}).click();await expect(page.getByRole('region',{name:'Cooking tools'})).toContainText('Session elapsed 1 min');await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(page.getByLabel('Cook estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-30T15:38:00.000Z');
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!).startedAt)).toBe(before.startedAt);
 });
-// These actual-progress examples begin when preparation is due. Early opening
-// of a future cook is covered separately by qa167-regressions.spec.ts.
+// This actual-progress example begins when preparation is due. Future opening
+// is covered below and in qa167-regressions.spec.ts.
 test('5+15+10 live finish follows actual roast and cooling transitions without extra Start controls',async({page},info)=>{
  const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nCool (10 minutes)'),meal={...newMeal(),name:'Seeds',serveAt:'2026-10-29T23:13Z',dishes:[dish]};await load(page,meal);const guide=page.getByRole('region',{name:'Current step',exact:true}),finish=page.getByLabel('Cook estimated finish',{exact:true}),meter=page.getByRole('region',{name:'Cook duration in beers'});
  const initial=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(initial.events??[]).toEqual([]);
@@ -33,7 +34,20 @@ test('changing the serving target leaves live quantities unchanged while updatin
  await meter.screenshot({path:info.outputPath('meter-target-difference.png'),scale:'css'});
 });
 
-test('work added during a cook keeps its creation anchor on ticks and reload',async({page})=>{
- const dish=parseRecipeText('Seeds','Roast (15 minutes)\nCool (10 minutes)');await load(page,{...newMeal(),name:'Add while cooking',serveAt:'2026-10-29T23:08Z',dishes:[dish]});await page.clock.fastForward(5*60000);await page.getByRole('button',{name:'Edit plan',exact:true}).click();await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add oven side dish',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Continue cooking',exact:true}).click();const finish=page.getByLabel('Cook estimated finish',{exact:true});await expect(finish).toHaveAttribute('datetime','2026-10-30T00:18:00.000Z');await page.clock.fastForward(60000);await expect(finish).toHaveAttribute('datetime','2026-10-30T00:18:00.000Z');
- const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(saved.dishes[1].executionAddedAt).toBe('2026-10-29T22:48:00.000Z');expect(saved.events??[]).toEqual([]);await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(finish).toHaveAttribute('datetime','2026-10-30T00:18:00.000Z');
+test('work added during an early-opened cook keeps its own creation anchor on ticks and reload',async({page})=>{
+ const dish=parseRecipeText('Seeds','Roast (15 minutes)\nCool (10 minutes)');
+ await load(page,{...newMeal(),name:'Add while cooking',serveAt:'2026-11-01T13:00Z',dishes:[dish]});
+ await page.clock.fastForward(5*60000);await page.getByRole('button',{name:'Edit plan',exact:true}).click();await page.getByRole('button',{name:'+ Add a dish',exact:true}).click();await page.getByRole('button',{name:'Add oven side dish',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await page.getByRole('button',{name:'Continue cooking',exact:true}).click();
+ const finish=page.getByLabel('Cook estimated finish',{exact:true});await expect(finish).toHaveAttribute('datetime','2026-11-01T13:00:00.000Z');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!)),added=saved.dishes[1],tasks=cookTimeline(saved);
+ expect(added.executionAddedAt).toBe('2026-10-29T22:48:00.000Z');expect(saved.events??[]).toEqual([]);
+ async function checkAdded(){
+  await page.getByRole('button',{name:'Full checklist',exact:true}).click();const list=page.getByRole('region',{name:'Full cook checklist'});
+  const row=(key:string)=>list.getByRole('button',{name:'Open step: '+tasks.find(t=>t.id===added.id+':'+key)!.title+' for '+added.name,exact:true});
+  await expect(row('prep').getByLabel('Estimated start',{exact:true})).toHaveAttribute('datetime','2026-10-29T22:48:00.000Z');
+  await expect(row('rest').getByLabel('Estimated finish',{exact:true})).toHaveAttribute('datetime','2026-10-30T00:18:00.000Z');
+ }
+ await checkAdded();await page.clock.fastForward(60000);await expect(finish).toHaveAttribute('datetime','2026-11-01T13:00:00.000Z');
+ await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await checkAdded();await expect(finish).toHaveAttribute('datetime','2026-11-01T13:00:00.000Z');
+ expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!))).events).toEqual(saved.events);
 });

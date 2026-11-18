@@ -444,9 +444,10 @@ metadata; a before/after unit and the unchanged Thursday/Sunday browser scenario
 verify the original finish, target and empty event history. Current methods retain
 the approved early-opening policy.
 
-Two short-recipe browser fixtures now set their serving target when their work is
-actually due, retaining all exact actual-transition and added-dish-anchor assertions.
-Future opening has its own explicit coverage. The current native brisket/ribs
+The short preparation/roast/cooling fixture sets its serving target when work is
+actually due, retaining all exact actual-transition assertions. The added-dish
+example retains a future serving target and checks both the original meal window
+and the new dish's creation anchor. The current native brisket/ribs
 planning expectation uses the shared activity budget: 70 minutes of overlapping
 brisket prep, 13 hours cooking and six hours holding, yielding 20h10 / a 4:50 PM
 preparation start. Its old target-derived planner reserved an extra five idle
@@ -458,3 +459,11 @@ The final focused fast run passes typechecking, **687 units**, and **40 desktop/
 browser cases** covering every failed scenario plus the QA and serving regressions.
 The application changes are limited to the explicit legacy compatibility guard;
 the current-template timing changes above are reconciled test expectations.
+
+The future opening window applies only to original dishes. New dishes added
+after the session began retain their recorded creation anchor, even before any
+physical activity is recorded. A failing-before unit and the strengthened browser
+example verify the new side's exact preparation/finish times, the original meal's
+future finish, ticks, reload and unchanged empty event history. This final follow-up
+passes **688 units** and **16 affected desktop/mobile browser cases**; the preceding
+40-case timing/QA run covers the unchanged remaining-work and serving behavior.

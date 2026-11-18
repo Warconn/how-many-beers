@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {newMeal,createDish} from '../src/domain/meal';
-import {cookTimeline,startCookSession,recordEvent,correctActivityBoundary} from '../src/domain/cookState';
+import {cookTimeline,startCookSession,recordEvent,correctActivityBoundary,addDishToMeal} from '../src/domain/cookState';
 import {planningReadiness} from '../src/domain/planningReadiness';
 import {cookProjection} from '../src/domain/cookProjection';
 import {cookDuration} from '../src/domain/cookDuration';
@@ -78,5 +78,14 @@ describe('QA #167 planning and actual-start regressions',()=>{
   expect(active.phasePlan?.forecastOrigin).toBeUndefined();
   expect(p.finish).toBe('2026-10-30T15:38:00.000Z');expect(p.remaining).toBe(1015);
   expect(active.serveAt).toBe(m.serveAt);expect(active.events??[]).toEqual([]);
+ });
+ it('keeps newly added work at its creation anchor when the original cook was opened early',()=>{
+  const original=startCookSession({...newMeal(),serveAt:target,dishes:[{...createDish('brats'),id:'brats'}]},now);
+  const before=cookProjection(original,cookTimeline(original),Date.parse(now));
+  const addedAt='2026-11-18T22:05:00.000Z',m=addDishToMeal(original,{...createDish('side'),id:'side'},addedAt),snapshot=structuredClone(m);
+  const p=cookProjection(m,cookTimeline(m),Date.parse(addedAt));
+  expect(p.forecasts['side:prep'].start).toBe(addedAt);
+  expect(p.forecasts['side:rest'].finish).toBe('2026-11-18T23:35:00.000Z');
+  expect(p.finish).toBe(before.finish);expect(m.events??[]).toEqual([]);expect(m).toEqual(snapshot);
  });
 });

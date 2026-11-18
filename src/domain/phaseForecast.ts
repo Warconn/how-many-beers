@@ -97,7 +97,8 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
   const generalPositions=own.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
   const generalOrigin=generalPositions.length?Math.min(...generalPositions):anchor;
   const observed=events.some(e=>e.phaseObservations?.some(o=>o.boundary==='start'));
-  const window=observed?anchor:stamp(plan.forecastOrigin)??anchor;
+  const addedLater=(stamp(dish?.executionAddedAt)??anchor)>anchor;
+  const window=observed||addedLater?anchor:stamp(plan.forecastOrigin)??anchor;
   const dishOrigin=Math.max(anchor,window,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor);
   let cursor=dishOrigin,unknown=false;
   let previousPrep:{planned:number;start:number;minutes:number;completed?:boolean}|undefined;
