@@ -36,6 +36,15 @@ describe('two-dish serving-time synchronization across Planning and Cooking Mode
     expect(projected.forecasts['potatoes:step-1'].finish).toBe(at('18:00'));
   });
 
+  it('keeps unstarted dishes aligned when their missing start makes the whole meal later',()=>{
+    const meal=startCookSession(fixture(),at('16:45')),before=structuredClone(meal);
+    const projected=cookProjection(meal,cookTimeline(meal),Date.parse(at('17:00')));
+    expect(projected.forecasts['potatoes:step-1'].finish).toBe(at('18:15'));
+    expect(projected.forecasts['brats:step-1'].start).toBe(at('17:30'));
+    expect(projected.forecasts['brats:step-1'].finish).toBe(at('18:15'));
+    expect(meal).toEqual(before);
+  });
+
   it('retains that synchronization after starting only the longer dish and reloading',()=>{
     let meal=startCookSession(fixture(),at('16:45'));
     meal=recordEvent(meal,'potatoes:step-1','completed',at('16:45'));
@@ -147,4 +156,40 @@ describe('two-dish serving-time synchronization across Planning and Cooking Mode
     expect(meal.events??[]).toEqual([]);
     expect(meal.serveAt).toBe(at('18:00'));
   });
+});
+
+
+describe('remaining preparation and the shared dish finish',()=>{
+ function prepMeal(){
+  const potatoes={...recipeReview(parseRecipeText('Potatoes','Chop potatoes (10 minutes)\nRoast potatoes (65 minutes)\nRemove potatoes from oven (0 minutes)'),at('18:00')).dishes[0],id:'potatoes'};
+  const brats={...recipeReview(parseRecipeText('Brats','Prepare brats (5 minutes)\nGrill brats (40 minutes)\nRemove brats from grill (0 minutes)'),at('18:00')).dishes[0],id:'brats'};
+  return startCookSession({...newMeal(),serveAt:at('18:00'),dishes:[potatoes,brats]},at('16:45'));
+ }
+ it('removes completed long-dish preparation from the common remaining work budget',()=>{
+  const meal=recordEvent(prepMeal(),'potatoes:step-1','completed',at('16:45')),before=structuredClone(meal);
+  const p=cookProjection(meal,cookTimeline(meal),Date.parse(at('16:45')));
+  expect(p.forecasts['potatoes:step-2'].finish).toBe(at('17:50'));
+  expect(p.forecasts['brats:step-2'].finish).toBe(at('17:50'));
+  expect(p.finish).toBe(at('17:50'));expect(meal).toEqual(before);
+ });
+ it('aligns remaining budgets after prep completes later in both dishes, through reload',()=>{
+  let meal=recordEvent(prepMeal(),'potatoes:step-1','completed',at('16:55'));
+  meal=recordEvent(meal,'brats:step-1','completed',at('16:55'));
+  const restored=JSON.parse(JSON.stringify(meal)),before=structuredClone(restored);
+  const p=cookProjection(restored,cookTimeline(restored),Date.parse(at('16:55')));
+  expect(p.forecasts['potatoes:step-2'].finish).toBe(at('18:00'));
+  expect(p.forecasts['brats:step-2'].start).toBe(at('17:20'));
+  expect(p.forecasts['brats:step-2'].finish).toBe(at('18:00'));
+  expect(restored).toEqual(before);
+ });
+ it('retains the actual cooking start while aligning an unstarted dish with completed preparation',()=>{
+  let meal=recordEvent(prepMeal(),'potatoes:step-1','completed',at('16:45'));
+  meal=recordEvent(meal,'potatoes:step-2','completed',at('16:55'));
+  meal=recordEvent(meal,'brats:step-1','completed',at('16:50'));
+  const before=structuredClone(meal),p=cookProjection(meal,cookTimeline(meal),Date.parse(at('16:55')));
+  expect(p.forecasts['potatoes:step-2'].start).toBe(at('16:55'));
+  expect(p.forecasts['brats:step-2'].start).toBe(at('17:20'));
+  expect(p.forecasts['brats:step-2'].finish).toBe(p.forecasts['potatoes:step-2'].finish);
+  expect(meal).toEqual(before);
+ });
 });

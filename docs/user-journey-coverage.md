@@ -299,3 +299,11 @@ checks live start order, completion/reload and retained saved order/events. Arch
 steps and recorded activity are sorted by their displayed times without changing
 stored history. These run on desktop/mobile Chromium and CI iPhone WebKit; the
 existing history-activity journey retains all attribution and byte-equality checks.
+
+Preparation synchronization extends this coverage: four unit cases prove that
+completed ordinary work leaves the remaining dish budget, missing starts move
+unstarted guidance truthfully, and actual cooking starts stay fixed. The existing
+remaining-cook Beerometer journey keeps its precise countdown assertions. Account
+lifecycle and mixed-meal Finish/Cook Again tests act by stable accessible step
+identity while rows re-sort, assert all actions completed, preserve prior facts,
+and verify only explicit Finish adds the generated holding-end observation.

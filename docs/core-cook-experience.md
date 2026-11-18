@@ -739,3 +739,8 @@ planning review, dish steps, live Cooking checklist and past-cook detail. Date e
 and reforecast update that order. Equal times remain stable; untimed work follows
 timed work. This view sorting preserves authored recipe relationships, saved order,
 actual events and historical snapshots.
+
+The shared Cooking finish also follows remaining work after ordinary preparation
+is completed. Unstarted dishes align to that current estimate; already observed
+activities and fixed paths keep their anchors. Missing starts can move estimates
+later, and recorded preparation can move them earlier, without changing any fact.

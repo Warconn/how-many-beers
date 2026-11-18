@@ -53,8 +53,12 @@ test('actual load anchors approximate cues across current and Up next; elapsed c
  await bar.screenshot({path:info.outputPath('up-next-check.png'),scale:'css'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await page.getByRole('button',{name:'Full checklist',exact:true}).click();
+ // The meal-wide footer names the current manual action, independently of
+ // selection. Compare the same action across surfaces, then check spritz too.
+ const sameAction=page.getByRole('button',{name:'Open step: Raise smoker to 225°F for Smoked brisket',exact:true});
+ await expect(sameAction.getByLabel('Check around',{exact:true})).toHaveAttribute('datetime',listTime!);
  const next=page.getByRole('button',{name:/Open step: Inspect and spritz if needed/});
- await expect(next.getByLabel('Check around',{exact:true})).toHaveAttribute('datetime',listTime!);
+ await expect(next.getByLabel('Check around',{exact:true})).toHaveAttribute('datetime','2026-11-08T06:24:00.000Z');
  await page.getByRole('button',{name:'Back to step',exact:true}).click();
  await page.clock.fastForward(3*3600000);
  await expect(current).toContainText('Review now');await expect(current.getByRole('checkbox')).not.toBeChecked();

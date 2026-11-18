@@ -232,3 +232,46 @@ Its assertions now explicitly cover timed-first display both before estimates
 are supplied and after one is cleared, while retaining every duration, editor,
 reload and safe guided-preparation assertion. The corrected scenario passes both
 local Chromium device projects, with typechecking and all 653 units rerun.
+
+### Preparation progress and stable test actions
+
+The broader compatibility check reproduced another serving-sync defect on the
+previous feature head: after brisket preparation was completed, the shorter dish
+kept the original, larger work allowance and held the whole-meal estimate back.
+The read-only budget probe now excludes completed ordinary work, and the common
+finish follows current known dish estimates. Missing starts can move that finish
+later; completed preparation can move it earlier. Physical observations and fixed
+paths remain anchored, and no stored completion/event timestamp is rebased.
+
+Four additional synchronization regressions fail before this correction and pass
+after it: missed starts in both dishes, completed long-dish prep, both preps
+completed later through reload, and an actual cooking start with the other dish's
+prep already completed. All 657 unit tests pass, including the 17 synchronization
+cases. The existing Beerometer journey retains its precise remaining-time checks.
+
+Browser test actions now retain accessible step identities instead of positional
+locators as live dates move rows. Account saves still preserve manual order,
+metadata and actuals, while the pinned dated row displays chronologically. Whole
+cook tests additionally assert every checkbox was completed. Archive validation
+keeps every pre-Finish event byte-for-byte and checks the single generated holding
+end recorded by explicit Finish; elapsed clock time still appends nothing.
+
+Legacy Cooking cues needed the same correction: flexible template rows previously
+kept their original calendar starts while their checkpoints displayed live dates.
+An early-start cook could therefore display Serve before Begin rest. Flexible
+Cooking rows now use the shared live Estimated start cue, while actual and fixed
+starts retain their existing precedence. Planning still shows planned dates and
+Step details retains the original plan. The new legacy rest/serve unit fails on
+the old selector; the cue test also preserves fixed and planning behavior.
+
+Final local checks pass typechecking, **659 units**, **74 distinct desktop/mobile
+Chromium cooking/planning cases**, and **four account checks** on desktop/phone
+Chromium. The account checks cover retained manual order plus chronological dated
+rows, hidden metadata, cancel/promote/finish, history and physical boundaries.
+The 74-case run passed 72 before an older footer test compared two different
+actions; after comparing the same global action and separately asserting spritz's
+corrected timestamp, its two device cases passed a clean rerun. The final fast
+run repeats typechecking and all units. Current desktop/mobile screenshots were
+reviewed. CI retains real iPhone WebKit, full accounts/auth/offline/security and
+the aggregate gate. Local WebKit download remains blocked by the environment's
+browser-download endpoint; Chromium mobile checks do not claim WebKit coverage.

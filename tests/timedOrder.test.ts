@@ -29,3 +29,13 @@ describe('timed display order',()=>{
   expect(JSON.stringify({tasks,completed})).toBe(before);
  });
 });
+
+it('orders legacy rest before its serving estimate when Cooking starts before the calendar plan',()=>{
+ const rest:PlannedTask={id:'brisket:rest',dishId:'brisket',dishName:'Brisket',title:'Begin rest',instructions:'',scheduledAt:'2026-11-26T15:20Z',isCondition:true,templateStage:{kind:'rest',minutes:160,startLabel:'Begin rest now'}};
+ const serve:PlannedTask={...rest,id:'brisket:serve',title:'Serve',scheduledAt:'2026-11-26T18:00Z',templateStage:undefined};
+ const forecasts:Record<string,StepForecast>={
+  [rest.id]:{start:'2026-11-25T23:00Z',finish:'2026-11-26T01:40Z',status:'estimated',template:{kind:'rest',basis:'estimated',at:'2026-11-25T23:00Z'}},
+  [serve.id]:{start:'2026-11-26T01:40Z',finish:null,status:'condition',template:{kind:'checkpoint',basis:'estimated',at:'2026-11-26T01:40Z'}},
+ };
+ expect(timedCookingTasks([rest,serve],forecasts,Date.parse('2026-11-25T10:00Z')).map(t=>t.id)).toEqual([rest.id,serve.id]);
+});

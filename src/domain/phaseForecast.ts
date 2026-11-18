@@ -18,9 +18,12 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
  const originals=meal.dishes.filter(d=>(stamp(d.executionAddedAt)??anchor)<=anchor);
  if(originals.length<2)return current;
  const originalIds=new Set(originals.map(d=>d.id)),originalTasks=timeline.filter(t=>originalIds.has(t.dishId));
- // Compare authored work budgets at the session's fixed origin. Using the live
- // clock here would keep postponing an unstarted shorter dish on every tick.
- const nominalMeal:ExtendedMeal={...meal,dishes:originals,completed:{},events:[]};
+ // Compare remaining authored work budgets at the session's fixed origin.
+ // The common finish below follows live progress; the budgets exclude idle time.
+ // Completed ordinary work no longer consumes a future allowance. Rebase only
+ // this read-only budget probe; live completion/physical timestamps stay exact.
+ const completed=Object.fromEntries(Object.keys(meal.completed).map(id=>[id,iso(anchor)]));
+ const nominalMeal:ExtendedMeal={...meal,dishes:originals,completed,events:[]};
  const nominal=projectPhases(nominalMeal,originalTasks,anchor);
  const finish=(projection:PhaseProjection,dishId:string)=>{
   const rows=originalTasks.filter(t=>t.dishId===dishId).map(t=>projection.forecasts[t.id]).filter(Boolean);
@@ -31,20 +34,14 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
  const budgets=new Map(originals.map(d=>[d.id,finish(nominal,d.id)]));
  const known=[...budgets.values()].filter((n):n is number=>n!==null);
  if(known.length<2)return current;
- let ready=Math.max(...known);
+ // Live dish finishes can advance when preparation is completed early, or
+ // extend after a late actual. Do not keep charging the initial prep budget.
+ const finishes=originals.map(d=>finish(current,d.id)).filter((n):n is number=>n!==null);
+ if(!finishes.length)return current;
+ const ready=Math.max(...finishes);
  const events=(meal as ExtendedMeal).events??[];
- const taskOwners=new Map(originalTasks.map(t=>[t.id,t.dishId]));
  const phaseOwners=new Map(meal.phasePlan?.phases.map(p=>[p.id,p.dishId]));
  const observed=new Set(events.flatMap(e=>(e.phaseObservations??[]).map(o=>phaseOwners.get(o.phaseId))));
- const progressed=new Set([
-  ...Object.keys(meal.completed).map(id=>taskOwners.get(id)),
-  ...events.filter(e=>e.kind==='started'||e.phaseObservations?.length).map(e=>taskOwners.get(e.taskId)),
- ]);
- for(const dish of originals){
-  if(!progressed.has(dish.id))continue;
-  const actualFinish=finish(current,dish.id);
-  if(actualFinish!==null)ready=Math.max(ready,actualFinish);
- }
  const starts=new Map<string,number>();
  for(const dish of originals){
   const budget=budgets.get(dish.id);

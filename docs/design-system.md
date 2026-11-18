@@ -321,3 +321,9 @@ with planned fallback. Equal times are stable; unknown times follow timed work.
 Apply this only to the view: never sort stored recipe relationships, task order,
 actual event arrays or archived snapshots in place. Recipe authoring without meal
 dates retains source order. Date edits and reforecast update timed list positions.
+
+Cooking dates must use the same live timing basis for flexible legacy templates
+and imported steps. A live forecast is Estimated start; an observed start remains
+Actual start, and fixed starts remain Planned start. Original calendar dates stay
+in Step details. Mixing an original planned rest start with a live serving check
+can put serving above rest even after sorting, so reuse `stepTimingCue` throughout.

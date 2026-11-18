@@ -27,7 +27,7 @@ export function stepTimingCue(task:PlannedTask,forecast:StepForecast|undefined,n
  if(forecast?.template?.basis==='actual'&&valid(forecast.start))return {label:'Actual start',at:forecast.start,...(forecast.overEstimate||forecast.status==='overdue'?{detail:'Review now; estimate elapsed.'}:{})};
  if(forecast?.status==='overdue')return {label:'Review now',detail:'Estimate elapsed; check progress.'};
  if(forecast?.lowerBound&&task.timingMode!=='fixed'&&task.timingMode!=='unscheduled'&&valid(forecast.start))return {label:'Earliest start',at:forecast.start,lowerBound:true,detail:'Verify conditions before starting.'};
- if(task.timingMode!=='unscheduled'&&valid(task.scheduledAt)&&(!forecast||task.timingMode==='fixed'||task.recipeOrder===undefined))return {label:'Planned start',at:task.scheduledAt,...(forecast?.status==='blocked'||forecast?.lowerBound?{detail:'Review timing: '+(forecast.reason??'waiting for previous work.')}: {})};
+ if(task.timingMode!=='unscheduled'&&valid(task.scheduledAt)&&(!forecast||task.timingMode==='fixed'))return {label:'Planned start',at:task.scheduledAt,...(forecast?.status==='blocked'||forecast?.lowerBound?{detail:'Review timing: '+(forecast.reason??'waiting for previous work.')}: {})};
  if(forecast?.status==='blocked')return {label:'Waiting for previous action',detail:forecast.reason};
  if(valid(forecast?.start))return {label:forecast?.status==='planned'?'Planned start':'Estimated start',at:forecast.start};
  return {label:task.id.endsWith(':serve')?'Serve when ready':'Start time not set'};
