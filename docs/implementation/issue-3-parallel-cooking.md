@@ -435,3 +435,26 @@ Cooking/QA run remains applicable to the unchanged recorded-activity controls.
 Container changed-UI selection explicitly trusts and addresses only the runner's
 checkout directory for Git comparison; it still fails closed and runs every
 selected spec. Final CI status is tracked at the PR's current head.
+
+The complete changed-UI run then exercised 179 browser cases and exposed a legacy
+window compatibility regression. Older brisket methods have large idle planning
+gaps which their established execution path compacts. `plannedSession` now leaves
+those methods on that existing path instead of attaching the new future-window
+metadata; a before/after unit and the unchanged Thursday/Sunday browser scenario
+verify the original finish, target and empty event history. Current methods retain
+the approved early-opening policy.
+
+Two short-recipe browser fixtures now set their serving target when their work is
+actually due, retaining all exact actual-transition and added-dish-anchor assertions.
+Future opening has its own explicit coverage. The current native brisket/ribs
+planning expectation uses the shared activity budget: 70 minutes of overlapping
+brisket prep, 13 hours cooking and six hours holding, yielding 20h10 / a 4:50 PM
+preparation start. Its old target-derived planner reserved an extra five idle
+minutes. Ribs retain their full 20-minute preheat at 6:50 AM rather than including
+ten idle minutes before loading. Cooking, holding and both 1 PM serving endpoints
+remain exact assertions; no physical duration or actual was shortened to pass.
+
+The final focused fast run passes typechecking, **687 units**, and **40 desktop/mobile
+browser cases** covering every failed scenario plus the QA and serving regressions.
+The application changes are limited to the explicit legacy compatibility guard;
+the current-template timing changes above are reconciled test expectations.

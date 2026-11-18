@@ -774,3 +774,5 @@ checkpoints show Completed check with the recorded timestamp; explicitly reopeni
 the checkbox restores the unfinished review cue. Normal planning/cooking views
 use the effective corrected phase start, with the original and correction retained
 in Activity. Multi-day schedule labels include weekday, month and day.
+Older brisket methods with authored idle planning gaps retain their established
+execution policy when starting; the future-window metadata is for current methods.

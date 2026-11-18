@@ -7,6 +7,7 @@ import {cookDuration} from '../src/domain/cookDuration';
 import {guidedCookingSteps} from '../src/domain/cookingFocus';
 import {isStoredMeal} from '../src/domain/storageValidation';
 import {stepTimingCue} from '../src/domain/stepTimingCue';
+import {legacyDish} from './fixtures/legacyDish';
 
 const now='2026-11-18T22:04:00.000Z',target='2026-11-19T23:00:00.000Z';
 const meal=(thawed=false)=>({...newMeal(),serveAt:target,dishes:[{...createDish('brisket'),id:'brisket'},{...createDish('turkey'),id:'turkey',...(thawed?{turkeyPrep:{state:'thawed' as const,thawDays:6,brineHours:22,dryHours:2.25}}:{})}]});
@@ -70,5 +71,12 @@ describe('QA #167 planning and actual-start regressions',()=>{
   expect(p.readyAt).toBeNull();expect(p.startAt).toBeNull();expect(p.partial).toBe(true);
   expect(p.tasks.every(t=>t.scheduledAt===null)).toBe(true);
   expect(cookDuration(m,p.tasks,Date.parse(now)).minutes).toBeNull();expect(m.serveAt).toBe('');
+ });
+ it('retains the execution path of an older brisket method with authored idle planning gaps',()=>{
+  const at='2026-10-29T22:43:00.000Z',m={...newMeal(),serveAt:'2026-11-01T13:00Z',dishes:[legacyDish('brisket')]};
+  const active=startCookSession(m,at),p=cookProjection(active,cookTimeline(active),Date.parse(at));
+  expect(active.phasePlan?.forecastOrigin).toBeUndefined();
+  expect(p.finish).toBe('2026-10-30T15:38:00.000Z');expect(p.remaining).toBe(1015);
+  expect(active.serveAt).toBe(m.serveAt);expect(active.events??[]).toEqual([]);
  });
 });
