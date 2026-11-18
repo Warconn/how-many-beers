@@ -311,3 +311,13 @@ The sticky guide names the owning dish and offers the same checkbox action as th
 list. Its selection remains meal-wide while another step is inspected. Preserve
 phone wrapping, keyboard focus and 44px targets; introduce no dashboard, tabs,
 nested steps, technique-specific stages or additional progress bars.
+
+### Timed step order
+
+Every meal schedule/checklist sorts by the full displayed calendar instant across
+dishes, earliest first. Planning uses planned starts; Cooking uses primary actual
+or estimated start cues. Completed-history rows use their displayed completion
+with planned fallback. Equal times are stable; unknown times follow timed work.
+Apply this only to the view: never sort stored recipe relationships, task order,
+actual event arrays or archived snapshots in place. Recipe authoring without meal
+dates retains source order. Date edits and reforecast update timed list positions.

@@ -289,3 +289,13 @@ creation can be independent of meal planning. The new “header recipe managemen
 has no meal-creation shortcut…” regression covers empty and populated libraries,
 Home/planning origins, edit/Cancel, unchanged workspace/history/recipe rows and
 return to the original screen. Inline text/upload choice tests remain intact.
+
+## Chronological plan and cook displays (#3 follow-up)
+
+`timed-order.spec.ts` covers a synthetic brisket/turkey plan whose saved order
+puts November 21 serving before November 14 thawing. Combined planning, dish steps,
+date edits and reload stay chronological. A separate two-dish Cooking journey
+checks live start order, completion/reload and retained saved order/events. Archived
+steps and recorded activity are sorted by their displayed times without changing
+stored history. These run on desktop/mobile Chromium and CI iPhone WebKit; the
+existing history-activity journey retains all attribution and byte-equality checks.

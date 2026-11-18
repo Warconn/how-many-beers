@@ -35,7 +35,7 @@ Brisket on the smoker, brats on the grill, turkey in the oven, or a few things g
 
 ### 🕒 Plan around serving time
 
-Pick when you want everyone at the table. How Many Beers combines the steps from multiple dishes into one chronological schedule, including prep, cooking, and rest where the recipe calls for them.
+Pick when you want everyone at the table. How Many Beers combines the steps from multiple dishes into one chronological schedule, including prep, cooking, and rest where the recipe calls for them. Planning, live checklists and past-cook steps all display in time order.
 
 Edit the plan as you go. Times are **estimates**, not promises. You stay in charge of when food is actually ready.
 

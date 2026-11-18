@@ -16,7 +16,7 @@ import CancelCookDialog from '@/components/CancelCookDialog';
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
-import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
+import { timedOrder, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, stepTimingWarnings, setStepDuration, editStep, moveStep, recordEvent, removeStep, updateTaskNote, startCookSession, addDishToMeal,correctActivityBoundary,finishSuppressedHolding } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
@@ -239,7 +239,7 @@ function CookExperience() {
   const timeline=plan?.tasks??rawTimeline;
   const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
   const forecasts=useMemo(()=>projection?.forecasts??(meal?liveStepForecasts(meal,timeline,clockNow):{}),[meal,timeline,clockNow,projection]);
-  const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
+  const liveSchedule = useMemo(() => timedOrder(timeline,t=>t.scheduledAt), [timeline]);
   const warnings = useMemo(() => {
     if (!meal) return [];
     // The raw template timeline can be late *before* planningReadiness moves its
@@ -780,7 +780,7 @@ function CookExperience() {
                   {d.recipeLink&&d.recipeLink.revision>0&&d.recipeLink.ownerId===recipes.ownerId&&<p className="muted small recipe-source">From My recipes: {d.recipeLink.name}</p>}
                   {d.preset==="turkey" && <TurkeyPreparation dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   <section className="inline-dish-steps" data-step-list={"dish-"+d.id} role="region" aria-label={d.name+" steps"}>
-                  {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
+                  {liveSchedule.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
                   {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
                     <label htmlFor={"new-step-"+d.id}>Step title</label>
                     <input id={"new-step-"+d.id} autoFocus value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
@@ -881,7 +881,7 @@ function CookExperience() {
             <section className="checklist-preview" id="checklist-preview" aria-label={recipeFirst?"Meal plan preview":"Cooking checklist preview"}>
               <div className="preview-intro"><h3>{recipeFirst?"Meal plan":"Cooking checklist"}</h3></div>
               <p className="muted small">Review all dishes together. Check off steps and record actual readings in Cooking Mode.</p>
-              <div className="checklist preview-task-list" data-step-list="meal-plan">{timeline.map(task => taskCard(task, "planning"))}</div>
+              <div className="checklist preview-task-list" data-step-list="meal-plan">{liveSchedule.map(task => taskCard(task, "planning"))}</div>
               <AddStepForm onAdd={addCustom}/>
               {message && <p className="form-error" role="alert">{message}</p>}
             </section>
@@ -891,7 +891,7 @@ function CookExperience() {
           </div>
           {timeline.length>0 && !methodReview && <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
-            <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Untimed recipes stay in recipe order until start times are known.</p>}
+            <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Steps without a start time follow the timed steps in recipe order.</p>}
             {timeline.length ? <>
               <ol className="schedule-list">
                 {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?when(task.scheduledAt):"Start time not set"}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step <Icon name="arrow-right"/></span></button></li>)}

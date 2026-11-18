@@ -1,3 +1,4 @@
+import {timedCookingTasks} from '@/domain/stepTimingCue';
 import Icon from './Icon';
 import {cookingTitle} from './CookingStepSummary';
 import type {PlannedTask} from '@/domain/meal';
@@ -23,7 +24,7 @@ export default function CookingChecklist({tasks,completed,onSelect,onComplete,fo
  };
  return <section className="full-cook-checklist" aria-label="Full cook checklist" id="full-cook-checklist" tabIndex={-1}>
   <h3>Full checklist</h3><p className="muted small">All dishes with live estimates for timed unfinished work. Open a step for instructions, notes and readings.</p>
-  <ol className="flat-cook-list">{tasks.map(task=><li key={task.id} className={completed[task.id]?'is-complete':''}>
+  <ol className="flat-cook-list">{timedCookingTasks(tasks,forecasts,now).map(task=><li key={task.id} className={completed[task.id]?'is-complete':''}>
    <label className="flat-step-check"><input type="checkbox" disabled={!!reading} aria-label={'Complete '+task.title+' for '+task.dishName} checked={!!completed[task.id]} onChange={e=>onComplete(task.id,e.target.checked)}/></label>
    <button type="button" disabled={!!reading} aria-label={'Open step: '+task.title+' for '+task.dishName} onClick={()=>onSelect(task.id)}>
     <span className="flat-step-copy"><strong>{cookingTitle(task.title)}</strong><span>{task.dishName}{task.isCondition?' · Verify conditions':''}</span>{completed[task.id] && <span className="flat-step-actual">Completed {time(completed[task.id])}</span>}{phases.filter(p=>p.startTaskId===task.id&&p.actualStart).map(p=><span className="inline-activity-status" key={p.id}>{activityStatus(p)}</span>)}</span>

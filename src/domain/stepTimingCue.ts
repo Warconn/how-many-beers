@@ -1,3 +1,4 @@
+import {timedOrder} from './stepTiming';
 import type {PlannedTask} from './meal';
 import {physicalPhase} from './physicalPhase';
 import type {StepForecast} from './cookForecast';
@@ -30,4 +31,10 @@ export function stepTimingCue(task:PlannedTask,forecast:StepForecast|undefined,n
  if(forecast?.status==='blocked')return {label:'Waiting for previous action',detail:forecast.reason};
  if(valid(forecast?.start))return {label:forecast?.status==='planned'?'Planned start':'Estimated start',at:forecast.start};
  return {label:task.id.endsWith(':serve')?'Serve when ready':'Start time not set'};
+}
+
+/** Match the primary time shown on cooking rows, retaining a forecast position
+ * for condition-only cues. Never use an estimated finish as a start time. */
+export function timedCookingTasks(tasks:readonly PlannedTask[],forecasts:Record<string,StepForecast>,now:number):PlannedTask[]{
+ return timedOrder(tasks,task=>stepTimingCue(task,forecasts[task.id],now).at??forecasts[task.id]?.start??task.scheduledAt);
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import {timedOrder} from '@/domain/stepTiming';
+
 import Icon from './Icon';
 import Beerometer from './Beerometer';
 import {useEffect,useRef,useState} from "react";
@@ -27,7 +29,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
   const detailBack=useRef<HTMLButtonElement>(null);
   const shown=history.cooks.filter(c=>(c.meal.name+" "+c.meal.dishes.map(d=>d.name).join(" ")).toLowerCase().includes(search.trim().toLowerCase()));
   const detailed=history.cooks.find(c=>c.id===selected);
-  const events=detailed?.meal.events??[];
+  const events=timedOrder(detailed?.meal.events??[],e=>e.occurredAt);
   const notes=Object.entries(detailed?.meal.notes??{}).filter(([,note])=>note.trim());
   useEffect(()=>{
     if(!detailed)return;
@@ -55,7 +57,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
         {detailed.feedback&&<p className="muted small">{detailed.feedback}</p>}
         <h4>Original checklist</h4>
         <ol className="history-tasks">
-          {detailed.plannedTimeline.map(step=><li key={step.id}>
+          {timedOrder(detailed.plannedTimeline,step=>detailed.meal.completed[step.id]??step.scheduledAt).map(step=><li key={step.id}>
             <strong>{step.title}</strong><span>{step.dishName}</span>
             {detailed.meal.phasePlan?.phases.filter(p=>p.startTaskId===step.id).map(p=>{
               const actual=phaseObservations(detailed.meal,p.id),stage=phaseStage(p);

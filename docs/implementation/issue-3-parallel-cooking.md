@@ -187,3 +187,40 @@ cooking rather than silently relinking recorded activity. Ambiguous old sessions
 may need explicit actual-time entry; their historical completions remain facts of
 the checklist only. Next phase should refine detection from reviewed examples and
 then separately design dependency/resource scheduling if the owner wants it.
+
+## Chronological display correction (November 18)
+
+The owner found the planning checklist still grouped by saved dish order: a
+November 21 brisket serving action appeared before November 14 turkey thawing.
+Planning's combined checklist, dish step editor and schedule now sort by full
+planned instants. Cooking's full checklist follows its primary actual/estimated
+start cues as forecasts change. Past-cook steps use their displayed completion
+with planned fallback, and recorded activity sorts by observation timestamp.
+Equal times retain their existing relative order; unknown times follow timed work.
+Recipe authoring retains its source sequence where no meal dates are displayed.
+
+This is a read-only presentation change. Recipe dependencies, stored task order,
+IDs, physical observations, original plans and archive bytes are preserved. Manual
+planning moves still edit sequence/timing through the existing domain helpers;
+they cannot make a later dated row display above an earlier one.
+
+`tests/timedOrder.test.ts` covers multi-day/dish ordering, unknown/invalid times,
+time-zone offsets, ties, actual/fixed/estimated cues and immutable archive fallback.
+`e2e/timed-order.spec.ts` reproduces saved dish grouping, verifies immediate date
+edits, dish/combined lists, Cooking Mode, completion/reload and archive read-only
+ordering on desktop/mobile Chromium and CI iPhone WebKit. The original application
+failed the new planning order assertion before the fix.
+
+The compatibility run also exposed a pre-existing browser-selector error on the
+previous feature head: after Record actual start advanced guidance, the test
+clicked the new current step's checkbox instead of completing the intended cooking
+row. It now targets that named row in Full checklist, retaining the original
+12:05 actual, 14:25 forecast and immutable-events-after-reload assertions.
+
+Local verification passes typechecking and all **653 unit tests**. The focused
+compatibility run exercised **54 distinct desktop/mobile Chromium cases** across
+planning order, flexible sequencing, serving alignment, parallel activities and
+history. The corrected selectors and all new ordering cases passed a clean
+10-case rerun; the final planning screenshot run passed both device projects.
+Reviewed screenshots are `desktop-chronological-plan-after.png` and
+`mobile-chronological-plan-after.png` in `docs/screenshots/3/`.

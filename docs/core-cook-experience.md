@@ -733,3 +733,9 @@ the original plan and every event. Missing relationships acquire no historical
 timestamps from old completions. Home and archived reads do not run this upgrade.
 Legacy sessions without a phase plan retain their existing execution path.
 See [implementation and validation](implementation/issue-3-parallel-cooking.md).
+
+All dated meal step lists use chronological display order across dishes, including
+planning review, dish steps, live Cooking checklist and past-cook detail. Date edits
+and reforecast update that order. Equal times remain stable; untimed work follows
+timed work. This view sorting preserves authored recipe relationships, saved order,
+actual events and historical snapshots.
