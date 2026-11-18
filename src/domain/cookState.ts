@@ -6,7 +6,8 @@ import {turkeyPreparation} from "./turkeyPrep";
 import {physicalPhase} from "./physicalPhase";
 import {chronologicalTasks} from "./stepTiming";
 import {buildPhasePlan,effectivePhasePlan,taskActivityIds,phaseObservations,type PhaseObservation} from './cookingPhases';
-import {detectedActivities,activityStepKey} from './activities';
+import {planningReadiness} from './planningReadiness';
+import {plannedSession} from './plannedSession';
 
 export type CookEventKind = "started" | "completed" | "reopened" | "temperature" | "equipment" | "removed";
 
@@ -31,8 +32,8 @@ export function startCookSession(meal:Meal,occurredAt:string):ExtendedMeal{
  if(meal.startedAt||meal.mode==='cooking'||Object.keys(meal.completed).length||((meal as ExtendedMeal).events??[]).some(e=>e.kind!=='removed'))return {...migrateMeal(meal),mode:'cooking',startedAt:meal.startedAt??occurredAt};
  if(!Number.isFinite(Date.parse(occurredAt)))throw Error('Choose a valid cook start.');
  const tasks=cookTimeline(meal);
- const prepared={...meal,dishes:meal.dishes.map(d=>d.activities||d.preset!=='custom'?d:{...d,activities:detectedActivities(tasks.filter(t=>t.dishId===d.id).map(t=>({id:activityStepKey(d.id,t.id),title:t.title,instructions:t.instructions,minutes:t.durationMinutes??null})))})};
- return {...migrateMeal(prepared),mode:'cooking',startedAt:occurredAt,phasePlan:buildPhasePlan(prepared,tasks)};
+ const plan=planningReadiness(meal,tasks,Date.parse(occurredAt));
+ return migrateMeal(plannedSession(meal,tasks,occurredAt,plan?.forecastOrigin));
 }
 
 /** Adding a dish during execution never starts it and never recompiles existing

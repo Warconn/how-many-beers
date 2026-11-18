@@ -327,3 +327,13 @@ and imported steps. A live forecast is Estimated start; an observed start remain
 Actual start, and fixed starts remain Planned start. Original calendar dates stay
 in Step details. Mixing an original planned rest start with a live serving check
 can put serving above rest even after sorting, so reuse `stepTimingCue` throughout.
+
+## Recorded activity and multi-day dates (PR #167 QA follow-up)
+
+An actual activity start satisfies its start instruction without a synthetic
+completion. Checklist/current-step checkboxes render checked and disabled when
+only that physical start was recorded, alongside the existing elapsed/actual
+activity status. Corrections remain in Step details. Completed checkpoints show
+their completion timestamp instead of an overdue prompt; readings remain available.
+Use weekday, month and day for the combined schedule and target labels so different
+weeks cannot appear interchangeable. Keep the existing row and footer layouts.

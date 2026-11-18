@@ -70,7 +70,7 @@ describe('two-dish serving-time synchronization across Planning and Cooking Mode
   });
 
   it.each([
-    ['16:00','16:30','17:15'],
+    ['16:00','17:15','18:00'],
     ['17:00','17:30','18:15'],
   ])('keeps one meal window when the session starts at %s', (start,shortStart,finish)=>{
     const meal=startCookSession(fixture(),at(start));

@@ -27,7 +27,7 @@ export function cookingInstruction(task:PlannedTask,rest:boolean):string{
  const concise=excerpt.length>200?excerpt.slice(0,197).replace(/\s+\S*$/,'')+'…':excerpt;
  return safety&&!concise.includes(safety)?concise+' '+safety:concise;
 }
-export default function CookingStepSummary({task,forecast,activePhase,now=Date.now(),onEditTime}:{onEditTime?:()=>void;now?:number;task:PlannedTask;forecast?:StepForecast;activePhase?:LivePhase}){
+export default function CookingStepSummary({task,forecast,activePhase,now=Date.now(),onEditTime,completedAt}:{completedAt?:string;onEditTime?:()=>void;now?:number;task:PlannedTask;forecast?:StepForecast;activePhase?:LivePhase}){
  const phase=forecast?.template?.kind,rest=phase==='rest',condition=task.isCondition&&!physicalPhase(task);
  const minutes=forecast?.template?.minutes??task.durationMinutes;
  const instruction=cookingInstruction(task,rest);
@@ -36,7 +36,7 @@ export default function CookingStepSummary({task,forecast,activePhase,now=Date.n
   <div className="between"><strong>{cookingTitle(task.title)}</strong></div>
   <p className="task-dish">{task.dishName}</p>
   {activePhase?.startTaskId===task.id&&activityStatus(activePhase)&&<p className="inline-activity-status">{activityStatus(activePhase)}</p>}
-  <p className="cooking-step-when">{onEditTime&&stepTimingCue(task,forecast,now).label==='Planned start'?<button type="button" className="link planned-time-button" aria-label={'Change planned time: '+task.title} onClick={onEditTime}><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/></button>:<><StepForecastTime task={task} now={now} forecast={timing} part="start" simple/>{onEditTime&&<button type="button" className="link edit-planned-time" onClick={onEditTime}>Change planned time</button>}</>}</p>
+  <p className="cooking-step-when">{onEditTime&&stepTimingCue(task,forecast,now).label==='Planned start'?<button type="button" className="link planned-time-button" aria-label={'Change planned time: '+task.title} onClick={onEditTime}><StepForecastTime task={task} completedAt={completedAt} now={now} forecast={timing} part="start" simple/></button>:<><StepForecastTime task={task} completedAt={completedAt} now={now} forecast={timing} part="start" simple/>{onEditTime&&<button type="button" className="link edit-planned-time" onClick={onEditTime}>Change planned time</button>}</>}</p>
   {!condition&&instruction&&<p className="muted small">{instruction}</p>}
   {!condition&&task.title!=='Hold until serving'&&<p className="cooking-step-timing">
     {minutes!=null&&<span>Estimated {formatDuration(minutes)}</span>}

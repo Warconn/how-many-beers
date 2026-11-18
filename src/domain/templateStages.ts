@@ -13,7 +13,8 @@ export function templateStage(dish:Dish,key:string):TemplateStage|undefined{
  if(dish.preset==='brisket')return key==='prep'?prep(dish.brisketPlan?.applied?.inputs.prepMinutes??30):key==='season'?prep(15):key==='preheat'?prep(dish.brisketPlan?.applied?.inputs.preheatMinutes??30):undefined;
  if(dish.preset==='turkey'){
   const t=turkeyPreparation(dish);
-  return key==='brine'&&t.brineHours>0?prep(t.brineHours*60,'Begin refrigerated brining'):key==='dry'&&t.dryHours>0?prep(t.dryHours*60,'Begin refrigerated drying'):key==='prep'?prep(15):key==='preheat'?prep(45):undefined;
+  if(key==='thaw')return prep(t.state==='thawed'?0:t.thawDays*1440,'Begin refrigerated thawing');
+  return key==='brine'?prep(t.brineHours*60,t.brineHours>0?'Begin refrigerated brining':undefined):key==='dry'?prep(t.dryHours*60,t.dryHours>0?'Begin refrigerated drying':undefined):key==='prep'?prep(15):key==='preheat'?prep(45):undefined;
  }
  return key==='prep'?prep(20):key==='preheat'?prep(20):undefined;
 }

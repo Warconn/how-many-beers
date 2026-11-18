@@ -23,7 +23,7 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
  // Completed ordinary work no longer consumes a future allowance. Rebase only
  // this read-only budget probe; live completion/physical timestamps stay exact.
  const completed=Object.fromEntries(Object.keys(meal.completed).map(id=>[id,iso(anchor)]));
- const nominalMeal:ExtendedMeal={...meal,dishes:originals,completed,events:[]};
+ const nominalMeal:ExtendedMeal={...meal,dishes:originals,completed,events:[],...(meal.phasePlan?{phasePlan:{...meal.phasePlan,forecastOrigin:undefined}}:{})};
  const nominal=projectPhases(nominalMeal,originalTasks,anchor);
  const finish=(projection:PhaseProjection,dishId:string)=>{
   const rows=originalTasks.filter(t=>t.dishId===dishId).map(t=>projection.forecasts[t.id]).filter(Boolean);
@@ -96,7 +96,9 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
   const independent=!dish&&!(meal as ExtendedMeal).planningGeneralSequence;
   const generalPositions=own.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
   const generalOrigin=generalPositions.length?Math.min(...generalPositions):anchor;
-  const dishOrigin=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor);
+  const observed=events.some(e=>e.phaseObservations?.some(o=>o.boundary==='start'));
+  const window=observed?anchor:stamp(plan.forecastOrigin)??anchor;
+  const dishOrigin=Math.max(anchor,window,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor);
   let cursor=dishOrigin,unknown=false;
   let previousPrep:{planned:number;start:number;minutes:number;completed?:boolean}|undefined;
   for(const t of own){

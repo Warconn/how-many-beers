@@ -352,3 +352,74 @@ cues. The new handoff and full twenty-action cases pass on both local devices.
 Reviewed screenshots are `desktop-holding-handoff.png` and
 `mobile-holding-handoff.png`. Required CI retains real iPhone WebKit and the full
 account/auth/offline/security gates; local mobile Chromium is not WebKit coverage.
+
+## Independent QA corrections (November 18)
+
+The review reproduced two gaps in the tested paths: default frozen turkey versus
+an explicitly thawed fixture, and actual starts recorded through details without
+checking the start instruction. New units failed on the old behavior. Browser
+regressions create native meals through controls and exercise both supported paths.
+
+Frozen turkey thawing is now an explicit preparation allowance in planning and
+the Beerometer, not an excluded reminder. Current flexible built-in templates use
+the same phase projection before/after starting. The reviewed 5:04 PM Wednesday
+example reports 173h45 and Wednesday November 25 at 10:49 PM in both modes; Fully
+thawed reports 29h45 and Thursday at 10:49 PM. The original Thursday 6 PM target
+remains unchanged. Zero brining/drying allowances stay known zero values. Legacy
+authored planning gaps, fixed anchors and manual recipe sequences retain their
+existing planning calculation; this does not reinterpret saved actuals or archives.
+
+Future planning windows persist as optional `phasePlan.forecastOrigin` in the
+existing JSON payload. The actual session `startedAt` remains the time the cook
+opened Cooking. Planning and deliberate starts share `plannedSession`; account
+atomic promotion uses that same payload preparation without changing the RPC.
+Old phase plans without the optional field remain valid. A recorded physical start
+supersedes the opening window, including when it was deliberately early. Reusable
+recipe methods do not acquire meal-specific timing metadata.
+
+`actionRecorded` derives satisfaction of a start instruction from its actual
+forecast basis whether the interval is active or ended. Guide, footer, visible
+checkbox and progress agree. Recorded-only starts show checked/disabled without
+appending a synthetic completion. Other unfinished prep stays explicit. Completed
+checks show their recorded completion; explicit reopen restores review. Planning
+uses the latest effective phase correction while Activity preserves all events.
+Schedule/target labels include month/day. Two adjacent compiler corrections keep
+brat holding after searing and wings frying after the independent oil allowance.
+
+CI browser jobs use the official Playwright 1.64.1 Noble image, matched to the
+lockfile and checked for both browsers. This avoids the observed slow apt mirrors.
+Existing required jobs, aggregate behavior, accounts/auth/offline and WebKit coverage
+remain enabled. The new QA, holding and native-guide specs are explicitly included
+in the iPhone project. Verification results and deployment identity are recorded in
+PR #167; local Chromium viewport testing does not certify WebKit or hosted accounts.
+
+Owner verification after Update app, using fresh synthetic meals:
+
+1. Add brisket plus default frozen turkey with a serving target tomorrow. Confirm
+   thawing precedes brining by the remaining thaw days, dates include month/day,
+   and the infeasible-target warning/estimated readiness appears before starting.
+2. Start Cooking immediately. Estimated serving and the Beerometer should agree
+   with planning; reload and confirm they remain stable. Do not check future work
+   now just to move through this timing example.
+3. In another meal choose Fully thawed. The six-day thaw allowance disappears;
+   brine/dry/cook/rest allowances remain. Opening Cooking early retains its future
+   preparation window until actual progress is explicitly recorded.
+4. For fast action testing use Smo-fried wings, recording smoking and oil starts
+   through Step details. Confirm oil readiness, doneness, smoker removal, frying
+   start and drain/season. Neither guide nor footer should return to ended starts.
+   Earlier prep deliberately left unchecked remains available for review.
+5. View a completed checkpoint and log another reading. It should show completion
+   rather than an overdue prompt. Correct smoking start, reload, and compare its
+   effective time in Cooking and Edit plan. Activity must retain the original event.
+
+Final local fast checks pass typechecking, **685 units / 55 files**, and **20 real
+desktop/mobile Chromium browser cases** (eight new QA cases plus twelve legacy
+cooking/control cases). Completed-checkpoint display sorting has a separate
+before/after regression. The initial broader run exposed derived status applying
+to legacy cooks without a phase plan; limiting it to explicit phase relationships
+preserves their existing controls. No browser assertion was weakened. Two unit
+fixtures now specify their intended near-term serving target instead of inheriting
+an unrelated future default. The explicit early-opening expectation now retains
+the planned meal finish. Reviewed screenshots are `desktop/mobile-frozen-plan.png`
+and `desktop/mobile-ended-activity.png`. Required CI supplies full changed UI,
+WebKit, account, auth, offline/export and SQL security results.

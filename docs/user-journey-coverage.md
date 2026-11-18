@@ -325,3 +325,14 @@ conservative behavior for clock expiry, readings, reopened readiness and newer
 remaining estimates. Fixed and actual holding timestamps survive reload.
 The partial-handoff example also checks the full meal's 1 PM estimate and turkey
 prep inside the drying/preheating window, preventing double-counted prep time.
+
+`qa167Regression.test.ts` and `qa167-regressions.spec.ts` cover the independent QA
+findings: full frozen versus already-thawed turkey, immediate planning/Cooking
+readiness and Beerometer agreement, explicit dated ordering, early Cooking entry,
+and recorded-only smoking/oil/frying starts that never return as next actions after
+ending. The browser creates native meals through controls, checks completed cues,
+corrects smoking start, reloads, and checks the effective planning timestamp while
+all prior events remain unchanged. Desktop/mobile Chromium run locally; the new
+spec, holding handoff and guided native meal are explicitly included in iPhone
+WebKit CI. Stored forecast-window validation rejects malformed metadata and accepts
+old plans without it. Existing archive, recipe and account ownership coverage remains.

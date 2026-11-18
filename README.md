@@ -41,6 +41,9 @@ Edit the plan as you go. Times are **estimates**, not promises. You stay in char
 
 Cooking Mode keeps known-duration, unstarted dishes aligned to one estimated meal
 finish, while preserving recorded starts and explicit fixed times.
+Current template planning includes required refrigerator thawing and uses the
+same activity forecast as Cooking. Opening Cooking before preparation is due
+retains the future window; recording an actual start takes precedence.
 
 ### 📖 Bring your own recipes
 
@@ -61,6 +64,8 @@ It's a little personality in a tool that's really about **time, timing, and gett
 When cooking starts, you get a focused next action and an accessible full checklist. Check off steps, record actual progress, log food or equipment temperatures, and add notes when something changes.
 
 After you confirm doneness, the guide offers the next resting or holding action.
+Recorded activity starts satisfy their checklist instruction, including after
+the activity ends. The guide does not ask you to start an ended activity again.
 
 A sticky next-action guide helps you keep your place. Head home, come back later, and continue the cook rather than starting over.
 

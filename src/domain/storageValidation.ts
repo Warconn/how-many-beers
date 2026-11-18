@@ -15,7 +15,7 @@ function phasePlan(v:unknown):boolean{
   &&v.phases.every(p=>object(p)&&['id','dishId','startTaskId','durationTaskId'].every(k=>text(p[k]))&&['heating','passive'].includes(String(p.kind))&&strings(p.endTaskIds)&&duration(p.minutes)&&optional(p.upperMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.leadMinutes,x=>number(x)&&x>=0&&x<=43200)&&optional(p.after,text)&&optional(p.stage,s=>text(s)&&Object.hasOwn(activityStages,String(s)))&&optional(p.independent,x=>typeof x==='boolean'))
   &&new Set(v.phases.map(p=>p.id)).size===v.phases.length
   &&record(v.order,strings)&&strings(v.suppressed)&&record(v.actions,a=>object(a)&&optional(a.starts,strings)&&optional(a.ends,strings)&&optional(a.observes,strings)&&optional(a.checkpoint,c=>object(c)&&text(c.phaseId)&&number(c.fraction)&&c.fraction>=0&&c.fraction<=100))
-  &&optional(v.activityVersion,x=>x===1)&&optional(v.originalPlan,p=>object(p)&&p.originalPlan===undefined&&phasePlan(p));
+  &&optional(v.activityVersion,x=>x===1)&&optional(v.forecastOrigin,x=>text(x)&&Number.isFinite(Date.parse(String(x))))&&optional(v.originalPlan,p=>object(p)&&p.originalPlan===undefined&&phasePlan(p));
 }
 
 export function isRecipeLink(v:unknown):boolean{

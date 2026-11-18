@@ -27,7 +27,7 @@ describe('physical phases behind the checklist',()=>{
   expect(p.phases?.find(p=>p.id==='brats:heat')?.actualEnd).toBeNull();
  });
  it('session/preparation completion does not invent physical starts or elapsed grilling',()=>{
-  let m=startCookSession({...newMeal(),dishes:[{...createDish('side'),id:'a',cookMinutes:45,restMinutes:10}]},at('16:00'));
+  let m=startCookSession({...newMeal(),serveAt:at('17:15'),dishes:[{...createDish('side'),id:'a',cookMinutes:45,restMinutes:10}]},at('16:00'));
   m=recordEvent(m,'a:prep','completed',at('16:00'));m=recordEvent(m,'a:preheat','completed',at('16:00'));
   const p=project(m,'16:20');expect(p.remaining).toBe(55);expect(p.phases?.[0].actualStart).toBeNull();
  });

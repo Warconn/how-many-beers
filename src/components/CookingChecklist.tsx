@@ -1,3 +1,4 @@
+import {actionRecorded} from '@/domain/cookingFocus';
 import {timedCookingTasks} from '@/domain/stepTimingCue';
 import Icon from './Icon';
 import {cookingTitle} from './CookingStepSummary';
@@ -24,11 +25,11 @@ export default function CookingChecklist({tasks,completed,onSelect,onComplete,fo
  };
  return <section className="full-cook-checklist" aria-label="Full cook checklist" id="full-cook-checklist" tabIndex={-1}>
   <h3>Full checklist</h3><p className="muted small">All dishes with live estimates for timed unfinished work. Open a step for instructions, notes and readings.</p>
-  <ol className="flat-cook-list">{timedCookingTasks(tasks,forecasts,now).map(task=><li key={task.id} className={completed[task.id]?'is-complete':''}>
-   <label className="flat-step-check"><input type="checkbox" disabled={!!reading} aria-label={'Complete '+task.title+' for '+task.dishName} checked={!!completed[task.id]} onChange={e=>onComplete(task.id,e.target.checked)}/></label>
+  <ol className="flat-cook-list">{timedCookingTasks(tasks,forecasts,now,completed).map(task=><li key={task.id} className={completed[task.id]||actionRecorded(forecasts[task.id])?'is-complete':''}>
+   <label className="flat-step-check"><input type="checkbox" disabled={!!reading||actionRecorded(forecasts[task.id])&&!completed[task.id]} aria-label={'Complete '+task.title+' for '+task.dishName} checked={!!completed[task.id]||actionRecorded(forecasts[task.id])} onChange={e=>onComplete(task.id,e.target.checked)}/></label>
    <button type="button" disabled={!!reading} aria-label={'Open step: '+task.title+' for '+task.dishName} onClick={()=>onSelect(task.id)}>
     <span className="flat-step-copy"><strong>{cookingTitle(task.title)}</strong><span>{task.dishName}{task.isCondition?' · Verify conditions':''}</span>{completed[task.id] && <span className="flat-step-actual">Completed {time(completed[task.id])}</span>}{phases.filter(p=>p.startTaskId===task.id&&p.actualStart).map(p=><span className="inline-activity-status" key={p.id}>{activityStatus(p)}</span>)}</span>
-    <span className="flat-step-time"><StepForecastTime task={task} now={now} forecast={forecasts[task.id]} part="start" simple/>{forecasts[task.id]?.finish&&<><br/><StepForecastTime forecast={forecasts[task.id]} part="finish" simple/></>}</span><Icon className="flat-step-chevron" name="chevron-right"/>
+    <span className="flat-step-time"><StepForecastTime task={task} completedAt={completed[task.id]} now={now} forecast={forecasts[task.id]} part="start" simple/>{forecasts[task.id]?.finish&&<><br/><StepForecastTime forecast={forecasts[task.id]} part="finish" simple/></>}</span><Icon className="flat-step-chevron" name="chevron-right"/>
    </button>
    {onReading&&canRead(task)&&<div className="flat-step-reading">
     {reading===task.id?<ActivityReadingForm task={task} activities={linked(task.id)} onCancel={()=>openReading(null)} onSave={(kind,value,unit,note,activityId,noteOnly)=>{onReading(task.id,kind,value,unit,note,activityId,noteOnly);openReading(null);}}/>:<button type="button" className="link" disabled={!!reading} onClick={()=>openReading(task.id)}>{events.some(e=>e.taskId===task.id&&(e.kind==='temperature'||e.kind==='equipment'))?'Record another reading':'Record reading'}</button>}

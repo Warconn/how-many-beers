@@ -91,7 +91,7 @@ describe('authored activity boundaries and compatibility',()=>{
  });
  it('includes ordinary preparation before the first independent physical activity',()=>{
   const dish=parseRecipeText('Seeds','Prepare (5 minutes)\nRoast (15 minutes)\nCool (10 minutes)');
-  let meal=startCookSession({...newMeal(),serveAt:at('20:00'),dishes:[dish]},at('12:00'));
+  let meal=startCookSession({...newMeal(),serveAt:at('12:30'),dishes:[dish]},at('12:00'));
   expect(cookProjection(meal,cookTimeline(meal),Date.parse(at('12:00'))).minimumRemaining).toBe(30);
   meal=recordEvent(meal,dish.id+':step-1','completed',at('12:01'));
   expect(cookProjection(meal,cookTimeline(meal),Date.parse(at('12:01'))).minimumRemaining).toBe(25);

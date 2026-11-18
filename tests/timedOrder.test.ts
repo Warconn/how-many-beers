@@ -30,6 +30,14 @@ describe('timed display order',()=>{
  });
 });
 
+it('orders a completed checkpoint by the recorded timestamp shown on its row',()=>{
+ const check={...task('dish:check','2026-11-21T15:00Z'),isCondition:true},next=task('other:prep','2026-11-21T12:00Z');
+ const forecasts:Record<string,StepForecast>={[check.id]:{start:check.scheduledAt,finish:null,status:'condition',template:{kind:'checkpoint',basis:'estimated',at:check.scheduledAt}}};
+ const completed={[check.id]:'2026-11-21T10:00Z'},before=JSON.stringify({check,next,forecasts,completed});
+ expect(timedCookingTasks([next,check],forecasts,0,completed).map(t=>t.id)).toEqual([check.id,next.id]);
+ expect(JSON.stringify({check,next,forecasts,completed})).toBe(before);
+});
+
 it('orders legacy rest before its serving estimate when Cooking starts before the calendar plan',()=>{
  const rest:PlannedTask={id:'brisket:rest',dishId:'brisket',dishName:'Brisket',title:'Begin rest',instructions:'',scheduledAt:'2026-11-26T15:20Z',isCondition:true,templateStage:{kind:'rest',minutes:160,startLabel:'Begin rest now'}};
  const serve:PlannedTask={...rest,id:'brisket:serve',title:'Serve',scheduledAt:'2026-11-26T18:00Z',templateStage:undefined};

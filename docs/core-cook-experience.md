@@ -754,3 +754,23 @@ due instead of extending cooking to its upper allowance. The cook still performs
 the separate removal/holding action to record the actual transition. Readings and
 time alone never trigger this handoff. Reopen or a newer explicit remaining
 estimate can change its forecast without rewriting any observed interval.
+
+November 18 independent QA follow-up: current built-in planning uses the same
+physical/preparation projection as a fresh Cooking session. Required turkey
+thawing is a full interval; Fully thawed and explicitly skipped preparation keep
+zero allowances. The target remains requested when infeasible. Future preparation
+windows survive early Cooking entry and reload as optional `phasePlan.forecastOrigin`
+metadata, distinct from the real `startedAt`. Any recorded physical start takes
+precedence over that opening window. Old active plans without this metadata keep
+their existing behavior. Legacy authored planning gaps and fixed/manual sequence
+feasibility retain their existing calculation and anchors.
+
+Current step, footer, checkbox presentation and progress recognize an actual
+activity start as satisfying its start instruction even after its end. This is a
+derived status: no extra completion event is appended. Recorded-only starts show
+a checked, disabled checkbox; start/end corrections remain available in details.
+Other unchecked preparation remains available for review. Currently completed
+checkpoints show Completed check with the recorded timestamp; explicitly reopening
+the checkbox restores the unfinished review cue. Normal planning/cooking views
+use the effective corrected phase start, with the original and correction retained
+in Activity. Multi-day schedule labels include weekday, month and day.

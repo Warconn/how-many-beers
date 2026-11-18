@@ -25,7 +25,7 @@ import TurkeyPreparation from "@/components/TurkeyPreparation";
 import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
-import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
+import { cookingFocus, guidedCookingSteps, actionRecorded } from "@/domain/cookingFocus";
 import {cookingTitle} from "@/components/CookingStepSummary";
 import TaskRow from "@/components/TaskRow";
 import {physicalPhase} from "@/domain/physicalPhase";
@@ -64,7 +64,7 @@ function when(iso: string | null): string {
   if (!iso) return "Timing TBD";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "Set a serving time";
-  return new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(undefined, { weekday: "short", month:"short",day:"numeric", hour: "numeric", minute: "2-digit" }).format(d);
 }
 
 
@@ -253,9 +253,9 @@ function CookExperience() {
   const livePhasePlan=meal?effectivePhasePlan(meal,timeline):undefined;
   const cookingTasks=livePhasePlan?timeline.filter(t=>!livePhasePlan.suppressed.includes(t.id)):timeline;
   const progressTasks=view==='cooking'?cookingTasks:timeline;
-  const complete = meal ? progressTasks.filter(task => !!meal.completed[task.id]).length : 0;
+  const complete = meal ? progressTasks.filter(task => !!meal.completed[task.id]||(view==='cooking'&&actionRecorded(forecasts[task.id]))).length : 0;
 
-  const remaining = meal ? cookingTasks.filter(task => !meal.completed[task.id]) : [];
+  const remaining = meal ? cookingTasks.filter(task => !meal.completed[task.id]&&!actionRecorded(forecasts[task.id])) : [];
   const phaseWaiting=!!meal?.phasePlan&&!remaining.length&&(projection?.remaining===null||(projection?.remaining??0)>0);
   const focus = cookingFocus(timeline,meal?.completed??{},clockNow);
   const guidance=guidedCookingSteps(cookingTasks,meal?.completed??{},guidedTaskId,meal?.phasePlan?forecasts:undefined);

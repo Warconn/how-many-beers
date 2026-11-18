@@ -7,7 +7,7 @@ import {activityIssue,activityTask,activityStages,type ActivityStage} from './ac
 export type CookingPhase={id:string;dishId:string;kind:'heating'|'passive';startTaskId:string;endTaskIds:string[];durationTaskId:string;minutes:number|null;upperMinutes?:number;after?:string;leadMinutes?:number;stage?:ActivityStage;independent?:boolean};
 export type PhaseAction={starts?:string[];ends?:string[];checkpoint?:{phaseId:string;fraction:number};observes?:string[]};
 type PhaseRelationships={version:1;phases:CookingPhase[];actions:Record<string,PhaseAction>;order:Record<string,string[]>;suppressed:string[]};
-export type PhasePlan=PhaseRelationships & {activityVersion?:1;originalPlan?:PhaseRelationships};
+export type PhasePlan=PhaseRelationships & {activityVersion?:1;originalPlan?:PhaseRelationships;forecastOrigin?:string};
 export type PhaseObservation={phaseId:string;boundary:'start'|'end'};
 
 /** Strict suggestions at import review only. Ambiguous multi-action text stays a
@@ -42,7 +42,7 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
     const duration=activityTask(d,own,a.durationStepId??a.startStepId)??start;
     const kind=a.stage==='cooking'||a.stage==='preheating'?'heating':'passive';
     const startIndex=own.findIndex(t=>t.id===start.id),previous=own[startIndex-1];
-    const prior=definitions.find(p=>p.id!==a.id&&(p.endStepId===a.startStepId||previous&&activityTask(d,own,p.endStepId??'')?.id===previous.id));
+    const prior=d.preset==='wings'&&a.id==='fry'?definitions.find(p=>p.id==='oil'):definitions.find(p=>p.id!==a.id&&(p.endStepId===a.startStepId||previous&&activityTask(d,own,p.endStepId??'')?.id===previous.id));
     let minutes=duration.durationMinutes??duration.templateStage?.minutes??null;
     if(d.preset==='wings')minutes=a.id==='heat'?Math.max(15,d.cookMinutes)-15:a.id==='oil'?10:a.id==='fry'?3:a.id==='dry'?480:a.id==='rest'?d.restMinutes:minutes;
     const p:CookingPhase={id:d.id+':'+a.id,dishId:d.id,kind,stage:a.stage,independent:true,startTaskId:start.id,endTaskIds:[end.id],durationTaskId:duration.id,minutes,...(prior?{after:d.id+':'+prior.id}:{}),...(d.preset==='wings'&&a.id==='rest'?{leadMinutes:2}:{})};
@@ -97,7 +97,7 @@ export function buildPhasePlan(meal:Meal,tasks:PlannedTask[]):PhasePlan{
    const source=stepsForDish(d);
    for(const t of own){
     const key=t.id.slice(d.id.length+1),entry=source?.find(s=>s.id===key);
-    if(!plan.actions[t.id]&&!t.templateStage&&(entry?.anchor==='progress'||key==='check'||key==='wrap'||key==='finish'||t.isCondition))action(t.id).checkpoint={phaseId:heat.id,fraction:entry?.anchor==='progress'?(entry.progress??0.5)*nominal/(nominal-stages):key==='finish'||key==='hold'?1:0.5};
+    if(!plan.actions[t.id]&&!t.templateStage&&(entry?.anchor==='progress'||key==='check'||key==='wrap'||key==='finish'||t.isCondition))action(t.id).checkpoint={phaseId:d.preset==='brats'&&key==='hold'?d.id+':sear':heat.id,fraction:entry?.anchor==='progress'?(entry.progress??0.5)*nominal/(nominal-stages):key==='finish'||key==='hold'?1:0.5};
    }
   }
   // Refrigerated preparation has real start/end boundaries too. Expiring these

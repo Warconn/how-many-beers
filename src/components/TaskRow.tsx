@@ -6,6 +6,7 @@ import type {PlannedTask} from "@/domain/meal";
 import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
 import {physicalPhase,physicalStartedEvent} from "@/domain/physicalPhase";
+import {actionRecorded} from '@/domain/cookingFocus';
 import {stepTimingCue,conditionCue} from '@/domain/stepTimingCue';
 import CookingStepSummary,{cookingInstruction,cookingInstructions} from "./CookingStepSummary";
 import StepEditor from "./StepEditor";
@@ -88,15 +89,15 @@ export default function TaskRow({
   useEffect(()=>{setTimeEditing(false);setDetailsOpen(false);setLogging(false);setReadingActivity('');setStartFormOpen(false);setStartError("");setRemainingEstimate('');setEstimateOpen(false);setNotesOpen(false);setActivityOpen(false);},[task.id]);
   useEffect(()=>{onReadingChange?.(logging||startFormOpen||!!remainingEstimate.trim());return ()=>onReadingChange?.(false);},[logging,startFormOpen,remainingEstimate,onReadingChange]);
 
-  const done=!!completedAt;
+  const recorded=actionRecorded(forecast),done=!!completedAt||recorded;
   const phase=activePhase?{label:'Record actual start'}:phaseModel?null:physicalPhase(task);
-  const started=activePhase?.actualStart?{occurredAt:activePhase.actualStart}:phase?physicalStartedEvent(events,task.id):latestStartedEvent(events,task.id);
+  const started=activePhase?.actualStart?{occurredAt:activePhase.actualStart}:phase?physicalStartedEvent(events,task.id):[...events].reverse().find(e=>e.taskId===task.id&&e.kind==='started'&&e.phaseObservations?.some(o=>o.boundary==='start'))??latestStartedEvent(events,task.id);
   const DetailContainer=mode==="cooking"?"details":"div";
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
   const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
   const summaryInstruction=task.isCondition&&!physicalPhase(task)?conditionCue(task):cookingInstruction(task,forecast?.template?.kind==='rest');
-  const primaryTiming=stepTimingCue(task,forecast,now);
+  const primaryTiming=stepTimingCue(task,forecast,now,completedAt);
   const fullInstructions=task.instructions==='Imported recipe step. Confirm instructions and timing.'?'':cookingInstructions(task);
   const detailInstructions=fullInstructions.split(/(?<=[.!?])\s+/).filter(sentence=>!summaryInstruction.includes(sentence)).join(' ');
   const standardPlanning=!!planningControls&&!isCooking;
@@ -130,11 +131,11 @@ export default function TaskRow({
 
   return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")+(standardPlanning?' standard-planning-step step-list-row '+(planningControls.dragging?'is-dragging ':'')+(planningControls.drop?'drop-'+planningControls.drop:''):'')} data-step-id={standardPlanning?task.id:undefined} data-step-group={standardPlanning?task.dishId:undefined} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
     <div className="task-top">
-      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging||startFormOpen||!!remainingEstimate.trim()}
+      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={recorded&&!completedAt||editing||logging||startFormOpen||!!remainingEstimate.trim()}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {standardPlanning?<StepGrip stepId={task.id} title={task.title} {...planningControls.grip}/>:!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
-        {isCooking?<CookingStepSummary now={now} task={task} forecast={forecast} activePhase={activePhase} onEditTime={!editing&&!durationDisabled?openTime:undefined}/>:<>
+        {isCooking?<CookingStepSummary now={now} task={task} completedAt={completedAt} forecast={forecast} activePhase={activePhase} onEditTime={!editing&&!durationDisabled?openTime:undefined}/>:<>
         <div className={standardPlanning?'between step-row-copy':'between'}><strong>{task.title}</strong><button type="button" className="link planned-time-button" aria-label={"Change planned time: "+task.title} disabled={editing||durationDisabled} onClick={openTime}>{task.scheduledAt?<>{task.isCondition&&!physicalPhase(task)?task.timingMode==='fixed'?'Planned check':'Check around':'Planned start'} <time dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"Set planned time"}</button></div>
         {standardPlanning?!task.isCondition&&<p className="planned-step-details step-row-timing"><span>{task.timingMode==='fixed'?'Fixed start · ':''}{task.id.endsWith(':serve')?'Serving':planningControls.duration!=null?'Estimated '+formatDuration(planningControls.duration):'Duration unknown'}</span></p>:(showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
         {!task.scheduledAt && (!onDurationChange||task.timingMode==='unscheduled') && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
