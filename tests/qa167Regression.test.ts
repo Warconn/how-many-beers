@@ -65,4 +65,10 @@ describe('QA #167 planning and actual-start regressions',()=>{
   expect(isStoredMeal({...active,phasePlan:{...active.phasePlan,forecastOrigin:'not-a-date'}})).toBe(false);
   expect(isStoredMeal({...active,phasePlan:{...active.phasePlan,forecastOrigin:undefined}})).toBe(true);
  });
+ it('keeps a cleared serving target untimed without inventing a preparation schedule or beer count',()=>{
+  const m={...meal(),serveAt:''},p=planningReadiness(m,cookTimeline(m),Date.parse(now))!;
+  expect(p.readyAt).toBeNull();expect(p.startAt).toBeNull();expect(p.partial).toBe(true);
+  expect(p.tasks.every(t=>t.scheduledAt===null)).toBe(true);
+  expect(cookDuration(m,p.tasks,Date.parse(now)).minutes).toBeNull();expect(m.serveAt).toBe('');
+ });
 });

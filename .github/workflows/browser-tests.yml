@@ -162,7 +162,9 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
-          mapfile -t specs < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- e2e/ | grep -E '^e2e/[^/]+[.]spec[.]ts$')
+          # Container processes run as root; trust only this checkout directory,
+          # rather than globally allowing repositories with arbitrary owners.
+          mapfile -t specs < <(git -C "$GITHUB_WORKSPACE" -c safe.directory="$GITHUB_WORKSPACE" diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- e2e/ | grep -E '^e2e/[^/]+[.]spec[.]ts$')
           test "${#specs[@]}" -gt 0
           npx playwright test "${specs[@]}" --workers=2
       - uses: actions/upload-artifact@v4

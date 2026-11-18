@@ -423,3 +423,15 @@ an unrelated future default. The explicit early-opening expectation now retains
 the planned meal finish. Reviewed screenshots are `desktop/mobile-frozen-plan.png`
 and `desktop/mobile-ended-activity.png`. Required CI supplies full changed UI,
 WebKit, account, auth, offline/export and SQL security results.
+
+The first container CI run reached the static-export tests and exposed a cleared
+serving-target regression: native projection could create timed rows without a
+valid target. Native planning now requires that target, keeping dates/readiness and
+the Beerometer unknown when it is cleared. The existing Android/iPhone assertion
+was retained, with a new domain regression. The follow-up passes **686 units**, six
+affected desktop/mobile timing checks, a static production export and all **18
+local Android Chromium offline/reliability/Beerometer cases**. The prior twenty-case
+Cooking/QA run remains applicable to the unchanged recorded-activity controls.
+Container changed-UI selection explicitly trusts and addresses only the runner's
+checkout directory for Git comparison; it still fails closed and runs every
+selected spec. Final CI status is tracked at the PR's current head.

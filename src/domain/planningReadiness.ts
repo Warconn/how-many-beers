@@ -147,7 +147,7 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
   // Native activities and full refrigerated preparation use the same projection
   // in planning as they will immediately after Start cooking. Imported/manual
   // sequence planning retains its authored fixed-anchor feasibility calculation.
-  const native=clockValid&&meal.dishes.length>0&&meal.dishes.every(d=>d.preset!=='custom'&&!d.planningSequence&&(d.preset!=='brisket'||d.brisketTemplateVersion===2))&&!timeline.some(t=>t.userSequence||t.timingMode==='fixed');
+  const native=clockValid&&target!==null&&meal.dishes.length>0&&meal.dishes.every(d=>d.preset!=='custom'&&!d.planningSequence&&(d.preset!=='brisket'||d.brisketTemplateVersion===2))&&!timeline.some(t=>t.userSequence||t.timingMode==='fixed');
   let live=native?phaseProjection(plannedSession(meal,timeline,new Date(now).toISOString()),timeline,now):null;
   if(live){
     // Use the shared activity budget to find the future window, rather than

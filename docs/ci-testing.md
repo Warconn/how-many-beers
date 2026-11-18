@@ -201,3 +201,5 @@ scope selection, test commands, iPhone projects, account/offline suites, time bu
 artifacts and the aggregate gate remain enabled. The prior changed-UI and offline
 jobs exhausted their budgets downloading OS packages; the interrupted iPhone shard
 started its tests only after that lengthy setup. Sharding was not that bottleneck.
+Changed-UI Git comparison explicitly addresses and trusts only `GITHUB_WORKSPACE`
+inside the container, preserving the nonempty spec check and full selected run.
