@@ -314,3 +314,14 @@ must preserve the next prep action's shared-serving window rather than jump to
 now. Coverage includes reload, real-clock guided interleaving, six-day thawing,
 shared finish and immutable actuals. The browser walkthrough advances the clock
 to estimated action times; ordinary check-offs continue to record actual time.
+
+The on-time holding regression uses an independent twenty-action fixture in
+`tests/fixtures/timedMealSchedule.ts`; expected steps/times are not selected by
+the scheduler under test. Unit and real-browser cases verify immediate holding
+guidance after confirmed doneness and both dishes served at Saturday 1 PM.
+Before the holding checkbox, actual heat end/hold start remain unrecorded; only
+the manual transition creates those observations. Negative cases retain the
+conservative behavior for clock expiry, readings, reopened readiness and newer
+remaining estimates. Fixed and actual holding timestamps survive reload.
+The partial-handoff example also checks the full meal's 1 PM estimate and turkey
+prep inside the drying/preheating window, preventing double-counted prep time.

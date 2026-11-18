@@ -60,6 +60,8 @@ It's a little personality in a tool that's really about **time, timing, and gett
 
 When cooking starts, you get a focused next action and an accessible full checklist. Check off steps, record actual progress, log food or equipment temperatures, and add notes when something changes.
 
+After you confirm doneness, the guide offers the next resting or holding action.
+
 A sticky next-action guide helps you keep your place. Head home, come back later, and continue the cook rather than starting over.
 
 ### 🔁 Save it, cook it, improve it

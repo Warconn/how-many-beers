@@ -746,3 +746,11 @@ activities and fixed paths keep their anchors. Missing starts can move estimates
 later, and recorded preparation can move them earlier, without changing any fact. Subsequent native-template prep actions retain their
 assigned window after an early prep completion; their forecast does not jump back
 to the completed step’s actual timestamp.
+Ordinary prep retains its authored overlap with drying/preheating allowances
+after an earlier prep action is checked, while manual sequences remain serial.
+
+A confirmed terminal doneness check makes the following resting/holding action
+due instead of extending cooking to its upper allowance. The cook still performs
+the separate removal/holding action to record the actual transition. Readings and
+time alone never trigger this handoff. Reopen or a newer explicit remaining
+estimate can change its forecast without rewriting any observed interval.

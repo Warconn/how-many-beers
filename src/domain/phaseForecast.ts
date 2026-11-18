@@ -71,6 +71,22 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
   if(p.id===p.dishId+':rest'&&d?.preset!=='custom')return Math.max(0,d?.restMinutes??0)+(d?.preset==='brisket'?d.brisketPlan?.applied?.inputs.holdBufferMinutes??0:0);
   return task?.durationMinutes??task?.templateStage?.minutes??p.minutes;
  };
+ // A completed terminal check can make the next handoff due, but never
+ // records a physical end. Trust only the source-linked condition immediately
+ // before an end/start transition into a passive phase, not ordinary readings.
+ const readinessFor=(p:CookingPhase,floor:number)=>{
+  const order=plan.order[p.dishId]??[];
+  const ids=p.endTaskIds.flatMap(endId=>{
+   const index=order.indexOf(endId);if(index<1)return [];
+   const previous=order[index-1],check=plan.actions[previous]?.checkpoint;
+   const holding=(plan.actions[endId]?.starts??[]).some(id=>plan.phases.some(next=>next.id===id&&next.dishId===p.dishId&&next.kind==='passive'));
+   return holding&&check?.phaseId===p.id&&check.fraction===1&&byId.get(previous)?.isCondition?[previous]:[];
+  });
+  return events.filter(e=>{
+   const at=stamp(e.occurredAt);
+   return e.kind==='completed'&&ids.includes(e.taskId)&&meal.completed[e.taskId]===e.occurredAt&&at!==null&&at>=floor;
+  }).at(-1);
+ };
  for(const dishId of new Set(timeline.map(t=>t.dishId))){
   const order=plan.order[dishId]??[];
   const own=timeline.filter(t=>t.dishId===dishId);
@@ -80,8 +96,9 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
   const independent=!dish&&!(meal as ExtendedMeal).planningGeneralSequence;
   const generalPositions=own.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
   const generalOrigin=generalPositions.length?Math.min(...generalPositions):anchor;
-  let cursor=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor),unknown=false;
-  let previousPrep:{planned:number;start:number;minutes:number}|undefined;
+  const dishOrigin=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor);
+  let cursor=dishOrigin,unknown=false;
+  let previousPrep:{planned:number;start:number;minutes:number;completed?:boolean}|undefined;
   for(const t of own){
    if(plan.suppressed.includes(t.id))continue;
    if(independent){cursor=stamp(t.executionAddedAt)??anchor+Math.max(0,(stamp(t.scheduledAt)??generalOrigin)-generalOrigin);unknown=false;}
@@ -90,7 +107,13 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
    const planned=stamp(t.scheduledAt),preparation=t.templateStage?.kind==='preparation';
    if(!preparation)previousPrep=undefined;
    const overlap=preparation&&!t.userSequence&&!dish?.planningStepOrder?.length&&previousPrep&&planned!==null?Math.max(0,previousPrep.minutes-(planned-previousPrep.planned)/minute):0;
-   const prepStart=previousPrep?previousPrep.start+(previousPrep.minutes-overlap)*minute:cursor;
+   // A completed prep keeps the dish's assigned start floor. For ordinary
+   // unsequenced prep, preserve overlap with an earlier passive allowance rather
+   // than charging that prep again after the allowance ends.
+   const completedOverlap=previousPrep?.completed&&!t.userSequence&&!dish?.planningStepOrder?.length&&!phases.length;
+   let prepStart=cursor;
+   if(previousPrep&&!previousPrep.completed)prepStart=previousPrep.start+(previousPrep.minutes-overlap)*minute;
+   else if(previousPrep&&completedOverlap)prepStart=Math.max(previousPrep.start,cursor-Math.max(0,length(t)??0)*minute);
    if(phases.length){
     for(const p of phases){
      const actual=phaseObservations(meal,p.id),actualStart=stamp(actual.start?.occurredAt),actualEnd=stamp(actual.end?.occurredAt),minutes=phaseLength(p);
@@ -104,9 +127,13 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
      const nominal=minutes===null?null:start+minutes*minute;
      const estimate=events.filter(e=>e.phaseEstimate?.phaseId===p.id&&stamp(e.occurredAt)!>=start).at(-1);
      const upper=p.upperMinutes!==undefined&&minutes===p.minutes?start+p.upperMinutes*minute:null;
-     const predicted=estimate?Date.parse(estimate.occurredAt)+estimate.phaseEstimate!.minutes*minute:nominal!==null&&nominal<=now&&actualStart!==null&&p.kind==='heating'&&upper!==null&&upper>now?upper:nominal;
+     const ready=actualStart!==null&&actualEnd===null&&p.kind==='heating'?readinessFor(p,actualStart):undefined;
+     // A later explicit remaining estimate supersedes readiness; a later
+     // confirmed check supersedes an older estimate. Actual intervals win above.
+     const handoff=!!ready&&(!estimate||events.indexOf(ready)>events.indexOf(estimate));
+     const predicted=handoff?Math.max(now,Date.parse(ready!.occurredAt)):estimate?Date.parse(estimate.occurredAt)+estimate.phaseEstimate!.minutes*minute:nominal!==null&&nominal<=now&&actualStart!==null&&p.kind==='heating'&&upper!==null&&upper>now?upper:nominal;
      const overrun=p.kind==='heating'&&actualStart!==null&&actualEnd===null&&nominal!==null&&nominal<=now;
-     const expired=p.kind==='heating'&&actualStart!==null&&actualEnd===null&&(predicted===null||predicted<=now);
+     const expired=!handoff&&p.kind==='heating'&&actualStart!==null&&actualEnd===null&&(predicted===null||predicted<=now);
      const unscheduled=t.timingMode==='unscheduled'&&actualStart===null;
      const conflict=actualStart===null&&fixed!==null&&fixed<earliest;
      // Recorded physical progress outranks hypothetical unfinished preparation;
@@ -138,7 +165,7 @@ function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:Re
     cursor=Math.max(cursor,done);
     // An early prep completion must not reset the next prep to its actual time
     // when this dish's remaining forecast has a later shared-serving window.
-    if(preparation&&planned!==null)previousPrep={planned,start:cursor,minutes:0};
+    if(preparation&&planned!==null)previousPrep={planned,start:Math.max(done,dishOrigin),minutes:0,completed:true};
     continue;
    }
    const minutes=length(t),actual=events.filter(e=>e.taskId===t.id&&e.kind==='started'&&!e.phaseEstimate&&!e.phaseObservations).at(-1);

@@ -307,3 +307,48 @@ cases passed a clean rerun. Reviewed screenshots are
 `desktop-brine-aligned-guidance.png` and `mobile-brine-aligned-guidance.png`.
 Existing early actuals remain facts: a clean order walkthrough uses a fresh meal
 and advances to the displayed estimates, rather than recording future work now.
+
+## Confirmed doneness to holding handoff (November 18)
+
+The on-time acceptance example exposed a real live-cook defect. At the nominal
+smoking endpoint, the supported upper cooking allowance extended the heat
+forecast even after the cook explicitly checked the terminal doneness condition.
+That postponed the separate holding action and could push a 1 PM meal to 6 PM.
+
+A confirmed source-linked terminal checkpoint now makes its following passive
+handoff due. Recognition uses the frozen phase/action relationships: a condition
+at fraction 1 immediately before the action that ends heating and starts a
+passive interval. It requires an actual heating start and a current completion
+at or after that start. Ordinary readings, elapsed time and intermediate checks
+do not qualify. No stored schema or inferred physical observation is added.
+
+The heat interval stays physically active until the cook checks the separate
+remove/rest/holding action. An explicit remaining estimate recorded after readiness
+supersedes that readiness for forecasting; a later confirmed check supersedes an
+older estimate. Reopening the terminal checkpoint restores conservative estimates.
+Fixed starts and already-recorded physical boundaries keep their existing meaning.
+
+`timedMealSchedule.ts` supplies twenty independently written action IDs/times for
+a Saturday 1 PM native brisket/turkey meal. `timedSequenceExamples.test.ts` checks
+every expected next action, both rest starts and both serving endpoints, alongside
+late starts, readings, reopen, estimate precedence, fixed holding and reload.
+`holding-handoff.spec.ts` exercises the same fixed schedule in the real UI and
+verifies the on-time handoff appends exactly its manual heat-end/hold-start event.
+The former on-time handoff test fails before the correction.
+
+The partial-handoff browser case also exposed a fifteen-minute prep drift. After
+turkey preheating was checked, the completed-prep path charged ordinary prep
+again after the drying allowance, instead of retaining its authored overlap.
+Completed ordinary prep now retains the dish's assigned start floor while allowing
+the next unsequenced prep allowance to overlap that earlier window. Explicit
+manual sequences and physical intervals keep their existing serial constraints.
+The independent example requires turkey prep at 7:15 AM, loading at 7:30 AM and
+the meal estimate at 1 PM even before the remaining actions have been checked.
+
+Final local `test:fast` verification passes typechecking, **676 unit tests across
+54 files**, and **84 desktop/mobile Chromium browser cases** covering holding,
+native meal order, physical boundaries, serving alignment and existing timing
+cues. The new handoff and full twenty-action cases pass on both local devices.
+Reviewed screenshots are `desktop-holding-handoff.png` and
+`mobile-holding-handoff.png`. Required CI retains real iPhone WebKit and the full
+account/auth/offline/security gates; local mobile Chromium is not WebKit coverage.
