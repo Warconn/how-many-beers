@@ -24,10 +24,10 @@ test('planner shows a natural full checklist, reachable Add to meal, and a read-
  await expect(share).toBeVisible();
  await share.click();
  const payload=await page.evaluate(()=>(window as typeof window & {__sharedPlan?:{text:string}}).__sharedPlan);
- expect(payload?.text).toContain('🍺 ~');
+ expect(payload?.text).toContain('🍺 THE BEEROMETER\n~');
  expect(payload?.text).toContain('Grilled beer-bath brats');
  expect(payload?.text).toContain('Dinner:');
- expect(payload?.text).toContain('🕒 Game plan');
+ expect(payload?.text).toContain('🗓️ THE GAME PLAN');
  expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBe(before);
  await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
  await expect(page.getByRole('region',{name:'Meal plan preview'})).toBeVisible();
