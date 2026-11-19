@@ -22,6 +22,7 @@ describe('read-only plan sharing',()=>{
   const text=formatMealPlanForShare(meal,[step('untimed','Set table',null,null)]);
   expect(text).toContain('THE BEEROMETER: Timing TBD');
   expect(text).toContain('Time to be confirmed: Set table');
-  expect(text).toContain('Cooking times are estimates');
+  expect(text).not.toContain('90 minutes per estimated beer');
+  expect(text).not.toContain('Cooking times are estimates');
  });
 });
