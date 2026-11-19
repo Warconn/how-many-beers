@@ -1,5 +1,16 @@
 # Core cook experience
 
+## Planning layout and text sharing (#168 / #169)
+
+Planning always shows the combined chronological checklist with natural page
+scrolling; the redundant Review Meal Plan toggle is removed. Recipe review keeps
+Add to meal and applicable recipe-save actions together above the steps in a
+compact sticky bar. Existing validation, open-draft commits and Cancel remain.
+Share plan exports a read-only text snapshot with the serving target, dishes,
+chronological steps and whole-meal Beerometer estimate through native sharing or
+Copy text. It does not save or start a cook. A shareable image remains future work.
+This section supersedes the historical method-footer placement described below.
+
 ## Past cook detail refinement (#161)
 
 Original checklist remains primary, with recorded completion times and planned

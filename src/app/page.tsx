@@ -21,6 +21,7 @@ import { equipmentWarnings } from "@/domain/schedule";
 import { addStep, cookTimeline, stepTimingWarnings, setStepDuration, editStep, moveStep, recordEvent, removeStep, updateTaskNote, startCookSession, addDishToMeal,correctActivityBoundary,finishSuppressedHolding } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import BeerEstimator from '@/components/Beerometer';
+import SharePlanButton from '@/components/SharePlanButton';
 import TurkeyPreparation from "@/components/TurkeyPreparation";
 import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
@@ -161,7 +162,7 @@ function CookExperience() {
   },[meal]);
   const [showDishSetup, setShowDishSetup] = useState(false);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
-  const [showChecklistPreview, setShowChecklistPreview] = useState(false);
+  const showChecklistPreview = true;
   const [editingStep, setEditingStep] = useState<{id:string;context:"dish"|"checklist"|"cooking"}|null>(null);
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [newStepDishId,setNewStepDishId] = useState<string | null>(null);
@@ -540,7 +541,7 @@ function CookExperience() {
     if(meal.dishes.some(d=>d.id===task.dishId)){
       setEditingDishId(task.dishId);setEditingStep({id:task.id,context:"dish"});
     }else{
-      setShowChecklistPreview(true);setEditingStep({id:task.id,context:"checklist"});
+      setEditingStep({id:task.id,context:"checklist"});
     }
   };
 
@@ -715,7 +716,7 @@ function CookExperience() {
             onName={name=>patch(m=>({...m,name}))}
             onServe={serveAt=>{patch(m=>({...m,serveAt}));setClockNow(Date.now());}}
             onSuggestion={()=>{if(plan?.suggestedServeAt)safelyPatch(m=>({...m,serveAt:formatLocalDateTime(plan.suggestedServeAt!,Intl.DateTimeFormat().resolvedOptions().timeZone)}));}}/>}
-          {timeline.length>0 && !methodReview && <BeerEstimator meal={meal} timeline={timeline} projection={projection}/>}
+          {timeline.length>0 && !methodReview && <><BeerEstimator meal={meal} timeline={timeline} projection={projection}/><SharePlanButton meal={meal} timeline={timeline}/></>}
           <section className={"workspace-overview"+(recipeFirst&&methodReview?" reviewing-method":"")} aria-label="Cook overview">
             <div className="workspace-heading">
               {!(recipeFirst&&methodReview)&&<div><p className="eyebrow">YOUR MENU</p><h2>{meal.dishes.length ? `${meal.dishes.length} ${meal.dishes.length===1?"dish":"dishes"} in this cook` : "What do you want to cook?"}</h2></div>}
@@ -861,9 +862,7 @@ function CookExperience() {
                 aria-describedby={!cookInProgress && startBlockReason ? "cook-start-help" : undefined}
                 onClick={startCooking}>{cookInProgress ? "Continue cooking" : "Start cooking"}</button>
               {!cookInProgress && <button type="button" className="button secondary save-plan-button" disabled={timeline.length===0 || planStepDraftOpen} aria-describedby={planStepDraftOpen?"save-plan-help":undefined} onClick={savePlanForLater}>{workspace.kind==='trial'?'Sign in to save plan':'Save plan for later'}</button>}
-              {timeline.length > 0 && <button type="button" className="link review-checklist-button"
-                aria-expanded={showChecklistPreview} aria-controls="checklist-preview"
-                onClick={()=>setShowChecklistPreview(v=>!v)}>{recipeFirst ? (showChecklistPreview ? "Hide Meal Plan" : "Review Meal Plan") : (showChecklistPreview ? "Hide checklist" : "Review checklist")}</button>}
+              
             </div>
             {!cookInProgress && planStepDraftOpen && <p id="save-plan-help" className="muted small">Save or cancel the open step first, then save your plan for later.</p>}
             {workspace.plansEnabled&&workspace.isSelectedPlan&&workspace.currentCookInProgress&&<div className="plan-active-notice"><p>Your current cook is still running. You can save this plan now and start it after finishing or canceling that cook.</p><button type="button" className="button secondary" disabled={planStepDraftOpen} onClick={()=>void continueCurrentCook()}>Continue current cook</button></div>}

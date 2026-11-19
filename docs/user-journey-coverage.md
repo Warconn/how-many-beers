@@ -1,5 +1,16 @@
 # User journey regression map
 
+## Planning layout and sharing (#168 / #169)
+
+`planning-share.spec.ts` checks the reachable primary action, natural checklist
+scrolling, read-only native text share and reload. `sharePlan.test.ts` covers
+chronological output, unknown times and whole-meal estimates. Account recipe
+journeys retain primary/secondary action hierarchy, open-step validation,
+Cancel and snapshot preservation in the new action bar. The extracted-timing
+journeys click Add to meal with Equipment open and verify the review closes on
+that first click before checking imported metadata, durations and persistence.
+Equipment checks also retain Escape and Tab-out behavior on desktop and phone.
+
 For #161, `history-activity` checks collapsed-by-default activity, keyboard opening
 and closing, actual completion display, archived dish/step attribution, all 16
 events/temperature values, saved and orphaned notes, original event ordering and

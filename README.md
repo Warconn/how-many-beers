@@ -51,6 +51,11 @@ Start with an editable cooking template or create a dish from pasted recipe inst
 
 With **My recipes**, you can keep your favorite methods, update the original, or save a separate variation. A saved recipe stays independent from the specific meal you used it in.
 
+Planning shows the full chronological checklist using normal page scrolling.
+Recipe review keeps **Add to meal** above the steps. **Share plan** sends a text
+snapshot of your menu, serving target, schedule and estimated beers through your
+device's share sheet, with **Copy text** as a fallback.
+
 ### 🍺 Meet the Beerometer
 
 *How many beers until dinner?*

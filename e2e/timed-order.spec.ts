@@ -15,7 +15,7 @@ test('all planning lists interleave multi-day dishes by time despite saved dish 
  const tasks=cookTimeline(meal);
  const grouped={...meal,taskOrder:[...tasks.filter(t=>t.dishId===brisket.id),...tasks.filter(t=>t.dishId===turkey.id)].map(t=>t.id)};
  await page.goto('/');await page.evaluate(m=>{localStorage.clear();localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m));},grouped);await page.reload();
- await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();
+ await page.getByRole('button',{name:/Resume planning/}).click();
  const list=page.locator('[data-step-list="meal-plan"]'),rows=list.getByRole('article');
  await timedOrder(rows);
  await expect(rows.first()).toHaveAttribute('aria-label','Start refrigerator thawing');
@@ -31,7 +31,7 @@ test('all planning lists interleave multi-day dishes by time despite saved dish 
  await list.scrollIntoViewIfNeeded();await page.screenshot({path:info.outputPath('chronological-plan.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));
  expect(saved.taskOrder).toEqual(grouped.taskOrder);expect(saved.events??[]).toEqual([]);
- await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();
  await expect(rows.first()).toHaveAttribute('aria-label','Slice and serve');await timedOrder(rows);
 });
 

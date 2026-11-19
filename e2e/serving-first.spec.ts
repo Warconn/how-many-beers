@@ -30,7 +30,7 @@ const ready=async(page:Page,time:string)=>{
  else{await expect(region.getByLabel('Estimated meal ready',{exact:true})).toHaveCount(0);await expect(region.getByLabel('Estimated start',{exact:true})).toBeVisible();}
 };
 const row=(page:Page,name:string)=>page.getByRole('region',{name:'Meal plan preview'}).getByRole('article',{name,exact:true});
-async function combined(page:Page){await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();}
+async function combined(page:Page){await expect(page.getByRole('region',{name:'Meal plan preview'})).toBeVisible();}
 async function starts(row:Locator,time:string){await expect(row.locator('time').first()).toHaveAttribute('datetime',at(time));}
 async function edit(page:Page,name:string,minutes?:string,fixed?:string){
  await row(page,name).getByRole('button',{name:`Edit ${name}`,exact:true}).click();const form=page.getByRole('form',{name:'Edit step',exact:true});

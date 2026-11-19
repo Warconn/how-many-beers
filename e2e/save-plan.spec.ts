@@ -66,12 +66,12 @@ test('a general-prep-only plan stays discoverable and can be saved untimed',asyn
  await page.getByRole('button',{name:'Save plan for later',exact:true}).click();
  await expect(page.getByRole('region',{name:'Planned start',exact:true})).toContainText('No confirmed start time');
  expect(await saved(page)).toEqual(meal);
- await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();await expect(page.getByRole('article',{name:'Set the table',exact:true})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await expect(page.getByRole('article',{name:'Set the table',exact:true})).toBeVisible();
 });
 
 test('planning actions align consistently on desktop and stack cleanly on phones',async({page},info)=>{
  await load(page,fixture());const actions=page.getByRole('region',{name:'Cooking actions',exact:true});const initial=page.viewportSize()!;
- const buttons=[actions.getByRole('button',{name:'Start cooking',exact:true}),actions.getByRole('button',{name:'Save plan for later',exact:true}),actions.getByRole('button',{name:'Review Meal Plan',exact:true})];
+ const buttons=[actions.getByRole('button',{name:'Start cooking',exact:true}),actions.getByRole('button',{name:'Save plan for later',exact:true})];
  for(const width of [375,768,1280]){
   await page.setViewportSize({width,height:900});const boxes=await Promise.all(buttons.map(b=>b.boundingBox()));
   for(const box of boxes)expect(box!.height).toBeGreaterThanOrEqual(48);
