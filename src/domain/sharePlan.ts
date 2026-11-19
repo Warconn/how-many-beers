@@ -30,7 +30,7 @@ export function formatMealPlanForShare(meal:Meal,timeline:PlannedTask[],now:numb
  let previousDay='';
  for(const task of timedOrder(timeline,task=>task.scheduledAt)){
   const known=valid(task.scheduledAt);
-  const key=known?new Date(task.scheduledAt).toDateString():'unknown';
+  const key=known?new Date(task.scheduledAt!).toDateString():'unknown';
   if(key!==previousDay){
    lines.push('',known?day(task.scheduledAt!).toUpperCase():'TIME TBD');
    previousDay=key;
