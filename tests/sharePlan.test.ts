@@ -20,6 +20,20 @@ describe('read-only plan sharing',()=>{
   expect(text).not.toContain('Next cook');
   expect(JSON.stringify({meal,tasks})).toBe(before);
  });
+ it('groups a single dish by day, without repeating its name or showing Next cook',()=>{
+  const turkey=createDish('turkey');
+  const meal={...newMeal(),serveAt:'2026-11-21T18:00:00Z',dishes:[turkey]};
+  const first={...step('brine','Start refrigerated brine','2026-11-20T17:00:00Z'),dishId:turkey.id,dishName:turkey.name};
+  const second={...step('roast','Begin roasting turkey','2026-11-21T17:00:00Z'),dishId:turkey.id,dishName:turkey.name};
+  const text=formatMealPlanForShare(meal,[second,first]);
+  expect(text).toContain('FRI, NOV 20');
+  expect(text).toContain('SAT, NOV 21');
+  expect(text.indexOf('Start refrigerated brine')).toBeLessThan(text.indexOf('Begin roasting turkey'));
+  expect(text).not.toContain('Next cook');
+  expect(text.split(turkey.name)).toHaveLength(2);
+  expect(text).not.toContain('90 minutes per estimated beer');
+  expect(text).not.toContain('Cooking times are estimates');
+ });
  it('does not invent an estimate or missing step time',()=>{
   const meal={...newMeal(),name:'Timing pending',serveAt:''};
   const text=formatMealPlanForShare(meal,[step('untimed','Set table',null,null)]);
