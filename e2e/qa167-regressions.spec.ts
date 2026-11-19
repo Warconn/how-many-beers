@@ -37,7 +37,7 @@ test('actual-start tools retire ended activities, checked conditions stay calm, 
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(stored.events.filter((e:{kind:string})=>e.kind==='started')).toHaveLength(4);
  await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(bar).not.toContainText('Start smoking wings');
  const resumed=await current(page,'Start smoking wings');await expect(resumed.getByLabel('Actual start',{exact:true})).toHaveAttribute('datetime','2026-11-18T21:04:00.000Z');
- await page.getByRole('button',{name:'Edit plan',exact:true}).click();await page.getByRole('button',{name:'Review Meal Plan',exact:true}).click();
+ await page.getByRole('button',{name:'Edit plan',exact:true}).click();
  await expect(page.getByRole('region',{name:'Meal plan preview'}).getByRole('article',{name:'Start smoking wings',exact:true})).toContainText(/Started Nov 18.*4:04 PM/);
  const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(after.events).toEqual(stored.events);
 });
