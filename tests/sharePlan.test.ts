@@ -11,7 +11,7 @@ describe('read-only, text-friendly meal plan sharing',()=>{
   const tasks=[step('late','Finish brats','2026-11-22T17:00:00Z',60),step('early','Preheat grill','2026-11-22T16:00:00Z',120)];
   const before=JSON.stringify({meal,tasks});
   const text=formatMealPlanForShare(meal,tasks,Date.parse('2026-11-22T12:00Z'));
-  expect(text).toMatch(/^🍻 HOW MANY BEERS?\nSaturday dinner\nDinner: /);
+  expect(text.startsWith('🍻 HOW MANY BEERS?\nSaturday dinner\nDinner: ')).toBe(true);
   expect(text).toContain('🍽️ ON THE MENU\n• Grilled beer-bath brats');
   expect(text).toContain('🍺 THE BEEROMETER\n~1.3 beers estimated');
   expect(text).toContain('🗓️ THE GAME PLAN');
