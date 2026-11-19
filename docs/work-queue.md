@@ -1,5 +1,18 @@
 # Work queue
 
+## Current authorized work: #3 Parallel Cooking
+
+The November 16 owner brief and subsequent architecture approval supersede the
+earlier #3 design-only hold. Deliver independent physical activity boundaries,
+repeatable observations, automatic recipe suggestions/corrections and inline
+status in the existing Cooking Mode. Preserve Beerometer, chronological checklist,
+global footer, actual history, recipe snapshots and account ownership. Use isolated
+synthetic acceptance fixtures. Prepare a feature PR to dev for product review;
+no automatic merge, hosted database change or production deployment. Full resource
+optimization and the production-release regression remain later work.
+See [implementation and acceptance evidence](implementation/issue-3-parallel-cooking.md).
+The completed smaller-ticket queue below remains historical context.
+
 ## Current approved queue: #162 then #161
 
 #162 delivered through PR #163 at `385331f`: word quantities require a separator

@@ -190,3 +190,16 @@ its `changed-ui-review` screenshot/trace artifact supplement mandatory smoke,
 auth/offline and path-selected account coverage. Its result is included in the
 aggregate gate. Full release regression remains unchanged. New relevant phone
 specs must be included in the iPhone project's match list.
+
+## Browser runtime reliability (November 18, PR #167)
+
+Browser jobs use the official `mcr.microsoft.com/playwright:v1.64.1-noble` image,
+matching the committed Playwright lockfile. The runtime check fails if package/image
+versions differ or Chromium/WebKit is missing. Update the image and declared version
+with future Playwright upgrades. This replaces per-job browser/OS installation;
+scope selection, test commands, iPhone projects, account/offline suites, time budgets,
+artifacts and the aggregate gate remain enabled. The prior changed-UI and offline
+jobs exhausted their budgets downloading OS packages; the interrupted iPhone shard
+started its tests only after that lengthy setup. Sharding was not that bottleneck.
+Changed-UI Git comparison explicitly addresses and trusts only `GITHUB_WORKSPACE`
+inside the container, preserving the nonempty spec check and full selected run.

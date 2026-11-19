@@ -16,21 +16,23 @@ import CancelCookDialog from '@/components/CancelCookDialog';
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dish, Meal, PlannedTask, PresetId } from "@/domain/meal";
 import { createDish, newMeal, presets } from "@/domain/meal";
-import { chronologicalTasks, formatDuration } from "@/domain/stepTiming";
+import { timedOrder, formatDuration } from "@/domain/stepTiming";
 import { equipmentWarnings } from "@/domain/schedule";
-import { addStep, cookTimeline, stepTimingWarnings, setStepDuration, editStep, moveStep, recordEvent, removeStep, updateTaskNote, startCookSession, addDishToMeal } from "@/domain/cookState";
+import { addStep, cookTimeline, stepTimingWarnings, setStepDuration, editStep, moveStep, recordEvent, removeStep, updateTaskNote, startCookSession, addDishToMeal,correctActivityBoundary,finishSuppressedHolding } from "@/domain/cookState";
 import type { CookEventKind, ExtendedMeal } from "@/domain/cookState";
 import BeerEstimator from '@/components/Beerometer';
 import TurkeyPreparation from "@/components/TurkeyPreparation";
 import BrisketPlanner from "@/components/BrisketPlanner";
 import PlannedCookStart from "@/components/PlannedCookStart";
 import CookingChecklist from "@/components/CookingChecklist";
-import { cookingFocus, guidedCookingSteps } from "@/domain/cookingFocus";
+import { cookingFocus, guidedCookingSteps, actionRecorded } from "@/domain/cookingFocus";
 import {cookingTitle} from "@/components/CookingStepSummary";
 import TaskRow from "@/components/TaskRow";
 import {physicalPhase} from "@/domain/physicalPhase";
 import StepForecastTime from "@/components/StepForecastTime";
-import {recordRemainingEstimate} from '@/domain/cookingPhases';
+import {recordRemainingEstimate,effectivePhasePlan,taskActivityIds,activityBoundaryWarnings} from '@/domain/cookingPhases';
+import RecipeActivities from '@/components/RecipeActivities';
+import {upgradeActivityLinks} from '@/domain/activityMigration';
 import {cookProjection} from "@/domain/cookProjection";
 import {liveStepForecasts} from "@/domain/cookForecast";
 import RecipeDetails from "@/components/RecipeDetails";
@@ -62,7 +64,7 @@ function when(iso: string | null): string {
   if (!iso) return "Timing TBD";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "Set a serving time";
-  return new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(undefined, { weekday: "short", month:"short",day:"numeric", hour: "numeric", minute: "2-digit" }).format(d);
 }
 
 
@@ -237,7 +239,7 @@ function CookExperience() {
   const timeline=plan?.tasks??rawTimeline;
   const projection=useMemo(()=>meal&&(meal.mode==="cooking"||meal.startedAt)?cookProjection(meal,timeline,clockNow):null,[meal,timeline,clockNow]);
   const forecasts=useMemo(()=>projection?.forecasts??(meal?liveStepForecasts(meal,timeline,clockNow):{}),[meal,timeline,clockNow,projection]);
-  const liveSchedule = useMemo(() => chronologicalTasks(timeline), [timeline]);
+  const liveSchedule = useMemo(() => timedOrder(timeline,t=>t.scheduledAt), [timeline]);
   const warnings = useMemo(() => {
     if (!meal) return [];
     // The raw template timeline can be late *before* planningReadiness moves its
@@ -246,16 +248,21 @@ function CookExperience() {
     const late = plan?.lateMinutes && plan.readyAt ? [
       `Estimated ready ${when(plan.readyAt)}, ${plan.lateMinutes} min past your ${when(meal.serveAt)} target. ${plan.startAt && Date.parse(plan.startAt) <= clockNow ? 'The earliest preparation is now; review optional preparation or change serving time.' : 'Review fixed starts or adjust serving time.'}`
     ] : [];
-    return [...equipmentWarnings(meal), ...timing, ...(plan?.conflicts ?? []), ...late];
+    return [...equipmentWarnings(meal), ...timing, ...activityBoundaryWarnings(meal,timeline), ...(plan?.conflicts ?? []), ...late];
   }, [meal,plan,clockNow]);
-  const cookingTasks=meal?.phasePlan?timeline.filter(t=>!meal.phasePlan!.suppressed.includes(t.id)):timeline;
+  const livePhasePlan=meal?effectivePhasePlan(meal,timeline):undefined;
+  const cookingTasks=livePhasePlan?timeline.filter(t=>!livePhasePlan.suppressed.includes(t.id)):timeline;
   const progressTasks=view==='cooking'?cookingTasks:timeline;
-  const complete = meal ? progressTasks.filter(task => !!meal.completed[task.id]).length : 0;
+  const complete = meal ? progressTasks.filter(task => !!meal.completed[task.id]||(view==='cooking'&&actionRecorded(forecasts[task.id]))).length : 0;
 
-  const remaining = meal ? cookingTasks.filter(task => !meal.completed[task.id]) : [];
+  const remaining = meal ? cookingTasks.filter(task => !meal.completed[task.id]&&!actionRecorded(forecasts[task.id])) : [];
   const phaseWaiting=!!meal?.phasePlan&&!remaining.length&&(projection?.remaining===null||(projection?.remaining??0)>0);
   const focus = cookingFocus(timeline,meal?.completed??{},clockNow);
   const guidance=guidedCookingSteps(cookingTasks,meal?.completed??{},guidedTaskId,meal?.phasePlan?forecasts:undefined);
+  const footerTask=guidedCookingSteps(cookingTasks,meal?.completed??{},null,meal?.phasePlan?forecasts:undefined).current;
+  useEffect(()=>{
+    if(view==='cooking'&&meal?.phasePlan&&!meal.phasePlan.activityVersion)patch(m=>upgradeActivityLinks(m));
+  },[view,meal?.id,meal?.phasePlan?.activityVersion,patch]);
 
   const onTextFile = async (file?:File) => {
     if (!file) return;
@@ -372,7 +379,8 @@ function CookExperience() {
     if(workspace.kind==='trial'){window.dispatchEvent(new Event('hmb-open-account'));return;}
     if(!meal) return;
     try{
-      const nextArchive=archiveCook(meal,history,outcome,new Date().toISOString());
+      const finishedAt=new Date().toISOString();
+      const nextArchive=archiveCook(finishSuppressedHolding(meal,finishedAt),history,outcome,finishedAt);
       await save({active:newMeal(),history:nextArchive});
       returnHome();
       setMessage("Cook saved to history. Ready for the next one!");
@@ -471,7 +479,8 @@ function CookExperience() {
     const visibleTasks = compact||mode==="planning" ? timeline.filter(t=>t.dishId===task.dishId) : timeline;
     const index = visibleTasks.findIndex(t => t.id === task.id);
     const taskEvents = (meal as ExtendedMeal).events ?? [];
-    const phase=projection?.phases?.find(p=>p.dishId===task.dishId&&p.active&&(p.kind==='heating'||Date.parse(p.finish)>clockNow))??projection?.phases?.find(p=>p.id===forecasts[task.id]?.phaseId);
+    const activityIds=taskActivityIds(meal,task.id,timeline),activityOptions=projection?.phases?.filter(p=>activityIds.includes(p.id))??[];
+    const phase=activityOptions.find(p=>p.startTaskId===task.id)??(activityOptions.length===1?activityOptions[0]:undefined);
     const concurrent=projection?.phases?.filter(p=>p.dishId!==task.dishId&&p.active&&(p.kind==='heating'||Date.parse(p.finish)>clockNow))??[];
     const context = compact ? "dish" : mode === "cooking" ? "cooking" : "checklist";
     return <TaskRow
@@ -480,6 +489,9 @@ function CookExperience() {
       task={task}
       forecast={mode==="cooking"?forecasts[task.id]:undefined}
       activePhase={mode==='cooking'?phase:undefined}
+      phaseModel={!!meal.phasePlan}
+      activityOptions={mode==='cooking'?activityOptions:undefined}
+      onCorrectEnd={mode==='cooking'&&phase?.actualEnd?occurredAt=>safelyPatch(m=>correctActivityBoundary(m,phase.id,'end',occurredAt)):undefined}
       alsoCooking={mode==='cooking'&&guidance.current?.id===task.id?[...new Set(concurrent.map(p=>meal.dishes.find(d=>d.id===p.dishId)?.name??'Another dish'))]:[]}
       onRemainingEstimate={mode==='cooking'&&phase?.active?minutes=>safelyPatch(m=>recordRemainingEstimate(m,phase.id,minutes,new Date().toISOString())):undefined}
       showTimingDetails={task.dishId==='custom'||meal.dishes.some(d=>d.id===task.dishId&&d.preset==='custom')}
@@ -516,9 +528,9 @@ function CookExperience() {
         safelyPatch(m=>moveStep(m,task.id,direction,task.dishId,mode==="planning"));
       }}
       onRemove={()=>{setEditingStep(current=>current?.id===task.id?null:current);safelyPatch(m=>removeStep(m,task.id,new Date().toISOString()));}}
-      onEvent={(kind:CookEventKind,value,unit,note,occurredAt)=>{
+      onEvent={(kind:CookEventKind,value,unit,note,occurredAt,activityId,noteOnly)=>{
         if(kind==="completed"||kind==="reopened")completeCookingStep(task.id,kind==="completed");
-        else safelyPatch(m=>recordEvent(m,kind==='started'&&phase?phase.startTaskId:task.id,kind,occurredAt??new Date().toISOString(),value,unit,note));
+        else safelyPatch(m=>recordEvent(m,kind==='started'&&phase?phase.startTaskId:task.id,kind,occurredAt??new Date().toISOString(),value,unit,note,{activityId,type:noteOnly?'note':undefined}));
       }}
     />;
   };
@@ -665,7 +677,7 @@ function CookExperience() {
                 <h3>{phaseWaiting?projection?.phases?.some(p=>p.active&&p.kind==='heating')?'Cooking underway':'Resting or cooling underway':'All steps checked'}</h3>
                 <div className="cook-completion-actions">{!phaseWaiting&&<button id="finish-cook-trigger" type="button" className="button primary" disabled={cookingDraftOpen} onClick={openFinishCook}>Finish cook</button>}<button type="button" className="button secondary" disabled={cookingDraftOpen} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button></div>
               </section>}
-              {cookPanel==="checklist" ? <CookingChecklist now={clockNow} forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep}/> : (guidance.current||!timeline.length)?<section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
+              {cookPanel==="checklist" ? <CookingChecklist now={clockNow} forecasts={forecasts} tasks={guidance.ordered} completed={meal.completed} onSelect={openGuidedStep} onComplete={completeCookingStep} plan={livePhasePlan} phases={projection?.phases} events={(meal as ExtendedMeal).events} onReadingChange={setCookReadingOpen} onReading={(id,kind,value,unit,note,activityId,noteOnly)=>{patch(m=>recordEvent(m,id,kind,new Date().toISOString(),value,unit,note,{activityId,type:noteOnly?'note':undefined}));setClockNow(Date.now());}}/> : (guidance.current||!timeline.length)?<section className="guided-step" aria-label="Current step" id="current-cook-step" tabIndex={-1}>
                 {guidance.current ? <>
                   {meal.completed[guidance.current.id]&&<p className="small muted">Completed step</p>}
                   {taskCard(guidance.current,"cooking")}
@@ -688,9 +700,9 @@ function CookExperience() {
           </div>
           {remaining.length>0&&<nav className="cook-guide-bar" aria-label="Cooking guide">
             <button type="button" className="guide-checklist-button" aria-label={cookPanel==="step"?"Full checklist":"Back to step"} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={toggleCookPanel}>{cookPanel==="step"?"Full checklist":"Back to step"}</button>
-            {guidance.next ? <button type="button" className="guide-next-button" aria-label={"Preview next step: "+guidance.next.title} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={()=>{
-              openGuidedStep(guidance.next!.id);if(guidance.current && !meal.completed[guidance.current.id])setNavigationNote("Previous step remains unchecked. It is still in Full checklist.");
-            }}><span className="guide-next-label">Up next · {guidance.next.dishName}</span><strong>{cookingTitle(guidance.next.title)}</strong><span className="guide-next-time"><StepForecastTime task={guidance.next} now={clockNow} forecast={forecasts[guidance.next.id]} part="start" simple/></span><Icon name="arrow-right" className="guide-next-icon"/></button>
+            {footerTask ? <><label className="guide-action-check"><input type="checkbox" aria-label={'Complete '+footerTask.title+' for '+footerTask.dishName} checked={!!meal.completed[footerTask.id]} disabled={cookingDraftOpen} onChange={e=>completeCookingStep(footerTask.id,e.target.checked)}/></label><button type="button" className="guide-next-button" aria-label={"Preview next step: "+footerTask.title} disabled={cookingDraftOpen} aria-describedby={cookingDraftOpen?"cooking-draft-help":undefined} onClick={()=>{
+              openGuidedStep(footerTask.id);
+            }}><span className="guide-next-label">Up next · {footerTask.dishName}</span><strong>{cookingTitle(footerTask.title)}</strong><span className="guide-next-time"><StepForecastTime task={footerTask} now={clockNow} forecast={forecasts[footerTask.id]} part="start" simple/></span><Icon name="arrow-right" className="guide-next-icon"/></button></>
             : <div className="guide-next-empty"><strong>Last unchecked step</strong><span>Check it off when ready.</span></div>}
           </nav>}
         </>
@@ -768,7 +780,7 @@ function CookExperience() {
                   {d.recipeLink&&d.recipeLink.revision>0&&d.recipeLink.ownerId===recipes.ownerId&&<p className="muted small recipe-source">From My recipes: {d.recipeLink.name}</p>}
                   {d.preset==="turkey" && <TurkeyPreparation dish={d} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
                   <section className="inline-dish-steps" data-step-list={"dish-"+d.id} role="region" aria-label={d.name+" steps"}>
-                  {timeline.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
+                  {liveSchedule.filter(t=>t.dishId===d.id).map(t=>taskCard(t,"planning",false,true))}
                   {newStepDishId===d.id ? <form className="inline-step-add" aria-label="Add dish step" onSubmit={e=>{e.preventDefault();addDishStep(d.id);}} onKeyDown={e=>{if(e.key==='Escape'){setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}}>
                     <label htmlFor={"new-step-"+d.id}>Step title</label>
                     <input id={"new-step-"+d.id} autoFocus value={newStepTitle} onChange={e=>setNewStepTitle(e.target.value)} maxLength={160}/>
@@ -776,6 +788,7 @@ function CookExperience() {
                     <button type="button" className="button secondary" onClick={()=>{setNewStepDishId(null);setNewStepTitle("");requestAnimationFrame(()=>document.getElementById("add-step-"+d.id)?.focus());}}>Cancel</button>
                   </form> : <button id={"add-step-"+d.id} type="button" className="button secondary dish-add-step" disabled={!!editingStep} onClick={()=>setNewStepDishId(d.id)}>Add a step to {d.name}</button>}
                 </section>
+                  {!meal.startedAt&&meal.mode!=='cooking'&&<RecipeActivities meal={meal as ExtendedMeal} dishId={d.id} onChange={next=>patch(()=>next)} disabled={!!editingStep||!!newStepDishId||workspace.locked}/>}
                   {recipes.authenticated&&<DishRecipeSaveButton disabled={!!editingStep||!!newStepDishId||workspace.locked} meal={meal} dishId={d.id} recipes={recipes} onLinkChange={async(link,renameFrom)=>{const current=latestMeal.current;if(!current||current.id!==meal.id)throw Error('Your meal changed. Reopen this dish.');await save({active:withRecipeLink(current as ExtendedMeal,d.id,link,renameFrom)});}}/>}
                   <details className="dish-advanced" key={d.id}><summary>Dish settings</summary>
                   {d.preset==="brisket" && <BrisketPlanner dish={d} serveAt={meal.serveAt} onChange={dish=>patch(m=>({...m,dishes:m.dishes.map(item=>item.id===d.id?dish:item)}))}/>}
@@ -868,7 +881,7 @@ function CookExperience() {
             <section className="checklist-preview" id="checklist-preview" aria-label={recipeFirst?"Meal plan preview":"Cooking checklist preview"}>
               <div className="preview-intro"><h3>{recipeFirst?"Meal plan":"Cooking checklist"}</h3></div>
               <p className="muted small">Review all dishes together. Check off steps and record actual readings in Cooking Mode.</p>
-              <div className="checklist preview-task-list" data-step-list="meal-plan">{timeline.map(task => taskCard(task, "planning"))}</div>
+              <div className="checklist preview-task-list" data-step-list="meal-plan">{liveSchedule.map(task => taskCard(task, "planning"))}</div>
               <AddStepForm onAdd={addCustom}/>
               {message && <p className="form-error" role="alert">{message}</p>}
             </section>
@@ -878,7 +891,7 @@ function CookExperience() {
           </div>
           {timeline.length>0 && !methodReview && <aside className="guided-schedule" aria-label="Live schedule">
             <div className="schedule-head"><p className="eyebrow">LIVE SCHEDULE</p><strong>{timeline.length} steps</strong></div>
-            <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Untimed recipes stay in recipe order until start times are known.</p>}
+            <p className="muted small">Serving {when(meal.serveAt || null)}</p>{liveSchedule.some(t=>t.recipeOrder!==undefined&&!t.scheduledAt)&&<p className="muted small">Steps without a start time follow the timed steps in recipe order.</p>}
             {timeline.length ? <>
               <ol className="schedule-list">
                 {(showFullSchedule?liveSchedule:liveSchedule.slice(0,4)).map(task=><li key={task.id}><button type="button" className="schedule-step" aria-label={"Edit "+task.title+" for "+task.dishName} onClick={()=>editScheduleStep(task)}><time dateTime={task.scheduledAt??undefined}>{task.scheduledAt?when(task.scheduledAt):"Start time not set"}</time><strong>{task.title}</strong><span>{task.dishName}{task.durationMinutes!=null?" · "+formatDuration(task.durationMinutes):""}</span><span className="schedule-edit-hint">Adjust step <Icon name="arrow-right"/></span></button></li>)}

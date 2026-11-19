@@ -86,13 +86,18 @@ jobs:
       - name: Unit tests
         run: npm run test
 
-  # Keep browser dependency installs off the moving ubuntu-latest image.
-  # Ubuntu 26 rollout runners have stalled on OS-package downloads before tests.
+  # Browser images include Chromium, WebKit and their OS libraries. Keep their
+  # version matched to the lockfile; avoid spending test budgets on apt mirrors.
   # Run these on every incremental commit, including draft PRs.
   # They cover a real guest cook and the critical account recovery paths.
   smoke:
     name: Critical browser smoke
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_IMAGE_VERSION: "1.64.1"
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -102,8 +107,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install Chromium and OS dependencies
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Playwright runtime
+        run: node scripts/check-playwright-runtime.mjs
       - name: Guest planning, Home and resume
         run: >-
           npx playwright test e2e/cook-flow.spec.ts
@@ -134,6 +139,11 @@ jobs:
     needs: scope
     if: needs.scope.outputs.focused == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_IMAGE_VERSION: "1.64.1"
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -144,7 +154,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium webkit
+      - run: node scripts/check-playwright-runtime.mjs
       - name: Run changed UI specs
         shell: bash
         env:
@@ -152,7 +162,9 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
-          mapfile -t specs < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- e2e/ | grep -E '^e2e/[^/]+[.]spec[.]ts$')
+          # Container processes run as root; trust only this checkout directory,
+          # rather than globally allowing repositories with arbitrary owners.
+          mapfile -t specs < <(git -C "$GITHUB_WORKSPACE" -c safe.directory="$GITHUB_WORKSPACE" diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- e2e/ | grep -E '^e2e/[^/]+[.]spec[.]ts$')
           test "${#specs[@]}" -gt 0
           npx playwright test "${specs[@]}" --workers=2
       - uses: actions/upload-artifact@v4
@@ -171,6 +183,11 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: ${{ matrix.suite }}
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_IMAGE_VERSION: "1.64.1"
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -190,8 +207,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install Playwright browsers and OS dependencies
-        run: npx playwright install --with-deps ${{ matrix.browsers }}
+      - name: Verify preinstalled Playwright runtime
+        run: node scripts/check-playwright-runtime.mjs
       - name: Run ${{ matrix.suite }} tests
         run: ${{ matrix.command }}
       - name: Upload browser report, screenshots and traces
@@ -215,6 +232,11 @@ jobs:
     name: ${{ matrix.suite }}
     needs: scope
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_IMAGE_VERSION: "1.64.1"
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -241,8 +263,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install Playwright browsers and OS dependencies
-        run: npx playwright install --with-deps ${{ matrix.browsers }}
+      - name: Verify preinstalled Playwright runtime
+        run: node scripts/check-playwright-runtime.mjs
       - name: Run ${{ matrix.suite }} tests
         run: ${{ matrix.command }}
       - name: Upload browser report, screenshots and traces
@@ -293,6 +315,11 @@ jobs:
     needs: scope
     name: regression (${{ matrix.shard }}/3)
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    env:
+      PLAYWRIGHT_IMAGE_VERSION: "1.64.1"
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -306,8 +333,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install Playwright browsers and OS dependencies
-        run: npx playwright install --with-deps chromium webkit
+      - name: Verify preinstalled Playwright runtime
+        run: node scripts/check-playwright-runtime.mjs
       - name: Run regression shard ${{ matrix.shard }}/3
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/raw-regression-results-${{ matrix.shard }}.json

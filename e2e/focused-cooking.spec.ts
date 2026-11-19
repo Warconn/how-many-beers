@@ -14,13 +14,13 @@ async function load(page:import('@playwright/test').Page,meal=fixture()){
 }
 const saved=(page:import('@playwright/test').Page)=>page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!) as ExtendedMeal);
 
-test('one guided step, next-step footer and a flat whole-cook checklist preserve navigation state',async({page},info)=>{
+test('one guided step, meal-wide footer and a flat whole-cook checklist preserve navigation state',async({page},info)=>{
  const original=await load(page);const guide=page.getByRole('region',{name:'Current step',exact:true});const bar=page.getByRole('navigation',{name:'Cooking guide',exact:true});
  await expect(guide.getByRole('article',{name:'Check the bark',exact:true})).toBeVisible();await expect(page.getByRole('article')).toHaveCount(1);
- await expect(bar.getByRole('button',{name:'Preview next step: Warm the sauce',exact:true})).toBeVisible();await expect(bar.getByRole('button',{name:/Save Cook|View plan/i})).toHaveCount(0);
+ await expect(bar.getByRole('button',{name:'Preview next step: Check the bark',exact:true})).toBeVisible();await expect(bar.getByRole('button',{name:/Save Cook|View plan/i})).toHaveCount(0);
  const box=await bar.boundingBox();expect(box!.y+box!.height).toBeLessThanOrEqual(page.viewportSize()!.height+1);
  await page.screenshot({path:info.outputPath('guided-cooking.png'),fullPage:false});
- await bar.getByRole('button',{name:'Preview next step: Warm the sauce',exact:true}).click();await expect(guide.getByRole('article',{name:'Warm the sauce',exact:true})).toBeVisible();expect(await saved(page)).toEqual(original);
+ await bar.getByRole('button',{name:'Full checklist',exact:true}).click();await page.getByRole('button',{name:'Open step: Warm the sauce for General prep',exact:true}).click();await expect(guide.getByRole('article',{name:'Warm the sauce',exact:true})).toBeVisible();await expect(bar.getByRole('button',{name:'Preview next step: Check the bark',exact:true})).toBeVisible();await expect(bar.getByRole('checkbox',{name:'Complete Check the bark for General prep',exact:true})).not.toBeChecked();expect(await saved(page)).toEqual(original);
  await bar.getByRole('button',{name:'Full checklist',exact:true}).click();const checklist=page.getByRole('region',{name:'Full cook checklist',exact:true});
  await expect(checklist.getByRole('listitem')).toHaveCount(5);await expect(checklist.getByRole('article')).toHaveCount(0);await expect(checklist.getByRole('checkbox',{name:'Complete Season food for General prep',exact:true})).toBeChecked();
  expect(await checklist.getByRole('button',{name:/^Open step:/}).allTextContents()).toEqual(expect.arrayContaining([expect.stringContaining('Check the bark'),expect.stringContaining('Warm the sauce')]));
@@ -28,6 +28,7 @@ test('one guided step, next-step footer and a flat whole-cook checklist preserve
  await checklist.getByRole('button',{name:'Open step: Choose a serving tray for General prep',exact:true}).click();await expect(guide).toContainText('Time not estimated');expect(await saved(page)).toEqual(original);
  await page.getByRole('button',{name:'Edit plan',exact:true}).click();expect(await saved(page)).toEqual(original);await page.getByRole('button',{name:'Continue cooking',exact:true}).click();
  await page.getByRole('button',{name:'Home',exact:true}).click();await page.reload();await page.getByRole('button',{name:/Continue cooking/}).click();await expect(guide.getByRole('article',{name:'Check the bark',exact:true})).toBeVisible();expect(await saved(page)).toEqual(original);
+ await bar.getByRole('button',{name:'Full checklist',exact:true}).click();await page.getByRole('button',{name:'Open step: Warm the sauce for General prep',exact:true}).click();await bar.getByRole('checkbox',{name:'Complete Check the bark for General prep',exact:true}).click();const completed=await saved(page);expect(completed.completed.due).toBeTruthy();expect(completed.completed.soon).toBeUndefined();expect(completed.events!.slice(original.events!.length).filter(e=>e.kind==='completed').map(e=>e.taskId)).toEqual(['due']);
  for(const width of [375,768,1280]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
 });
 

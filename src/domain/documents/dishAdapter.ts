@@ -3,11 +3,12 @@ import {cookTimeline} from '../cookState';
 import {buildPhasePlan} from '../cookingPhases';
 import {stepsForDish} from '../../data/cookTemplates';
 import {isStoredMeal} from '../storageValidation';
+import {ACTIVITY_PARAMETER,decodeActivities} from '../activities';
 import {parseCookingDocument,type RecipeDocument,type RecipeDefinition,type DocumentStep,type RecipeAction} from './cookingDocument';
 
 const referenceDate='2030-01-01T13:00'; // Internal compilation anchor, never serialized.
 const copy=<T>(v:T):T=>JSON.parse(JSON.stringify(v));
-const keys=['id','name','preset','equipment','cookMinutes','restMinutes','pitTempF','weightLb','steps','recipeIngredients','recipeReference','recipeSource','brisketPlan','brisketTemplateVersion','turkeyPrep','planningSequence','planningStepOrder'];
+const keys=['id','name','preset','equipment','cookMinutes','restMinutes','pitTempF','weightLb','steps','recipeIngredients','recipeReference','recipeSource','brisketPlan','brisketTemplateVersion','turkeyPrep','planningSequence','planningStepOrder','activities'];
 export type DishConversion={status:'converted';document:RecipeDocument;original:Dish}|{status:'skipped';reason:string;original:unknown};
 
 /** Non-mutating conversion of a native authored dish. No meal or execution input.
@@ -52,7 +53,8 @@ function projectDish(d:Dish,id:string):RecipeDocument{
  if(d.brisketPlan){configuration.brisketInputs=d.brisketPlan.inputs;if(d.brisketPlan.applied){const {recommendedStart:_a,latestStart:_b,prepStart:_c,...applied}=d.brisketPlan.applied;configuration.brisketApplied=applied;configuration.brisketMode=d.brisketPlan.mode;}}
  if(d.steps)configuration.sourceStepOrder=d.steps.map(s=>s.id);
  const doc={format:'how-many-beers' as const,schemaVersion:1 as const,type:'recipe' as const,id,name:d.name,recipe:{method:d.preset,equipment:[d.equipment],configuration,
-  source:{kind:d.preset==='custom'?d.recipeSource!==undefined?'text' as const:'manual' as const:'template' as const,...(d.recipeReference!==undefined?{reference:d.recipeReference}:{}),...(d.recipeSource!==undefined?{originalText:d.recipeSource}:{}),...(d.preset!=='custom'?{templateId:d.preset,templateVersion:d.brisketTemplateVersion??1}:{})},
+  ...(d.activities?{parameters:{[ACTIVITY_PARAMETER]:JSON.stringify(d.activities)}}:{}),
+  source:{kind:d.preset==='custom'?d.recipeSource!==undefined?'text' as const:'manual' as const:'template' as const,...(d.recipeReference!==undefined?{reference:d.recipeReference}:{}),...(d.recipeSource!==undefined?{originalText:d.recipeSource}:{}),...(d.preset!=='custom'?{templateId:d.preset,templateVersion:d.activities?.templateVersion??d.brisketTemplateVersion??1}:{})},
   ...(d.recipeIngredients!==undefined?{ingredients:d.recipeIngredients}:{}),...(d.weightLb!==undefined?{weight:{value:d.weightLb,unit:'lb' as const}}:{}),steps,
   phases:plan.phases.map(p=>({id:local(p.id),kind:p.kind,estimatedMinutes:p.minutes,durationStepId:local(p.durationTaskId),...(p.after?{after:local(p.after)}:{}),...(p.upperMinutes!==undefined?{upperMinutes:p.upperMinutes}:{}),...(p.leadMinutes!==undefined?{leadMinutes:p.leadMinutes}:{})})),suppressedStepIds:plan.suppressed.map(local)}};
  return parseCookingDocument(copy(doc)) as RecipeDocument;
@@ -66,6 +68,7 @@ function nativeDish(doc:RecipeDocument,instanceId:string):Dish{
   ...(r.weight?{weightLb:r.weight.value}:{}),...(r.ingredients!==undefined?{recipeIngredients:r.ingredients}:{}),
   ...(r.source.reference!==undefined?{recipeReference:r.source.reference}:{}),...(r.source.originalText!==undefined?{recipeSource:r.source.originalText}:{})};
  if(c.preset==='custom')dish.steps=[...r.steps.filter(s=>!s.generated)].sort((a,b)=>(sourceStepOrder?.indexOf(a.id)??0)-(sourceStepOrder?.indexOf(b.id)??0)).map((s):RecipeStep=>({id:s.id,title:s.title,minutes:s.timing.estimatedMinutes,...(s.instructions!==undefined?{instructions:s.instructions}:{}),...(s.temperatures!==undefined?{recipeTemperatures:s.temperatures}:{}),...(s.cookingKind?{cookingKind:s.cookingKind}:{})}));
+ if(r.parameters?.[ACTIVITY_PARAMETER]!==undefined)dish.activities=decodeActivities(r.parameters[ACTIVITY_PARAMETER]);
  return copy(dish);
 }
 /** Fresh dish identity, stable recipe-local keys. Recompiles through today's

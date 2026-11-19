@@ -1,4 +1,5 @@
 import {compactLibraryCard} from '../helpers/libraryCard';
+import {ACTIVITY_PARAMETER} from '../../src/domain/activities';
 import {openOwnRecipe} from '../helpers/recipeEntry';
 import {test,expect,type Page,type BrowserContext,type Locator} from '@playwright/test';
 import {backend,user} from './fixtures';
@@ -11,6 +12,28 @@ import {archiveCook,emptyHistory} from '../../src/domain/cookHistory';
 import type {RawArchive} from '../../src/account/workspace';
 import type {ExtendedMeal} from '../../src/domain/cookState';
 test.use({timezoneId:'UTC'});
+
+test('reviewed activity corrections survive account save/reload while meal snapshots stay independent',async({page,context})=>{
+ test.setTimeout(60_000);
+ const remote=server();await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:'Resume planning',exact:true}).click();await openOwnRecipe(page);
+ await page.getByLabel('Recipe title',{exact:true}).fill('Reviewed brine');await page.getByLabel('Recipe instructions',{exact:true}).fill('Start refrigerated brine (30 minutes)\nEnd brine and pat dry\nRoast turkey (60 minutes)\nRemove turkey from oven');await page.getByRole('button',{name:'Preview recipe steps',exact:true}).click();
+ const method=page.getByRole('region',{name:'Review your method',exact:true}),activities=method.locator('.activity-review');
+ await activities.locator(':scope > summary').click();await activities.getByRole('button',{name:'Review activity',exact:true}).last().click();
+ const editor=method.getByRole('group',{name:'Edit activity',exact:true});await editor.getByLabel('Activity stage',{exact:true}).selectOption('none');await editor.getByRole('button',{name:'Save activity',exact:true}).click();
+ await activities.getByRole('button',{name:'Review activity',exact:true}).first().click();await editor.getByLabel('Activity stage',{exact:true}).selectOption('preparing');await editor.getByRole('button',{name:'Save activity',exact:true}).click();
+ await recipeAction(method,'Save to My recipes');await expect(method.getByText('Saved recipe',{exact:true})).toBeVisible();
+ const original=structuredClone([...remote.rows.values()][0].document),metadata=JSON.parse(original.recipe.parameters[ACTIVITY_PARAMETER]);
+ expect(metadata.definitions).toHaveLength(1);expect(metadata.definitions[0]).toMatchObject({stage:'preparing',startStepId:'step-1',endStepId:'step-2',provenance:'confirmed'});
+ expect(metadata.dismissedStartStepIds).toContain('step-3');
+ await method.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);
+ const snapshot=structuredClone(remote.workspace.active.meal),history=structuredClone(remote.workspace.history);
+ await page.reload();const management=await library(page);await management.getByRole('button',{name:/^Edit /}).click();
+ const savedActivities=management.locator('.activity-review');await savedActivities.locator(':scope > summary').click();await expect(savedActivities).toContainText('Preparing');await expect(savedActivities.getByRole('button',{name:'Review activity',exact:true})).toHaveCount(1);
+ await savedActivities.getByRole('button',{name:'Review activity',exact:true}).click();await management.getByLabel('Activity stage',{exact:true}).selectOption('holding');await management.getByRole('button',{name:'Save activity',exact:true}).click();await recipeAction(management,'Save changes');
+ await expect.poll(()=>JSON.parse([...remote.rows.values()][0].document.recipe.parameters[ACTIVITY_PARAMETER]).definitions[0].stage).toBe('holding');
+ expect(remote.workspace.active.meal).toEqual(snapshot);expect(remote.workspace.history).toEqual(history);expect(original.recipe.parameters[ACTIVITY_PARAMETER]).toBe(JSON.stringify(metadata));
+});
 const rpc='https://auth.example.test/rest/v1/rpc/';
 function server(){
  const meal:ExtendedMeal={...newMeal(),name:'Current dinner',serveAt:'2026-11-15T13:00'};

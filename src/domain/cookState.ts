@@ -5,11 +5,15 @@ import {adjustDishSequence,servingConflict} from "./stepDependencies";
 import {turkeyPreparation} from "./turkeyPrep";
 import {physicalPhase} from "./physicalPhase";
 import {chronologicalTasks} from "./stepTiming";
-import {buildPhasePlan,type PhaseObservation} from './cookingPhases';
+import {buildPhasePlan,effectivePhasePlan,taskActivityIds,phaseObservations,type PhaseObservation} from './cookingPhases';
+import {planningReadiness} from './planningReadiness';
+import {plannedSession} from './plannedSession';
 
 export type CookEventKind = "started" | "completed" | "reopened" | "temperature" | "equipment" | "removed";
 
 export type CookEvent = {
+  activityId?:string;
+  observationType?:'note';
   phaseObservations?: PhaseObservation[];
   phaseEstimate?: {phaseId:string;minutes:number};
   id: string;
@@ -27,7 +31,9 @@ export type CookEvent = {
 export function startCookSession(meal:Meal,occurredAt:string):ExtendedMeal{
  if(meal.startedAt||meal.mode==='cooking'||Object.keys(meal.completed).length||((meal as ExtendedMeal).events??[]).some(e=>e.kind!=='removed'))return {...migrateMeal(meal),mode:'cooking',startedAt:meal.startedAt??occurredAt};
  if(!Number.isFinite(Date.parse(occurredAt)))throw Error('Choose a valid cook start.');
- return {...migrateMeal(meal),mode:'cooking',startedAt:occurredAt,phasePlan:buildPhasePlan(meal,cookTimeline(meal))};
+ const tasks=cookTimeline(meal);
+ const plan=planningReadiness(meal,tasks,Date.parse(occurredAt));
+ return migrateMeal(plannedSession(meal,tasks,occurredAt,plan?.forecastOrigin));
 }
 
 /** Adding a dish during execution never starts it and never recompiles existing
@@ -216,6 +222,8 @@ export function setStepDuration(meal:Meal,taskId:string,durationMinutes:number|n
 export function removeStep(meal: Meal, taskId: string, occurredAt: string): ExtendedMeal {
   if (!cookTimeline(meal).some(t=>t.id===taskId)) throw new Error("Task not found.");
   const m = migrateMeal(meal);
+  const phase=effectivePhasePlan(m,cookTimeline(m))?.phases.find(p=>(p.startTaskId===taskId||p.endTaskIds.includes(taskId))&&((m.events??[]).some(e=>e.phaseObservations?.some(o=>o.phaseId===p.id))));
+  if(phase)throw Error('This step bounds recorded activity. Keep the step and correct its actual time instead.');
   return {
     ...m,
     hiddenTaskIds: [...(m.hiddenTaskIds ?? []), taskId],
@@ -257,7 +265,7 @@ export function moveStep(meal: Meal, taskId: string, direction: "up"|"down", dis
   return {...m,taskOrder:order};
 }
 
-export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occurredAt: string, value?: number, unit?: "°F"|"°C", note?: string): ExtendedMeal {
+export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occurredAt: string, value?: number, unit?: "°F"|"°C", note?: string, observation?:{activityId?:string;type?:'note'}): ExtendedMeal {
   const m = migrateMeal(meal);
   const planned=cookTimeline(m).find(t=>t.id===taskId);
   if (!planned) throw new Error("Task not found.");
@@ -286,8 +294,20 @@ export function recordEvent(meal: Meal, taskId: string, kind: CookEventKind, occ
   const start = !meal.phasePlan && !physicalPhase(planned) && !alreadyStarted && (kind==="completed" || kind==="temperature" || kind==="equipment")
     ? [{id:crypto.randomUUID(),taskId,kind:"started" as const,startSource:"activity" as const,occurredAt:timestamp}]
     : [];
-  const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp,...(kind==="started"&&physicalPhase(planned)?{startSource:"physical" as const}:{})};
-  const action=meal.phasePlan?.actions[taskId];
+  const tasks=cookTimeline(m),plan=effectivePhasePlan(m,tasks);
+  const event: CookEvent = {id:crypto.randomUUID(),taskId,kind,occurredAt:timestamp,...(kind==="started"&&(plan?plan.actions[taskId]?.starts?.length:physicalPhase(planned))?{startSource:"physical" as const}:{})};
+  const linked=taskActivityIds(m,taskId,tasks);
+  if(observation?.activityId&&!linked.includes(observation.activityId))throw Error('Choose an activity linked to this step.');
+  if(kind==='temperature'||kind==='equipment'){
+    const active=linked.filter(id=>{const p=phaseObservations(m,id);return !!p.start&&!p.end;});
+    const choices=active.length?active:linked;
+    if(!observation?.activityId&&choices.length>1)throw Error('Choose the activity for this reading.');
+    const activityId=observation?.activityId??choices[0];
+    if(activityId)event.activityId=activityId;
+    if(observation?.type==='note')event.observationType='note';
+  }
+  const sourceAction=plan?.actions[taskId];
+  const action=sourceAction&&observation?.activityId?{...sourceAction,starts:sourceAction.starts?.filter(id=>id===observation.activityId),ends:sourceAction.ends?.filter(id=>id===observation.activityId)}:sourceAction;
   if(action&&(kind==='completed'||kind==='started')){
     const seen=(id:string,boundary:'start'|'end')=>priorEvents.some(e=>e.phaseObservations?.some(o=>o.phaseId===id&&o.boundary===boundary));
     const observations:PhaseObservation[]=[
@@ -313,6 +333,30 @@ export function latestStartedEvent(events: CookEvent[], taskId: string): CookEve
   // If a task was reopened, allow starting the new attempt.
   const lastRestartIndex = relevant.map(e=>e.kind).lastIndexOf("reopened");
   return relevant.slice(lastRestartIndex+1).find(e=>e.kind==="started");
+}
+
+/** Correct physical evidence without altering the checklist or an old event. */
+export function correctActivityBoundary(meal:Meal,activityId:string,boundary:'start'|'end',occurredAt:string):ExtendedMeal {
+ const m=migrateMeal(meal),phase=effectivePhasePlan(m,cookTimeline(m))?.phases.find(p=>p.id===activityId);
+ if(!phase)throw Error('Choose an activity in this meal.');
+ const actual=phaseObservations(m,activityId);
+ if(!actual[boundary])throw Error('Record this physical boundary before correcting it.');
+ const at=Date.parse(occurredAt),opposite=actual[boundary==='start'?'end':'start'];
+ if(!Number.isFinite(at))throw Error('Choose a valid actual time.');
+ if(opposite&&(boundary==='start'?at>Date.parse(opposite.occurredAt):at<Date.parse(opposite.occurredAt)))throw Error('The actual start must be before the recorded end.');
+ const event:CookEvent={id:crypto.randomUUID(),taskId:boundary==='start'?phase.startTaskId:phase.endTaskIds[0],kind:boundary==='start'?'started':'completed',occurredAt,phaseObservations:[{phaseId:activityId,boundary}],note:'Corrected actual '+boundary};
+ return {...m,events:[...(m.events??[]),event]};
+}
+
+/** Finish replaces only a deliberately suppressed, generated holding endpoint. */
+export function finishSuppressedHolding(meal:Meal,occurredAt:string):ExtendedMeal {
+ let next:ExtendedMeal=meal;
+ const plan=effectivePhasePlan(meal,cookTimeline(meal));
+ for(const p of plan?.phases??[]){
+  const actual=phaseObservations(next,p.id),end=p.endTaskIds.find(id=>plan!.suppressed.includes(id));
+  if(p.stage==='holding'&&actual.start&&!actual.end&&end)next=recordEvent(next,end,'completed',occurredAt);
+ }
+ return next;
 }
 
 /** A text update counts as work begun only while actively cooking.

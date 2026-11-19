@@ -2,6 +2,8 @@ import type {Meal, PlannedTask} from './meal';
 import type {ExtendedMeal} from './cookState';
 import {stepMinutes} from './executionTimeline';
 import {turkeyPreparation} from './turkeyPrep';
+import {plannedSession} from './plannedSession';
+import {phaseProjection} from './phaseForecast';
 
 export type PlanningReadiness = {
   tasks: PlannedTask[];
@@ -11,6 +13,7 @@ export type PlanningReadiness = {
   suggestedServeAt: string | null;
   partial: boolean;
   conflicts: string[];
+  forecastOrigin?:string;
 };
 const stamp = (s: string | null | undefined) => s && Number.isFinite(Date.parse(s)) ? Date.parse(s) : null;
 const iso = (n: number) => Number.isFinite(n) && Math.abs(n) <= 8640000000000000 ? new Date(n).toISOString() : null;
@@ -51,7 +54,7 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
     for (const task of list) {
       const dish = meal.dishes.find(d => d.id === task.dishId);
       const turkey = dish?.preset === 'turkey' ? turkeyPreparation(dish) : null;
-      if (turkey && (task.id === dish!.id + ':thaw' ||
+      if (turkey && (task.id === dish!.id + ':thaw' && turkey.state==='thawed' ||
           task.id === dish!.id + ':brine' && turkey.brineHours === 0)) continue;
       const start = stamp(task.scheduledAt);
       const minutes = stepMinutes(meal, task) ??
@@ -96,9 +99,9 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
     for (const task of tasks) {
       const dish = meal.dishes.find(d => d.id === task.dishId);
       const turkey = dish?.preset === 'turkey' ? turkeyPreparation(dish) : null;
-      // Unordered template thaw reminders and skipped brining are not intervals.
+      // Already-thawed confirmations and skipped brining are not intervals.
       // Explicitly ordered turkey preparation is materialized by cookTimeline.
-      if (!sequential && turkey && (task.id === dish!.id + ':thaw' ||
+      if (!sequential && turkey && (task.id === dish!.id + ':thaw' && turkey.state==='thawed' ||
           task.id === dish!.id + ':brine' && turkey.brineHours === 0)) {
         result.set(task.id, {...task});
         continue;
@@ -140,16 +143,34 @@ export function planningReadiness(meal: Meal, timeline: PlannedTask[], now: numb
       end = Math.max(end ?? -Infinity, finish);
     }
   }
-  const readyAt = !partial && end !== null ? iso(end) : null;
+  let origin=!partial&&begin!==null?iso(Math.max(now,begin)):null;
+  // Native activities and full refrigerated preparation use the same projection
+  // in planning as they will immediately after Start cooking. Imported/manual
+  // sequence planning retains its authored fixed-anchor feasibility calculation.
+  const native=clockValid&&target!==null&&meal.dishes.length>0&&meal.dishes.every(d=>d.preset!=='custom'&&!d.planningSequence&&(d.preset!=='brisket'||d.brisketTemplateVersion===2))&&!timeline.some(t=>t.userSequence||t.timingMode==='fixed');
+  let live=native?phaseProjection(plannedSession(meal,timeline,new Date(now).toISOString()),timeline,now):null;
+  if(live){
+    // Use the shared activity budget to find the future window, rather than
+    // mixing target-derived reminder gaps with physical interval durations.
+    const movable=!timeline.some(t=>t.timingMode==='fixed'||t.timingMode==='unscheduled');
+    origin=live.finish&&movable&&target!==null?iso(now+Math.max(0,target-Date.parse(live.finish))):iso(now);
+    live=phaseProjection(plannedSession(meal,timeline,new Date(now).toISOString(),origin??undefined),timeline,now);
+  }
+  const readyAt = live?live.finish:!partial && end !== null ? iso(end) : null;
+  const projectedTasks=timeline.map(t=>{
+    const f=live?.forecasts[t.id];
+    return f?.start&&t.timingMode!=='fixed'&&t.timingMode!=='unscheduled'?{...t,scheduledAt:f.start}:result.get(t.id)??t;
+  });
   const lateMinutes = readyAt && target !== null
     ? Math.max(0, Math.ceil((Date.parse(readyAt) - target) / 60000)) : 0;
   return {
-    tasks: timeline.map(t => result.get(t.id) ?? t),
+    tasks: projectedTasks,
     readyAt,
-    startAt: !partial && begin !== null ? iso(begin) : null,
+    startAt: live?origin:!partial && begin !== null ? iso(begin) : null,
     lateMinutes,
-    suggestedServeAt: lateMinutes && end !== null ? iso(Math.ceil(end / 60000) * 60000) : null,
+    suggestedServeAt: lateMinutes && readyAt ? iso(Math.ceil(Date.parse(readyAt) / 60000) * 60000) : null,
     partial,
     conflicts,
+    ...(origin?{forecastOrigin:origin}:{}),
   };
 }

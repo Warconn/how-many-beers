@@ -47,6 +47,13 @@ export function estimatedFinish(task: { scheduledAt: string | null; durationMinu
   const end = Date.parse(task.scheduledAt) + task.durationMinutes * 60_000;
   return Number.isFinite(end) ? new Date(end).toISOString() : null;
 }
+/** Stable display order by full calendar instant. Unknown times follow timed work.
+ * Returns the original objects without changing recipe sequence or saved order. */
+export function timedOrder<T>(items:readonly T[], time:(item:T)=>string|null|undefined):T[]{
+ const instant=(item:T)=>{const at=time(item);return at&&Number.isFinite(Date.parse(at))?Date.parse(at):Infinity;};
+ return [...items].sort((a,b)=>instant(a)-instant(b));
+}
+
 export function chronologicalTasks<T extends { scheduledAt: string | null; dishId?: string; recipeOrder?: number }>(tasks: T[]): T[] {
   const instant=(task:T)=>task.scheduledAt && Number.isFinite(Date.parse(task.scheduledAt))?Date.parse(task.scheduledAt):Infinity;
   const ordered=[...tasks].sort((a,b)=>instant(a)-instant(b));

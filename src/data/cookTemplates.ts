@@ -76,6 +76,12 @@ export const brisketStepsV2:TemplateStep[]=[
  {id:'rest',title:'Hold until serving',anchor:'finish',conditional:true,instructions:'',optionalDetails:'Use temperature-controlled hot holding at 140°F or above and monitor the food. An insulated cooler alone does not guarantee safe holding. The reserve includes initial rest; serve when ready.'},
  {id:'serve',title:'Slice and serve',anchor:'serve',instructions:'Slice across the grain.',optionalDetails:'Optional: finish slices with leftover tallow.'}
 ];
-export function stepsForDish(dish:{preset:string;brisketTemplateVersion?:2}){
+export function stepsForDish(dish:{preset:string;brisketTemplateVersion?:2;activities?:{templateVersion?:2}}){
+ if(dish.preset==='wings'&&dish.activities?.templateVersion===2)return templateSteps.wings!.flatMap((step):TemplateStep[]=>
+  step.id==='oil'?[{...step,instructions:'Set up the fryer according to its manual and heat oil while the wings continue smoking. Keep water away from hot oil.'}]:
+  step.id==='fry'?[
+   {id:'oil-ready',title:'Verify oil is ready',anchor:'progress',progress:0.94,conditional:true,instructions:'Confirm the oil is at the temperature specified by your fryer and recipe. Record checks as needed; confirm readiness only when satisfied.'},
+   {id:'smoke-end',title:'Remove wings from smoker',anchor:'progress',progress:0.95,conditional:true,instructions:'Verify at least 165°F in thick parts and remove the wings when ready. This ends smoking; the fryer remains independent.'},step,
+  ]:[step]);
  return dish.preset==='brisket'&&dish.brisketTemplateVersion===2?brisketStepsV2:templateSteps[dish.preset];
 }

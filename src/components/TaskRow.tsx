@@ -6,6 +6,7 @@ import type {PlannedTask} from "@/domain/meal";
 import type {CookEvent, CookEventKind, StepPlanEdit} from "@/domain/cookState";
 import {latestStartedEvent} from "@/domain/cookState";
 import {physicalPhase,physicalStartedEvent} from "@/domain/physicalPhase";
+import {actionRecorded} from '@/domain/cookingFocus';
 import {stepTimingCue,conditionCue} from '@/domain/stepTimingCue';
 import CookingStepSummary,{cookingInstruction,cookingInstructions} from "./CookingStepSummary";
 import StepEditor from "./StepEditor";
@@ -14,12 +15,16 @@ import Icon from './Icon';
 import RemoveButton from "./RemoveButton";
 import {estimatedFinish,formatDuration} from "@/domain/stepTiming";
 import type {LivePhase} from '@/domain/phaseForecast';
+import {activityStages,phaseStage} from '@/domain/activities';
 
 type Props = {
   now?:number;
   activePhase?:LivePhase;
+  phaseModel?:boolean;
+  activityOptions?:LivePhase[];
   alsoCooking?:string[];
   onRemainingEstimate?:(minutes:number)=>void;
+  onCorrectEnd?:(occurredAt:string)=>void;
   task: PlannedTask;
   forecast?: StepForecast;
   index: number;
@@ -43,7 +48,7 @@ type Props = {
   durationDisabled?: boolean;
   onMove: (direction:"up"|"down")=>string|void;
   onRemove: ()=>void;
-  onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string,occurredAt?:string)=>void;
+  onEvent: (kind:CookEventKind,value?:number,unit?:"°F"|"°C",note?:string,occurredAt?:string,activityId?:string,noteOnly?:boolean)=>void;
 };
 
 function localDateTimeInput(iso:string):string {
@@ -57,7 +62,7 @@ function formatted(iso:string):string {
 }
 
 export default function TaskRow({
-  task,forecast,now=Date.now(),index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,alsoCooking=[],onRemainingEstimate
+  task,forecast,now=Date.now(),index,count,isNext=false,compact=false,planningControls,showTimingDetails=false,hasServeTarget=false,mode,completedAt,events,note,onNote,onEdit,onDurationChange,durationDisabled=false,onMove,onRemove,onEvent,editing,onEditingChange,editorId,onReadingChange,activePhase,phaseModel=false,activityOptions=[],alsoCooking=[],onRemainingEstimate,onCorrectEnd
 }:Props) {
   const timeTrigger=useRef<HTMLElement|null>(null);
   const [timeEditing,setTimeEditing]=useState(false);
@@ -66,8 +71,10 @@ export default function TaskRow({
   const [logging,setLogging]=useState(false);
   const [startFormOpen,setStartFormOpen]=useState(false);
   const [startTime,setStartTime]=useState("");
+  const [timeBoundary,setTimeBoundary]=useState<'start'|'end'>('start');
   const [startError,setStartError]=useState("");
-  const [readingType,setReadingType]=useState<"temperature"|"equipment">("temperature");
+  const [readingType,setReadingType]=useState<"temperature"|"equipment"|"note">(activePhase&&phaseStage(activePhase)==='preheating'?'equipment':'temperature');
+  const [readingActivity,setReadingActivity]=useState('');
   const [reading,setReading]=useState("");
   const [unit,setUnit]=useState<"°F"|"°C">("°F");
   const [readingNote,setReadingNote]=useState("");
@@ -79,18 +86,18 @@ export default function TaskRow({
   const [activityOpen,setActivityOpen]=useState(false);
 
   // Each new checklist action starts with its optional tools collapsed.
-  useEffect(()=>{setTimeEditing(false);setDetailsOpen(false);setLogging(false);setStartFormOpen(false);setStartError("");setRemainingEstimate('');setEstimateOpen(false);setNotesOpen(false);setActivityOpen(false);},[task.id]);
+  useEffect(()=>{setTimeEditing(false);setDetailsOpen(false);setLogging(false);setReadingActivity('');setStartFormOpen(false);setStartError("");setRemainingEstimate('');setEstimateOpen(false);setNotesOpen(false);setActivityOpen(false);},[task.id]);
   useEffect(()=>{onReadingChange?.(logging||startFormOpen||!!remainingEstimate.trim());return ()=>onReadingChange?.(false);},[logging,startFormOpen,remainingEstimate,onReadingChange]);
 
-  const done=!!completedAt;
-  const phase=activePhase?{label:'Record actual start'}:physicalPhase(task);
-  const started=activePhase?.actualStart?{occurredAt:activePhase.actualStart}:phase?physicalStartedEvent(events,task.id):latestStartedEvent(events,task.id);
+  const recorded=actionRecorded(forecast),done=!!completedAt||recorded;
+  const phase=activePhase?{label:'Record actual start'}:phaseModel?null:physicalPhase(task);
+  const started=activePhase?.actualStart?{occurredAt:activePhase.actualStart}:phase?physicalStartedEvent(events,task.id):[...events].reverse().find(e=>e.taskId===task.id&&e.kind==='started'&&e.phaseObservations?.some(o=>o.boundary==='start'))??latestStartedEvent(events,task.id);
   const DetailContainer=mode==="cooking"?"details":"div";
   const activity=events.filter(e=>e.taskId===task.id && e.kind!=="removed").slice(-8).reverse();
   const isCooking=mode==="cooking";
   const visibleInstructions=onDurationChange&&task.instructions.startsWith(task.title)?task.instructions.slice(task.title.length).trim():task.instructions;
   const summaryInstruction=task.isCondition&&!physicalPhase(task)?conditionCue(task):cookingInstruction(task,forecast?.template?.kind==='rest');
-  const primaryTiming=stepTimingCue(task,forecast,now);
+  const primaryTiming=stepTimingCue(task,forecast,now,completedAt);
   const fullInstructions=task.instructions==='Imported recipe step. Confirm instructions and timing.'?'':cookingInstructions(task);
   const detailInstructions=fullInstructions.split(/(?<=[.!?])\s+/).filter(sentence=>!summaryInstruction.includes(sentence)).join(' ');
   const standardPlanning=!!planningControls&&!isCooking;
@@ -103,29 +110,32 @@ export default function TaskRow({
     if(!startTime||!Number.isFinite(when.getTime())||when.getTime()>Date.now()){
       setStartError("Choose a valid actual time that is not in the future.");return;
     }
-    onEvent("started",undefined,undefined,started?"Corrected actual phase start":"Recorded actual phase start",when.toISOString());
+    if(timeBoundary==='end')onCorrectEnd?.(when.toISOString());
+    else onEvent("started",undefined,undefined,started?"Corrected actual phase start":"Recorded actual phase start",when.toISOString(),activePhase?.id);
     setStartFormOpen(false);setStartTime("");setStartError("");
   };
 
   const handleReading=()=>{
-    const hasTemperature=reading.trim().length>0;
+    const hasTemperature=readingType!=='note'&&reading.trim().length>0;
     const num=hasTemperature?Number(reading):undefined;
     if((readingType==="temperature" && !hasTemperature) ||
        (hasTemperature && (!Number.isFinite(num) || num===undefined || num<=0 || num>(unit==="°F"?600:300))) ||
-       (readingType==="equipment" && !hasTemperature && !readingNote.trim())){
+       ((readingType==="equipment"||readingType==='note') && !hasTemperature && !readingNote.trim())){
       setError(readingType==="equipment"?"Enter a setpoint or describe the equipment change.":"Enter a valid food temperature.");return;
     }
-    onEvent(readingType,num,hasTemperature?unit:undefined,readingNote);
+    const active=activityOptions.filter(p=>p.active),choices=active.length?active:activityOptions;
+    if(choices.length>1&&!readingActivity){setError('Choose the activity for this reading.');return;}
+    onEvent(readingType==='note'?'equipment':readingType,num,hasTemperature?unit:undefined,readingNote,undefined,readingActivity||choices[0]?.id,readingType==='note');
     setReading("");setReadingNote("");setLogging(false);setError("");
   };
 
   return <article className={"task cook-task "+(done?"done ":"")+(isNext && isCooking ? "first-task":"")+(compact?" compact-task":"")+(standardPlanning?' standard-planning-step step-list-row '+(planningControls.dragging?'is-dragging ':'')+(planningControls.drop?'drop-'+planningControls.drop:''):'')} data-step-id={standardPlanning?task.id:undefined} data-step-group={standardPlanning?task.dishId:undefined} aria-label={task.title} id={editorId} tabIndex={isCooking?-1:undefined}>
     <div className="task-top">
-      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={editing||logging||startFormOpen||!!remainingEstimate.trim()}
+      {isCooking && <label className="task-check-control"><input aria-label={"Complete "+task.title} type="checkbox" checked={done} disabled={recorded&&!completedAt||editing||logging||startFormOpen||!!remainingEstimate.trim()}
         onChange={e=>onEvent(e.target.checked?"completed":"reopened")}/></label>}
       {standardPlanning?<StepGrip stepId={task.id} title={task.title} {...planningControls.grip}/>:!isCooking && <span className="preview-index" aria-hidden>{index+1}</span>}
       <div className="task-main">
-        {isCooking?<CookingStepSummary now={now} task={task} forecast={forecast} activePhase={activePhase} onEditTime={!editing&&!durationDisabled?openTime:undefined}/>:<>
+        {isCooking?<CookingStepSummary now={now} task={task} completedAt={completedAt} forecast={forecast} activePhase={activePhase} onEditTime={!editing&&!durationDisabled?openTime:undefined}/>:<>
         <div className={standardPlanning?'between step-row-copy':'between'}><strong>{task.title}</strong><button type="button" className="link planned-time-button" aria-label={"Change planned time: "+task.title} disabled={editing||durationDisabled} onClick={openTime}>{task.scheduledAt?<>{task.isCondition&&!physicalPhase(task)?task.timingMode==='fixed'?'Planned check':'Check around':'Planned start'} <time dateTime={task.scheduledAt}>{formatted(task.scheduledAt)}</time></>:"Set planned time"}</button></div>
         {standardPlanning?!task.isCondition&&<p className="planned-step-details step-row-timing"><span>{task.timingMode==='fixed'?'Fixed start · ':''}{task.id.endsWith(':serve')?'Serving':planningControls.duration!=null?'Estimated '+formatDuration(planningControls.duration):'Duration unknown'}</span></p>:(showTimingDetails || task.durationMinutes != null || !task.scheduledAt || task.timingMode === "fixed") && <p className="planned-step-details">{task.timingMode === "fixed" ? "Fixed time · " : ""}{task.durationMinutes != null ? "Estimated "+formatDuration(task.durationMinutes) : showTimingDetails&&task.id.endsWith(':serve')?"Serving milestone":"Duration unknown"}{estimatedFinish(task) ? " · Estimated finish "+formatted(estimatedFinish(task)!) : ""}</p>}
         {!task.scheduledAt && (!onDurationChange||task.timingMode==='unscheduled') && <p className="muted small">{task.timingMode==='unscheduled'?'Left unscheduled. Choose a planned start when ready.':hasServeTarget?'Confirm missing step durations or set a fixed start.':'Set serving time or a fixed start.'}</p>}
@@ -147,17 +157,18 @@ export default function TaskRow({
       <div className="step-optional-records" aria-label="Optional step records">
         <div className="cooking-step-actions">
           {phase&&<button type="button" className="button secondary" disabled={editing||logging} onClick={()=>{
-            setStartFormOpen(v=>!v);
+            setTimeBoundary('start');setStartFormOpen(v=>!v);
             if(!startFormOpen&&!startTime)setStartTime(localDateTimeInput(started?.occurredAt??new Date().toISOString()));
             setStartError("");
           }} aria-expanded={startFormOpen}>{startFormOpen?"Cancel start time edit":started?"Correct actual start time":"Record actual start"}</button>}
+          {onCorrectEnd&&activePhase?.actualEnd&&<button type="button" className="button secondary" disabled={editing||logging} onClick={()=>{setTimeBoundary('end');setStartTime(localDateTimeInput(activePhase.actualEnd!));setStartFormOpen(true);setStartError('');}}>Correct actual end time</button>}
           <button type="button" className="button secondary" disabled={editing||startFormOpen} onClick={()=>{setLogging(v=>!v);setDetailsOpen(true);setError("");}} aria-expanded={logging}>{logging?"Close logging":"+ Log temperature"}</button>
         </div>
         {startFormOpen&&<div className="reading-form">
-          <label htmlFor={editorId+"-actual-start"}>Actual start date and time</label>
+          <label htmlFor={editorId+"-actual-start"}>Actual {timeBoundary} date and time</label>
           <input id={editorId+"-actual-start"} type="datetime-local" value={startTime} onChange={e=>{setStartTime(e.target.value);setStartError("");}} aria-invalid={!!startError} aria-describedby={startError?editorId+"-start-error":undefined}/>
           {startError&&<p className="form-error" id={editorId+"-start-error"} role="alert">{startError}</p>}
-          <button type="button" className="button primary" onClick={saveActualStart}>Save actual start</button>
+          <button type="button" className="button primary" onClick={saveActualStart}>Save actual {timeBoundary}</button>
         </div>}
         {onRemainingEstimate&&<button type="button" className="button secondary" aria-expanded={estimateOpen} disabled={editing||logging||startFormOpen} onClick={()=>setEstimateOpen(v=>!v)}>Adjust remaining estimate</button>}
         {onRemainingEstimate&&estimateOpen&&<form className="remaining-estimate" onSubmit={e=>{e.preventDefault();const n=Number(remainingEstimate);if(!remainingEstimate||!Number.isFinite(n)||n<0||n>43200){setError('Enter a valid remaining estimate.');return;}onRemainingEstimate(n);setRemainingEstimate('');setEstimateOpen(false);setError('');}}>
@@ -193,18 +204,21 @@ export default function TaskRow({
     {isCooking && <>
       {logging && <div className="reading-form">
         <div>
+          {activityOptions.length>1&&<label htmlFor={editorId+'-reading-activity'}>Activity</label>}{activityOptions.length>1&&<select id={editorId+'-reading-activity'} value={readingActivity} onChange={e=>setReadingActivity(e.target.value)}><option value="">Choose activity</option>{activityOptions.map(p=><option key={p.id} value={p.id}>{activityStages[phaseStage(p)??'cooking']} · {p.startTitle??'Activity start'}</option>)}</select>}
           <label htmlFor={"reading-kind-"+task.id}>Reading type</label>
           <select id={"reading-kind-"+task.id} value={readingType} onChange={e=>setReadingType(e.target.value as "temperature"|"equipment")}>
             <option value="temperature">Meat / food temperature</option>
             <option value="equipment">Equipment setting / change</option>
+            <option value="note">Observation / note</option>
           </select>
         </div>
-        <div className="reading-fields">
+        {readingType!=='note'&&<div className="reading-fields">
           <div><label htmlFor={"reading-temp-"+task.id}>{readingType==="equipment"?"Setpoint (optional)":"Food temperature"}</label>
           <input type="number" inputMode="decimal" min={1} max={unit==="°F"?600:300} id={"reading-temp-"+task.id} value={reading} onChange={e=>setReading(e.target.value)} placeholder="e.g. 169"/></div>
           <div><label htmlFor={"reading-unit-"+task.id}>Unit</label>
           <select id={"reading-unit-"+task.id} value={unit} onChange={e=>setUnit(e.target.value as "°F"|"°C")}><option value="°F">°F</option><option value="°C">°C</option></select></div>
         </div>
+        }
         <label htmlFor={"reading-note-"+task.id}>Location / details (optional)</label>
         <input id={"reading-note-"+task.id} maxLength={500} value={readingNote} onChange={e=>setReadingNote(e.target.value)} placeholder={readingType==="temperature"?"Flat, thickest part...":"Pit set to 250, switched to Smoke mode..."}/>
         <button type="button" className="button primary" onClick={handleReading}>Save timestamped reading</button>
@@ -213,7 +227,7 @@ export default function TaskRow({
       <input id={"note-"+task.id} className="task-note" maxLength={500} placeholder="Bark looks good, wrapped in paper..." value={note} onChange={e=>onNote(e.target.value)}/></>}
       {activity.length>0 && <div className="task-activity"><button type="button" className="button secondary" aria-expanded={activityOpen} onClick={()=>setActivityOpen(v=>!v)}>Activity ({activity.length}{events.filter(e=>e.taskId===task.id&&e.kind!=="removed").length>8?"+":""})</button>{activityOpen&&
         <ul>{activity.map(e=><li key={e.id}>
-          <time>{formatted(e.occurredAt)}</time> · {e.kind==="temperature"?"Food temp":e.kind==="equipment"?"Equipment setting":e.kind==="reopened"?"Reopened":e.kind==="completed"?"Completed":"Started"}
+          <time>{formatted(e.occurredAt)}</time> · {e.observationType==='note'?'Observation':e.kind==="temperature"?"Food temp":e.kind==="equipment"?"Equipment setting":e.kind==="reopened"?"Reopened":e.kind==="completed"?"Completed":"Started"}
           {e.value!==undefined?" "+e.value+(e.unit||""):""}{e.note?" · "+e.note:""}
         </li>)}</ul>}
       </div>}

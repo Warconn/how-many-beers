@@ -2,6 +2,10 @@ import type {PlannedTask} from './meal';
 import {chronologicalTasks} from './stepTiming';
 import type {StepForecast} from './cookForecast';
 
+/** Actual starts satisfy their start instruction even after the interval ends.
+ * This display status never creates a checklist completion or a physical fact. */
+export const actionRecorded=(f:StepForecast|undefined)=>!!f?.phaseId&&f.template?.basis==='actual'&&f.template.kind!=='checkpoint';
+
 /** Planned clock groups only: no dependency solver or automatic completion. */
 export function cookingFocus(tasks:PlannedTask[],completed:Record<string,string>,now:number){
   const groups={now:[] as PlannedTask[],next:[] as PlannedTask[],later:[] as PlannedTask[],untimed:[] as PlannedTask[],completed:[] as PlannedTask[]};
@@ -24,13 +28,16 @@ export function guidedCookingSteps(tasks:PlannedTask[],completed:Record<string,s
   // completions change. Only the global primary/next-action priority is live.
   const ordered=chronologicalTasks(tasks);
   const priority=forecasts?chronologicalTasks(tasks.map(t=>({...t,scheduledAt:forecasts[t.id]?.start??t.scheduledAt}))).map(t=>byId.get(t.id)!):ordered;
-  const unfinished=priority.filter(t=>!completed[t.id]);
+  const unfinished=priority.filter(t=>{
+    const f=forecasts?.[t.id];
+    return !completed[t.id]&&!actionRecorded(f);
+  });
   let first=unfinished[0]??null;
   // An imported recipe may have only a serving time. Review its untimed work first.
   if(first?.id.endsWith(':serve'))first=unfinished.find(t=>instant(t)===Infinity)??first;
   const current=ordered.find(t=>t.id===selectedId)??first;
   const index=current?ordered.findIndex(t=>t.id===current.id):-1;
   const candidates=forecasts?priority.filter(t=>t.id!==current?.id):index<0?[]:[...ordered.slice(index+1),...ordered.slice(0,index)];
-  const next=candidates.find(t=>!completed[t.id] && t.id!==current?.id)??null;
+  const next=candidates.find(t=>!completed[t.id]&&!actionRecorded(forecasts?.[t.id]) && t.id!==current?.id)??null;
   return {current,next,ordered,index,remaining:unfinished.length};
 }

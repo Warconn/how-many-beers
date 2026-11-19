@@ -19,7 +19,7 @@ Brisket on the smoker, brats on the grill, turkey in the oven, or a few things g
 1. **Tell us when you're eating.** Choose a serving date and time. Start with dinner, then build the plan around it.
 2. **Bring your recipes together.** Choose a starter method, pick from **My recipes**, or paste/upload your own instructions.
 3. **Make it yours.** Adjust the steps, estimated times, equipment, and order. Review a combined meal schedule instead of bouncing between separate recipes.
-4. **Follow the cook.** Cooking Mode keeps the next action close, with a full checklist, temperature readings, notes, and room for adjustments.
+4. **Follow the cook.** Cooking Mode keeps the next meal-wide action close. Independent activities can run together, and checked checkpoints keep accepting timestamped readings without stopping cooking.
 5. **Remember the good ones.** Save meals for later, revisit past cooks, and reuse or refine your recipes for the next round.
 
 ## See it in action
@@ -35,9 +35,15 @@ Brisket on the smoker, brats on the grill, turkey in the oven, or a few things g
 
 ### 🕒 Plan around serving time
 
-Pick when you want everyone at the table. How Many Beers combines the steps from multiple dishes into one chronological schedule, including prep, cooking, and rest where the recipe calls for them.
+Pick when you want everyone at the table. How Many Beers combines the steps from multiple dishes into one chronological schedule, including prep, cooking, and rest where the recipe calls for them. Planning, live checklists and past-cook steps all display in time order.
 
 Edit the plan as you go. Times are **estimates**, not promises. You stay in charge of when food is actually ready.
+
+Cooking Mode keeps known-duration, unstarted dishes aligned to one estimated meal
+finish, while preserving recorded starts and explicit fixed times.
+Current template planning includes required refrigerator thawing and uses the
+same activity forecast as Cooking. Opening Cooking before preparation is due
+retains the future window; recording an actual start takes precedence.
 
 ### 📖 Bring your own recipes
 
@@ -56,6 +62,10 @@ It's a little personality in a tool that's really about **time, timing, and gett
 ### ✅ Cook with a checklist, not a spreadsheet
 
 When cooking starts, you get a focused next action and an accessible full checklist. Check off steps, record actual progress, log food or equipment temperatures, and add notes when something changes.
+
+After you confirm doneness, the guide offers the next resting or holding action.
+Recorded activity starts satisfy their checklist instruction, including after
+the activity ends. The guide does not ask you to start an ended activity again.
 
 A sticky next-action guide helps you keep your place. Head home, come back later, and continue the cook rather than starting over.
 

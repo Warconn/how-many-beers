@@ -118,10 +118,12 @@ test('a template plus an uploaded recipe finishes as one meal and Cook Again cre
   await page.getByRole('button', {name: 'Start cooking', exact: true}).click();
   await page.getByRole('button', {name: 'Full checklist', exact: true}).click();
   const list = page.getByRole('region', {name: 'Full cook checklist', exact: true});
-  for (const checkbox of await list.getByRole('checkbox').all()) {
+  // Live estimates can move rows after a completion. Keep each action's identity.
+  for (const name of await list.getByRole('checkbox').evaluateAll(nodes => nodes.map(n => n.getAttribute('aria-label')!))) {
     await page.clock.fastForward(60_000);
-    await checkbox.check();
+    await list.getByRole('checkbox', {name, exact: true}).check();
   }
+  await expect(list.getByRole('checkbox', {checked: false})).toHaveCount(0);
   const finished = await readMeal(page);
   for (const dish of planned.dishes) {
     expect(finished.events?.some(e => e.taskId.startsWith(dish.id + ':') && e.kind === 'completed')).toBe(true);
@@ -131,13 +133,19 @@ test('a template plus an uploaded recipe finishes as one meal and Cook Again cre
   expect((await readMeal(page)).mode).toBe('cooking');
   expect((await readMeal(page)).events).toEqual(finished.events);
   await expect(page.getByRole('button', {name: 'Finish cook', exact: true})).toHaveCount(1);
+  const finishAt = await page.evaluate(() => new Date().toISOString());
   await page.getByRole('button', {name: 'Finish cook', exact: true}).click();
   await page.getByRole('button', {name: 'Save finished cook', exact: true}).click();
   await page.getByRole('button', {name: /Past cooks/}).click();
   await page.getByRole('button', {name: 'View cook', exact: true}).click();
   await expect(page.getByRole('region', {name: 'Saved cook details'})).toContainText('Pumpkin seeds');
   const archived = (await readHistory(page)).cooks[0];
-  expect(archived.meal.events).toEqual(finished.events);
+  expect(archived.meal.events?.slice(0, finished.events?.length)).toEqual(finished.events);
+  const holding = finished.phasePlan!.phases.find(p => p.dishId === planned.dishes[1].id && p.stage === 'holding')!;
+  expect(archived.meal.events?.slice(finished.events?.length)).toMatchObject([{
+    taskId: planned.dishes[1].id + ':serve', kind: 'completed', occurredAt: finishAt,
+    phaseObservations: [{phaseId: holding.id, boundary: 'end'}],
+  }]);
   expect(archived.meal.dishes).toEqual(planned.dishes);
   await page.screenshot({path: info.outputPath('mixed-meal-history.png'), fullPage: true, scale: 'css', style: 'nextjs-portal{display:none}'});
   page.once('dialog', dialog => dialog.accept());

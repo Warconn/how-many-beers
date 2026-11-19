@@ -1,11 +1,15 @@
 "use client";
 
+import {timedOrder} from '@/domain/stepTiming';
+
 import Icon from './Icon';
 import Beerometer from './Beerometer';
 import {useEffect,useRef,useState} from "react";
 import type {ArchivedCook,HistoryLibrary} from "@/domain/cookHistory";
 import {archivedActivity} from "@/domain/historyActivity";
 import LibraryList,{LibraryItemHeading} from './LibraryList';
+import {activityStatus,activityStages,phaseStage} from '@/domain/activities';
+import {phaseObservations} from '@/domain/cookingPhases';
 
 type Props = {
   history:HistoryLibrary;
@@ -25,7 +29,7 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
   const detailBack=useRef<HTMLButtonElement>(null);
   const shown=history.cooks.filter(c=>(c.meal.name+" "+c.meal.dishes.map(d=>d.name).join(" ")).toLowerCase().includes(search.trim().toLowerCase()));
   const detailed=history.cooks.find(c=>c.id===selected);
-  const events=detailed?.meal.events??[];
+  const events=timedOrder(detailed?.meal.events??[],e=>e.occurredAt);
   const notes=Object.entries(detailed?.meal.notes??{}).filter(([,note])=>note.trim());
   useEffect(()=>{
     if(!detailed)return;
@@ -53,8 +57,13 @@ export default function CookHistoryPanel({history,onRepeat,onDelete}:Props){
         {detailed.feedback&&<p className="muted small">{detailed.feedback}</p>}
         <h4>Original checklist</h4>
         <ol className="history-tasks">
-          {detailed.plannedTimeline.map(step=><li key={step.id}>
+          {timedOrder(detailed.plannedTimeline,step=>detailed.meal.completed[step.id]??step.scheduledAt).map(step=><li key={step.id}>
             <strong>{step.title}</strong><span>{step.dishName}</span>
+            {detailed.meal.phasePlan?.phases.filter(p=>p.startTaskId===step.id).map(p=>{
+              const actual=phaseObservations(detailed.meal,p.id),stage=phaseStage(p);
+              if(!actual.start||!stage)return null;
+              return <small key={p.id}>{actual.end?activityStatus({...p,actualStart:actual.start.occurredAt,actualEnd:actual.end.occurredAt,elapsed:(Date.parse(actual.end.occurredAt)-Date.parse(actual.start.occurredAt))/60000}):activityStages[stage]+' · End not recorded'}</small>;
+            })}
             {detailed.meal.completed[step.id]
               ? <small>Completed <time dateTime={detailed.meal.completed[step.id]}>{fmt(detailed.meal.completed[step.id])}</time></small>
               : step.scheduledAt&&<small>Planned <time dateTime={step.scheduledAt}>{fmt(step.scheduledAt)}</time></small>}
