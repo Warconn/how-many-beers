@@ -163,7 +163,7 @@ Home keeps its existing cook content. Home, My recipes and Past cooks share a
 quiet text navigation within the existing header; My recipes is a full screen, never a modal overlay.
 Recipe names open the existing review editor, Use recipe opens an independent
 meal draft, and contextual trash controls retain records after confirmation.
-The method footer groups the two same-scope decisions, with one visually primary
+The compact sticky action bar above the method steps groups the two same-scope decisions, with one visually primary
 action. Show persistence choices only when reusable content has changed; merely
 opening an editor, editing meal dates or recording activity does not expose saves.
 Saved recipe editing uses Save changes plus immediately visible Save as copy.
@@ -175,6 +175,10 @@ share a row with 16px separation; phone controls occupy separate rows with 16px
 separation and 44px minimum targets. Back/Cancel uses top navigation. Acknowledged
 save/error state stays with the method action area. Add a step stays after the
 list, separate from persistence actions.
+
+The equipment panel closes after an outside pointer click reaches its target, so
+collapsing the panel cannot move Add to meal or Save before the click completes.
+Keyboard Tab out and Escape still close the panel; Escape restores trigger focus.
 
 Recipe authoring shows name, equipment, steps, durations and conditions. Hide the
 meal date/name form, schedule, other dishes and cooking controls during review;

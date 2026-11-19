@@ -34,6 +34,13 @@ scope classification and aggregate checks must stay intact.
 
 ## Current owner direction: #3 Parallel Cooking (November 16, 2026)
 
+November 19 follow-up: #3 is owner-accepted and merged into dev through #167 at
+`aafc2ab`. The owner authorizes fixing #170's CI failures and merging it into dev
+after required checks pass. #168 moves grouped method actions above the steps and
+keeps the whole chronological plan visible with page scrolling; #169 currently
+shares a read-only text snapshot, with image sharing deferred. This supersedes
+older footer-placement rules. No production promotion or hosted mutation.
+
 The owner explicitly authorized the scoped Parallel Cooking implementation and
 approved the architecture/reproduction checkpoint in chat. This supersedes the
 older #3 design-only hold and the queue's instruction to stop after #161/#162.
