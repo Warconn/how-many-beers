@@ -24,11 +24,8 @@ export function formatMealPlanForShare(meal:Meal,timeline:PlannedTask[],now:numb
   ...(menu.length?menu:['- Add a dish']),
   '',
   `THE BEEROMETER: ${beers}`,
-  estimate.label.startsWith('Partial')?'Some timing is still being confirmed.':'90 minutes per estimated beer. Pace is just for fun.',
   '',
   'THE GAME PLAN',
   ...(schedule.length?schedule:['- Add steps to build the plan']),
-  '',
-  'Cooking times are estimates, not doneness or food-safety guarantees.',
  ].join('\n');
 }
