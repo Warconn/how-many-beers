@@ -31,11 +31,11 @@ test('dish editor separates adding from selecting and preserves cooks', async ({
   await page.getByRole('button', { name: 'Edit Saturday brisket', exact: true }).click();
   await expect(editor).toHaveCount(0);
   await page.getByRole('button', { name: 'Edit Grilled beer-bath brats', exact: true }).click();
-  await expect(page.getByText('Get wood pellets', { exact: true })).toHaveCount(0);
+  await expect(editor.getByText('Get wood pellets', { exact: true })).toHaveCount(0);
   await page.reload();
   await page.getByRole('button', { name: /Resume planning/ }).click();
   await page.getByRole('button', { name: 'Edit Saturday brisket', exact: true }).click();
-  await expect(page.getByText('Get wood pellets', { exact: true })).toBeVisible();
+  await expect(editor.getByText('Get wood pellets', { exact: true })).toBeVisible();
   await editor.getByText('Dish settings',{exact:true}).click();await expect(editor.getByRole('button',{name:'Equipment: Patio smoker',exact:true})).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });

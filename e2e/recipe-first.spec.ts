@@ -68,5 +68,5 @@ test('collapsed step grips drag directly and preserve the new order after adding
 
 test('old review bookmarks return to the default app without changing saved work',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Plan a cook/}).click();await page.getByRole('button',{name:'Choose a template',exact:true}).click();await page.getByRole('button',{name:'Add grilled beer-bath brats',exact:true}).click();await page.getByRole('button',{name:'Add to meal',exact:true}).click();
- const before=await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'));await page.goto('/recipe-first/');await expect(page).toHaveURL(/\/$/);expect(new URL(page.url()).pathname).toBe('/');expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBe(before);
+ const before=await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'));await page.goto('/recipe-first/',{waitUntil:'commit'});await expect(page).toHaveURL(/\/$/);expect(new URL(page.url()).pathname).toBe('/');expect(await page.evaluate(()=>localStorage.getItem('how-many-beers:meal:v1'))).toBe(before);
 });
