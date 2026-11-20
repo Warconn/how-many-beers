@@ -163,7 +163,7 @@ Home keeps its existing cook content. Home, My recipes and Past cooks share a
 quiet text navigation within the existing header; My recipes is a full screen, never a modal overlay.
 Recipe names open the existing review editor, Use recipe opens an independent
 meal draft, and contextual trash controls retain records after confirmation.
-The method footer groups the two same-scope decisions, with one visually primary
+The compact sticky action bar above the method steps groups the two same-scope decisions, with one visually primary
 action. Show persistence choices only when reusable content has changed; merely
 opening an editor, editing meal dates or recording activity does not expose saves.
 Saved recipe editing uses Save changes plus immediately visible Save as copy.
@@ -175,6 +175,10 @@ share a row with 16px separation; phone controls occupy separate rows with 16px
 separation and 44px minimum targets. Back/Cancel uses top navigation. Acknowledged
 save/error state stays with the method action area. Add a step stays after the
 list, separate from persistence actions.
+
+The equipment panel closes after an outside pointer click reaches its target, so
+collapsing the panel cannot move Add to meal or Save before the click completes.
+Keyboard Tab out and Escape still close the panel; Escape restores trigger focus.
 
 Recipe authoring shows name, equipment, steps, durations and conditions. Hide the
 meal date/name form, schedule, other dishes and cooking controls during review;
@@ -287,3 +291,53 @@ starts stay explicitly distinct; uncertain/conditional work has no false countdo
 Passive waiting uses quiet text rather than a new action. Keep the full-width
 Continue cooking primary and the compact View cook / Cancel cook second row with
 44px targets. The summary itself has no completion or navigation control.
+## Parallel activity feedback (#3)
+
+Keep the existing Beerometer and flat chronological rows. Place a readable quiet
+14px `Cooking · 4h 20m elapsed` line beneath its start action; actual duration is
+shown only when both physical boundaries exist. Use the shared four-stage formatter
+for new activity metadata. Do not guess a stage for an ambiguous legacy passive
+record. Technique/equipment remains in the authored instructions and step name.
+
+Record reading / Record another reading is a quiet 44px text action in that same
+row. The inline form supports food/equipment readings and timestamped notes, with
+an activity choice only when association is ambiguous. Readings stay on that row
+under one native disclosure. The checked milestone remains checked. Use explicit
+native label/for associations and 16px inputs/selects.
+
+Recipe correction lives in one optional Review activities disclosure after the
+step list and separate from recipe saving. Its compact editor has Activity stage,
+Start at, End at and Save/Cancel; No activity is a stage-selector choice. Preserve
+method drafts and the existing save-original/copy hierarchy. Editing an activity
+does not reorder the activity rows underneath the user's pointer.
+
+The sticky guide names the owning dish and offers the same checkbox action as the
+list. Its selection remains meal-wide while another step is inspected. Preserve
+phone wrapping, keyboard focus and 44px targets; introduce no dashboard, tabs,
+nested steps, technique-specific stages or additional progress bars.
+
+### Timed step order
+
+Every meal schedule/checklist sorts by the full displayed calendar instant across
+dishes, earliest first. Planning uses planned starts; Cooking uses primary actual
+or estimated start cues. Completed-history rows use their displayed completion
+with planned fallback. Equal times are stable; unknown times follow timed work.
+Apply this only to the view: never sort stored recipe relationships, task order,
+actual event arrays or archived snapshots in place. Recipe authoring without meal
+dates retains source order. Date edits and reforecast update timed list positions.
+
+Cooking dates must use the same live timing basis for flexible legacy templates
+and imported steps. A live forecast is Estimated start; an observed start remains
+Actual start, and fixed starts remain Planned start. Original calendar dates stay
+in Step details. Mixing an original planned rest start with a live serving check
+can put serving above rest even after sorting, so reuse `stepTimingCue` throughout.
+
+## Recorded activity and multi-day dates (PR #167 QA follow-up)
+
+An actual activity start satisfies its start instruction without a synthetic
+completion. Checklist/current-step checkboxes render checked and disabled when
+only that physical start was recorded, alongside the existing elapsed/actual
+activity status. Corrections remain in Step details. Completed checkpoints show
+their completion timestamp instead of an overdue prompt; readings remain available.
+Use weekday, month and day for the combined schedule and target labels so different
+weeks cannot appear interchangeable. Keep the existing row and footer layouts.

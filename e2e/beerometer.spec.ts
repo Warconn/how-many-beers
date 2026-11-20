@@ -10,7 +10,9 @@ test('Beerometer updates during planning and stays visible while cooking',async(
  // The active cooking meter remains sticky and is checked after Start cooking below.
  if(page.viewportSize()!.width<=650){await expect(meter).toHaveCSS('position','static');await expect(meter).not.toBeInViewport();}
  else await expect(meter).toBeInViewport();
- if(page.viewportSize()!.width>900){const banner=await meter.boundingBox(),schedule=await page.getByRole('complementary',{name:'Live schedule'}).boundingBox();expect(schedule!.y).toBeGreaterThanOrEqual(banner!.y+banner!.height);}
+ // Desktop keeps the schedule in a separate column; its top scrolls above the
+ // sticky Beerometer without overlapping it.
+ if(page.viewportSize()!.width>900){const banner=await meter.boundingBox(),schedule=await page.getByRole('complementary',{name:'Live schedule'}).boundingBox();expect(schedule!.x).toBeGreaterThanOrEqual(banner!.x+banner!.width);}
  await page.screenshot({path:info.outputPath('beerometer-planning.png'),fullPage:false,style:'nextjs-portal{display:none}'});await page.getByRole('button',{name:'Start cooking',exact:true}).click();await expect(meter).toBeVisible();await expect(meter).toBeInViewport();await expect(page.getByText(/^Saved on this device/)).toHaveCount(0);
  const step=page.getByRole('region',{name:'Current step',exact:true});await step.getByRole('checkbox').click();await expect(meter).toBeInViewport();await expect(page.getByRole('navigation',{name:'Cooking guide',exact:true})).toBeInViewport();
  for(const width of [375,768,1280]){await page.setViewportSize({width,height:844});await step.scrollIntoViewIfNeeded();await expect(meter).toBeInViewport();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}

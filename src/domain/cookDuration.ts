@@ -3,10 +3,11 @@ import {cookProjection} from './cookProjection';
 import {sequenceCheckpoint} from './stepSequence';
 import type {ExtendedMeal} from './cookState';
 import {stepMinutes} from './executionTimeline';
+import {turkeyPreparation} from './turkeyPrep';
 const stamp=(s:string|null|undefined)=>s && Number.isFinite(Date.parse(s))?Date.parse(s):null;
 function eligibleTasks(meal:Meal,timeline:PlannedTask[]){
   return timeline.filter(t=>t.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
-    (t.id===d.id+':thaw' || (t.id===d.id+':brine' && d.turkeyPrep?.brineHours===0))));
+    (t.id===d.id+':thaw' && turkeyPreparation(d).state==='thawed' || (t.id===d.id+':brine' && turkeyPreparation(d).brineHours===0))));
 }
 function unknownDuration(meal:Meal,t:PlannedTask){
   if(t.templateStage&&(meal as ExtendedMeal).taskOverrides?.[t.id]?.durationMinutes===null)return true;
@@ -30,7 +31,7 @@ export function remainingCook(meal:Meal,timeline:PlannedTask[],now:number,finish
  * brining do not start it. Hidden tasks are already removed by cookTimeline. */
 export function cookDuration(meal:Meal,timeline:PlannedTask[],now:number,finishedAt?:string){
   const eligible=(id:string)=>timeline.find(t=>t.id===id)?.userSequence||!meal.dishes.some(d=>d.preset==='turkey' &&
-    (id===d.id+':thaw' || (id===d.id+':brine' && d.turkeyPrep?.brineHours===0)));
+    (id===d.id+':thaw' && turkeyPreparation(d).state==='thawed' || (id===d.id+':brine' && turkeyPreparation(d).brineHours===0)));
   const tasks=timeline.filter(t=>eligible(t.id));
   const starts=tasks.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
   const ends=tasks.map(t=>{const at=stamp(t.scheduledAt);return at===null?null:at+Math.max(0,stepMinutes(meal,t)??0)*60000;}).filter((n):n is number=>n!==null);

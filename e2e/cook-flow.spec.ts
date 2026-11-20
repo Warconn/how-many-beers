@@ -166,9 +166,9 @@ test("planner expands one dish to manage its steps without edit mode",async({pag
  await page.getByRole("button",{name:"Add a step to Smoked brisket"}).click();
  await page.getByLabel("Step title").fill("Get wood pellets");
  await page.getByRole("button",{name:"Save step"}).click();
- await expect(page.getByText("Get wood pellets")).toBeVisible();
+ await expect(page.getByRole("region",{name:"Smoked brisket steps",exact:true}).getByText("Get wood pellets",{exact:true})).toBeVisible();
  await page.reload();
  await page.getByRole("button",{name:/Resume planning/}).click();
  await page.getByRole("button",{name:"Edit Smoked brisket",exact:true}).click();
- await expect(page.getByText("Get wood pellets")).toBeVisible();
+ await expect(page.getByRole("region",{name:"Smoked brisket steps",exact:true}).getByText("Get wood pellets",{exact:true})).toBeVisible();
 });

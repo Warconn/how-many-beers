@@ -1,3 +1,4 @@
+import {timedOrder} from './stepTiming';
 import type {PlannedTask} from './meal';
 import {physicalPhase} from './physicalPhase';
 import type {StepForecast} from './cookForecast';
@@ -12,9 +13,10 @@ export function conditionCue(task:PlannedTask):string{
  if(/tender/i.test(task.title))return 'When probe-tender; verify doneness.';
  return 'Verify the recipe’s condition before continuing.';
 }
-export function stepTimingCue(task:PlannedTask,forecast:StepForecast|undefined,now:number):TimingCue{
+export function stepTimingCue(task:PlannedTask,forecast:StepForecast|undefined,now:number,completedAt?:string):TimingCue{
  const checkpoint=forecast?.template?.kind==='checkpoint'||(task.isCondition&&!physicalPhase(task));
  if(checkpoint){
+  if(completedAt)return {label:'Completed check',at:completedAt};
   const detail=conditionCue(task),at=forecast?.template?.at??forecast?.start;
   if(forecast?.template?.basis==='actual'&&valid(at))return {label:'Actual check',at};
   if(forecast?.status==='blocked')return {label:'Review timing',detail:forecast.reason??detail};
@@ -26,8 +28,14 @@ export function stepTimingCue(task:PlannedTask,forecast:StepForecast|undefined,n
  if(forecast?.template?.basis==='actual'&&valid(forecast.start))return {label:'Actual start',at:forecast.start,...(forecast.overEstimate||forecast.status==='overdue'?{detail:'Review now; estimate elapsed.'}:{})};
  if(forecast?.status==='overdue')return {label:'Review now',detail:'Estimate elapsed; check progress.'};
  if(forecast?.lowerBound&&task.timingMode!=='fixed'&&task.timingMode!=='unscheduled'&&valid(forecast.start))return {label:'Earliest start',at:forecast.start,lowerBound:true,detail:'Verify conditions before starting.'};
- if(task.timingMode!=='unscheduled'&&valid(task.scheduledAt)&&(!forecast||task.timingMode==='fixed'||task.recipeOrder===undefined))return {label:'Planned start',at:task.scheduledAt,...(forecast?.status==='blocked'||forecast?.lowerBound?{detail:'Review timing: '+(forecast.reason??'waiting for previous work.')}: {})};
+ if(task.timingMode!=='unscheduled'&&valid(task.scheduledAt)&&(!forecast||task.timingMode==='fixed'))return {label:'Planned start',at:task.scheduledAt,...(forecast?.status==='blocked'||forecast?.lowerBound?{detail:'Review timing: '+(forecast.reason??'waiting for previous work.')}: {})};
  if(forecast?.status==='blocked')return {label:'Waiting for previous action',detail:forecast.reason};
  if(valid(forecast?.start))return {label:forecast?.status==='planned'?'Planned start':'Estimated start',at:forecast.start};
  return {label:task.id.endsWith(':serve')?'Serve when ready':'Start time not set'};
+}
+
+/** Match the primary time shown on cooking rows, retaining a forecast position
+ * for condition-only cues. Never use an estimated finish as a start time. */
+export function timedCookingTasks(tasks:readonly PlannedTask[],forecasts:Record<string,StepForecast>,now:number,completed:Record<string,string>={}):PlannedTask[]{
+ return timedOrder(tasks,task=>stepTimingCue(task,forecasts[task.id],now,completed[task.id]).at??forecasts[task.id]?.start??task.scheduledAt);
 }

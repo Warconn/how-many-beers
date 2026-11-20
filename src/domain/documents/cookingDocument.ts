@@ -1,6 +1,7 @@
 import Ajv from 'ajv';
 import schema from './cooking-document-v1.schema.json';
 import type {Dish,RecipeTemperature} from '../meal';
+import {ACTIVITY_PARAMETER,decodeActivities} from '../activities';
 
 export type RecipeAction = {type:'prepare'|'serve'|'custom'} | {type:'checkpoint';phaseId?:string;fraction?:number} | {type:'start_phase'|'end_phase';phaseId:string};
 export type DocumentStep = {
@@ -34,6 +35,7 @@ export type CookingDocument=RecipeDocument|MealDocument;
 const shape=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
 const unique=(ids:string[])=>new Set(ids).size===ids.length;
 function recipeLinks(r:RecipeDefinition):boolean{
+ if(r.parameters?.[ACTIVITY_PARAMETER]!==undefined)try{decodeActivities(r.parameters[ACTIVITY_PARAMETER]);}catch{return false;}
  const allSteps=[...r.steps,...(r.review?.addedSteps??[])];
  const stepIds=allSteps.map(s=>s.id),phaseIds=r.phases.map(p=>p.id);
  if(!unique(stepIds)||!unique(phaseIds))return false;

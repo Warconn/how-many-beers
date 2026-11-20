@@ -1,4 +1,5 @@
 import {compactLibraryCard} from '../helpers/libraryCard';
+import {ACTIVITY_PARAMETER} from '../../src/domain/activities';
 import {openOwnRecipe} from '../helpers/recipeEntry';
 import {test,expect,type Page,type BrowserContext,type Locator} from '@playwright/test';
 import {backend,user} from './fixtures';
@@ -11,6 +12,28 @@ import {archiveCook,emptyHistory} from '../../src/domain/cookHistory';
 import type {RawArchive} from '../../src/account/workspace';
 import type {ExtendedMeal} from '../../src/domain/cookState';
 test.use({timezoneId:'UTC'});
+
+test('reviewed activity corrections survive account save/reload while meal snapshots stay independent',async({page,context})=>{
+ test.setTimeout(60_000);
+ const remote=server();await remote.attach(context);await signIn(page);
+ await page.getByRole('button',{name:'Resume planning',exact:true}).click();await openOwnRecipe(page);
+ await page.getByLabel('Recipe title',{exact:true}).fill('Reviewed brine');await page.getByLabel('Recipe instructions',{exact:true}).fill('Start refrigerated brine (30 minutes)\nEnd brine and pat dry\nRoast turkey (60 minutes)\nRemove turkey from oven');await page.getByRole('button',{name:'Preview recipe steps',exact:true}).click();
+ const method=page.getByRole('region',{name:'Review your method',exact:true}),activities=method.locator('.activity-review');
+ await activities.locator(':scope > summary').click();await activities.getByRole('button',{name:'Review activity',exact:true}).last().click();
+ const editor=method.getByRole('group',{name:'Edit activity',exact:true});await editor.getByLabel('Activity stage',{exact:true}).selectOption('none');await editor.getByRole('button',{name:'Save activity',exact:true}).click();
+ await activities.getByRole('button',{name:'Review activity',exact:true}).first().click();await editor.getByLabel('Activity stage',{exact:true}).selectOption('preparing');await editor.getByRole('button',{name:'Save activity',exact:true}).click();
+ await recipeAction(method,'Save to My recipes');await expect(method.getByText('Saved recipe',{exact:true})).toBeVisible();
+ const original=structuredClone([...remote.rows.values()][0].document),metadata=JSON.parse(original.recipe.parameters[ACTIVITY_PARAMETER]);
+ expect(metadata.definitions).toHaveLength(1);expect(metadata.definitions[0]).toMatchObject({stage:'preparing',startStepId:'step-1',endStepId:'step-2',provenance:'confirmed'});
+ expect(metadata.dismissedStartStepIds).toContain('step-3');
+ await method.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);
+ const snapshot=structuredClone(remote.workspace.active.meal),history=structuredClone(remote.workspace.history);
+ await page.reload();const management=await library(page);await management.getByRole('button',{name:/^Edit /}).click();
+ const savedActivities=management.locator('.activity-review');await savedActivities.locator(':scope > summary').click();await expect(savedActivities).toContainText('Preparing');await expect(savedActivities.getByRole('button',{name:'Review activity',exact:true})).toHaveCount(1);
+ await savedActivities.getByRole('button',{name:'Review activity',exact:true}).click();await management.getByLabel('Activity stage',{exact:true}).selectOption('holding');await management.getByRole('button',{name:'Save activity',exact:true}).click();await recipeAction(management,'Save changes');
+ await expect.poll(()=>JSON.parse([...remote.rows.values()][0].document.recipe.parameters[ACTIVITY_PARAMETER]).definitions[0].stage).toBe('holding');
+ expect(remote.workspace.active.meal).toEqual(snapshot);expect(remote.workspace.history).toEqual(history);expect(original.recipe.parameters[ACTIVITY_PARAMETER]).toBe(JSON.stringify(metadata));
+});
 const rpc='https://auth.example.test/rest/v1/rpc/';
 function server(){
  const meal:ExtendedMeal={...newMeal(),name:'Current dinner',serveAt:'2026-11-15T13:00'};
@@ -144,8 +167,8 @@ test('quiet navigation opens a dedicated recipe screen and equipment selection p
  const nav=page.getByRole('navigation',{name:'Main navigation'});await expect(nav.getByRole('button')).toHaveText(['Home','My recipes','Past cooks']);await nav.getByRole('button',{name:'My recipes',exact:true}).click();await expect(page.getByRole('region',{name:'My recipes',exact:true})).toBeVisible();await expect(page.getByRole('dialog',{name:'My recipes',exact:true})).toHaveCount(0);await page.goBack();await expect(page.getByRole('region',{name:'My recipes',exact:true})).toHaveCount(0);await expect(nav.getByRole('button',{name:'Home',exact:true})).toHaveAttribute('aria-current','page');await review(page);
  const method=page.getByRole('region',{name:'Review your method'});
  await expect(page.getByLabel('Serve date and time')).toHaveCount(0);await expect(page.getByLabel('Meal name',{exact:true})).toHaveCount(0);await expect(page.getByRole('complementary',{name:'Live schedule'})).toHaveCount(0);
- const footer=method.locator('.recipe-review-footer'),primary=footer.getByRole('button',{name:'Add to meal',exact:true}),secondary=footer.getByRole('button',{name:'Save to My recipes',exact:true});
- await expect(primary).toHaveClass(/primary/);await expect(secondary).toBeVisible();await expect(footer.getByRole('button')).toHaveCount(2);await expect(method.getByText('Recipe actions',{exact:true})).toHaveCount(0);
+ const actions=method.locator('.recipe-review-primary'),primary=actions.getByRole('button',{name:'Add to meal',exact:true}),secondary=actions.getByRole('button',{name:'Save to My recipes',exact:true});
+ await expect(primary).toHaveClass(/primary/);await expect(secondary).toBeVisible();await expect(actions.getByRole('button')).toHaveCount(2);await expect(method.getByText('Recipe actions',{exact:true})).toHaveCount(0);
  await primary.scrollIntoViewIfNeeded();const a=(await primary.boundingBox())!,b=(await secondary.boundingBox())!;
  expect(a.height).toBeGreaterThanOrEqual(44);expect(b.height).toBeGreaterThanOrEqual(44);
  if(page.viewportSize()!.width<=600){expect(b.y-a.y-a.height).toBeGreaterThanOrEqual(15);expect(Math.abs(b.width-a.width)).toBeLessThan(1);}else{expect(Math.abs(b.y-a.y)).toBeLessThan(2);expect(b.x-a.x-a.width).toBeGreaterThanOrEqual(15);}
@@ -154,6 +177,7 @@ test('quiet navigation opens a dedicated recipe screen and equipment selection p
  await expect(choices.getByRole('combobox')).toHaveCount(0);await expect(method.getByRole('button',{name:/Done|Add equipment/})).toHaveCount(0);
  await choices.getByRole('checkbox',{name:'Pellet smoker',exact:true}).uncheck();await choices.getByRole('checkbox',{name:'Oven',exact:true}).check();
  await choices.getByRole('checkbox',{name:'Oven',exact:true}).press('Escape');await expect(choices).toHaveCount(0);await expect(trigger).toBeFocused();await expect(trigger).toContainText('Oven');
+ await trigger.click();await choices.getByLabel('Other equipment',{exact:true}).focus();await choices.getByLabel('Other equipment',{exact:true}).press('Tab');await expect(choices).toHaveCount(0);await expect(primary).toBeFocused();
  await recipeAction(method,'Save to My recipes');await expect(method.getByText('Saved recipe',{exact:true})).toBeVisible();const doc=[...remote.rows.values()][0].document;expect(doc.recipe.equipment).toEqual(['Oven']);expect(doc.recipe.configuration.cookMinutes).toBe(780);expect(doc.recipe.configuration.restMinutes).toBe(360);
  await trigger.click();await choices.getByRole('checkbox',{name:'Blackstone',exact:true}).check();await choices.getByLabel('Other equipment',{exact:true}).fill('My griddle');await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('equipment-open.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
  await method.getByLabel('Recipe name',{exact:true}).click();await expect(choices).toHaveCount(0);await recipeAction(method,'Save as copy');await expect(method.getByText('Saved recipe',{exact:true})).toBeVisible();expect([...remote.rows.values()].at(-1).document.recipe.equipment).toEqual(['Oven + Blackstone + My griddle']);
@@ -186,15 +210,15 @@ test('moving oil preparation before the wings check saves directly and reuses th
  await recipeAction(page,'Save to My recipes');await expect(page.getByText('Saved recipe',{exact:true})).toBeVisible();await expect(page.getByRole('region',{name:'Review your method',exact:true})).toHaveCount(0);expect(withoutLinks(remote.workspace.active.meal)).toEqual(withoutLinks(before.active.meal));expect(remote.workspace.history).toEqual(before.history);const saved=structuredClone([...remote.rows.values()][0]);await page.reload();const screen=await library(page);await screen.getByRole('button',{name:'Use recipe',exact:true}).click();const review=page.getByRole('region',{name:'Review your method',exact:true});await expect(review.locator('.method-review-steps > li').nth(4)).toContainText('Prepare fryer and heat oil');await expect(review.locator('.method-review-steps > li').nth(5)).toContainText('Confirm wings are cooked through');await review.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(2);expect(withoutLinks(remote.workspace.active.meal).dishes[0]).toEqual(withoutLinks(before.active.meal).dishes[0]);expect(remote.workspace.active.meal.serveAt).toBe(before.active.meal.serveAt);expect(remote.workspace.active.meal.events).toEqual(before.active.meal.events);expect([...remote.rows.values()][0]).toEqual(saved);
 });
 
-test('recipe footer commits open additions and Cancel discards equipment and invalid step drafts',async({page,context},info)=>{
+test('recipe actions commit open additions and Cancel discards equipment and invalid step drafts',async({page,context},info)=>{
  const remote=server();await remote.attach(context);await signIn(page);await review(page);await recipeAction(page,'Save to My recipes');await expect(page.getByText('Saved recipe',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Add to meal',exact:true}).click();await expect.poll(()=>remote.workspace.active.meal.dishes.length).toBe(1);
  const screen=await library(page);await screen.getByRole('button',{name:'Edit Smoked brisket',exact:true}).click();
- const footer=screen.locator('.recipe-review-footer');await expect(footer.getByRole('button',{name:'Save changes',exact:true})).toHaveCount(0);await expect(footer.getByRole('button',{name:'Save as copy',exact:true})).toHaveCount(0);await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
+ const actions=screen.locator('.recipe-review-primary');await expect(actions.getByRole('button',{name:'Save changes',exact:true})).toHaveCount(0);await expect(actions.getByRole('button',{name:'Save as copy',exact:true})).toHaveCount(0);await expect(page.getByLabel('Serve date and time')).toHaveCount(0);
  const source=structuredClone([...remote.rows.values()][0]);await screen.getByRole('button',{name:'Add a step',exact:true}).click();const adding=screen.getByRole('form',{name:'Add recipe step',exact:true});await adding.getByLabel('Step name',{exact:true}).fill('Finish with herbs');await adding.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await adding.getByLabel('Duration (minutes)',{exact:true}).fill('2');await expect(screen.getByRole('button',{name:'Save step',exact:true})).toHaveCount(0);
  await screen.getByLabel('Recipe name',{exact:true}).fill('Herb finish');await recipeAction(screen,'Save as copy','Herb finish');await expect(screen.getByRole('button',{name:'Edit Herb finish',exact:true})).toBeVisible();expect([...remote.rows.values()][0]).toEqual(source);expect(remote.rows.size).toBe(2);
  await screen.getByRole('button',{name:'Edit Herb finish',exact:true}).click();await expect(screen.getByText('Finish with herbs',{exact:true})).toBeVisible();const saved=structuredClone([...remote.rows.values()]),meal=structuredClone(remote.workspace);
  await screen.getByRole('button',{name:/^Equipment:/}).click();await screen.getByRole('group',{name:'Equipment choices',exact:true}).getByLabel('Other equipment',{exact:true}).fill('My equipment');await screen.getByLabel('Recipe name',{exact:true}).click();await screen.getByRole('button',{name:'Edit Trim brisket',exact:true}).click();await screen.getByLabel('Step name',{exact:true}).fill('');
- await footer.getByRole('button',{name:'Save changes',exact:true}).click();await expect(screen.getByRole('alert').filter({hasText:'Give the step a name'})).toBeVisible();expect([...remote.rows.values()]).toEqual(saved);
+ await actions.getByRole('button',{name:'Save changes',exact:true}).click();await expect(screen.getByRole('alert').filter({hasText:'Give the step a name'})).toBeVisible();expect([...remote.rows.values()]).toEqual(saved);
  await page.screenshot({path:info.outputPath('saved-recipe-draft-editor.png'),fullPage:true,scale:'css',style:'nextjs-portal{display:none}'});
  await screen.getByRole('button',{name:'Cancel',exact:true}).click();await screen.getByRole('button',{name:'Edit Herb finish',exact:true}).click();await expect(screen.getByRole('button',{name:'Equipment: Pellet smoker',exact:true})).toBeVisible();await expect(screen.getByText('Trim brisket',{exact:true})).toBeVisible();expect([...remote.rows.values()]).toEqual(saved);expect(remote.workspace).toEqual(meal);
 });

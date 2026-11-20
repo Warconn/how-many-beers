@@ -45,11 +45,10 @@ test('planned cook has one compact action beneath the menu and optional checklis
   expect(actionBox!.y).toBeGreaterThanOrEqual(menuBox!.y + menuBox!.height);
   expect(actionBox!.y - menuBox!.y - menuBox!.height).toBeLessThan(40);
   expect(actionBox!.height).toBeLessThan(200);
-  await expect(page.getByRole('region', { name: 'Meal plan preview' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Review Meal Plan', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Meal plan preview' })).toBeVisible();
-  await page.getByRole('button', { name: 'Hide Meal Plan', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Meal plan preview' })).toHaveCount(0);
+  const preview=page.getByRole('region',{name:'Meal plan preview'});
+  await expect(preview).toBeVisible();
+  await expect(page.getByRole('button',{name:'Review Meal Plan',exact:true})).toHaveCount(0);
+  expect(await preview.locator('.preview-task-list').evaluate(el=>getComputedStyle(el).overflowY)).toBe('visible');
   await expect(page.getByText(/Schedules are estimates, not food-safety checks/)).toBeVisible();
   await page.getByRole('region', { name: 'Cook overview' }).evaluate(el => el.scrollIntoView({ block: 'start' }));
   await page.screenshot({ path: info.outputPath('cook-action.png'), fullPage: false });

@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {newMeal,createDish,type Dish} from '../src/domain/meal';
+import {legacyDish} from './fixtures/legacyDish';
 import {cookTimeline,recordEvent,startCookSession,setStepDuration,moveStep,addDishToMeal,editStep,type ExtendedMeal} from '../src/domain/cookState';
 import {cookProjection} from '../src/domain/cookProjection';
 import {recordRemainingEstimate} from '../src/domain/cookingPhases';
@@ -26,7 +27,7 @@ describe('physical phases behind the checklist',()=>{
   expect(p.phases?.find(p=>p.id==='brats:heat')?.actualEnd).toBeNull();
  });
  it('session/preparation completion does not invent physical starts or elapsed grilling',()=>{
-  let m=startCookSession({...newMeal(),dishes:[{...createDish('side'),id:'a',cookMinutes:45,restMinutes:10}]},at('16:00'));
+  let m=startCookSession({...newMeal(),serveAt:at('17:15'),dishes:[{...createDish('side'),id:'a',cookMinutes:45,restMinutes:10}]},at('16:00'));
   m=recordEvent(m,'a:prep','completed',at('16:00'));m=recordEvent(m,'a:preheat','completed',at('16:00'));
   const p=project(m,'16:20');expect(p.remaining).toBe(55);expect(p.phases?.[0].actualStart).toBeNull();
  });
@@ -138,7 +139,7 @@ describe('physical phases behind the checklist',()=>{
   m=recordEvent(m,'a:bath','completed',at('18:05'));expect(project(m,'18:05').remaining).toBe(15);expect(m.events?.at(-1)?.phaseObservations).toEqual([{phaseId:'a:heat',boundary:'end'},{phaseId:'a:sear',boundary:'start'}]);
  });
  it('wings preserve oil/drain/rest allowances and preparing the fryer does not end smoking',()=>{
-  const d={...createDish('wings'),id:'a'};let m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
+  const d={...legacyDish('wings'),id:'a'};let m=startCookSession({...newMeal(),dishes:[d]},at('16:00'));
   for(const key of ['dry','prep','preheat','start'])m=recordEvent(m,'a:'+key,'completed',at('16:00'));
   expect(project(m,'16:00').remaining).toBe(200);m=recordEvent(m,'a:oil','completed',at('17:00'));
   expect(project(m,'17:00').phases?.find(p=>p.id==='a:heat')?.actualEnd).toBeNull();

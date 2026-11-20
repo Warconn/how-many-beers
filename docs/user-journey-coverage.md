@@ -1,5 +1,33 @@
 # User journey regression map
 
+## Full release regression reconciliation (#171)
+
+The full suite retains desktop/mobile Chromium and iPhone WebKit coverage.
+`cook-flow`, `dish-editor` and `home-next-action` distinguish the dish editor from
+the simultaneously visible whole-meal checklist. `step-editor-minimal` identifies
+recipe steps by identity instead of assuming source-order positions in a timed
+list. Its unit round trips still cover 22 hours, 45/90 minutes, fractional and
+unknown durations, fixed overrides, metadata, actual readings and reload.
+`step-editing-ux` supplies a known simmer duration for its timed reorder scenario;
+`timedOrder.test.ts` retains unknown-time ordering. `post-brisket` checks both
+planned and estimated time-edit labels without changing recorded preparation.
+`beerometer` checks that the sidebar occupies a separate column while the meter
+is sticky, then cooking visibility and phone overflow. `whole-cook-duration` includes all five thaw
+days in planning and cooking, checks explicit physical thaw start and preserves
+the frozen actual-duration history after finishing. The legacy route check waits
+for initial navigation commit before asserting its redirect and unchanged save.
+
+## Planning layout and sharing (#168 / #169)
+
+`planning-share.spec.ts` checks the reachable primary action, natural checklist
+scrolling, read-only native text share and reload. `sharePlan.test.ts` covers
+chronological output, unknown times and whole-meal estimates. Account recipe
+journeys retain primary/secondary action hierarchy, open-step validation,
+Cancel and snapshot preservation in the new action bar. The extracted-timing
+journeys click Add to meal with Equipment open and verify the review closes on
+that first click before checking imported metadata, durations and persistence.
+Equipment checks also retain Escape and Tab-out behavior on desktop and phone.
+
 For #161, `history-activity` checks collapsed-by-default activity, keyboard opening
 and closing, actual completion display, archived dish/step attribution, all 16
 events/temperature values, saved and orphaned notes, original event ordering and
@@ -15,6 +43,35 @@ require a separator; compact numeric units and existing ambiguity rules remain.
 November 9, 2026 release review. These are Playwright tests that interact with the
 real rendered app, using its buttons, inputs, navigation and saving paths. Unit
 coverage supplements them; passing unit tests alone is not user-journey evidence.
+
+## Parallel Cooking (#3)
+
+`servingTimeSynchronization.test.ts` and the Planning → Cooking Mode journey in
+`serving-first.spec.ts` cover 75-minute potatoes plus 45-minute brats for 6 PM.
+The browser checks both individual finishes, the shorter dish's 5:15 start,
+an actual potato start, reload and byte-identical retained events. Checking only
+the whole-meal Beerometer would miss the former 5:30 brat finish. Unit cases cover
+stable offsets on later clocks, early/late sessions, late actuals, early actuals
+that must remain early, duration edits, fixed paths, unknown duration and built-in
+brisket/ribs with different preparation and holding allowances.
+
+`parallel-cooking.spec.ts` exercises the synthetic two-turkey overlap and stored
+six-phase defect, brisket readings 145/162/181, simultaneous wings smoking/oil heat
+with separate readiness/removal/frying boundaries, and brats readings 130/150/165
+on one checked row after reload. It also corrects stage/start/end and No activity
+through real recipe review controls before cooking. Desktop/mobile Chromium and
+iPhone WebKit projects retain screenshots. These fixtures contain no exported
+owner records.
+
+`auth/personal-recipes.spec.ts` saves/reloads reviewed relationships through the
+account library, retains rejected suggestions, and verifies independent active
+meal/history snapshots after library edits. `activityRelationships.test.ts` and
+`parallelCooking.test.ts` cover immutable actuals, compound boundaries, overlap
+bounds, metadata round trips, protected recorded boundaries and idempotent
+migration/rollback. Disposable PostgreSQL `parallel-activities.sql` verifies the
+same payloads through existing RPCs and owner isolation; no hosted migration is
+required. `focused-cooking` checks that selecting another row does not change the
+meal-wide footer action or saved state.
 
 ## #139 orphaned plans and empty drafts
 
@@ -122,6 +179,7 @@ sleeping through a cook. Screenshots join the existing review artifact.
 | Fixed ribs 8:10 AM → 1:40 PM heat finish → 2 PM ready (#117) | `step-timing`, `serving-first` | Literal template fixture, actual UI edits and target preservation |
 | Late target, fixed/manual anchors, overnight/DST edits | `serving-first`, `step-timing`, `duration-reflow` | Deterministic exact clocks, invalid/ambiguous date validation |
 | Prominent collapsed current/Up Next cues and optional tools | `step-timing-cues`, `cooking-simplicity`, `post-brisket`, `cooking-layout` | Guided cards, flat checklist, cues without opening details |
+| Independent same-dish activities, repeatable checked checkpoints, recipe corrections | `parallel-cooking`, `auth/personal-recipes`; units `activityRelationships`, `parallelCooking` | Synthetic turkey/brisket/wings/brats, real controls and reload, exact activity IDs and immutable observations |
 | Actual cook starts, parallel dishes, overruns and changed estimates | `physical-cooking`, `live-cook-start`, `live-step-estimates`, `remaining-cook` | Seeded physical boundaries plus real actions/corrections/ticks/reload; never auto-doneness |
 | New 6-hour / optional 8-hour brisket reserve; saved methods unchanged | `post-brisket`, `cook-journeys`; units `postBrisket`, `brisketEstimate` | UI reserve controls, full new cook; unit snapshot/default compatibility |
 | Hold until serving → existing Finish; early/cancelled/complete finish | `cook-journeys`, `cooking-simplicity`, `cooking-layout`, `focused-cooking`, `auth/account-cooks` | New full journey plus targeted hold and finish confirmations, immutable history |
@@ -259,3 +317,50 @@ creation can be independent of meal planning. The new “header recipe managemen
 has no meal-creation shortcut…” regression covers empty and populated libraries,
 Home/planning origins, edit/Cancel, unchanged workspace/history/recipe rows and
 return to the original screen. Inline text/upload choice tests remain intact.
+
+## Chronological plan and cook displays (#3 follow-up)
+
+`timed-order.spec.ts` covers a synthetic brisket/turkey plan whose saved order
+puts November 21 serving before November 14 thawing. Combined planning, dish steps,
+date edits and reload stay chronological. A separate two-dish Cooking journey
+checks live start order, completion/reload and retained saved order/events. Archived
+steps and recorded activity are sorted by their displayed times without changing
+stored history. These run on desktop/mobile Chromium and CI iPhone WebKit; the
+existing history-activity journey retains all attribution and byte-equality checks.
+
+Preparation synchronization extends this coverage: four unit cases prove that
+completed ordinary work leaves the remaining dish budget, missing starts move
+unstarted guidance truthfully, and actual cooking starts stay fixed. The existing
+remaining-cook Beerometer journey keeps its precise countdown assertions. Account
+lifecycle and mixed-meal Finish/Cook Again tests act by stable accessible step
+identity while rows re-sort, assert all actions completed, preserve prior facts,
+and verify only explicit Finish adds the generated holding-end observation.
+
+`cookingOrderRegression.test.ts` and `guided-meal-order.spec.ts` cover native
+brisket plus oven turkey with a 22-hour brine. Early completion of a prep action
+must preserve the next prep action's shared-serving window rather than jump to
+now. Coverage includes reload, real-clock guided interleaving, six-day thawing,
+shared finish and immutable actuals. The browser walkthrough advances the clock
+to estimated action times; ordinary check-offs continue to record actual time.
+
+The on-time holding regression uses an independent twenty-action fixture in
+`tests/fixtures/timedMealSchedule.ts`; expected steps/times are not selected by
+the scheduler under test. Unit and real-browser cases verify immediate holding
+guidance after confirmed doneness and both dishes served at Saturday 1 PM.
+Before the holding checkbox, actual heat end/hold start remain unrecorded; only
+the manual transition creates those observations. Negative cases retain the
+conservative behavior for clock expiry, readings, reopened readiness and newer
+remaining estimates. Fixed and actual holding timestamps survive reload.
+The partial-handoff example also checks the full meal's 1 PM estimate and turkey
+prep inside the drying/preheating window, preventing double-counted prep time.
+
+`qa167Regression.test.ts` and `qa167-regressions.spec.ts` cover the independent QA
+findings: full frozen versus already-thawed turkey, immediate planning/Cooking
+readiness and Beerometer agreement, explicit dated ordering, early Cooking entry,
+and recorded-only smoking/oil/frying starts that never return as next actions after
+ending. The browser creates native meals through controls, checks completed cues,
+corrects smoking start, reloads, and checks the effective planning timestamp while
+all prior events remain unchanged. Desktop/mobile Chromium run locally; the new
+spec, holding handoff and guided native meal are explicitly included in iPhone
+WebKit CI. Stored forecast-window validation rejects malformed metadata and accepts
+old plans without it. Existing archive, recipe and account ownership coverage remains.

@@ -1,5 +1,6 @@
 import type { Dish, RecipeStep, RecipeTemperature } from "./meal";
 import {recipeCookingKind} from './cookingPhases';
+import {detectedActivities} from './activities';
 
 export type RecipeTiming={minutes:number|null;range?:[number,number]};
 const words:Record<string,number>={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12};
@@ -116,5 +117,6 @@ export function parseRecipeText(name:string,text:string):Dish{
   id:crypto.randomUUID(),name:name.trim()||sourceTitle?.slice(0,180)||'Imported recipe',preset:'custom',
   equipment:recipeEquipment(equipmentSource),pitTempF:setting?temperatureF(setting):undefined,
   cookMinutes:0,restMinutes:0,steps,recipeSource:text,recipeIngredients,recipeReference:references.join('\n'),
+  activities:detectedActivities([...steps,{id:'serve',title:'Serve when ready',minutes:null}]),
  };
 }

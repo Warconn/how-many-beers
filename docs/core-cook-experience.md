@@ -1,5 +1,16 @@
 # Core cook experience
 
+## Planning layout and text sharing (#168 / #169)
+
+Planning always shows the combined chronological checklist with natural page
+scrolling; the redundant Review Meal Plan toggle is removed. Recipe review keeps
+Add to meal and applicable recipe-save actions together above the steps in a
+compact sticky bar. Existing validation, open-draft commits and Cancel remain.
+Share plan exports a read-only text snapshot with the serving target, dishes,
+chronological steps and whole-meal Beerometer estimate through native sharing or
+Copy text. It does not save or start a cook. A shareable image remains future work.
+This section supersedes the historical method-footer placement described below.
+
 ## Past cook detail refinement (#161)
 
 Original checklist remains primary, with recorded completion times and planned
@@ -695,3 +706,84 @@ it stops on inactive Home and does not add a separate timer to the summary.
 V1 shows one canonical action for simultaneous work. It does not claim other
 steps are unavailable or invent serialized timestamps / +N readiness. #3 can
 supply improved priority and projections through the same presentation later.
+## Parallel Cooking (#3)
+
+Cooking Mode keeps known-duration, unstarted dishes aligned to one estimated
+meal finish. It compares each original dish's preparation/cooking/holding budget
+at the fixed session origin, preserving the shorter dish's later start across
+clock ticks and reload. A known late actual can move guidance for the unstarted
+dishes; recorded activity, fixed times and the requested serving target stay
+unchanged. Unknown work remains uncertain, and dishes added during cooking keep
+their existing creation anchor. The existing session-based behavior still avoids
+inventing idle days of holding when cooking starts well before a calendar target.
+
+Cooking retains its existing step/details view, flat chronological full checklist,
+prominent Beerometer and sticky meal-wide guide. A checkbox performs an authored
+action: start a bounded activity, confirm a milestone, or end the linked activity.
+Only explicit observed boundaries create actual intervals. Checking an ordinary
+step, recording a reading, or reaching a duration estimate never invents physical
+cooking or confirms readiness. Multiple independent activities can run inside a
+dish or across dishes. The guide checkbox and list row call the same handler.
+Inspecting another row does not change activity or meal-wide action selection.
+
+Preparing, Preheating, Cooking and Holding are the shared stage labels. Started
+rows show a quiet stage/elapsed line, then actual duration once both boundaries
+are recorded. A checked checkpoint keeps Record another reading available inline;
+each temperature or note retains its own timestamp and task/activity association.
+Oil-ready gates can log readings before the user explicitly confirms readiness.
+
+Recipe review/planning has an optional Review activities disclosure with stage,
+Start at, End at and No activity. Clear pairs are accepted while authoring;
+ambiguous instructions remain ordinary until resolved. Confirmed links and explicit
+rejections persist through recipe saving/copying and independent meal snapshots.
+Activity links are frozen for execution. Actual start/end corrections append facts;
+checkbox reopen never erases or restarts physical activity.
+
+Old active phase plans upgrade once upon deliberate Cooking Mode entry, keeping
+the original plan and every event. Missing relationships acquire no historical
+timestamps from old completions. Home and archived reads do not run this upgrade.
+Legacy sessions without a phase plan retain their existing execution path.
+See [implementation and validation](implementation/issue-3-parallel-cooking.md).
+
+All dated meal step lists use chronological display order across dishes, including
+planning review, dish steps, live Cooking checklist and past-cook detail. Date edits
+and reforecast update that order. Equal times remain stable; untimed work follows
+timed work. This view sorting preserves authored recipe relationships, saved order,
+actual events and historical snapshots.
+
+The shared Cooking finish also follows remaining work after ordinary preparation
+is completed. Unstarted dishes align to that current estimate; already observed
+activities and fixed paths keep their anchors. Missing starts can move estimates
+later, and recorded preparation can move them earlier, without changing any fact. Subsequent native-template prep actions retain their
+assigned window after an early prep completion; their forecast does not jump back
+to the completed step’s actual timestamp.
+Ordinary prep retains its authored overlap with drying/preheating allowances
+after an earlier prep action is checked, while manual sequences remain serial.
+
+A confirmed terminal doneness check makes the following resting/holding action
+due instead of extending cooking to its upper allowance. The cook still performs
+the separate removal/holding action to record the actual transition. Readings and
+time alone never trigger this handoff. Reopen or a newer explicit remaining
+estimate can change its forecast without rewriting any observed interval.
+
+November 18 independent QA follow-up: current built-in planning uses the same
+physical/preparation projection as a fresh Cooking session. Required turkey
+thawing is a full interval; Fully thawed and explicitly skipped preparation keep
+zero allowances. The target remains requested when infeasible. Future preparation
+windows survive early Cooking entry and reload as optional `phasePlan.forecastOrigin`
+metadata, distinct from the real `startedAt`. Any recorded physical start takes
+precedence over that opening window. Old active plans without this metadata keep
+their existing behavior. Legacy authored planning gaps and fixed/manual sequence
+feasibility retain their existing calculation and anchors.
+
+Current step, footer, checkbox presentation and progress recognize an actual
+activity start as satisfying its start instruction even after its end. This is a
+derived status: no extra completion event is appended. Recorded-only starts show
+a checked, disabled checkbox; start/end corrections remain available in details.
+Other unchecked preparation remains available for review. Currently completed
+checkpoints show Completed check with the recorded timestamp; explicitly reopening
+the checkbox restores the unfinished review cue. Normal planning/cooking views
+use the effective corrected phase start, with the original and correction retained
+in Activity. Multi-day schedule labels include weekday, month and day.
+Older brisket methods with authored idle planning gaps retain their established
+execution policy when starting; the future-window metadata is for current methods.

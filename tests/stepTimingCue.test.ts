@@ -37,3 +37,12 @@ it('preserves earliest bounds for constrained rest while keeping manual plans an
  expect(stepTimingCue(task,forecast,now)).toMatchObject({label:'Earliest start',at:forecast.start,lowerBound:true});
  expect(stepTimingCue({...task,timingMode:'fixed'},forecast,now)).toMatchObject({label:'Planned start',at:task.scheduledAt,detail:'Review timing: Cooking still active.'});
 });
+
+it('uses live estimated starts for flexible legacy rows while leaving planning and fixed dates intact',()=>{
+ const forecast={start:'2026-11-08T05:00Z',finish:null,status:'estimated' as const};
+ const before=JSON.stringify(task);
+ expect(stepTimingCue(task,forecast,now)).toMatchObject({label:'Estimated start',at:forecast.start});
+ expect(stepTimingCue({...task,timingMode:'fixed'},forecast,now)).toMatchObject({label:'Planned start',at:task.scheduledAt});
+ expect(stepTimingCue(task,undefined,now)).toMatchObject({label:'Planned start',at:task.scheduledAt});
+ expect(JSON.stringify(task)).toBe(before);
+});

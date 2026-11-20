@@ -32,6 +32,35 @@ offline cases, screenshots or SQL security. The pipeline skips expensive
 irrelevant suites in earlier stages, not at the release boundary. Fail-closed
 scope classification and aggregate checks must stay intact.
 
+## Current owner direction: #3 Parallel Cooking (November 16, 2026)
+
+November 20 release follow-up: the owner authorizes resolving #171's full-release
+browser failures, integrating the fixes through a feature PR into dev, then
+promoting #171 to main once full release, build and security checks pass. Preserve
+the accepted chronological lists and preparation forecasts; update stale test
+assumptions without dropping coverage. Verify production deployment afterward.
+No hosted database or real user-history mutation is authorized or required.
+
+November 19 follow-up: #3 is owner-accepted and merged into dev through #167 at
+`aafc2ab`. The owner authorizes fixing #170's CI failures and merging it into dev
+after required checks pass. #168 moves grouped method actions above the steps and
+keeps the whole chronological plan visible with page scrolling; #169 currently
+shares a read-only text snapshot, with image sharing deferred. This supersedes
+older footer-placement rules. No production promotion or hosted mutation.
+
+The owner explicitly authorized the scoped Parallel Cooking implementation and
+approved the architecture/reproduction checkpoint in chat. This supersedes the
+older #3 design-only hold and the queue's instruction to stop after #161/#162.
+Implement independent Preparing/Preheating/Cooking/Holding activities, repeated
+checkpoint observations, conservative authoring-time detection/correction and
+subtle inline status using the existing checklist, Beerometer and meal-wide guide.
+Preserve actual events, legacy archives, account isolation and independent recipe
+snapshots. Use synthetic fixtures; never mutate the owner's real dev cook/history
+for testing. No full dependency/resource optimizer, hosted migrations, automatic
+dev/main merge or production deployment. Prepare a PR into dev and stop for product
+review. See docs/implementation/issue-3-parallel-cooking.md for implementation and
+verification details. The earlier queue directions below are historical context.
+
 ## Current dev queue (November 15, 2026)
 
 Latest approved queue: #162 narrow duration-parser fix, then #161 small Past cook

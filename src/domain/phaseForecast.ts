@@ -1,18 +1,62 @@
 import type {Meal,PlannedTask} from './meal';
 import type {ExtendedMeal} from './cookState';
 import type {StepForecast} from './cookForecast';
-import {phaseObservations,type CookingPhase} from './cookingPhases';
+import {phaseObservations,effectivePhasePlan,type CookingPhase} from './cookingPhases';
+import type {ActivityStage} from './activities';
 
 const minute=60000;
 const stamp=(s:string|null|undefined)=>s&&Number.isFinite(Date.parse(s))?Date.parse(s):null;
 const iso=(n:number)=>new Date(n).toISOString();
-export type LivePhase={id:string;dishId:string;kind:CookingPhase['kind'];startTaskId:string;actualStart:string|null;actualEnd:string|null;start:string;finish:string;minutes:number|null;elapsed:number;active:boolean;overrun:boolean;uncertain:boolean};
+export type LivePhase={id:string;dishId:string;kind:CookingPhase['kind'];stage?:ActivityStage;startTaskId:string;startTitle?:string;actualStart:string|null;actualEnd:string|null;start:string;finish:string;minutes:number|null;elapsed:number;active:boolean;overrun:boolean;uncertain:boolean};
 export type PhaseProjection={forecasts:Record<string,StepForecast>;phases:LivePhase[];finish:string|null;earliestFinish:string;remaining:number|null;minimumRemaining:number;projected:number|null;elapsed:number;provisional:boolean;reason:string;provisionalTiming?:{offSmoker:string;readyAfterRest:string;basedOn:'planned'|'actual'}};
 
 /** A single read-only projection feeds the meter, current action and upcoming
  * times. Only tagged actual observations anchor physical intervals. */
 export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):PhaseProjection{
- const plan=meal.phasePlan!,events=(meal as ExtendedMeal).events??[],forecasts:Record<string,StepForecast>={},states=new Map<string,LivePhase>();
+ const current=projectPhases(meal,timeline,now);
+ const anchor=stamp(meal.startedAt)??now;
+ const originals=meal.dishes.filter(d=>(stamp(d.executionAddedAt)??anchor)<=anchor);
+ if(originals.length<2)return current;
+ const originalIds=new Set(originals.map(d=>d.id)),originalTasks=timeline.filter(t=>originalIds.has(t.dishId));
+ // Compare remaining authored work budgets at the session's fixed origin.
+ // The common finish below follows live progress; the budgets exclude idle time.
+ // Completed ordinary work no longer consumes a future allowance. Rebase only
+ // this read-only budget probe; live completion/physical timestamps stay exact.
+ const completed=Object.fromEntries(Object.keys(meal.completed).map(id=>[id,iso(anchor)]));
+ const nominalMeal:ExtendedMeal={...meal,dishes:originals,completed,events:[],...(meal.phasePlan?{phasePlan:{...meal.phasePlan,forecastOrigin:undefined}}:{})};
+ const nominal=projectPhases(nominalMeal,originalTasks,anchor);
+ const finish=(projection:PhaseProjection,dishId:string)=>{
+  const rows=originalTasks.filter(t=>t.dishId===dishId).map(t=>projection.forecasts[t.id]).filter(Boolean);
+  if(!rows.length||rows.some(f=>f.lowerBound||['unknown','blocked','overdue'].includes(f.status)))return null;
+  const ends=rows.map(f=>stamp(f.finish??f.start)).filter((n):n is number=>n!==null);
+  return ends.length?Math.max(...ends):null;
+ };
+ const budgets=new Map(originals.map(d=>[d.id,finish(nominal,d.id)]));
+ const known=[...budgets.values()].filter((n):n is number=>n!==null);
+ if(known.length<2)return current;
+ // Live dish finishes can advance when preparation is completed early, or
+ // extend after a late actual. Do not keep charging the initial prep budget.
+ const finishes=originals.map(d=>finish(current,d.id)).filter((n):n is number=>n!==null);
+ if(!finishes.length)return current;
+ const ready=Math.max(...finishes);
+ const events=(meal as ExtendedMeal).events??[];
+ const phaseOwners=new Map(meal.phasePlan?.phases.map(p=>[p.id,p.dishId]));
+ const observed=new Set(events.flatMap(e=>(e.phaseObservations??[]).map(o=>phaseOwners.get(o.phaseId))));
+ const starts=new Map<string,number>();
+ for(const dish of originals){
+  const budget=budgets.get(dish.id);
+  // Never shift an actual interval or an explicitly fixed path to make a target
+  // look achievable. New dishes retain their own recorded creation anchor.
+  if(budget===null||budget===undefined||observed.has(dish.id)
+    ||originalTasks.some(t=>t.dishId===dish.id&&t.timingMode==='fixed'))continue;
+  const start=anchor+ready-budget;
+  if(start>anchor)starts.set(dish.id,start);
+ }
+ return starts.size?projectPhases(meal,timeline,now,starts):current;
+}
+
+function projectPhases(meal:Meal,timeline:PlannedTask[],now:number,dishStarts:ReadonlyMap<string,number>=new Map()):PhaseProjection{
+ const plan=effectivePhasePlan(meal,timeline)!,events=(meal as ExtendedMeal).events??[],forecasts:Record<string,StepForecast>={},states=new Map<string,LivePhase>();
  const byId=new Map(timeline.map(t=>[t.id,t]));
  let end=now,uncertain=false;
  const anchor=stamp(meal.startedAt)??now;
@@ -27,6 +71,22 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
   if(p.id===p.dishId+':rest'&&d?.preset!=='custom')return Math.max(0,d?.restMinutes??0)+(d?.preset==='brisket'?d.brisketPlan?.applied?.inputs.holdBufferMinutes??0:0);
   return task?.durationMinutes??task?.templateStage?.minutes??p.minutes;
  };
+ // A completed terminal check can make the next handoff due, but never
+ // records a physical end. Trust only the source-linked condition immediately
+ // before an end/start transition into a passive phase, not ordinary readings.
+ const readinessFor=(p:CookingPhase,floor:number)=>{
+  const order=plan.order[p.dishId]??[];
+  const ids=p.endTaskIds.flatMap(endId=>{
+   const index=order.indexOf(endId);if(index<1)return [];
+   const previous=order[index-1],check=plan.actions[previous]?.checkpoint;
+   const holding=(plan.actions[endId]?.starts??[]).some(id=>plan.phases.some(next=>next.id===id&&next.dishId===p.dishId&&next.kind==='passive'));
+   return holding&&check?.phaseId===p.id&&check.fraction===1&&byId.get(previous)?.isCondition?[previous]:[];
+  });
+  return events.filter(e=>{
+   const at=stamp(e.occurredAt);
+   return e.kind==='completed'&&ids.includes(e.taskId)&&meal.completed[e.taskId]===e.occurredAt&&at!==null&&at>=floor;
+  }).at(-1);
+ };
  for(const dishId of new Set(timeline.map(t=>t.dishId))){
   const order=plan.order[dishId]??[];
   const own=timeline.filter(t=>t.dishId===dishId);
@@ -36,8 +96,12 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
   const independent=!dish&&!(meal as ExtendedMeal).planningGeneralSequence;
   const generalPositions=own.map(t=>stamp(t.scheduledAt)).filter((n):n is number=>n!==null);
   const generalOrigin=generalPositions.length?Math.min(...generalPositions):anchor;
-  let cursor=Math.max(anchor,stamp(dish?.executionAddedAt)??anchor),unknown=false;
-  let previousPrep:{planned:number;start:number;minutes:number}|undefined;
+  const observed=events.some(e=>e.phaseObservations?.some(o=>o.boundary==='start'));
+  const addedLater=(stamp(dish?.executionAddedAt)??anchor)>anchor;
+  const window=observed||addedLater?anchor:stamp(plan.forecastOrigin)??anchor;
+  const dishOrigin=Math.max(anchor,window,stamp(dish?.executionAddedAt)??anchor,dishStarts.get(dishId)??anchor);
+  let cursor=dishOrigin,unknown=false;
+  let previousPrep:{planned:number;start:number;minutes:number;completed?:boolean}|undefined;
   for(const t of own){
    if(plan.suppressed.includes(t.id))continue;
    if(independent){cursor=stamp(t.executionAddedAt)??anchor+Math.max(0,(stamp(t.scheduledAt)??generalOrigin)-generalOrigin);unknown=false;}
@@ -46,38 +110,51 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
    const planned=stamp(t.scheduledAt),preparation=t.templateStage?.kind==='preparation';
    if(!preparation)previousPrep=undefined;
    const overlap=preparation&&!t.userSequence&&!dish?.planningStepOrder?.length&&previousPrep&&planned!==null?Math.max(0,previousPrep.minutes-(planned-previousPrep.planned)/minute):0;
-   const prepStart=previousPrep?previousPrep.start+(previousPrep.minutes-overlap)*minute:cursor;
+   // A completed prep keeps the dish's assigned start floor. For ordinary
+   // unsequenced prep, preserve overlap with an earlier passive allowance rather
+   // than charging that prep again after the allowance ends.
+   const completedOverlap=previousPrep?.completed&&!t.userSequence&&!dish?.planningStepOrder?.length&&!phases.length;
+   let prepStart=cursor;
+   if(previousPrep&&!previousPrep.completed)prepStart=previousPrep.start+(previousPrep.minutes-overlap)*minute;
+   else if(previousPrep&&completedOverlap)prepStart=Math.max(previousPrep.start,cursor-Math.max(0,length(t)??0)*minute);
    if(phases.length){
     for(const p of phases){
      const actual=phaseObservations(meal,p.id),actualStart=stamp(actual.start?.occurredAt),actualEnd=stamp(actual.end?.occurredAt),minutes=phaseLength(p);
      const prior=p.after?states.get(p.after):undefined;
-     const earliest=Math.max(now,preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor)+(p.leadMinutes??0)*minute;
+     const loaded=plan.phases.find(q=>q.dishId===dishId&&q.stage==='cooking'&&phaseObservations(meal,q.id).start);
+     const origin=loaded?stamp(byId.get(loaded.startTaskId)?.scheduledAt):null;
+     const aligned=loaded&&origin!==null&&planned!==null?Date.parse(phaseObservations(meal,loaded.id).start!.occurredAt)+planned-origin:cursor;
+     const earliest=Math.max(now,p.independent?(prior?Date.parse(prior.finish):aligned):preparation?prepStart:cursor,prior?Date.parse(prior.finish):anchor)+(p.leadMinutes??0)*minute;
      const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
      const start=actualStart??Math.max(earliest,fixed??earliest);
      const nominal=minutes===null?null:start+minutes*minute;
      const estimate=events.filter(e=>e.phaseEstimate?.phaseId===p.id&&stamp(e.occurredAt)!>=start).at(-1);
      const upper=p.upperMinutes!==undefined&&minutes===p.minutes?start+p.upperMinutes*minute:null;
-     const predicted=estimate?Date.parse(estimate.occurredAt)+estimate.phaseEstimate!.minutes*minute:nominal!==null&&nominal<=now&&actualStart!==null&&p.kind==='heating'&&upper!==null&&upper>now?upper:nominal;
+     const ready=actualStart!==null&&actualEnd===null&&p.kind==='heating'?readinessFor(p,actualStart):undefined;
+     // A later explicit remaining estimate supersedes readiness; a later
+     // confirmed check supersedes an older estimate. Actual intervals win above.
+     const handoff=!!ready&&(!estimate||events.indexOf(ready)>events.indexOf(estimate));
+     const predicted=handoff?Math.max(now,Date.parse(ready!.occurredAt)):estimate?Date.parse(estimate.occurredAt)+estimate.phaseEstimate!.minutes*minute:nominal!==null&&nominal<=now&&actualStart!==null&&p.kind==='heating'&&upper!==null&&upper>now?upper:nominal;
      const overrun=p.kind==='heating'&&actualStart!==null&&actualEnd===null&&nominal!==null&&nominal<=now;
-     const expired=p.kind==='heating'&&actualStart!==null&&actualEnd===null&&(predicted===null||predicted<=now);
+     const expired=!handoff&&p.kind==='heating'&&actualStart!==null&&actualEnd===null&&(predicted===null||predicted<=now);
      const unscheduled=t.timingMode==='unscheduled'&&actualStart===null;
      const conflict=actualStart===null&&fixed!==null&&fixed<earliest;
      // Recorded physical progress outranks hypothetical unfinished preparation;
      // do not require perfect bookkeeping to trust an actual loading/rest start.
-     const precedingUnknown:boolean=actualStart===null&&(unknown||!!prior?.uncertain);
+     const precedingUnknown:boolean=actualStart===null&&((!p.independent&&unknown)||!!prior?.uncertain);
      const unresolved:boolean=actualEnd===null&&(expired||minutes===null||unscheduled||conflict||precedingUnknown);
      const finish=actualEnd??Math.max(start,predicted??start,expired?now:start);
-     const state:LivePhase={id:p.id,dishId,kind:p.kind,startTaskId:p.startTaskId,actualStart:actual.start?.occurredAt??null,actualEnd:actual.end?.occurredAt??null,start:iso(start),finish:iso(finish),minutes,elapsed:actualStart===null?0:Math.max(0,((actualEnd??now)-actualStart)/minute),active:actualStart!==null&&actualEnd===null,overrun,uncertain:unresolved};
+     const state:LivePhase={id:p.id,dishId,kind:p.kind,...(p.stage?{stage:p.stage}:{}),startTaskId:p.startTaskId,startTitle:byId.get(p.startTaskId)?.title,actualStart:actual.start?.occurredAt??null,actualEnd:actual.end?.occurredAt??null,start:iso(start),finish:iso(finish),minutes,elapsed:actualStart===null?0:Math.max(0,((actualEnd??now)-actualStart)/minute),active:actualStart!==null&&actualEnd===null,overrun,uncertain:unresolved};
      states.set(p.id,state);
      forecasts[t.id]={start:state.start,finish:state.finish,status:unresolved?'unknown':'estimated',phaseId:p.id,elapsedMinutes:state.elapsed,physicalActive:state.active,overEstimate:overrun,lowerBound:unresolved,retainDuration:state.active,template:{kind:p.kind==='passive'?'rest':'cook',at:state.start,basis:actualStart===null?'estimated':'actual',...(minutes!==null?{minutes}:{})},...(unresolved?{reason:expired?'Cooking is still active; the finish is an earliest estimate.':conflict?'Fixed start conflicts with unfinished work.':'Some remaining timing is unknown.'}:{})};
-     cursor=finish;unknown=unresolved;
+     if(p.independent){end=Math.max(end,finish);uncertain ||= unresolved;cursor=Math.max(cursor,finish);unknown ||= unresolved;}else{cursor=finish;unknown=unresolved;}
      if(preparation&&planned!==null&&minutes!==null)previousPrep={planned,start,minutes};
     }
     continue;
    }
    const checkpoint=action?.checkpoint;
    const ends=(action?.ends??[]).map(id=>states.get(id)).filter((p):p is LivePhase=>!!p);
-   if(checkpoint||ends.length&&!(length(t)!>0)){
+   if(checkpoint||ends.length&&(!(length(t)!>0)||ends.some(e=>!!e.stage))){
     const p=checkpoint?states.get(checkpoint.phaseId):ends.at(-1);
     const derived=p?checkpoint?Date.parse(p.start)+(p.minutes??0)*checkpoint.fraction*minute:Date.parse(p.finish):Math.max(cursor,now);
     const at=t.timingMode==='fixed'?stamp(t.scheduledAt)??derived:derived;
@@ -86,7 +163,14 @@ export function phaseProjection(meal:Meal,timeline:PlannedTask[],now:number):Pha
     // changes the phase; rapid check-offs cannot manufacture cooked minutes.
     continue;
    }
-   if(done!==null){if(independent)continue;cursor=Math.max(cursor,done);if(preparation&&planned!==null)previousPrep={planned,start:done,minutes:0};continue;}
+   if(done!==null){
+    if(independent)continue;
+    cursor=Math.max(cursor,done);
+    // An early prep completion must not reset the next prep to its actual time
+    // when this dish's remaining forecast has a later shared-serving window.
+    if(preparation&&planned!==null)previousPrep={planned,start:Math.max(done,dishOrigin),minutes:0,completed:true};
+    continue;
+   }
    const minutes=length(t),actual=events.filter(e=>e.taskId===t.id&&e.kind==='started'&&!e.phaseEstimate&&!e.phaseObservations).at(-1);
    const fixed=t.timingMode==='fixed'?stamp(t.scheduledAt):null;
    // Ordinary preparation estimates can run from the session/creation anchor.

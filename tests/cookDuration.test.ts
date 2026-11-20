@@ -11,11 +11,12 @@ describe('whole cook duration',()=>{
   const brisket=createDish('brisket'),brats=createDish('brats');const m={...newMeal(),dishes:[brisket],serveAt:'2026-11-25T18:00Z'};
   expect(read(m).minutes).toBe(1505);expect(read({...m,dishes:[brats,brisket]}).minutes).toBe(1505);
  });
- it('includes refrigerated brining, excludes thaw reminders and skipped brine',()=>{
+ it('includes required thawing and refrigerated brining, excluding skipped brine',()=>{
   const t={...createDish('turkey'),turkeyPrep:{state:'frozen' as const,thawDays:5,brineHours:22,dryHours:8}};
   const m={...newMeal(),dishes:[t],serveAt:'2026-11-25T18:00Z'};
-  expect(read(m).minutes).toBe(270+60+30*60);
-  expect(read({...m,dishes:[{...t,turkeyPrep:{...t.turkeyPrep,brineHours:0}}]}).minutes).toBe(270+60+8*60);
+  expect(read(m).minutes).toBe(5*1440+270+60+30*60);
+  expect(read({...m,dishes:[{...t,turkeyPrep:{...t.turkeyPrep,brineHours:0}}]}).minutes).toBe(5*1440+270+60+8*60);
+  expect(read({...m,dishes:[{...t,turkeyPrep:{...t.turkeyPrep,state:'thawed'}}]}).minutes).toBe(270+60+30*60);
  });
  it('uses edited times/durations, excludes hidden steps, handles untimed input',()=>{
   const d=createDish('brats'),m={...newMeal(),dishes:[d],serveAt:'2026-11-25T18:00Z'};

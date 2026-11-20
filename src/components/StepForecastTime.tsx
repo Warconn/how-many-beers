@@ -2,9 +2,9 @@ import type {PlannedTask} from '@/domain/meal';
 import {stepTimingCue} from '@/domain/stepTimingCue';
 import type {StepForecast} from '@/domain/cookForecast';
 const format=(iso:string,simple=false)=>new Date(iso).toLocaleString([],simple&&new Date(iso).toDateString()===new Date().toDateString()?{hour:'numeric',minute:'2-digit'}:{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-export default function StepForecastTime({forecast,part,simple=false,task,now=Date.now()}:{task?:PlannedTask;now?:number;forecast?:StepForecast;part:'start'|'finish';simple?:boolean}){
+export default function StepForecastTime({forecast,part,simple=false,task,now=Date.now(),completedAt}:{completedAt?:string;task?:PlannedTask;now?:number;forecast?:StepForecast;part:'start'|'finish';simple?:boolean}){
  if(task&&part==='start'){
-  const cue=stepTimingCue(task,forecast,now);
+  const cue=stepTimingCue(task,forecast,now,completedAt);
   return <span>{cue.label}{cue.at&&<> <time aria-label={cue.label} dateTime={cue.at}>{format(cue.at,simple)}</time>{cue.lowerBound?'+':''}</>}{cue.detail&&<span className="step-condition-cue"> · {cue.detail}</span>}</span>;
  }
  if(!forecast)return <span>Timing not set</span>;

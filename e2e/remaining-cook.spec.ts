@@ -8,14 +8,17 @@ test('Beerometer decreases with remaining work and reaches zero before Finish co
  await page.goto('/');await page.evaluate(m=>localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m)),meal);await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Start cooking',exact:true}).click();
  const meter=page.getByRole('region',{name:'Cook duration in beers'});const before=Number(await meter.locator('strong').innerText());
  await page.getByRole('button',{name:'Full checklist',exact:true}).click();
- const checks=page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox');await checks.first().check();
+ const checks=page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox');
+ const prep=cookTimeline(meal).find(t=>t.dishId===meal.dishes[0].id&&t.templateStage?.kind==='preparation')!;
+ await page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{name:'Complete '+prep.title+' for '+prep.dishName,exact:true}).check();
  // Completing critical-path brisket prep advances that dish, without summing parallel work.
  await expect(meter).toContainText('16h 25m');
  await expect.poll(async()=>Number(await meter.locator('strong').innerText())).toBeLessThan(before);
  for(const task of cookTimeline(meal).filter(t=>t.templateStage?.kind==='preparation'))await page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{name:'Complete '+task.title+' for '+task.dishName,exact:true}).check();
  await expect(meter).toContainText('15h 40m');
  await expect.poll(async()=>Number(await meter.locator('strong').innerText())).toBeLessThan(before);
- for(let i=1;i<await checks.count();i++)await checks.nth(i).check();
+ for(const name of await checks.evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label')!)))await page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{name,exact:true}).check();
+ await expect(page.getByRole('region',{name:'Full cook checklist'}).getByRole('checkbox',{checked:false})).toHaveCount(0);
  await expect(meter.locator('strong')).toHaveText('0.0');await expect(meter).toContainText('0h 00m');await expect(meter).not.toContainText('Projected cook');
  const observed=await page.evaluate(()=>JSON.parse(localStorage.getItem('how-many-beers:meal:v1')!));expect(observed.events.some((e:any)=>e.phaseObservations?.some((o:any)=>o.phaseId===meal.dishes[0].id+':rest'&&o.boundary==='end'))).toBe(true);
  await page.getByRole('button',{name:'Back to step',exact:true}).click();await meter.scrollIntoViewIfNeeded();await page.screenshot({path:info.outputPath('remaining-zero.png'),fullPage:false});

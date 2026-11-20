@@ -1,5 +1,8 @@
 import {newMeal,type Dish,type Meal,type PlannedTask} from './meal';
 import {cookTimeline,addDishToMeal,setStepDuration,type ExtendedMeal} from './cookState';
+import {detectedActivities,activityStepKey,type RecipeActivity,type ActivityMetadata} from './activities';
+import {buildPhasePlan} from './cookingPhases';
+import {phaseStage,activityIssue} from './activities';
 
 /** A recipe review is an uncommitted planning document, never the live cook. */
 export function recipeReview(dish:Dish,serveAt:string):ExtendedMeal{
@@ -7,7 +10,47 @@ export function recipeReview(dish:Dish,serveAt:string):ExtendedMeal{
  // Imported review is a sequential plan. Timing corrections should close the
  // original estimate's gap, without changing the source recipe or old cooks.
  if(draft.preset==='custom'&&!draft.planningSequence)draft.planningSequence=[...(draft.steps??[]).map(s=>s.id),'serve'];
- return {...newMeal(),serveAt,dishes:[draft]};
+ return prepareRecipeActivities({...newMeal(),serveAt,dishes:[draft]});
+}
+
+/** Run only in authoring/fresh-start paths. Existing execution never re-infers. */
+export function prepareRecipeActivities(meal:ExtendedMeal):ExtendedMeal{
+ if(meal.mode==='cooking'||meal.startedAt)return meal;
+ const tasks=cookTimeline(meal);
+ return {...meal,dishes:meal.dishes.map(d=>{
+  if(d.preset!=='custom')return d;
+  const detected=detectedActivities(tasks.filter(t=>t.dishId===d.id).map(t=>({id:activityStepKey(d.id,t.id),title:t.title,instructions:t.instructions,minutes:t.durationMinutes??null})));
+  if(!d.activities)return {...d,activities:detected};
+  const additions=detected.definitions.filter(a=>!d.activities!.definitions.some(old=>old.startStepId===a.startStepId)&&!d.activities!.dismissedStartStepIds?.includes(a.startStepId));
+  return additions.length?{...d,activities:{...d.activities,definitions:[...d.activities.definitions,...additions]}}:d;
+ })};
+}
+
+export function reviewActivities(meal:ExtendedMeal,dishId:string):ActivityMetadata{
+ const dish=meal.dishes.find(d=>d.id===dishId)!;
+ if(dish.activities)return dish.activities;
+ if(dish.preset==='custom')return prepareRecipeActivities(meal).dishes.find(d=>d.id===dishId)!.activities!;
+ const plan=buildPhasePlan(meal,cookTimeline(meal));
+ return {version:1 as const,definitions:plan.phases.filter(p=>p.dishId===dishId).flatMap(p=>{
+  const stage=phaseStage(p);return stage?[{id:activityStepKey(dishId,p.id),stage,startStepId:activityStepKey(dishId,p.startTaskId),endStepId:p.endTaskIds[0]?activityStepKey(dishId,p.endTaskIds[0]):null,
+   checkpointStepIds:Object.entries(plan.actions).filter(([,a])=>a.checkpoint?.phaseId===p.id).map(([id])=>activityStepKey(dishId,id)),provenance:'template' as const}]:[];
+ })};
+}
+export function setRecipeActivity(meal:ExtendedMeal,dishId:string,id:string,activity:RecipeActivity|null,dismissedStartId?:string):ExtendedMeal{
+ if(meal.mode==='cooking'||meal.startedAt)throw Error('Activity relationships are edited before cooking. Recorded activity is retained.');
+ const prepared=prepareRecipeActivities(meal),dish=prepared.dishes.find(d=>d.id===dishId);
+ if(!dish)throw Error('Choose a recipe.');
+ const metadata=reviewActivities(prepared,dishId);
+ const previous=metadata.definitions.find(a=>a.id===id);
+ if(activity&&(!activity.startStepId||!activity.endStepId))throw Error('Choose a start and end step.');
+ if(activity){const issue=activityIssue(dish,cookTimeline(prepared).filter(t=>t.dishId===dishId),activity);if(issue)throw Error(issue);}
+ const confirmed=activity?{...activity,provenance:'confirmed' as const}:null;
+ const definitions=metadata.definitions.flatMap(a=>a.id===id?confirmed?[confirmed]:[]:[a]);
+ if(confirmed&&!previous)definitions.push(confirmed);
+ const dismissed=!activity?previous?.startStepId??dismissedStartId:previous&&previous.startStepId!==activity.startStepId?previous.startStepId:undefined;
+ const next={...metadata,definitions,
+  dismissedStartStepIds:[...new Set([...(metadata.dismissedStartStepIds??[]),...(dismissed?[dismissed]:[])])]};
+ return {...prepared,dishes:prepared.dishes.map(d=>d.id===dishId?{...d,activities:next}:d)};
 }
 export function addReviewedDish(current:Meal,review:ExtendedMeal,replaceUnstarted=false):ExtendedMeal{
  if(review.dishes.length!==1||review.startedAt||review.mode==='cooking'||Object.keys(review.completed).length||review.events?.some(e=>e.kind!=='removed'))throw Error('Only an unstarted recipe can be added.');
