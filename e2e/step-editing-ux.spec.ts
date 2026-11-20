@@ -37,7 +37,10 @@ for (const kind of ['template','imported'] as const) test(`${kind} editor keeps 
 });
 
 test('hidden metadata survives ordinary edits; add, move and remove stay aligned and persist',async({page})=>{
-  const dish=parseRecipeText('Soup','Chop\nSimmer'),other=createDish('brats');
+  // A future fixed start and a timed successor can be reordered without
+  // conflicting with overdue work or inventing a time for an unknown step.
+  await page.clock.install({time:new Date('2026-11-01T10:00:00Z')});
+  const dish=parseRecipeText('Soup','Chop\nSimmer (15 minutes)'),other=createDish('brats');
   const id=dish.id+':'+dish.steps![0].id;
   const meal={...newMeal(),serveAt:'2026-11-01T18:00',dishes:[dish,other],taskOverrides:{[id]:{scheduledAt:'2026-11-01T12:00:34.567Z',durationMinutes:30,equipment:'Stockpot',targetTempF:165}}};
   await page.goto('/');await page.evaluate(m=>{localStorage.clear();localStorage.setItem('how-many-beers:meal:v1',JSON.stringify(m));},meal);await page.reload();
@@ -57,7 +60,7 @@ test('hidden metadata survives ordinary edits; add, move and remove stay aligned
   const taste=region.getByRole('article',{name:'Taste',exact:true});await expect(taste).toBeVisible();await taste.getByRole('button',{name:'Move Taste'}).press('ArrowDown');await expect(region.getByRole('article').last()).toHaveAttribute('aria-label','Taste');
   await taste.getByRole('button',{name:'Edit Taste',exact:true}).click();page.once('dialog',d=>d.accept());await taste.getByRole('button',{name:'Remove step: Taste',exact:true}).click();await expect(taste).toHaveCount(0);
   await page.reload();await page.getByRole('button',{name:/Resume planning/}).click();await page.getByRole('button',{name:'Edit Soup',exact:true}).click();
-  await expect(region.getByRole('article').nth(1)).toHaveAttribute('aria-label','Chop finely');expect((await read()).dishes[1]).toEqual(other);
+  await expect(region.getByRole('article').nth(1)).toHaveAttribute('aria-label','Chop finely');expect((await read()).dishes[1]).toEqual(other);expect((await read()).taskOverrides[id]).toMatchObject(meal.taskOverrides[id]);
   await region.getByRole('article',{name:'Chop finely',exact:true}).getByRole('button',{name:/^Edit(?: |$)/}).click();
   expect((await read()).taskOverrides[id]).toMatchObject({equipment:'Stockpot',targetTempF:165});
   await form.getByLabel('Planned date and time',{exact:true}).fill('');await form.getByLabel('Duration unit',{exact:true}).selectOption('minutes');await form.getByLabel('Estimated duration (minutes)',{exact:true}).fill('');await form.getByRole('button',{name:'Save',exact:true}).click();

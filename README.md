@@ -91,7 +91,7 @@ Want a different approach? Edit a method, import your own, or keep several varia
 This is a **hands-on cooking companion**, not an autopilot for food safety or a guarantee that dinner will be ready at an exact minute.
 
 - Cooking estimates help with planning; actual temperatures, doneness, and safe holding still require your judgment and appropriate food-safety guidance.
-- You can add multiple dishes to one meal today. Advanced automatic cross-dish dependency scheduling, equipment conflict handling, and fully independent overlapping cooking phases are **still being designed**, not features to rely on yet.
+- You can add multiple dishes and track independent overlapping activities today. Advanced automatic cross-dish dependency scheduling and equipment conflict handling are **still being designed**, not features to rely on yet.
 - You can try the experience as a guest. Persistent, cross-device saved cooks and personal recipes use the account experience; guest work should not be treated as a permanent backup.
 
 We're keeping the interface deliberately simple: **plan, cook, repeat**, with the detailed controls available when you need them.

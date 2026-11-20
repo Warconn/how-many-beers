@@ -34,6 +34,13 @@ scope classification and aggregate checks must stay intact.
 
 ## Current owner direction: #3 Parallel Cooking (November 16, 2026)
 
+November 20 release follow-up: the owner authorizes resolving #171's full-release
+browser failures, integrating the fixes through a feature PR into dev, then
+promoting #171 to main once full release, build and security checks pass. Preserve
+the accepted chronological lists and preparation forecasts; update stale test
+assumptions without dropping coverage. Verify production deployment afterward.
+No hosted database or real user-history mutation is authorized or required.
+
 November 19 follow-up: #3 is owner-accepted and merged into dev through #167 at
 `aafc2ab`. The owner authorizes fixing #170's CI failures and merging it into dev
 after required checks pass. #168 moves grouped method actions above the steps and

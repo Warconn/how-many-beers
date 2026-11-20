@@ -1,5 +1,22 @@
 # User journey regression map
 
+## Full release regression reconciliation (#171)
+
+The full suite retains desktop/mobile Chromium and iPhone WebKit coverage.
+`cook-flow`, `dish-editor` and `home-next-action` distinguish the dish editor from
+the simultaneously visible whole-meal checklist. `step-editor-minimal` identifies
+recipe steps by identity instead of assuming source-order positions in a timed
+list. Its unit round trips still cover 22 hours, 45/90 minutes, fractional and
+unknown durations, fixed overrides, metadata, actual readings and reload.
+`step-editing-ux` supplies a known simmer duration for its timed reorder scenario;
+`timedOrder.test.ts` retains unknown-time ordering. `post-brisket` checks both
+planned and estimated time-edit labels without changing recorded preparation.
+`beerometer` checks that the sidebar occupies a separate column while the meter
+is sticky, then cooking visibility and phone overflow. `whole-cook-duration` includes all five thaw
+days in planning and cooking, checks explicit physical thaw start and preserves
+the frozen actual-duration history after finishing. The legacy route check waits
+for initial navigation commit before asserting its redirect and unchanged save.
+
 ## Planning layout and sharing (#168 / #169)
 
 `planning-share.spec.ts` checks the reachable primary action, natural checklist
